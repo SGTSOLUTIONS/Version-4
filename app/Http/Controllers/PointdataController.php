@@ -500,7 +500,7 @@ class PointdataController extends Controller
                 'old_door_no'          => $request->old_door_no,
                 'aadhar_no'            => $request->aadhar_no,
                 'ration_no'            => $request->ration_no,
-                'number_persons'       => $request->number_persons,
+                'no_of_persons'       => $request->number_persons,
                 'eb'                   => $request->eb,
                 'worker_name'          => $user->name,
                 'remarks'              => $request->remarks,
