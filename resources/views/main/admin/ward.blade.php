@@ -327,11 +327,6 @@
             let isLoading = false;
             let userRole = '{{ auth()->user()->role }}';
 
-            // For commissioner, populate zone filter with their zones only
-            @if (auth()->user()->role == 'commissioner')
-                // Zone filter is already populated with commissioner's zones from Blade
-            @endif
-
             // Load zones based on corporation selection in filter (admin only)
             $('#corporationFilter').on('change', function() {
                 let corpId = $(this).val();
@@ -470,7 +465,7 @@
                 });
             }
 
-            // Render cards like corporation template
+            // Render cards
             function renderCards(wards) {
                 if (!wards || wards.length === 0) {
                     $('#wardsGrid').html(`
@@ -534,21 +529,21 @@
                                     Ward ${escapeHtml(ward.ward_no)}
                                 </h3>
                                 ${ward.contact_person ? `
-                                                <p class="acard-desc small mb-1">
-                                                    <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
-                                                    ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
-                                                </p>
-                                            ` : ''}
+                                    <p class="acard-desc small mb-1">
+                                        <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
+                                        ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
+                                    </p>
+                                ` : ''}
                                 ${ward.phone ? `
-                                                <p class="acard-desc small mb-1">
-                                                    <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
-                                                </p>
-                                            ` : ''}
+                                    <p class="acard-desc small mb-1">
+                                        <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
+                                    </p>
+                                ` : ''}
                                 ${ward.email ? `
-                                                <p class="acard-desc small mb-1">
-                                                    <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
-                                                </p>
-                                            ` : ''}
+                                    <p class="acard-desc small mb-1">
+                                        <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
+                                    </p>
+                                ` : ''}
                                 <div class="acard-footer">
                                     <span class="acard-author">
                                         ${escapeHtml(ward.contact_person || 'No contact')}
@@ -565,10 +560,10 @@
                                         <i class="bi bi-pencil"></i> Edit
                                     </button>
                                     ${userRole === 'admin' ? `
-                                                    <button class="btn btn-danger btn-sm flex-fill delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}">
-                                                        <i class="bi bi-trash"></i> Delete
-                                                    </button>
-                                                ` : ''}
+                                        <button class="btn btn-danger btn-sm flex-fill delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -689,8 +684,7 @@
                     $('#f_corp_id').prop('disabled', true);
                     $('#f_corp_id_hidden').val('{{ auth()->user()->corporation_id }}');
                 @else
-                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop(
-                        'disabled', true);
+                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop('disabled', true);
                     $('#f_corp_id').prop('disabled', false);
                     $('#f_corp_id_hidden').val('');
                 @endif
@@ -698,78 +692,77 @@
                 $('#wardModal').modal('show');
             });
 
-
             // Submit form with role-based URL
-          $('#wardForm').on('submit', function(e) {
-    e.preventDefault();
-    $('.is-invalid').removeClass('is-invalid');
-    $('.invalid-feedback').text('');
+            $('#wardForm').on('submit', function(e) {
+                e.preventDefault();
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').text('');
 
-    // For commissioner, ensure corp_id is sent via hidden field
-    @if(auth()->user()->role == 'commissioner')
-        // The hidden field already has the value
-        // Make sure the select is disabled but hidden field is set
-        if (!$('#f_corp_id_hidden').val()) {
-            $('#f_corp_id_hidden').val('{{ auth()->user()->corporation_id }}');
-        }
-    @endif
+                // For commissioner, ensure corp_id is sent via hidden field
+                @if (auth()->user()->role == 'commissioner')
+                    if (!$('#f_corp_id_hidden').val()) {
+                        $('#f_corp_id_hidden').val('{{ auth()->user()->corporation_id }}');
+                    }
+                @endif
 
-    let formData = new FormData(this);
-    let wardId = $('#wardId').val();
-    let method = $('#wardFormMethod').val();
-    let url;
+                let formData = new FormData(this);
+                let wardId = $('#wardId').val();
+                let method = $('#wardFormMethod').val();
+                let url;
 
-    if (method === 'PUT') {
-        if (userRole === 'commissioner') {
-            url = "/commissioner/wards/" + wardId;
-        } else {
-            url = "/admin/wards/" + wardId;
-        }
-        formData.append('_method', 'PUT');
-    } else {
-        if (userRole === 'commissioner') {
-            url = "/commissioner/wards";
-        } else {
-            url = "/admin/wards";
-        }
-    }
+                if (method === 'PUT') {
+                    if (userRole === 'commissioner') {
+                        url = "/commissioner/wards/" + wardId;
+                    } else {
+                        url = "/admin/wards/" + wardId;
+                    }
+                    formData.append('_method', 'PUT');
+                } else {
+                    if (userRole === 'commissioner') {
+                        url = "/commissioner/wards";
+                    } else {
+                        url = "/admin/wards";
+                    }
+                }
 
-    $('#wardSaveBtn').prop('disabled', true).html(
-        '<span class="spinner-border spinner-border-sm me-1"></span> Saving...');
+                $('#wardSaveBtn').prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-1"></span> Saving...');
 
-    $.ajax({
-        url: url,
-        type: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
-            $('#wardForm')[0].reset();
-            $('#wardModal').modal('hide');
-            showFlashMessage(response.message || 'Ward saved successfully', 'success');
-            loadWards(currentPage);
-        },
-        error: function(xhr) {
-            $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
-            if (xhr.status === 422) {
-                let errors = xhr.responseJSON.errors;
-                $.each(errors, function(field, messages) {
-                    $('[name="' + field + '"]').addClass('is-invalid');
-                    $('#error-' + field).text(messages[0]);
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
+                        $('#wardForm')[0].reset();
+                        $('#wardModal').modal('hide');
+                        showFlashMessage(response.message || 'Ward saved successfully', 'success');
+                        loadWards(currentPage);
+                    },
+                    error: function(xhr) {
+                        $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
+                        if (xhr.status === 422) {
+                            let errors = xhr.responseJSON.errors;
+                            $.each(errors, function(field, messages) {
+                                $('[name="' + field + '"]').addClass('is-invalid');
+                                $('#error-' + field).text(messages[0]);
+                            });
+                            showFlashMessage('Please fix validation errors', 'error');
+                        } else {
+                            let errorMessage = xhr.responseJSON?.message || 'Something went wrong';
+                            showFlashMessage(errorMessage, 'error');
+                            console.error('Server error:', xhr.responseJSON);
+                        }
+                    }
                 });
-                showFlashMessage('Please fix validation errors', 'error');
-            } else {
-                let errorMessage = xhr.responseJSON?.message || 'Something went wrong';
-                showFlashMessage(errorMessage, 'error');
-                console.error('Server error:', xhr.responseJSON);
-            }
-        }
-    });
-});
+            });
+
+            // Edit button with role-based URL
             $(document).on('click', '.edit-btn', function() {
                 let id = $(this).data('id');
                 let url;
@@ -785,8 +778,7 @@
                     type: "GET",
                     success: function(response) {
                         let ward = response.data;
-                        $('#modalTitle').html(
-                            '<i class="bi bi-pencil-square me-2"></i> Edit Ward');
+                        $('#modalTitle').html('<i class="bi bi-pencil-square me-2"></i> Edit Ward');
                         $('#wardId').val(ward.id);
 
                         let corpId = null;
@@ -847,7 +839,6 @@
                 });
             });
 
-
             // Delete button - Only for admin
             @if (auth()->user()->role == 'admin')
                 $(document).on('click', '.delete-btn', function() {
@@ -870,14 +861,11 @@
                         },
                         success: function(response) {
                             $('#deleteModal').modal('hide');
-                            showFlashMessage(response.message || 'Ward deleted successfully',
-                                'success');
+                            showFlashMessage(response.message || 'Ward deleted successfully', 'success');
                             loadWards(1);
                         },
                         error: function(xhr) {
-                            showFlashMessage(xhr.responseJSON?.message ||
-                                'Failed to delete ward',
-                                'error');
+                            showFlashMessage(xhr.responseJSON?.message || 'Failed to delete ward', 'error');
                         }
                     });
                 });
@@ -908,20 +896,18 @@
                             }
                         }
                         let corporationName = '-';
-                        if (ward.zone && typeof ward.zone === 'object' && ward.zone
-                            .corporation) {
+                        if (ward.zone && typeof ward.zone === 'object' && ward.zone.corporation) {
                             corporationName = ward.zone.corporation.name || '-';
                         }
-                        let imageUrl = ward.drone_image ? "{{ asset('storage') }}/" + ward
-                            .drone_image : null;
+                        let imageUrl = ward.drone_image ? "{{ asset('storage') }}/" + ward.drone_image : null;
 
                         let html = `
                             <div class="row">
                                 <div class="col-12 text-center mb-3">
                                     ${imageUrl ? `<img src="${imageUrl}" alt="${escapeHtml(ward.ward_no)}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 10px;">` :
                                         `<div style="width: 150px; height: 150px; background: #e9ecef; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;">
-                                                        <i class="bi bi-building fs-1 text-muted"></i>
-                                                    </div>`}
+                                            <i class="bi bi-building fs-1 text-muted"></i>
+                                        </div>`}
                                 </div>
                                 <div class="col-md-6"><strong>Corporation:</strong><br><p>${escapeHtml(corporationName)}</p></div>
                                 <div class="col-md-6"><strong>Zone:</strong><br><p>${escapeHtml(zoneName)}</p></div>
