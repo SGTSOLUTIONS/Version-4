@@ -487,7 +487,7 @@ class PointdataController extends Controller
             }
 
             DB::table($pointDataTableName)->insert([
-                'building_id' => $buildingdata->id,
+                'building_data_id' => $buildingdata->id,
                 'assessment_type'      => $request->assessment_type,
                 'assessment'           => $request->assessment,
                 'owner_name'           => $request->owner_name,
