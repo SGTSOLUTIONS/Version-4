@@ -576,10 +576,10 @@
                         $('#zoneFormMethod').val('PUT');
                         $('#zoneSaveBtn').html('Update Zone');
 
-                        // For commissioner, keep corporation field disabled
-                        @if(auth()->user()->role == 'commissioner')
-                            $('#f_corp_id').prop('disabled', true);
-                        @endif
+                        // // For commissioner, keep corporation field disabled
+                        // @if(auth()->user()->role == 'commissioner')
+                        //     $('#f_corp_id').prop('disabled', true);
+                        // @endif
 
                         $('#zoneModal').modal('show');
                     },
