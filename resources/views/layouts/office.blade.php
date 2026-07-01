@@ -192,6 +192,10 @@
                         <i class="bi bi-map"></i>
                         <span class="ol-nav-label">Zones</span>
                     </a>
+                    <a href="{{ route('commissioner.wards.index') }}" class="ol-nav-item">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                        <span class="ol-nav-label">Wards</span>
+                    </a>
                 @endif
             @endauth
 

@@ -17,22 +17,33 @@
             <input type="text" id="wardSearch" class="form-control" placeholder="Search by ward number or zone">
         </div>
         <div class="d-flex align-items-center gap-2">
-            <select id="corporationFilter" class="form-select app-select">
-                <option value="">All Corporations</option>
-                @foreach ($corporations as $corp)
-                    <option value="{{ $corp->id }}">
-                        {{ $corp->name }}
+            {{-- Only show corporation filter for admin --}}
+            @if(auth()->user()->role == 'admin')
+                <select id="corporationFilter" class="form-select app-select">
+                    <option value="">All Corporations</option>
+                    @foreach ($corporations as $corp)
+                        <option value="{{ $corp->id }}">
+                            {{ $corp->name }}
+                        </option>
+                    @endforeach
+                </select>
+            @endif
+
+            <select id="zoneFilter" class="form-select app-select">
+                <option value="">All Zones</option>
+                @foreach ($zones as $zone)
+                    <option value="{{ $zone->id }}">
+                        {{ $zone->zone_name }}
                     </option>
                 @endforeach
             </select>
-            <select id="zoneFilter" class="form-select app-select">
-                <option value="">All Zones</option>
-            </select>
+
             <select id="statusFilter" class="form-select app-select">
                 <option value="">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
             </select>
+
             <button class="btn btn-success app-btn-sm" data-bs-toggle="modal" data-bs-target="#wardModal" id="addWardBtn">
                 <i class="bi bi-building-add"></i>
                 <span>Add Ward</span>
@@ -84,10 +95,12 @@
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label">Corporation <span class="text-danger">*</span></label>
-                                        <select name="corp_id" id="f_corp_id" class="form-select" required>
+                                        <select name="corp_id" id="f_corp_id" class="form-select" required
+                                            {{ auth()->user()->role == 'commissioner' ? 'disabled' : '' }}>
                                             <option value="">Select Corporation</option>
                                             @foreach ($corporations as $corp)
-                                                <option value="{{ $corp->id }}">
+                                                <option value="{{ $corp->id }}"
+                                                    {{ auth()->user()->role == 'commissioner' && auth()->user()->corporation_id == $corp->id ? 'selected' : '' }}>
                                                     {{ $corp->name }}
                                                 </option>
                                             @endforeach
@@ -96,8 +109,14 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Zone <span class="text-danger">*</span></label>
-                                        <select name="zone_id" id="f_zone_id" class="form-select" required disabled>
-                                            <option value="">First select Corporation</option>
+                                        <select name="zone_id" id="f_zone_id" class="form-select" required
+                                            {{ auth()->user()->role == 'commissioner' ? '' : 'disabled' }}>
+                                            <option value="">Select Zone</option>
+                                            @foreach ($zones as $zone)
+                                                <option value="{{ $zone->id }}">
+                                                    {{ $zone->zone_name }} ({{ $zone->zone_code }})
+                                                </option>
+                                            @endforeach
                                         </select>
                                         <div class="invalid-feedback" id="error-zone_id"></div>
                                     </div>
@@ -175,8 +194,6 @@
                                         </small>
                                         <div class="invalid-feedback" id="error-polygon_file"></div>
                                     </div>
-
-                                    <!-- Road File -->
                                     <div class="col-md-4">
                                         <label class="form-label">Road File (GeoJSON)</label>
                                         <input type="file" name="road_file" id="f_road_file" class="form-control"
@@ -253,7 +270,8 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete Confirmation Modal - Only for admin -->
+    @if(auth()->user()->role == 'admin')
     <div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
             <div class="modal-content">
@@ -273,6 +291,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- View Ward Modal -->
     <div class="modal fade" id="viewModal" tabindex="-1">
@@ -303,8 +322,14 @@
             let currentPage = 1;
             let totalPages = 1;
             let isLoading = false;
+            let userRole = '{{ auth()->user()->role }}';
 
-            // Load zones based on corporation selection in filter
+            // For commissioner, populate zone filter with their zones only
+            @if(auth()->user()->role == 'commissioner')
+                // Zone filter is already populated with commissioner's zones from Blade
+            @endif
+
+            // Load zones based on corporation selection in filter (admin only)
             $('#corporationFilter').on('change', function() {
                 let corpId = $(this).val();
                 let zoneSelect = $('#zoneFilter');
@@ -313,8 +338,9 @@
                 zoneSelect.prop('disabled', true);
 
                 if (corpId) {
+                    let url = "{{ route('admin.zones.byCorporation') }}";
                     $.ajax({
-                        url: "{{ route('admin.zones.byCorporation') }}",
+                        url: url,
                         type: "GET",
                         data: {
                             corp_id: corpId
@@ -324,7 +350,7 @@
                                 $.each(response.data, function(index, zone) {
                                     zoneSelect.append(
                                         `<option value="${zone.id}">${zone.zone_name}</option>`
-                                        );
+                                    );
                                 });
                                 zoneSelect.prop('disabled', false);
                             } else {
@@ -354,8 +380,9 @@
                 zoneSelect.prop('disabled', true);
 
                 if (corpId) {
+                    let url = "{{ route('admin.zones.byCorporation') }}";
                     $.ajax({
-                        url: "{{ route('admin.zones.byCorporation') }}",
+                        url: url,
                         type: "GET",
                         data: {
                             corp_id: corpId
@@ -365,7 +392,7 @@
                                 $.each(response.data, function(index, zone) {
                                     zoneSelect.append(
                                         `<option value="${zone.id}">${zone.zone_name} (${zone.zone_code})</option>`
-                                        );
+                                    );
                                 });
                                 zoneSelect.prop('disabled', false);
                             } else {
@@ -393,8 +420,15 @@
                 let zoneId = $("#zoneFilter").val();
                 let corporationId = $("#corporationFilter").val();
 
+                let url;
+                if (userRole === 'commissioner') {
+                    url = "{{ route('commissioner.ward.list') }}";
+                } else {
+                    url = "{{ route('admin.ward.list') }}";
+                }
+
                 $.ajax({
-                    url: "{{ route('admin.ward.list') }}",
+                    url: url,
                     type: "GET",
                     data: {
                         ward_no: search,
@@ -449,7 +483,6 @@
                 const assetBase = "{{ asset('') }}";
 
                 $.each(wards, function(index, ward) {
-                    // Get zone name properly
                     let zoneName = '-';
                     if (ward.zone) {
                         if (typeof ward.zone === 'object') {
@@ -459,13 +492,11 @@
                         }
                     }
 
-                    // Get corporation name
                     let corporationName = '-';
                     if (ward.zone && typeof ward.zone === 'object' && ward.zone.corporation) {
                         corporationName = ward.zone.corporation.name || '-';
                     }
 
-                    // Image handling
                     let imageUrl = ward.drone_image ?
                         assetBase + ward.drone_image :
                         assetBase + 'images/default-ward.png';
@@ -500,21 +531,21 @@
                                     Ward ${escapeHtml(ward.ward_no)}
                                 </h3>
                                 ${ward.contact_person ? `
-                                        <p class="acard-desc small mb-1">
-                                            <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
-                                            ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
-                                        </p>
-                                    ` : ''}
+                                    <p class="acard-desc small mb-1">
+                                        <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
+                                        ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
+                                    </p>
+                                ` : ''}
                                 ${ward.phone ? `
-                                        <p class="acard-desc small mb-1">
-                                            <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
-                                        </p>
-                                    ` : ''}
+                                    <p class="acard-desc small mb-1">
+                                        <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
+                                    </p>
+                                ` : ''}
                                 ${ward.email ? `
-                                        <p class="acard-desc small mb-1">
-                                            <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
-                                        </p>
-                                    ` : ''}
+                                    <p class="acard-desc small mb-1">
+                                        <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
+                                    </p>
+                                ` : ''}
                                 <div class="acard-footer">
                                     <span class="acard-author">
                                         ${escapeHtml(ward.contact_person || 'No contact')}
@@ -525,14 +556,16 @@
                                 </div>
                                 <div class="d-flex gap-2 mt-3">
                                     <button class="btn btn-info btn-sm flex-fill view-btn" data-id="${ward.id}">
-                                        <i class="bi bi-eye"></i>
+                                        <i class="bi bi-eye"></i> View
                                     </button>
                                     <button class="btn btn-warning btn-sm flex-fill edit-btn" data-id="${ward.id}">
-                                        <i class="bi bi-pencil"></i>
+                                        <i class="bi bi-pencil"></i> Edit
                                     </button>
-                                    <button class="btn btn-danger btn-sm flex-fill delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    ${userRole === 'admin' ? `
+                                        <button class="btn btn-danger btn-sm flex-fill delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -541,7 +574,7 @@
                 $('#wardsGrid').html(html);
             }
 
-            // Render pagination (same as corporation)
+            // Render pagination
             function renderPagination(pagination) {
                 if (!pagination || pagination.last_page <= 1) {
                     $('#paginationContainer').hide();
@@ -636,6 +669,7 @@
                 loadWards(1);
             });
 
+            // Add Ward button
             $('#addWardBtn').on('click', function() {
                 $('#wardForm')[0].reset();
                 $('#currentImage').hide();
@@ -643,13 +677,21 @@
                 $('#wardFormMethod').val('POST');
                 $('#modalTitle').html('<i class="bi bi-building-add me-2"></i> Add Ward');
                 $('#wardSaveBtn').html('Save Ward');
-                $('#f_zone_id').html('<option value="">First select Corporation</option>').prop('disabled',
-                    true);
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
+
+                // For commissioner, zone dropdown should be enabled
+                @if(auth()->user()->role == 'commissioner')
+                    $('#f_zone_id').prop('disabled', false);
+                    $('#f_corp_id').prop('disabled', true);
+                @else
+                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop('disabled', true);
+                @endif
+
                 $('#wardModal').modal('show');
             });
 
+            // Submit form with role-based URL
             $('#wardForm').on('submit', function(e) {
                 e.preventDefault();
                 $('.is-invalid').removeClass('is-invalid');
@@ -658,11 +700,21 @@
                 let formData = new FormData(this);
                 let wardId = $('#wardId').val();
                 let method = $('#wardFormMethod').val();
-                let url = "{{ route('admin.wards.store') }}";
+                let url;
 
                 if (method === 'PUT') {
-                    url = "/admin/wards/" + wardId;
+                    if (userRole === 'commissioner') {
+                        url = "/commissioner/wards/" + wardId;
+                    } else {
+                        url = "/admin/wards/" + wardId;
+                    }
                     formData.append('_method', 'PUT');
+                } else {
+                    if (userRole === 'commissioner') {
+                        url = "/commissioner/wards";
+                    } else {
+                        url = "/admin/wards";
+                    }
                 }
 
                 $('#wardSaveBtn').prop('disabled', true).html(
@@ -702,10 +754,19 @@
                 });
             });
 
+            // Edit button with role-based URL
             $(document).on('click', '.edit-btn', function() {
                 let id = $(this).data('id');
+                let url;
+
+                if (userRole === 'commissioner') {
+                    url = "/commissioner/wards/" + id;
+                } else {
+                    url = "/admin/wards/" + id;
+                }
+
                 $.ajax({
-                    url: "/admin/wards/" + id,
+                    url: url,
                     type: "GET",
                     success: function(response) {
                         let ward = response.data;
@@ -718,11 +779,15 @@
                             corpId = ward.zone.corp_id;
                         }
                         $('#f_corp_id').val(corpId);
-                        $('#f_corp_id').trigger('change');
 
-                        setTimeout(() => {
+                        @if(auth()->user()->role == 'admin')
+                            $('#f_corp_id').trigger('change');
+                            setTimeout(() => {
+                                $('#f_zone_id').val(ward.zone_id);
+                            }, 500);
+                        @else
                             $('#f_zone_id').val(ward.zone_id);
-                        }, 500);
+                        @endif
 
                         $('#f_ward_no').val(ward.ward_no);
 
@@ -765,6 +830,8 @@
                 });
             });
 
+            // Delete button - Only for admin
+            @if(auth()->user()->role == 'admin')
             $(document).on('click', '.delete-btn', function() {
                 let id = $(this).data('id');
                 let name = $(this).data('name');
@@ -795,11 +862,21 @@
                     }
                 });
             });
+            @endif
 
+            // View button with role-based URL
             $(document).on('click', '.view-btn', function() {
                 let id = $(this).data('id');
+                let url;
+
+                if (userRole === 'commissioner') {
+                    url = "/commissioner/wards/" + id;
+                } else {
+                    url = "/admin/wards/" + id;
+                }
+
                 $.ajax({
-                    url: "/admin/wards/" + id,
+                    url: url,
                     type: "GET",
                     success: function(response) {
                         let ward = response.data;
@@ -824,8 +901,8 @@
                                 <div class="col-12 text-center mb-3">
                                     ${imageUrl ? `<img src="${imageUrl}" alt="${escapeHtml(ward.ward_no)}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 10px;">` :
                                         `<div style="width: 150px; height: 150px; background: #e9ecef; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;">
-                                                <i class="bi bi-building fs-1 text-muted"></i>
-                                            </div>`}
+                                            <i class="bi bi-building fs-1 text-muted"></i>
+                                        </div>`}
                                 </div>
                                 <div class="col-md-6"><strong>Corporation:</strong><br><p>${escapeHtml(corporationName)}</p></div>
                                 <div class="col-md-6"><strong>Zone:</strong><br><p>${escapeHtml(zoneName)}</p></div>

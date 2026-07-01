@@ -8,28 +8,53 @@ use App\Models\Zone;
 use App\Models\Corporation;
 use App\Services\WardService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class WardController extends Controller
-
 {
+    protected $wardService;
+
+    public function __construct(WardService $wardService)
+    {
+        $this->wardService = $wardService;
+    }
+
     /**
      * Display a listing of the resource.
      */
-    protected $wardService;
-
-    public function __construct(
-        WardService $wardService
-    ) {
-        $this->wardService = $wardService;
-    }
     public function index()
     {
-        $corporations = Corporation::where('status', 'active')->orderBy('name')->get();
-        $zones = Zone::with('corporation')->where('status', 'active')->orderBy('zone_name')->get();
+        $user = Auth::user();
+
+        // Get corporations based on role
+        if ($user->role == 'commissioner') {
+            // Commissioner can only see their corporation
+            $corporations = Corporation::where('id', $user->corporation_id)
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get();
+
+            // Get zones for their corporation only
+            $zones = Zone::where('corp_id', $user->corporation_id)
+                ->where('status', 'active')
+                ->with('corporation')
+                ->orderBy('zone_name')
+                ->get();
+        } else {
+            // Admin can see all
+            $corporations = Corporation::where('status', 'active')
+                ->orderBy('name')
+                ->get();
+
+            $zones = Zone::with('corporation')
+                ->where('status', 'active')
+                ->orderBy('zone_name')
+                ->get();
+        }
 
         return view('main.admin.ward', compact('corporations', 'zones'));
     }
@@ -39,7 +64,15 @@ class WardController extends Controller
      */
     public function list(Request $request)
     {
+        $user = Auth::user();
         $query = Ward::with(['zone.corporation', 'zone']);
+
+        // Commissioner can only view wards in their corporation
+        if ($user->role == 'commissioner') {
+            $query->whereHas('zone', function ($q) use ($user) {
+                $q->where('corp_id', $user->corporation_id);
+            });
+        }
 
         if ($request->filled('ward_no')) {
             $query->where('ward_no', 'like', '%' . $request->ward_no . '%');
@@ -60,7 +93,8 @@ class WardController extends Controller
             $query->where('zone_id', $request->zone_id);
         }
 
-        if ($request->filled('corp_id')) {
+        // Allow corp_id filter only for admin
+        if ($user->role != 'commissioner' && $request->filled('corp_id')) {
             $query->whereHas('zone', function ($q) use ($request) {
                 $q->where('corp_id', $request->corp_id);
             });
@@ -79,6 +113,19 @@ class WardController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+
+        // Commissioner can only create wards in their corporation
+        if ($user->role == 'commissioner') {
+            $zone = Zone::find($request->zone_id);
+            if (!$zone || $zone->corp_id != $user->corporation_id) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You can only create wards in your corporation\'s zones'
+                ], 403);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'corp_id' => 'required|exists:corporations,id',
             'zone_id' => 'required|exists:zones,id',
@@ -124,7 +171,7 @@ class WardController extends Controller
                 throw new \Exception('Selected zone does not belong to the chosen corporation');
             }
 
-            // Handle drone image upload using CommonHelper (same as corporation)
+            // Handle drone image upload
             $droneImagePath = null;
             if ($request->hasFile('drone_image')) {
                 $droneImagePath = CommonHelper::uploadProfileImage(
@@ -141,10 +188,7 @@ class WardController extends Controller
                     true
                 );
 
-                if (
-                    isset($geojsonData['features'][0]['geometry']) &&
-                    isset($geojsonData['features'][0]['geometry']['coordinates'])
-                ) {
+                if (isset($geojsonData['features'][0]['geometry']['coordinates'])) {
                     $boundary = json_encode([
                         'coordinates' => $geojsonData['features'][0]['geometry']['coordinates']
                     ]);
@@ -174,10 +218,8 @@ class WardController extends Controller
 
             $createTable = $this->wardService->createWardTables($ward->id);
             if ($createTable) {
-                $polygonTable     = $createTable['polygon'];
-                $pointTable       = $createTable['point'];
-                $polygonDataTable = $createTable['polygon_data'];
-                $pointDataTable   = $createTable['point_data'];
+                $polygonTable = $createTable['polygon'];
+                $pointTable = $createTable['point'];
                 if ($request->hasFile('polygon_file')) {
                     $result = $this->wardService->createPolygonUpdate(
                         $polygonTable,
@@ -208,6 +250,19 @@ class WardController extends Controller
      */
     public function show(Ward $ward)
     {
+        $user = Auth::user();
+
+        // Check if commissioner has access to this ward
+        if ($user->role == 'commissioner') {
+            $zone = Zone::find($ward->zone_id);
+            if (!$zone || $zone->corp_id != $user->corporation_id) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized to view this ward'
+                ], 403);
+            }
+        }
+
         $ward->load(['zone.corporation', 'zone']);
 
         return response()->json([
@@ -221,6 +276,28 @@ class WardController extends Controller
      */
     public function update(Request $request, Ward $ward)
     {
+        $user = Auth::user();
+
+        // Check if commissioner has access to update this ward
+        if ($user->role == 'commissioner') {
+            $zone = Zone::find($ward->zone_id);
+            if (!$zone || $zone->corp_id != $user->corporation_id) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized to update this ward'
+                ], 403);
+            }
+
+            // Commissioner can only update wards in their corporation's zones
+            $newZone = Zone::find($request->zone_id);
+            if (!$newZone || $newZone->corp_id != $user->corporation_id) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You can only update wards in your corporation\'s zones'
+                ], 403);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'corp_id' => 'required|exists:corporations,id',
             'zone_id' => 'required|exists:zones,id',
@@ -266,9 +343,8 @@ class WardController extends Controller
                 throw new \Exception('Selected zone does not belong to the chosen corporation');
             }
 
-            // Handle drone image upload using CommonHelper (same as corporation)
+            // Handle drone image upload
             if ($request->hasFile('drone_image')) {
-                // Delete old image if exists and not a default avatar
                 if ($ward->drone_image && !str_starts_with($ward->drone_image, 'http')) {
                     Storage::disk('public')->delete($ward->drone_image);
                 }
@@ -286,10 +362,7 @@ class WardController extends Controller
                     true
                 );
 
-                if (
-                    isset($geojsonData['features'][0]['geometry']) &&
-                    isset($geojsonData['features'][0]['geometry']['coordinates'])
-                ) {
+                if (isset($geojsonData['features'][0]['geometry']['coordinates'])) {
                     $ward->boundary = json_encode([
                         'coordinates' => $geojsonData['features'][0]['geometry']['coordinates']
                     ]);
@@ -314,12 +387,11 @@ class WardController extends Controller
             $ward->address = $request->address;
 
             $ward->save();
+
             $createTable = $this->wardService->createWardTables($ward->id);
             if ($createTable) {
-                $polygonTable     = $createTable['polygon'];
-                $pointTable       = $createTable['point'];
-                $polygonDataTable = $createTable['polygon_data'];
-                $pointDataTable   = $createTable['point_data'];
+                $polygonTable = $createTable['polygon'];
+                $pointTable = $createTable['point'];
                 if ($request->hasFile('polygon_file')) {
                     $result = $this->wardService->createPolygonUpdate(
                         $polygonTable,
@@ -350,17 +422,24 @@ class WardController extends Controller
      */
     public function destroy(Ward $ward)
     {
+        $user = Auth::user();
+
+        // Commissioner cannot delete wards
+        if ($user->role == 'commissioner') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Commissioners cannot delete wards'
+            ], 403);
+        }
+
         DB::beginTransaction();
 
         try {
-            // Delete drone image if exists and not a default avatar
             if ($ward->drone_image && !str_starts_with($ward->drone_image, 'http')) {
                 Storage::disk('public')->delete($ward->drone_image);
             }
 
-            // Drop ward-specific tables
             $this->wardService->dropWardTables($ward->id);
-
             $ward->delete();
 
             DB::commit();

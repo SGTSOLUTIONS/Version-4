@@ -100,6 +100,12 @@ Route::middleware(['auth', 'role:commissioner'])->prefix('commissioner')->name('
     Route::resource('corporations', CorporationController::class);
     Route::get('corporations/{corporation}', [CorporationController::class, 'show'])->name('corporations.show');
     Route::put('corporations/{corporation}', [CorporationController::class, 'update'])->name('corporations.update');
+    // Ward routes
+    Route::get('wards/list', [WardController::class, 'list'])->name('ward.list');
+     Route::resource('wards', WardController::class);
+    Route::get('wards/{ward}', [WardController::class, 'show'])->name('wards.show');
+    Route::post('wards', [WardController::class, 'store'])->name('wards.store');
+    Route::put('wards/{ward}', [WardController::class, 'update'])->name('wards.update');
 
     // Add commissioner specific routes here
 });

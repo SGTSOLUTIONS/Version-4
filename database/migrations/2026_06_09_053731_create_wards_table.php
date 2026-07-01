@@ -1,102 +1,69 @@
 <?php
 
-namespace App\Http\Controllers;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use App\Models\Ward;
-use App\Models\Zone;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-
-class MapController extends Controller
+return new class extends Migration
 {
-    public function map()
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
     {
-        $user = Auth::user();
+        Schema::create('wards', function (Blueprint $table) {
+            $table->id();
 
-        // Allow only Team Leader and Surveyor
-        if (!in_array($user->role, ['teamleader', 'surveyor'])) {
-            abort(403, 'Unauthorized access');
-        }
+            // Foreign Key
+            $table->foreignId('zone_id')
+                  ->constrained('zones')
+                  ->cascadeOnUpdate()
+                  ->cascadeOnDelete();
 
-        // Handle ward_ids (single or comma separated)
-        $wardIds = explode(',', $user->ward_ids);
+            // Ward Details
+            $table->string('ward_no', 50)->unique();
 
-        $wardId = trim($wardIds[0]);
+            // Drone Image
+            $table->string('drone_image')->nullable();
 
-        $ward = Ward::findOrFail($wardId);
+            // Map Extents
+            $table->decimal('extent_left', 12, 6)->nullable();
+            $table->decimal('extent_right', 12, 6)->nullable();
+            $table->decimal('extent_top', 12, 6)->nullable();
+            $table->decimal('extent_bottom', 12, 6)->nullable();
 
-        $zone = Zone::findOrFail($ward->zone_id);
+            // GeoJSON / WKT Boundary
+            $table->longText('boundary')->nullable();
 
-        $corp = $zone->corp_id;
-        $wardNo = $ward->ward_no;
+            // Optional Zone Name
+            $table->string('zone')->nullable();
 
-        // Dynamic table names
-        $polygonsTableName = "polygons_{$wardId}";
-        $linesTableName = "lines_{$wardId}";
-        $pointsTableName = "points_{$wardId}";
-        $polygonDataTableName = "polygon_data_{$wardId}";
-        $pointDataTableName = "point_data_{$wardId}";
+            // Contact Information
+            $table->string('contact_person')->nullable();
+            $table->string('designation')->nullable();
+            $table->string('phone', 20)->nullable();
+            $table->string('email')->nullable();
+            $table->text('address')->nullable();
 
-        $misTableName = "mis_{$corp}";
-        $waterTaxTableName = "water_tax_{$corp}";
+            // Status
+            $table->enum('status', ['active', 'inactive'])
+                  ->default('active');
 
-        // Check tables exist
-        foreach ([
-            $polygonsTableName,
-            $linesTableName,
-            $pointsTableName,
-            $polygonDataTableName,
-            $pointDataTableName,
-            $misTableName,
-            $waterTaxTableName
-        ] as $table) {
-            if (!DB::getSchemaBuilder()->hasTable($table)) {
-                abort(404, "Table '{$table}' does not exist.");
-            }
-        }
+            $table->timestamps();
+            $table->softDeletes();
 
-        // GIS Data
-        $polygons = DB::table($polygonsTableName)->get();
-        $lines = DB::table($linesTableName)->get();
-        $points = DB::table($pointsTableName)->get();
-        $polygonDatas = DB::table($polygonDataTableName)->get();
-        $pointDatas = DB::table($pointDataTableName)->get();
-
-        // MIS + Water Tax
-        $misData = DB::table($misTableName . ' as mis')
-            ->leftJoin(
-                $waterTaxTableName . ' as wt',
-                'mis.assessment',
-                '=',
-                'wt.assessment'
-            )
-            ->where('mis.ward_no', $wardNo)
-            ->select(
-                'mis.*',
-                'wt.watertax_no',
-                'wt.old_watertax_no'
-            )
-            ->get();
-
-        // Road Names
-        $uniqueRoadNames = DB::table($misTableName)
-            ->select('road_name')
-            ->whereNotNull('road_name')
-            ->where('road_name', '!=', '')
-            ->distinct()
-            ->orderBy('road_name')
-            ->pluck('road_name');
-
-        return view('map.mapview', compact(
-            'ward',
-            'zone',
-            'polygons',
-            'points',
-            'lines',
-            'polygonDatas',
-            'pointDatas',
-            'misData',
-            'uniqueRoadNames'
-        ));
+            // Indexes
+            $table->index('zone_id');
+            $table->index('ward_no');
+            $table->index('status');
+        });
     }
-}
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('wards');
+    }
+};
