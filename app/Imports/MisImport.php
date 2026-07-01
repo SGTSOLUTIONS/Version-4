@@ -158,7 +158,7 @@ class MisImport implements ToCollection, WithHeadingRow, WithValidation
         return [
             'assessment' => 'nullable|string|max:100',
             'gisid' => 'nullable|string|max:100',
-            'ward_no' => 'nullable|string|max:50',
+            'ward_no' => 'nullable|max:50',
             'plot_area' => 'nullable|numeric',
             'half_year_tax' => 'nullable|numeric',
             'balance' => 'nullable|numeric',
