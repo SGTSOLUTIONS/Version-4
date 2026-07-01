@@ -204,7 +204,7 @@ class WardController extends Controller
                     }
                 }
 
-                // Create ward - extents stored as strings to avoid numeric overflow
+                // Create ward
                 $ward = Ward::create([
                     'zone_id' => $request->zone_id,
                     'ward_no' => $request->ward_no,
@@ -392,7 +392,7 @@ class WardController extends Controller
                     }
                 }
 
-                // Update ward details - extents stored as strings
+                // Update ward details
                 $ward->zone_id = $request->zone_id;
                 $ward->ward_no = $request->ward_no;
                 $ward->extent_left = $request->extent_left;
@@ -465,15 +465,11 @@ class WardController extends Controller
             DB::beginTransaction();
 
             try {
-                // Delete drone image if exists
                 if ($ward->drone_image && !str_starts_with($ward->drone_image, 'http')) {
                     Storage::disk('public')->delete($ward->drone_image);
                 }
 
-                // Drop ward tables
                 $this->wardService->dropWardTables($ward->id);
-
-                // Delete ward
                 $ward->delete();
 
                 // Commit transaction

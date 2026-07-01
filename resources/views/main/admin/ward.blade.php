@@ -18,7 +18,7 @@
         </div>
         <div class="d-flex align-items-center gap-2">
             {{-- Only show corporation filter for admin --}}
-            @if(auth()->user()->role == 'admin')
+            @if (auth()->user()->role == 'admin')
                 <select id="corporationFilter" class="form-select app-select">
                     <option value="">All Corporations</option>
                     @foreach ($corporations as $corp)
@@ -95,7 +95,7 @@
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label">Corporation <span class="text-danger">*</span></label>
-                                        <select name="corp_id" id="f_corp_id" class="form-select" required
+                                        <select name="corp_id_display" id="f_corp_id" class="form-select" required
                                             {{ auth()->user()->role == 'commissioner' ? 'disabled' : '' }}>
                                             <option value="">Select Corporation</option>
                                             @foreach ($corporations as $corp)
@@ -105,6 +105,9 @@
                                                 </option>
                                             @endforeach
                                         </select>
+                                        <!-- Hidden field to send corp_id when disabled -->
+                                        <input type="hidden" name="corp_id" id="f_corp_id_hidden"
+                                            value="{{ auth()->user()->role == 'commissioner' ? auth()->user()->corporation_id : '' }}">
                                         <div class="invalid-feedback" id="error-corp_id"></div>
                                     </div>
                                     <div class="col-md-6">
@@ -271,26 +274,26 @@
     </div>
 
     <!-- Delete Confirmation Modal - Only for admin -->
-    @if(auth()->user()->role == 'admin')
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
-            <div class="modal-content">
-                <div class="modal-body text-center py-4">
-                    <div
-                        style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
-                        <i class="bi bi-trash3" style="font-size:22px;color:#ef4444;"></i>
+    @if (auth()->user()->role == 'admin')
+        <div class="modal fade" id="deleteModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+                <div class="modal-content">
+                    <div class="modal-body text-center py-4">
+                        <div
+                            style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                            <i class="bi bi-trash3" style="font-size:22px;color:#ef4444;"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1">Delete Ward?</h6>
+                        <p class="text-muted" style="font-size:0.8rem;" id="deleteWardName"></p>
+                        <input type="hidden" id="deleteWardId">
                     </div>
-                    <h6 class="fw-bold mb-1">Delete Ward?</h6>
-                    <p class="text-muted" style="font-size:0.8rem;" id="deleteWardName"></p>
-                    <input type="hidden" id="deleteWardId">
-                </div>
-                <div class="modal-footer border-0 justify-content-center gap-2 pt-0">
-                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">Delete</button>
+                    <div class="modal-footer border-0 justify-content-center gap-2 pt-0">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">Delete</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     @endif
 
     <!-- View Ward Modal -->
@@ -325,7 +328,7 @@
             let userRole = '{{ auth()->user()->role }}';
 
             // For commissioner, populate zone filter with their zones only
-            @if(auth()->user()->role == 'commissioner')
+            @if (auth()->user()->role == 'commissioner')
                 // Zone filter is already populated with commissioner's zones from Blade
             @endif
 
@@ -531,21 +534,21 @@
                                     Ward ${escapeHtml(ward.ward_no)}
                                 </h3>
                                 ${ward.contact_person ? `
-                                    <p class="acard-desc small mb-1">
-                                        <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
-                                        ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
-                                    </p>
-                                ` : ''}
+                                                <p class="acard-desc small mb-1">
+                                                    <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
+                                                    ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
+                                                </p>
+                                            ` : ''}
                                 ${ward.phone ? `
-                                    <p class="acard-desc small mb-1">
-                                        <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
-                                    </p>
-                                ` : ''}
+                                                <p class="acard-desc small mb-1">
+                                                    <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
+                                                </p>
+                                            ` : ''}
                                 ${ward.email ? `
-                                    <p class="acard-desc small mb-1">
-                                        <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
-                                    </p>
-                                ` : ''}
+                                                <p class="acard-desc small mb-1">
+                                                    <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
+                                                </p>
+                                            ` : ''}
                                 <div class="acard-footer">
                                     <span class="acard-author">
                                         ${escapeHtml(ward.contact_person || 'No contact')}
@@ -562,10 +565,10 @@
                                         <i class="bi bi-pencil"></i> Edit
                                     </button>
                                     ${userRole === 'admin' ? `
-                                        <button class="btn btn-danger btn-sm flex-fill delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
-                                    ` : ''}
+                                                    <button class="btn btn-danger btn-sm flex-fill delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}">
+                                                        <i class="bi bi-trash"></i> Delete
+                                                    </button>
+                                                ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -589,7 +592,7 @@
                         `<li class="page-item"><a class="page-link" href="#" data-page="${pagination.current_page - 1}">&laquo; Previous</a></li>`;
                 } else {
                     html +=
-                    `<li class="page-item disabled"><a class="page-link" href="#">&laquo; Previous</a></li>`;
+                        `<li class="page-item disabled"><a class="page-link" href="#">&laquo; Previous</a></li>`;
                 }
 
                 if (pagination.current_page > 3) {
@@ -606,7 +609,7 @@
                             `<li class="page-item active"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
                     } else {
                         html +=
-                        `<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                            `<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
                     }
                 }
 
@@ -629,7 +632,7 @@
 
                 let start = pagination.from || ((pagination.current_page - 1) * pagination.per_page + 1);
                 let end = pagination.to || Math.min(pagination.current_page * pagination.per_page, pagination
-                .total);
+                    .total);
                 let infoHtml =
                     `<div class="text-center text-muted mt-3">Showing ${start} to ${end} of ${pagination.total} wards</div>`;
 
@@ -680,81 +683,93 @@
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
 
-                // For commissioner, zone dropdown should be enabled
-                @if(auth()->user()->role == 'commissioner')
+                // For commissioner, set hidden field value
+                @if (auth()->user()->role == 'commissioner')
                     $('#f_zone_id').prop('disabled', false);
                     $('#f_corp_id').prop('disabled', true);
+                    $('#f_corp_id_hidden').val('{{ auth()->user()->corporation_id }}');
                 @else
-                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop('disabled', true);
+                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop(
+                        'disabled', true);
+                    $('#f_corp_id').prop('disabled', false);
+                    $('#f_corp_id_hidden').val('');
                 @endif
 
                 $('#wardModal').modal('show');
             });
 
+
             // Submit form with role-based URL
-            $('#wardForm').on('submit', function(e) {
-                e.preventDefault();
-                $('.is-invalid').removeClass('is-invalid');
-                $('.invalid-feedback').text('');
+          $('#wardForm').on('submit', function(e) {
+    e.preventDefault();
+    $('.is-invalid').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
 
-                let formData = new FormData(this);
-                let wardId = $('#wardId').val();
-                let method = $('#wardFormMethod').val();
-                let url;
+    // For commissioner, ensure corp_id is sent via hidden field
+    @if(auth()->user()->role == 'commissioner')
+        // The hidden field already has the value
+        // Make sure the select is disabled but hidden field is set
+        if (!$('#f_corp_id_hidden').val()) {
+            $('#f_corp_id_hidden').val('{{ auth()->user()->corporation_id }}');
+        }
+    @endif
 
-                if (method === 'PUT') {
-                    if (userRole === 'commissioner') {
-                        url = "/commissioner/wards/" + wardId;
-                    } else {
-                        url = "/admin/wards/" + wardId;
-                    }
-                    formData.append('_method', 'PUT');
-                } else {
-                    if (userRole === 'commissioner') {
-                        url = "/commissioner/wards";
-                    } else {
-                        url = "/admin/wards";
-                    }
-                }
+    let formData = new FormData(this);
+    let wardId = $('#wardId').val();
+    let method = $('#wardFormMethod').val();
+    let url;
 
-                $('#wardSaveBtn').prop('disabled', true).html(
-                    '<span class="spinner-border spinner-border-sm me-1"></span> Saving...');
+    if (method === 'PUT') {
+        if (userRole === 'commissioner') {
+            url = "/commissioner/wards/" + wardId;
+        } else {
+            url = "/admin/wards/" + wardId;
+        }
+        formData.append('_method', 'PUT');
+    } else {
+        if (userRole === 'commissioner') {
+            url = "/commissioner/wards";
+        } else {
+            url = "/admin/wards";
+        }
+    }
 
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
-                        $('#wardForm')[0].reset();
-                        $('#wardModal').modal('hide');
-                        showFlashMessage(response.message || 'Ward saved successfully',
-                            'success');
-                        loadWards(currentPage);
-                    },
-                    error: function(xhr) {
-                        $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
-                        if (xhr.status === 422) {
-                            let errors = xhr.responseJSON.errors;
-                            $.each(errors, function(field, messages) {
-                                $('[name="' + field + '"]').addClass('is-invalid');
-                                $('#error-' + field).text(messages[0]);
-                            });
-                            showFlashMessage('Please fix validation errors', 'error');
-                        } else {
-                            showFlashMessage(xhr.responseJSON?.message ||
-                                'Something went wrong', 'error');
-                        }
-                    }
+    $('#wardSaveBtn').prop('disabled', true).html(
+        '<span class="spinner-border spinner-border-sm me-1"></span> Saving...');
+
+    $.ajax({
+        url: url,
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
+            $('#wardForm')[0].reset();
+            $('#wardModal').modal('hide');
+            showFlashMessage(response.message || 'Ward saved successfully', 'success');
+            loadWards(currentPage);
+        },
+        error: function(xhr) {
+            $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
+            if (xhr.status === 422) {
+                let errors = xhr.responseJSON.errors;
+                $.each(errors, function(field, messages) {
+                    $('[name="' + field + '"]').addClass('is-invalid');
+                    $('#error-' + field).text(messages[0]);
                 });
-            });
-
-            // Edit button with role-based URL
+                showFlashMessage('Please fix validation errors', 'error');
+            } else {
+                let errorMessage = xhr.responseJSON?.message || 'Something went wrong';
+                showFlashMessage(errorMessage, 'error');
+                console.error('Server error:', xhr.responseJSON);
+            }
+        }
+    });
+});
             $(document).on('click', '.edit-btn', function() {
                 let id = $(this).data('id');
                 let url;
@@ -779,14 +794,16 @@
                             corpId = ward.zone.corp_id;
                         }
                         $('#f_corp_id').val(corpId);
+                        $('#f_corp_id_hidden').val(corpId); // Set hidden field
 
-                        @if(auth()->user()->role == 'admin')
+                        @if (auth()->user()->role == 'admin')
                             $('#f_corp_id').trigger('change');
                             setTimeout(() => {
                                 $('#f_zone_id').val(ward.zone_id);
                             }, 500);
                         @else
                             $('#f_zone_id').val(ward.zone_id);
+                            $('#f_corp_id').prop('disabled', true);
                         @endif
 
                         $('#f_ward_no').val(ward.ward_no);
@@ -830,38 +847,40 @@
                 });
             });
 
+
             // Delete button - Only for admin
-            @if(auth()->user()->role == 'admin')
-            $(document).on('click', '.delete-btn', function() {
-                let id = $(this).data('id');
-                let name = $(this).data('name');
-                $('#deleteWardId').val(id);
-                $('#deleteWardName').text(`This will permanently remove "${name}" and all its data.`);
-                $('#deleteModal').modal('show');
-            });
-
-            $('#confirmDeleteBtn').on('click', function() {
-                let id = $('#deleteWardId').val();
-                if (!id) return;
-
-                $.ajax({
-                    url: "/admin/wards/" + id,
-                    type: "DELETE",
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        $('#deleteModal').modal('hide');
-                        showFlashMessage(response.message || 'Ward deleted successfully',
-                            'success');
-                        loadWards(1);
-                    },
-                    error: function(xhr) {
-                        showFlashMessage(xhr.responseJSON?.message || 'Failed to delete ward',
-                            'error');
-                    }
+            @if (auth()->user()->role == 'admin')
+                $(document).on('click', '.delete-btn', function() {
+                    let id = $(this).data('id');
+                    let name = $(this).data('name');
+                    $('#deleteWardId').val(id);
+                    $('#deleteWardName').text(`This will permanently remove "${name}" and all its data.`);
+                    $('#deleteModal').modal('show');
                 });
-            });
+
+                $('#confirmDeleteBtn').on('click', function() {
+                    let id = $('#deleteWardId').val();
+                    if (!id) return;
+
+                    $.ajax({
+                        url: "/admin/wards/" + id,
+                        type: "DELETE",
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            $('#deleteModal').modal('hide');
+                            showFlashMessage(response.message || 'Ward deleted successfully',
+                                'success');
+                            loadWards(1);
+                        },
+                        error: function(xhr) {
+                            showFlashMessage(xhr.responseJSON?.message ||
+                                'Failed to delete ward',
+                                'error');
+                        }
+                    });
+                });
             @endif
 
             // View button with role-based URL
@@ -901,8 +920,8 @@
                                 <div class="col-12 text-center mb-3">
                                     ${imageUrl ? `<img src="${imageUrl}" alt="${escapeHtml(ward.ward_no)}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 10px;">` :
                                         `<div style="width: 150px; height: 150px; background: #e9ecef; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;">
-                                            <i class="bi bi-building fs-1 text-muted"></i>
-                                        </div>`}
+                                                        <i class="bi bi-building fs-1 text-muted"></i>
+                                                    </div>`}
                                 </div>
                                 <div class="col-md-6"><strong>Corporation:</strong><br><p>${escapeHtml(corporationName)}</p></div>
                                 <div class="col-md-6"><strong>Zone:</strong><br><p>${escapeHtml(zoneName)}</p></div>
