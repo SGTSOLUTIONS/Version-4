@@ -301,7 +301,7 @@ class PointdataController extends Controller
 
         if ($request->assessment_type === 'OLD') {
             $exists = DB::table($misTableName)
-                ->where('assessement', $request->assessment)
+                ->where('assessment', $request->assessment)
                 ->where('ward_no', $ward->ward_no)
                 ->exists();
 
@@ -315,7 +315,7 @@ class PointdataController extends Controller
             }
         } elseif ($request->assessment_type === 'NEW') {
             $exists = DB::table($misTableName)
-                ->where('assessement', $request->assessment)
+                ->where('assessment', $request->assessment)
                 ->exists();
 
             if ($exists) {
@@ -328,7 +328,7 @@ class PointdataController extends Controller
             }
         } elseif ($request->assessment_type === 'OTHER_WARD') {
             $exists = DB::table($misTableName)
-                ->where('assessement', $request->assessment)
+                ->where('assessment', $request->assessment)
                 ->whereNotIn('ward_no', [$ward->ward_no])
                 ->exists();
 
