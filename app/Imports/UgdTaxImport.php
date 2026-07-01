@@ -131,7 +131,7 @@ class UgdTaxImport implements ToCollection, WithHeadingRow, WithValidation
     public function rules(): array
     {
         return [
-            'ugd_no' => 'nullable|string|max:100',
+            'ugd_no' => 'nullable|max:100',
             'assessment' => 'nullable|string|max:100',
             'owner_name' => 'nullable|string|max:255',
             'slab_rate' => 'nullable|numeric',

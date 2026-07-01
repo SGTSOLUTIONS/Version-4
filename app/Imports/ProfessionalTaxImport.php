@@ -119,7 +119,7 @@ class ProfessionalTaxImport implements ToCollection, WithHeadingRow, WithValidat
     public function rules(): array
     {
         return [
-            'pt_number' => 'nullable|string|max:100',
+            'pt_number' => 'nullable|max:100',
             'employee_count' => 'nullable|integer',
             'half_year_tax' => 'nullable|numeric',
             'arrears' => 'nullable|numeric',

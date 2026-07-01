@@ -161,7 +161,7 @@ class WaterTaxImport implements ToCollection, WithHeadingRow, WithValidation
     public function rules(): array
     {
         return [
-            'watertax_no' => 'nullable|string|max:100',
+            'watertax_no' => 'nullable|max:100',
             'assessment' => 'nullable|string|max:100',
             'slab_rate' => 'nullable|numeric',
             'balance' => 'nullable|numeric',
