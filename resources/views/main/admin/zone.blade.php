@@ -24,7 +24,7 @@
             </select>
 
             {{-- Only show corporation filter for admin --}}
-            @if(auth()->user()->role == 'admin')
+            @if (auth()->user()->role == 'admin')
                 <select id="corpFilter" class="form-select app-select">
                     <option value="">All Corporations</option>
                     @foreach ($corporations as $corp)
@@ -110,7 +110,8 @@
 
                                     <div class="col-md-6">
                                         <label class="form-label">Total Wards</label>
-                                        <input type="number" name="total_wards" id="f_total_wards" class="form-control" min="0">
+                                        <input type="number" name="total_wards" id="f_total_wards" class="form-control"
+                                            min="0">
                                     </div>
 
                                     <div class="col-12">
@@ -130,7 +131,8 @@
 
                                     <div class="col-md-4">
                                         <label class="form-label">Contact Person</label>
-                                        <input type="text" name="contact_person" id="f_contact_person" class="form-control">
+                                        <input type="text" name="contact_person" id="f_contact_person"
+                                            class="form-control">
                                     </div>
 
                                     <div class="col-md-4">
@@ -195,7 +197,8 @@
         <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
             <div class="modal-content">
                 <div class="modal-body text-center py-4">
-                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                    <div
+                        style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
                         <i class="bi bi-trash3" style="font-size:22px;color:#ef4444;"></i>
                     </div>
                     <h6 class="fw-bold mb-1">Delete Zone?</h6>
@@ -219,8 +222,9 @@
             let userRole = '{{ auth()->user()->role }}';
 
             // If commissioner, disable corporation selection in form
-            @if(auth()->user()->role == 'commissioner')
-                $('#f_corp_id').prop('disabled', true);
+            @if (auth()->user()->role == 'commissioner')
+                $('#f_corp_id').prop('disabled', false); // Enable it
+                $('#f_corp_id').prop('readonly', true); // But make it readonly
             @endif
 
             // Get the base URL for the current role
@@ -324,27 +328,27 @@
                                 </h3>
 
                                 ${zone.total_wards ? `
-                                    <div class="mb-2">
-                                        <i class="bi bi-diagram-2"></i>
-                                        <span>Total Wards: ${zone.total_wards}</span>
-                                    </div>
-                                ` : ''}
+                                        <div class="mb-2">
+                                            <i class="bi bi-diagram-2"></i>
+                                            <span>Total Wards: ${zone.total_wards}</span>
+                                        </div>
+                                    ` : ''}
 
                                 <p class="acard-desc">
                                     ${escapeHtml(zone.description ?? 'No description available')}
                                 </p>
 
                                 ${zone.contact_person ? `
-                                    <div class="small mb-1">
-                                        <i class="bi bi-person"></i> ${escapeHtml(zone.contact_person)}
-                                    </div>
-                                ` : ''}
+                                        <div class="small mb-1">
+                                            <i class="bi bi-person"></i> ${escapeHtml(zone.contact_person)}
+                                        </div>
+                                    ` : ''}
 
                                 ${zone.phone ? `
-                                    <div class="small mb-1">
-                                        <i class="bi bi-telephone"></i> ${escapeHtml(zone.phone)}
-                                    </div>
-                                ` : ''}
+                                        <div class="small mb-1">
+                                            <i class="bi bi-telephone"></i> ${escapeHtml(zone.phone)}
+                                        </div>
+                                    ` : ''}
 
                                 <div class="acard-footer">
                                     <span class="badge ${badgeClass}">
@@ -473,8 +477,9 @@
                 $('.invalid-feedback').text('');
 
                 // For commissioner, keep corporation field disabled
-                @if(auth()->user()->role == 'commissioner')
-                    $('#f_corp_id').prop('disabled', true);
+                @if (auth()->user()->role == 'commissioner')
+                    $('#f_corp_id').prop('disabled', false); // Enable it
+                    $('#f_corp_id').prop('readonly', true); // But make it readonly
                 @endif
 
                 $('#zoneModal').modal('show');
@@ -525,7 +530,8 @@
                         $('#zoneSaveBtn').prop('disabled', false).html('Save Zone');
                         $('#zoneForm')[0].reset();
                         $('#zoneModal').modal('hide');
-                        showFlashMessage(response.message || 'Zone saved successfully', 'success');
+                        showFlashMessage(response.message || 'Zone saved successfully',
+                            'success');
                         loadZones();
                     },
                     error: function(xhr) {
@@ -538,7 +544,8 @@
                             });
                             showFlashMessage('Please fix validation errors', 'error');
                         } else {
-                            showFlashMessage(xhr.responseJSON?.message || 'Something went wrong', 'error');
+                            showFlashMessage(xhr.responseJSON?.message ||
+                                'Something went wrong', 'error');
                         }
                     }
                 });
@@ -560,7 +567,8 @@
                     type: "GET",
                     success: function(response) {
                         let zone = response.data;
-                        $('#modalTitle').html('<i class="bi bi-pencil-square me-2"></i> Edit Zone');
+                        $('#modalTitle').html(
+                            '<i class="bi bi-pencil-square me-2"></i> Edit Zone');
                         $('#zoneId').val(zone.id);
                         $('#f_corp_id').val(zone.corp_id);
                         $('#f_zone_name').val(zone.zone_name);
@@ -576,10 +584,11 @@
                         $('#zoneFormMethod').val('PUT');
                         $('#zoneSaveBtn').html('Update Zone');
 
-                        // // For commissioner, keep corporation field disabled
-                        // @if(auth()->user()->role == 'commissioner')
-                        //     $('#f_corp_id').prop('disabled', true);
-                        // @endif
+                        // For commissioner, keep corporation field disabled
+                        @if (auth()->user()->role == 'commissioner')
+                            $('#f_corp_id').prop('disabled', false); // Enable it
+                            $('#f_corp_id').prop('readonly', true); // But make it readonly
+                        @endif
 
                         $('#zoneModal').modal('show');
                     },
@@ -618,11 +627,13 @@
                     },
                     success: function(response) {
                         $('#deleteModal').modal('hide');
-                        showFlashMessage(response.message || 'Zone deleted successfully', 'success');
+                        showFlashMessage(response.message || 'Zone deleted successfully',
+                            'success');
                         loadZones();
                     },
                     error: function(xhr) {
-                        showFlashMessage(xhr.responseJSON?.message || 'Failed to delete zone', 'error');
+                        showFlashMessage(xhr.responseJSON?.message || 'Failed to delete zone',
+                            'error');
                     }
                 });
             });
