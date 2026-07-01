@@ -21,14 +21,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class CorporationController extends Controller
 {
     protected CorporationService $corporationService;
-    protected ImportService $importService;
+
 
     public function __construct(
         CorporationService $corporationService,
-        ImportService $importService
+
     ) {
         $this->corporationService = $corporationService;
-        $this->importService = $importService;
     }
 
     public function index()
