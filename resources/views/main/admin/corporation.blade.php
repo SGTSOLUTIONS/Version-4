@@ -24,8 +24,9 @@
                 <option value="suspended">Suspended</option>
             </select>
             {{-- Only show Add button for admin --}}
-            @if(auth()->user()->role == 'admin')
-                <button class="btn btn-success app-btn-sm" data-bs-toggle="modal" data-bs-target="#corpModal" id="addCorpBtn">
+            @if (auth()->user()->role == 'admin')
+                <button class="btn btn-success app-btn-sm" data-bs-toggle="modal" data-bs-target="#corpModal"
+                    id="addCorpBtn">
                     <i class="bi bi-building-add"></i>
                     <span>Add Corporation</span>
                 </button>
@@ -74,16 +75,18 @@
                             <div class="card-body">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">Corporation Name <span class="text-danger">*</span></label>
+                                        <label class="form-label">Corporation Name <span
+                                                class="text-danger">*</span></label>
                                         <input type="text" name="name" id="f_name" class="form-control">
                                         <div class="invalid-feedback" id="error-name"></div>
                                     </div>
-                                    @if(auth()->user()->role == 'admin')
-                                    <div class="col-md-6">
-                                        <label class="form-label">Corporation Code <span class="text-danger">*</span></label>
-                                        <input type="text" name="code" id="f_code" class="form-control">
-                                        <div class="invalid-feedback" id="error-code"></div>
-                                    </div>
+                                    @if (auth()->user()->role == 'admin')
+                                        <div class="col-md-6">
+                                            <label class="form-label">Corporation Code <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" name="code" id="f_code" class="form-control">
+                                            <div class="invalid-feedback" id="error-code"></div>
+                                        </div>
                                     @endif
                                     <div class="col-md-4">
                                         <label class="form-label">State <span class="text-danger">*</span></label>
@@ -132,27 +135,32 @@
                                             <img src="" alt="Preview" style="max-height: 100px;">
                                         </div>
                                     </div>
-                                    @if(auth()->user()->role == 'admin')
-                                    <div class="col-md-6">
-                                        <label class="form-label">Boundary File <span class="text-danger">*</span></label>
-                                        <input type="file" name="boundary_file" id="f_boundary" class="form-control">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">MIS File</label>
-                                        <input type="file" name="mis_file" id="f_mis" class="form-control">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Water Tax File</label>
-                                        <input type="file" name="water_tax_file" id="f_water" class="form-control">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">UGD Tax File</label>
-                                        <input type="file" name="ugd_tax_file" id="f_ugd" class="form-control">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Professional Tax File</label>
-                                        <input type="file" name="professional_tax_file" id="f_pt" class="form-control">
-                                    </div>
+                                    @if (auth()->user()->role == 'admin')
+                                        <div class="col-md-6">
+                                            <label class="form-label">Boundary File <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="file" name="boundary_file" id="f_boundary"
+                                                class="form-control">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">MIS File</label>
+                                            <input type="file" name="mis_file" id="f_mis" class="form-control">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Water Tax File</label>
+                                            <input type="file" name="water_tax_file" id="f_water"
+                                                class="form-control">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">UGD Tax File</label>
+                                            <input type="file" name="ugd_tax_file" id="f_ugd"
+                                                class="form-control">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Professional Tax File</label>
+                                            <input type="file" name="professional_tax_file" id="f_pt"
+                                                class="form-control">
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -172,7 +180,8 @@
         <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
             <div class="modal-content">
                 <div class="modal-body text-center py-4">
-                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                    <div
+                        style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
                         <i class="bi bi-trash3" style="font-size:22px;color:#ef4444;"></i>
                     </div>
                     <h6 class="fw-bold mb-1">Delete Corporation?</h6>
@@ -352,12 +361,12 @@
                                     </button>
 
                                     ${userRole === 'admin' ? `
-                                        <button class="btn btn-danger btn-sm flex-fill delete-btn"
-                                                data-id="${corp.id}"
-                                                data-name="${escapeHtml(corp.name)}">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
-                                    ` : ''}
+                                            <button class="btn btn-danger btn-sm flex-fill delete-btn"
+                                                    data-id="${corp.id}"
+                                                    data-name="${escapeHtml(corp.name)}">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        ` : ''}
                                 </div>
 
                             </div>
@@ -384,7 +393,7 @@
                         `<li class="page-item"><a class="page-link" href="#" data-page="${pagination.current_page - 1}">&laquo; Previous</a></li>`;
                 } else {
                     html +=
-                    `<li class="page-item disabled"><a class="page-link" href="#">&laquo; Previous</a></li>`;
+                        `<li class="page-item disabled"><a class="page-link" href="#">&laquo; Previous</a></li>`;
                 }
 
                 // First page
@@ -403,7 +412,7 @@
                             `<li class="page-item active"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
                     } else {
                         html +=
-                        `<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                            `<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
                     }
                 }
 
@@ -429,7 +438,7 @@
                 // Add info text
                 let start = pagination.from || ((pagination.current_page - 1) * pagination.per_page + 1);
                 let end = pagination.to || Math.min(pagination.current_page * pagination.per_page, pagination
-                .total);
+                    .total);
                 let infoHtml = `<div class="text-center text-muted mt-3">
                             Showing ${start} to ${end} of ${pagination.total} corporations
                         </div>`;
@@ -517,7 +526,6 @@
                 let method = $('#formMethod').val();
                 let url;
 
-                // Determine the URL based on role and method
                 if (method === 'PUT') {
                     if (userRole === 'commissioner') {
                         url = "/commissioner/corporations/" + corpId;
@@ -549,7 +557,8 @@
                         $('#corpSaveBtn').prop('disabled', false).html('Save Corporation');
                         $('#corpForm')[0].reset();
                         $('#corpModal').modal('hide');
-                        showFlashMessage(response.message || 'Corporation saved successfully', 'success');
+                        showFlashMessage(response.message || 'Corporation saved successfully',
+                            'success');
                         loadCorporations(currentPage);
                     },
                     error: function(xhr) {
@@ -561,8 +570,15 @@
                                 $('#error-' + field).text(messages[0]);
                             });
                             showFlashMessage('Please fix validation errors', 'error');
+                        } else if (xhr.status === 403) {
+                            showFlashMessage(xhr.responseJSON?.message || 'Permission denied',
+                                'error');
                         } else {
-                            showFlashMessage(xhr.responseJSON?.message || 'Something went wrong', 'error');
+                            // Show the actual error message from the server
+                            let errorMessage = xhr.responseJSON?.message ||
+                                'Something went wrong';
+                            showFlashMessage(errorMessage, 'error');
+                            console.error('Server error:', xhr.responseJSON);
                         }
                     }
                 });
@@ -584,7 +600,8 @@
                     type: "GET",
                     success: function(response) {
                         let corp = response.data;
-                        $('#modalTitle').html('<i class="bi bi-pencil-square me-2"></i> Edit Corporation');
+                        $('#modalTitle').html(
+                            '<i class="bi bi-pencil-square me-2"></i> Edit Corporation');
                         $('#corpId').val(corp.id);
                         $('#f_name').val(corp.name);
                         if (userRole === 'admin') {
@@ -599,7 +616,8 @@
 
                         // Show existing image if any
                         if (corp.image) {
-                            $('#imagePreview img').attr('src', "{{ asset('') }}" + corp.image);
+                            $('#imagePreview img').attr('src', "{{ asset('') }}" + corp
+                                .image);
                             $('#imagePreview').show();
                         }
 
@@ -647,11 +665,13 @@
                     },
                     success: function(response) {
                         $('#deleteModal').modal('hide');
-                        showFlashMessage(response.message || 'Corporation deleted successfully', 'success');
+                        showFlashMessage(response.message || 'Corporation deleted successfully',
+                            'success');
                         loadCorporations(1);
                     },
                     error: function(xhr) {
-                        showFlashMessage(xhr.responseJSON?.message || 'Failed to delete corporation', 'error');
+                        showFlashMessage(xhr.responseJSON?.message ||
+                            'Failed to delete corporation', 'error');
                     }
                 });
             });

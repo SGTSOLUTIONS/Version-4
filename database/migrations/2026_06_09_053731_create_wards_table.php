@@ -27,10 +27,10 @@ return new class extends Migration
             $table->string('drone_image')->nullable();
 
             // Map Extents
-            $table->decimal('extent_left', 12, 6)->nullable();
-            $table->decimal('extent_right', 12, 6)->nullable();
-            $table->decimal('extent_top', 12, 6)->nullable();
-            $table->decimal('extent_bottom', 12, 6)->nullable();
+            $table->string('extent_left')->nullable();
+            $table->string('extent_right')->nullable();
+            $table->string('extent_top')->nullable();
+            $table->string('extent_bottom')->nullable();
 
             // GeoJSON / WKT Boundary
             $table->longText('boundary')->nullable();
