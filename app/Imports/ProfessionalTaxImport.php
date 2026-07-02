@@ -247,8 +247,8 @@ class ProfessionalTaxImport implements ToCollection, WithHeadingRow, WithValidat
             'arrears' => 'nullable|numeric',
             'penalty' => 'nullable|numeric',
             'balance' => 'nullable|numeric',
-            'due_date' => 'nullable|date',
-            'paid_date' => 'nullable|date',
+            'due_date' => 'nullable',
+            'paid_date' => 'nullable',
         ];
     }
 
