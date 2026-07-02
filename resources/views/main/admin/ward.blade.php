@@ -95,7 +95,7 @@
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label">Corporation <span class="text-danger">*</span></label>
-                                        <select name="corp_id_display" id="f_corp_id" class="form-select" required
+                                        <select name="corp_id" id="f_corp_id" class="form-select" required
                                             {{ auth()->user()->role == 'commissioner' ? 'disabled' : '' }}>
                                             <option value="">Select Corporation</option>
                                             @foreach ($corporations as $corp)
@@ -105,15 +105,11 @@
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <!-- Hidden field to send corp_id when disabled -->
-                                        <input type="hidden" name="corp_id" id="f_corp_id_hidden"
-                                            value="{{ auth()->user()->role == 'commissioner' ? auth()->user()->corporation_id : '' }}">
                                         <div class="invalid-feedback" id="error-corp_id"></div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Zone <span class="text-danger">*</span></label>
-                                        <select name="zone_id" id="f_zone_id" class="form-select" required
-                                            {{ auth()->user()->role == 'commissioner' ? '' : 'disabled' }}>
+                                        <select name="zone_id" id="f_zone_id" class="form-select" required>
                                             <option value="">Select Zone</option>
                                             @foreach ($zones as $zone)
                                                 <option value="{{ $zone->id }}">
@@ -131,9 +127,9 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Zone Name (Optional)</label>
-                                        <input type="text" name="zone" id="f_zone" class="form-control"
+                                        <input type="text" name="zone_name" id="f_zone_name" class="form-control"
                                             placeholder="e.g., East, West, North">
-                                        <div class="invalid-feedback" id="error-zone"></div>
+                                        <div class="invalid-feedback" id="error-zone_name"></div>
                                     </div>
                                     <div class="col-md-12">
                                         <label class="form-label">Drone Image</label>
@@ -678,15 +674,40 @@
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
 
-                // For commissioner, set hidden field value
+                // Reset form fields for proper state
                 @if (auth()->user()->role == 'commissioner')
-                    $('#f_zone_id').prop('disabled', false);
+                    // For commissioner, corporation is fixed
                     $('#f_corp_id').prop('disabled', true);
-                    $('#f_corp_id_hidden').val('{{ auth()->user()->corporation_id }}');
+                    // Load zones for the commissioner's corporation
+                    let corpId = $('#f_corp_id').val();
+                    if (corpId) {
+                        $('#f_zone_id').html('<option value="">Loading zones...</option>').prop('disabled', true);
+                        let url = "{{ route('admin.zones.byCorporation') }}";
+                        $.ajax({
+                            url: url,
+                            type: "GET",
+                            data: { corp_id: corpId },
+                            success: function(response) {
+                                let zoneSelect = $('#f_zone_id');
+                                zoneSelect.html('<option value="">Select Zone</option>');
+                                if (response.status && response.data.length > 0) {
+                                    $.each(response.data, function(index, zone) {
+                                        zoneSelect.append(
+                                            `<option value="${zone.id}">${zone.zone_name} (${zone.zone_code})</option>`
+                                        );
+                                    });
+                                    zoneSelect.prop('disabled', false);
+                                } else {
+                                    zoneSelect.html('<option value="">No zones available</option>');
+                                    zoneSelect.prop('disabled', true);
+                                }
+                            }
+                        });
+                    }
                 @else
-                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop('disabled', true);
+                    // For admin, enable corporation selection
                     $('#f_corp_id').prop('disabled', false);
-                    $('#f_corp_id_hidden').val('');
+                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop('disabled', true);
                 @endif
 
                 $('#wardModal').modal('show');
@@ -697,13 +718,6 @@
                 e.preventDefault();
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
-
-                // For commissioner, ensure corp_id is sent via hidden field
-                @if (auth()->user()->role == 'commissioner')
-                    if (!$('#f_corp_id_hidden').val()) {
-                        $('#f_corp_id_hidden').val('{{ auth()->user()->corporation_id }}');
-                    }
-                @endif
 
                 let formData = new FormData(this);
                 let wardId = $('#wardId').val();
@@ -724,6 +738,15 @@
                         url = "/admin/wards";
                     }
                 }
+
+                // For commissioner, ensure corp_id is sent
+                @if (auth()->user()->role == 'commissioner')
+                    // The disabled select still submits its value
+                    if (!$('#f_corp_id').val()) {
+                        showFlashMessage('Corporation is required', 'error');
+                        return false;
+                    }
+                @endif
 
                 $('#wardSaveBtn').prop('disabled', true).html(
                     '<span class="spinner-border spinner-border-sm me-1"></span> Saving...');
@@ -749,8 +772,18 @@
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
                             $.each(errors, function(field, messages) {
-                                $('[name="' + field + '"]').addClass('is-invalid');
-                                $('#error-' + field).text(messages[0]);
+                                // Handle field name mapping for validation errors
+                                let fieldSelector = '[name="' + field + '"]';
+                                let errorId = '#error-' + field;
+
+                                // If field is 'zone', map to 'zone_name'
+                                if (field === 'zone') {
+                                    fieldSelector = '[name="zone_name"]';
+                                    errorId = '#error-zone_name';
+                                }
+
+                                $(fieldSelector).addClass('is-invalid');
+                                $(errorId).text(messages[0]);
                             });
                             showFlashMessage('Please fix validation errors', 'error');
                         } else {
@@ -786,20 +819,22 @@
                             corpId = ward.zone.corp_id;
                         }
                         $('#f_corp_id').val(corpId);
-                        $('#f_corp_id_hidden').val(corpId); // Set hidden field
 
                         @if (auth()->user()->role == 'admin')
+                            // For admin, trigger change to load zones
                             $('#f_corp_id').trigger('change');
                             setTimeout(() => {
                                 $('#f_zone_id').val(ward.zone_id);
                             }, 500);
                         @else
+                            // For commissioner, zones are already loaded
                             $('#f_zone_id').val(ward.zone_id);
                             $('#f_corp_id').prop('disabled', true);
                         @endif
 
                         $('#f_ward_no').val(ward.ward_no);
 
+                        // Handle zone_name field
                         let zoneNameValue = '';
                         if (ward.zone_name) {
                             zoneNameValue = ward.zone_name;
@@ -810,7 +845,7 @@
                                 zoneNameValue = ward.zone;
                             }
                         }
-                        $('#f_zone').val(zoneNameValue);
+                        $('#f_zone_name').val(zoneNameValue);
                         $('#f_extent_left').val(ward.extent_left);
                         $('#f_extent_right').val(ward.extent_right);
                         $('#f_extent_top').val(ward.extent_top);
@@ -899,7 +934,7 @@
                         if (ward.zone && typeof ward.zone === 'object' && ward.zone.corporation) {
                             corporationName = ward.zone.corporation.name || '-';
                         }
-                        let imageUrl = ward.drone_image ? "{{ asset('storage') }}/" + ward.drone_image : null;
+                        let imageUrl = ward.drone_image ? "{{ asset('') }}" + ward.drone_image : null;
 
                         let html = `
                             <div class="row">
@@ -912,7 +947,7 @@
                                 <div class="col-md-6"><strong>Corporation:</strong><br><p>${escapeHtml(corporationName)}</p></div>
                                 <div class="col-md-6"><strong>Zone:</strong><br><p>${escapeHtml(zoneName)}</p></div>
                                 <div class="col-md-6"><strong>Ward Number:</strong><br><p>${escapeHtml(ward.ward_no)}</p></div>
-                                <div class="col-md-6"><strong>Zone Name:</strong><br><p>${escapeHtml(ward.zone || '-')}</p></div>
+                                <div class="col-md-6"><strong>Zone Name:</strong><br><p>${escapeHtml(ward.zone_name || '-')}</p></div>
                                 <div class="col-md-6"><strong>Contact Person:</strong><br><p>${escapeHtml(ward.contact_person || '-')}</p></div>
                                 <div class="col-md-6"><strong>Designation:</strong><br><p>${escapeHtml(ward.designation || '-')}</p></div>
                                 <div class="col-md-6"><strong>Phone:</strong><br><p>${escapeHtml(ward.phone || '-')}</p></div>

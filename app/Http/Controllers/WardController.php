@@ -141,7 +141,7 @@ class WardController extends Controller
                     'max:255',
                     Rule::unique('wards', 'ward_no')->whereNull('deleted_at'),
                 ],
-                'drone_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'drone_image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
                 'extent_left' => 'nullable',
                 'extent_right' => 'nullable',
                 'extent_top' => 'nullable',
@@ -329,7 +329,7 @@ class WardController extends Controller
                         ->ignore($ward->id)
                         ->whereNull('deleted_at'),
                 ],
-                'drone_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'drone_image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
                 'extent_left' => 'nullable',
                 'extent_right' => 'nullable',
                 'extent_top' => 'nullable',
