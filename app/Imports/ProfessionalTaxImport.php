@@ -108,12 +108,12 @@ class ProfessionalTaxImport implements ToCollection, WithHeadingRow, WithValidat
     private function parseDecimal($value)
     {
         if (empty($value)) {
-            return null;
+            return 0;
         }
 
         $cleaned = preg_replace('/[^0-9.-]/', '', $value);
 
-        return $cleaned !== '' ? (float)$cleaned : null;
+        return $cleaned !== '' ? (float)$cleaned : 0;
     }
 
     public function rules(): array
