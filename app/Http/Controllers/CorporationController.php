@@ -90,12 +90,12 @@ class CorporationController extends Controller
                 'pincode'               => 'required|string|max:20',
                 'status'                => 'required|string|max:50',
                 'description'           => 'required|string',
-                'image'                 => 'required|image|mimes:jpg,jpeg,png|max:2048',
+                'image'                 => 'required|image|mimes:jpg,jpeg,png',
                 'boundary_file'         => 'required|file',
-                'mis_file'              => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
-                'water_tax_file'        => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
-                'ugd_tax_file'          => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
-                'professional_tax_file' => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+                'mis_file'              => 'nullable|file|mimes:xlsx,xls,csv',
+                'water_tax_file'        => 'nullable|file|mimes:xlsx,xls,csv',
+                'ugd_tax_file'          => 'nullable|file|mimes:xlsx,xls,csv',
+                'professional_tax_file' => 'nullable|file|mimes:xlsx,xls,csv|',
             ]);
 
             if ($validator->fails()) {
@@ -252,10 +252,10 @@ class CorporationController extends Controller
             if ($user->role == 'admin') {
                 $rules['code'] = 'required|string|max:100|unique:corporations,code,' . $corporation->id;
                 $rules['boundary_file'] = 'nullable|file';
-                $rules['mis_file'] = 'nullable|file|mimes:xlsx,xls,csv|max:10240';
-                $rules['water_tax_file'] = 'nullable|file|mimes:xlsx,xls,csv|max:10240';
-                $rules['ugd_tax_file'] = 'nullable|file|mimes:xlsx,xls,csv|max:10240';
-                $rules['professional_tax_file'] = 'nullable|file|mimes:xlsx,xls,csv|max:10240';
+                $rules['mis_file'] = 'nullable|file|mimes:xlsx,xls,csv';
+                $rules['water_tax_file'] = 'nullable|file|mimes:xlsx,xls,csv';
+                $rules['ugd_tax_file'] = 'nullable|file|mimes:xlsx,xls,csv';
+                $rules['professional_tax_file'] = 'nullable|file|mimes:xlsx,xls,csv';
             }
 
             $validator = Validator::make($request->all(), $rules);
