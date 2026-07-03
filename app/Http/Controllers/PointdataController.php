@@ -628,7 +628,7 @@ class PointdataController extends Controller
                     'worker_name' => $user->name ?? null,
                     'remarks' => $request->remarks,
                     'water_tax' => $request->watertax_no,
-                    'ugd_tax' => $request->ugd_no,
+
                     'point_gisid' => $request->point_gisid,
                     'created_at' => now(),
                     'updated_at' => now(),
