@@ -347,7 +347,8 @@
             transition: transform 0.2s, box-shadow 0.2s;
             display: flex;
             flex-direction: column;
-            height: 100%; /* Make card fill the column */
+            height: 100%;
+            /* Make card fill the column */
         }
 
         .acard:hover {
@@ -355,25 +356,21 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
         }
 
-        /* Card Image Styles - Fully Responsive with Cover Fit */
         .acard-img-wrap {
             position: relative;
-            width: 80%;
-            height: 220px; /* Slightly smaller for better grid fit */
+            width: 100%;
+            height: 220px;
             background: #f0f2f5;
             overflow: hidden;
             flex-shrink: 0;
-              display: flex;
-    justify-content: center;
-    align-items: center;
         }
 
         .acard-img-wrap img {
             position: absolute;
             top: 0;
             left: 0;
-            width: 80%;
-            height: 80%;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             display: block;
         }
@@ -598,7 +595,8 @@
             }
 
             .acard-img-wrap {
-                height: 180px; /* Smaller height on mobile */
+                height: 180px;
+                /* Smaller height on mobile */
             }
         }
 
@@ -766,7 +764,8 @@
                 const assetBase = "{{ asset('') }}";
 
                 $.each(corporations, function(index, corp) {
-                    let imageUrl = corp.image ? assetBase + corp.image : assetBase + 'images/default-corp.png';
+                    let imageUrl = corp.image ? assetBase + corp.image : assetBase +
+                        'images/default-corp.png';
 
                     let badgeClass = {
                         active: 'bg-success',
@@ -805,12 +804,12 @@
                                             <i class="bi bi-pencil"></i> Edit
                                         </button>
                                         ${userRole === 'admin' ? `
-                                            <button class="btn btn-danger btn-sm flex-fill delete-btn"
-                                                    data-id="${corp.id}"
-                                                    data-name="${escapeHtml(corp.name)}">
-                                                <i class="bi bi-trash"></i> Delete
-                                            </button>
-                                        ` : ''}
+                                                    <button class="btn btn-danger btn-sm flex-fill delete-btn"
+                                                            data-id="${corp.id}"
+                                                            data-name="${escapeHtml(corp.name)}">
+                                                        <i class="bi bi-trash"></i> Delete
+                                                    </button>
+                                                ` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -839,7 +838,7 @@
                         `<li class="page-item"><a class="page-link" href="#" data-page="${pagination.current_page - 1}">&laquo; Previous</a></li>`;
                 } else {
                     html +=
-                    `<li class="page-item disabled"><a class="page-link" href="#">&laquo; Previous</a></li>`;
+                        `<li class="page-item disabled"><a class="page-link" href="#">&laquo; Previous</a></li>`;
                 }
 
                 if (pagination.current_page > 3) {
@@ -856,7 +855,7 @@
                             `<li class="page-item active"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
                     } else {
                         html +=
-                        `<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                            `<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
                     }
                 }
 
@@ -879,7 +878,7 @@
 
                 let start = pagination.from || ((pagination.current_page - 1) * pagination.per_page + 1);
                 let end = pagination.to || Math.min(pagination.current_page * pagination.per_page, pagination
-                .total);
+                    .total);
 
                 let infoHtml = `<div class="text-center text-muted mt-3" id="paginationInfo">
                     Showing ${start} to ${end} of ${pagination.total} corporations
@@ -978,16 +977,16 @@
                                         ${value.skipped > 0 ? `<span class="num-skipped">⚠${value.skipped}</span>` : ''}
                                     </div>
                                     ${value.skipped > 0 && value.skipped_details && value.skipped_details.length > 0 ? `
-                                        <div class="mt-2 text-start" style="font-size: 12px;">
-                                            <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
-                                                View skipped details (${value.skipped})
-                                            </button>
-                                            <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
-                                                ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
-                                                ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
-                                            </div>
-                                        </div>
-                                    ` : ''}
+                                                <div class="mt-2 text-start" style="font-size: 12px;">
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
+                                                        View skipped details (${value.skipped})
+                                                    </button>
+                                                    <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
+                                                        ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
+                                                        ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
+                                                    </div>
+                                                </div>
+                                            ` : ''}
                                 </div>
                             </div>
                         `;
@@ -1375,8 +1374,8 @@
                                     <p><strong>Description:</strong></p>
                                     <p class="text-muted">${escapeHtml(corp.description || 'No description')}</p>
                                     ${corp.boundary_file ? `
-                                        <p><strong>Boundary:</strong> <span class="text-success">✓ Uploaded</span></p>
-                                    ` : ''}
+                                                <p><strong>Boundary:</strong> <span class="text-success">✓ Uploaded</span></p>
+                                            ` : ''}
                                 </div>
                             </div>
                         `;
