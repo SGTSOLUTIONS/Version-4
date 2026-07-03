@@ -358,19 +358,22 @@
         /* Card Image Styles - Fully Responsive with Cover Fit */
         .acard-img-wrap {
             position: relative;
-            width: 100%;
+            width: 80%;
             height: 220px; /* Slightly smaller for better grid fit */
             background: #f0f2f5;
             overflow: hidden;
             flex-shrink: 0;
+              display: flex;
+    justify-content: center;
+    align-items: center;
         }
 
         .acard-img-wrap img {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 80%;
+            height: 80%;
             object-fit: cover;
             display: block;
         }
