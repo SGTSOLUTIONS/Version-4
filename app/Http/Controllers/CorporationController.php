@@ -404,35 +404,36 @@ class CorporationController extends Controller
     }
 
     public function destroy(Corporation $corporation)
-    {
+{
+    try {
+        $this->corporationService->dropCorporationTables($corporation->id);
+
         DB::beginTransaction();
 
+        if ($corporation->image && !str_starts_with($corporation->image, 'http')) {
+            Storage::disk('public')->delete($corporation->image);
+        }
+
+        $corporation->delete();
+
+        DB::commit();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Corporation deleted successfully.',
+        ]);
+    } catch (\Throwable $e) {
         try {
-            if ($corporation->image && !str_starts_with($corporation->image, 'http')) {
-                Storage::disk('public')->delete($corporation->image);
-            }
-
-            $this->corporationService->dropCorporationTables($corporation->id);
-
-            $corporation->delete();
-
-            DB::commit();
-
-            return response()->json([
-                'status'  => true,
-                'message' => 'Corporation deleted successfully.',
-            ]);
-        } catch (\Throwable $e) {
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
-
-            report($e);
-
-            return response()->json([
-                'status'  => false,
-                'message' => $e->getMessage(),
-            ], 500);
+        } catch (\Throwable $rollbackError) {
         }
+
+        return response()->json([
+            'status' => false,
+            'message' => $e->getMessage(),
+        ], 500);
     }
+}
 }
