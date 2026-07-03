@@ -16,14 +16,13 @@
         <div class="data-search">
             <input type="text" id="corpSearch" class="form-control" placeholder="Search by corporation name">
         </div>
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
             <select id="statusFilter" class="form-select app-select">
                 <option value="">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
                 <option value="suspended">Suspended</option>
             </select>
-            {{-- Only show Add button for admin --}}
             @if (auth()->user()->role == 'admin')
                 <button class="btn btn-success app-btn-sm" data-bs-toggle="modal" data-bs-target="#corpModal"
                     id="addCorpBtn">
@@ -34,29 +33,23 @@
         </div>
     </div>
 
-    {{-- loading spinner --}}
     <div id="loadingSpinner" class="text-center py-5" style="display: none;">
         <div class="spinner-border text-success" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 
-    <div class="card-grid" id="corporationsGrid">
-        <!-- Corporations will be loaded here -->
-    </div>
+    <div class="card-grid" id="corporationsGrid"></div>
 
-    <!-- Pagination Container -->
     <div id="paginationContainer" class="d-flex justify-content-center mt-4" style="display: none;">
         <nav>
-            <ul class="pagination" id="paginationList">
-                <!-- Pagination will be loaded here -->
-            </ul>
+            <ul class="pagination" id="paginationList"></ul>
         </nav>
     </div>
 
-    <!-- Corporation Modal (Add/Edit) -->
+    <!-- Corporation Modal -->
     <div class="modal fade" id="corpModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">
@@ -74,34 +67,34 @@
                             <div class="card-header">Basic Information</div>
                             <div class="card-body">
                                 <div class="row g-3">
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-md-6">
                                         <label class="form-label">Corporation Name <span class="text-danger">*</span></label>
                                         <input type="text" name="name" id="f_name" class="form-control">
                                         <div class="invalid-feedback" id="error-name"></div>
                                     </div>
                                     @if (auth()->user()->role == 'admin')
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6">
                                             <label class="form-label">Corporation Code <span class="text-danger">*</span></label>
                                             <input type="text" name="code" id="f_code" class="form-control">
                                             <div class="invalid-feedback" id="error-code"></div>
                                         </div>
                                     @endif
-                                    <div class="col-md-4">
+                                    <div class="col-12 col-sm-6 col-md-4">
                                         <label class="form-label">State <span class="text-danger">*</span></label>
                                         <input type="text" name="state" id="f_state" class="form-control">
                                         <div class="invalid-feedback" id="error-state"></div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-12 col-sm-6 col-md-4">
                                         <label class="form-label">District <span class="text-danger">*</span></label>
                                         <input type="text" name="district" id="f_district" class="form-control">
                                         <div class="invalid-feedback" id="error-district"></div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-12 col-sm-6 col-md-4">
                                         <label class="form-label">Pincode <span class="text-danger">*</span></label>
                                         <input type="text" name="pincode" id="f_pincode" class="form-control">
                                         <div class="invalid-feedback" id="error-pincode"></div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-sm-6 col-md-6">
                                         <label class="form-label">Type</label>
                                         <select name="type" id="f_type" class="form-select">
                                             <option value="Municipal Corporation">Municipal Corporation</option>
@@ -109,7 +102,7 @@
                                             <option value="Town Panchayat">Town Panchayat</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-sm-6 col-md-6">
                                         <label class="form-label">Status <span class="text-danger">*</span></label>
                                         <select name="status" id="f_status" class="form-select">
                                             <option value="active">Active</option>
@@ -130,41 +123,41 @@
                             <div class="card-header">Files & Uploads</div>
                             <div class="card-body">
                                 <div class="row g-3">
-                                    <div class="col-md-6">
+                                    <div class="col-12 col-md-6">
                                         <label class="form-label">Logo <span class="text-danger">*</span></label>
                                         <input type="file" name="image" id="f_image" class="form-control" accept="image/*">
                                         <div class="invalid-feedback" id="error-image"></div>
                                         <div id="imagePreview" class="mt-2" style="display: none;">
-                                            <img src="" alt="Preview" style="max-height: 100px;">
+                                            <img src="" alt="Preview" style="max-height: 100px; max-width: 100%; object-fit: contain;">
                                             <button type="button" class="btn btn-sm btn-danger ms-2" onclick="removeImagePreview()">Remove</button>
                                         </div>
                                     </div>
                                     @if (auth()->user()->role == 'admin')
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6">
                                             <label class="form-label">Boundary File <span class="text-danger">*</span></label>
                                             <input type="file" name="boundary_file" id="f_boundary" class="form-control" accept=".json,.geojson">
                                             <div class="invalid-feedback" id="error-boundary_file"></div>
                                             <small class="text-muted">Upload GeoJSON format only</small>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6">
                                             <label class="form-label">MIS File</label>
                                             <input type="file" name="mis_file" id="f_mis" class="form-control" accept=".xlsx,.xls,.csv">
                                             <div class="invalid-feedback" id="error-mis_file"></div>
                                             <small class="text-muted">Excel/CSV file (max 100MB)</small>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6">
                                             <label class="form-label">Water Tax File</label>
                                             <input type="file" name="water_tax_file" id="f_water" class="form-control" accept=".xlsx,.xls,.csv">
                                             <div class="invalid-feedback" id="error-water_tax_file"></div>
                                             <small class="text-muted">Excel/CSV file (max 100MB)</small>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6">
                                             <label class="form-label">UGD Tax File</label>
                                             <input type="file" name="ugd_tax_file" id="f_ugd" class="form-control" accept=".xlsx,.xls,.csv">
                                             <div class="invalid-feedback" id="error-ugd_tax_file"></div>
                                             <small class="text-muted">Excel/CSV file (max 100MB)</small>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-12 col-md-6">
                                             <label class="form-label">Professional Tax File</label>
                                             <input type="file" name="professional_tax_file" id="f_pt" class="form-control" accept=".xlsx,.xls,.csv">
                                             <div class="invalid-feedback" id="error-professional_tax_file"></div>
@@ -184,13 +177,12 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
             <div class="modal-content">
                 <div class="modal-body text-center py-4">
-                    <div
-                        style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                    <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
                         <i class="bi bi-trash3" style="font-size:22px;color:#ef4444;"></i>
                     </div>
                     <h6 class="fw-bold mb-1">Delete Corporation?</h6>
@@ -207,7 +199,7 @@
 
     <!-- View Modal -->
     <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
@@ -216,9 +208,7 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="viewModalBody">
-                    <!-- Content loaded via AJAX -->
-                </div>
+                <div class="modal-body" id="viewModalBody"></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
@@ -228,7 +218,7 @@
 
     <!-- Import Statistics Modal -->
     <div class="modal fade" id="importStatsModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
@@ -237,9 +227,7 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="importStatsBody">
-                    <!-- Dynamic content -->
-                </div>
+                <div class="modal-body" id="importStatsBody"></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
@@ -311,12 +299,32 @@
         animation: slideOutRight 0.4s ease forwards;
     }
 
-    /* Card Grid Styles */
+    /* Card Grid Styles - Fully Responsive */
     .card-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 20px;
         margin-top: 20px;
+    }
+
+    /* Responsive card grid */
+    @media (min-width: 1200px) {
+        .card-grid {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+    }
+
+    @media (max-width: 1199px) and (min-width: 768px) {
+        .card-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+        .card-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
     }
 
     .acard {
@@ -327,6 +335,7 @@
         transition: transform 0.2s, box-shadow 0.2s;
         display: flex;
         flex-direction: column;
+        height: 100%;
     }
 
     .acard:hover {
@@ -336,15 +345,31 @@
 
     .acard-img-wrap {
         position: relative;
-        height: 180px;
+        height: 200px;
         background: #f0f2f5;
         overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    /* Responsive image height */
+    @media (max-width: 576px) {
+        .acard-img-wrap {
+            height: 180px;
+        }
     }
 
     .acard-img-wrap img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
+    }
+
+    /* Fallback for images that don't load properly */
+    .acard-img-wrap img.error {
+        object-fit: contain;
+        padding: 20px;
+        background: #f8f9fa;
     }
 
     .acard-overlay {
@@ -354,6 +379,7 @@
         right: 0;
         bottom: 0;
         background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.3));
+        pointer-events: none;
     }
 
     .acard-tag {
@@ -368,6 +394,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        z-index: 2;
     }
 
     .acard-body {
@@ -384,6 +411,7 @@
         align-items: center;
         gap: 6px;
         margin-bottom: 8px;
+        flex-wrap: wrap;
     }
 
     .acard-meta .dot {
@@ -392,6 +420,7 @@
         border-radius: 50%;
         background: #d1d5db;
         display: inline-block;
+        flex-shrink: 0;
     }
 
     .acard-title {
@@ -404,6 +433,7 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        word-break: break-word;
     }
 
     .acard-desc {
@@ -415,6 +445,7 @@
         overflow: hidden;
         margin-bottom: 12px;
         flex: 1;
+        word-break: break-word;
     }
 
     .acard-footer {
@@ -424,6 +455,8 @@
         padding-top: 10px;
         border-top: 1px solid #f3f4f6;
         margin-top: auto;
+        flex-wrap: wrap;
+        gap: 6px;
     }
 
     .acard-author {
@@ -436,18 +469,91 @@
         font-size: 11px;
         padding: 4px 12px;
         border-radius: 20px;
+        flex-shrink: 0;
     }
 
-    /* Toolbar Styles */
+    /* Card action buttons - responsive */
+    .acard-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+
+    .acard-actions .btn {
+        flex: 1;
+        min-width: 60px;
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    @media (max-width: 400px) {
+        .acard-actions .btn {
+            font-size: 11px;
+            padding: 5px 8px;
+            min-width: 50px;
+        }
+    }
+
+    /* Toolbar Styles - Responsive */
     .data-toolbar {
         margin: 20px 0 10px;
     }
 
+    .data-search {
+        flex: 1;
+        min-width: 200px;
+    }
+
     .data-search input {
-        min-width: 250px;
+        width: 100%;
+        min-width: 200px;
         border-radius: 8px;
         border: 1px solid #e5e7eb;
         padding: 8px 14px;
+    }
+
+    @media (max-width: 576px) {
+        .data-toolbar {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 12px !important;
+        }
+        .data-search {
+            width: 100%;
+        }
+        .data-search input {
+            min-width: 100%;
+        }
+        .data-toolbar .d-flex {
+            width: 100%;
+            justify-content: stretch;
+        }
+        .data-toolbar .d-flex .app-select {
+            flex: 1;
+            min-width: 0;
+        }
+        .data-toolbar .d-flex .btn {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .data-toolbar .d-flex .app-select {
+            font-size: 13px;
+            padding: 6px 10px;
+        }
+        .data-toolbar .d-flex .btn {
+            font-size: 13px;
+            padding: 6px 12px;
+        }
+        .data-toolbar .d-flex .btn span {
+            display: none;
+        }
+        .data-toolbar .d-flex .btn i {
+            font-size: 16px;
+        }
     }
 
     .app-select {
@@ -455,6 +561,13 @@
         border: 1px solid #e5e7eb;
         padding: 8px 14px;
         min-width: 140px;
+    }
+
+    @media (max-width: 576px) {
+        .app-select {
+            min-width: 0;
+            flex: 1;
+        }
     }
 
     .btn-success.app-btn-sm {
@@ -466,6 +579,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
+        white-space: nowrap;
     }
 
     .btn-success.app-btn-sm:hover {
@@ -482,7 +596,7 @@
         border-color: #ef4444 !important;
     }
 
-    /* Pagination */
+    /* Pagination - Responsive */
     .pagination .page-item.active .page-link {
         background-color: #1679AB;
         border-color: #1679AB;
@@ -493,10 +607,38 @@
         color: #1679AB;
         border-radius: 6px;
         margin: 0 2px;
+        padding: 8px 14px;
     }
 
     .pagination .page-item.disabled .page-link {
         color: #9ca3af;
+    }
+
+    @media (max-width: 576px) {
+        .pagination .page-link {
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+        .pagination .page-item .page-link {
+            margin: 0 1px;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .pagination .page-link {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .pagination .page-item:not(.active) .page-link {
+            display: none;
+        }
+        .pagination .page-item.active .page-link {
+            display: block;
+        }
+        .pagination .page-item:first-child .page-link,
+        .pagination .page-item:last-child .page-link {
+            display: block;
+        }
     }
 
     /* Import Stats Card */
@@ -507,6 +649,7 @@
         text-align: center;
         transition: all 0.2s;
         border: 1px solid #e5e7eb;
+        height: 100%;
     }
 
     .import-stat-card:hover {
@@ -532,6 +675,7 @@
         justify-content: center;
         gap: 16px;
         font-size: 13px;
+        flex-wrap: wrap;
     }
 
     .import-stat-card .stat-numbers .num-inserted {
@@ -549,23 +693,86 @@
         font-weight: 600;
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-        .card-grid {
-            grid-template-columns: 1fr;
+    /* Modal responsive improvements */
+    @media (max-width: 576px) {
+        .modal-dialog {
+            margin: 10px;
         }
-        .data-toolbar {
-            flex-direction: column;
-            align-items: stretch !important;
+        .modal-body {
+            padding: 12px;
         }
-        .data-search input {
-            min-width: 100%;
+        .modal-header h5 {
+            font-size: 16px;
         }
+        .modal-footer {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .modal-footer .btn {
+            flex: 1;
+            min-width: 80px;
+        }
+    }
+
+    /* Flash message responsive */
+    @media (max-width: 576px) {
         .flash-message-container {
             max-width: calc(100% - 20px);
             right: 10px;
             top: 10px;
         }
+        .flash-message {
+            padding: 12px 16px;
+            font-size: 13px;
+        }
+        .flash-message i {
+            font-size: 18px;
+        }
+    }
+
+    /* View modal responsive image */
+    #viewModalBody img {
+        max-width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+
+    @media (max-width: 768px) {
+        #viewModalBody .row .col-md-4 {
+            text-align: center;
+        }
+        #viewModalBody .row .col-md-8 {
+            margin-top: 12px;
+        }
+    }
+
+    /* Pagination info */
+    #paginationInfo {
+        font-size: 13px;
+    }
+
+    @media (max-width: 576px) {
+        #paginationInfo {
+            font-size: 12px;
+        }
+    }
+
+    /* Skipped details toggle */
+    .skipped-details {
+        max-height: 100px;
+        overflow-y: auto;
+        background: #fef2f2;
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        color: #991b1b;
+        word-break: break-word;
+    }
+
+    /* Loading spinner */
+    #loadingSpinner .spinner-border {
+        width: 3rem;
+        height: 3rem;
     }
 </style>
 @endpush
@@ -596,7 +803,6 @@ $(document).ready(function() {
             info: 'bi-info-circle-fill'
         };
 
-        // Remove existing flash messages
         $('.flash-message-container').remove();
 
         const container = `
@@ -611,7 +817,6 @@ $(document).ready(function() {
 
         $('body').append(container);
 
-        // Auto dismiss
         if (duration > 0) {
             setTimeout(() => {
                 const container = $('.flash-message-container');
@@ -731,8 +936,9 @@ $(document).ready(function() {
                 <div class="acard">
                     <div class="acard-img-wrap">
                         <img src="${imageUrl}"
-                            onerror="this.src='${assetBase}images/default-corp.png'"
-                            alt="${escapeHtml(corp.name)}">
+                            onerror="this.onerror=null; this.src='${assetBase}images/default-corp.png'; this.classList.add('error');"
+                            alt="${escapeHtml(corp.name)}"
+                            loading="lazy">
                         <div class="acard-overlay"></div>
                         <span class="acard-tag">${corp.type ?? 'Corporation'}</span>
                     </div>
@@ -749,18 +955,18 @@ $(document).ready(function() {
                             <span class="acard-author">${escapeHtml(corp.code)}</span>
                             <span class="badge ${badgeClass}">${corp.status}</span>
                         </div>
-                        <div class="d-flex gap-2 mt-3">
+                        <div class="acard-actions">
                             <button class="btn btn-info btn-sm flex-fill view-btn" data-id="${corp.id}">
-                                <i class="bi bi-eye"></i> View
+                                <i class="bi bi-eye"></i> <span class="btn-label">View</span>
                             </button>
                             <button class="btn btn-warning btn-sm flex-fill edit-btn" data-id="${corp.id}">
-                                <i class="bi bi-pencil"></i> Edit
+                                <i class="bi bi-pencil"></i> <span class="btn-label">Edit</span>
                             </button>
                             ${userRole === 'admin' ? `
                                 <button class="btn btn-danger btn-sm flex-fill delete-btn"
                                         data-id="${corp.id}"
                                         data-name="${escapeHtml(corp.name)}">
-                                    <i class="bi bi-trash"></i> Delete
+                                    <i class="bi bi-trash"></i> <span class="btn-label">Delete</span>
                                 </button>
                             ` : ''}
                         </div>
@@ -786,9 +992,9 @@ $(document).ready(function() {
         let html = '';
 
         if (pagination.current_page > 1) {
-            html += `<li class="page-item"><a class="page-link" href="#" data-page="${pagination.current_page - 1}">&laquo; Previous</a></li>`;
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="${pagination.current_page - 1}">&laquo;</a></li>`;
         } else {
-            html += `<li class="page-item disabled"><a class="page-link" href="#">&laquo; Previous</a></li>`;
+            html += `<li class="page-item disabled"><a class="page-link" href="#">&laquo;</a></li>`;
         }
 
         if (pagination.current_page > 3) {
@@ -814,9 +1020,9 @@ $(document).ready(function() {
         }
 
         if (pagination.current_page < pagination.last_page) {
-            html += `<li class="page-item"><a class="page-link" href="#" data-page="${pagination.current_page + 1}">Next &raquo;</a></li>`;
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="${pagination.current_page + 1}">&raquo;</a></li>`;
         } else {
-            html += `<li class="page-item disabled"><a class="page-link" href="#">Next &raquo;</a></li>`;
+            html += `<li class="page-item disabled"><a class="page-link" href="#">&raquo;</a></li>`;
         }
 
         $('#paginationList').html(html);
@@ -857,6 +1063,7 @@ $(document).ready(function() {
         $('#imagePreview').hide();
         $('#imagePreview img').attr('src', '');
         $('#f_code').prop('disabled', false);
+        $('#f_image').prop('required', true);
     }
 
     // =============================================
@@ -891,7 +1098,7 @@ $(document).ready(function() {
                 let color = importTypes[key]?.color || '#6b7280';
 
                 html += `
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
                         <div class="import-stat-card">
                             <div class="stat-icon" style="color: ${color}">
                                 <i class="bi ${importTypes[key]?.icon || 'bi-file-spreadsheet'}"></i>
@@ -908,7 +1115,7 @@ $(document).ready(function() {
                                     <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
                                         View skipped details (${value.skipped})
                                     </button>
-                                    <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
+                                    <div class="skipped-details" style="display:none; margin-top: 6px;">
                                         ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
                                         ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
                                     </div>
@@ -955,7 +1162,6 @@ $(document).ready(function() {
         $('#importStatsModal').modal('show');
     }
 
-    // Toggle skipped details
     window.toggleSkippedDetails = function(btn) {
         const details = $(btn).next('.skipped-details');
         details.slideToggle();
@@ -994,7 +1200,6 @@ $(document).ready(function() {
         resetForm();
         $('#modalTitle').html('<i class="bi bi-building-add me-2"></i> Add Corporation');
         $('#corpSaveBtn').html('Save Corporation');
-        $('.modal-header').removeClass('bg-warning');
         $('#corpModal').modal('show');
     });
 
@@ -1026,14 +1231,8 @@ $(document).ready(function() {
             }
         }
 
-        // Validate required fields before sending
         let hasError = false;
-        let requiredFields = ['name', 'state', 'district', 'pincode', 'status', 'description'];
-        if (userRole === 'admin' && method !== 'PUT') {
-            requiredFields.push('code');
-        }
         if (method !== 'PUT') {
-            // Image is required for new corporations
             let imageFile = $('#f_image')[0].files[0];
             if (!imageFile) {
                 showFlashMessage('Please upload a corporation logo', 'error');
@@ -1065,7 +1264,6 @@ $(document).ready(function() {
 
                 showFlashMessage(response.message || 'Corporation saved successfully', 'success');
 
-                // Show import stats if available
                 if (response.import_stats && Object.keys(response.import_stats).length > 0) {
                     showImportStats(response.import_stats);
                 }
@@ -1091,13 +1289,6 @@ $(document).ready(function() {
                             let errorContainer = $('#error-' + field);
                             if (errorContainer.length) {
                                 errorContainer.text(messages[0]);
-                            } else {
-                                // Fallback: find closest error container
-                                let closestError = input.closest('.col-md-6, .col-md-4, .col-12')
-                                    .find('.invalid-feedback');
-                                if (closestError.length) {
-                                    closestError.text(messages[0]);
-                                }
                             }
                         }
                         errorMessages.push(messages[0]);
@@ -1112,16 +1303,6 @@ $(document).ready(function() {
                     let errorMessage = xhr.responseJSON?.message || 'Something went wrong';
                     showFlashMessage(errorMessage, 'error');
                     console.error('Server error:', xhr.responseJSON);
-
-                    // Show detailed error in modal
-                    if (xhr.responseJSON?.errors) {
-                        let detailHtml = '<div class="text-danger mt-2"><small>';
-                        $.each(xhr.responseJSON.errors, function(field, msgs) {
-                            detailHtml += `<div>${field}: ${msgs.join(', ')}</div>`;
-                        });
-                        detailHtml += '</small></div>';
-                        $('.modal-body').append(detailHtml);
-                    }
                 }
             }
         });
@@ -1177,7 +1358,6 @@ $(document).ready(function() {
                     $('#f_code').prop('disabled', false);
                 }
 
-                // Remove required attribute from image for edit
                 $('#f_image').prop('required', false);
 
                 $('#corpModal').modal('show');
@@ -1268,21 +1448,21 @@ $(document).ready(function() {
 
                 let html = `
                     <div class="row">
-                        <div class="col-md-4 text-center mb-3">
+                        <div class="col-12 col-md-4 text-center mb-3">
                             <img src="${imageUrl}"
                                  alt="${escapeHtml(corp.name)}"
-                                 style="max-height: 150px; border-radius: 8px; object-fit: cover;"
-                                 onerror="this.src='${assetBase}images/default-corp.png'">
+                                 style="max-height: 150px; max-width: 100%; border-radius: 8px; object-fit: contain;"
+                                 onerror="this.onerror=null; this.src='${assetBase}images/default-corp.png';">
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-12 col-md-8">
                             <h4>${escapeHtml(corp.name)}</h4>
                             <div class="row mt-3">
-                                <div class="col-sm-6">
+                                <div class="col-12 col-sm-6">
                                     <p><strong>Code:</strong> ${escapeHtml(corp.code)}</p>
                                     <p><strong>Type:</strong> ${escapeHtml(corp.type || 'Municipal Corporation')}</p>
                                     <p><strong>Status:</strong> <span class="badge ${badgeClass}">${corp.status}</span></p>
                                 </div>
-                                <div class="col-sm-6">
+                                <div class="col-12 col-sm-6">
                                     <p><strong>State:</strong> ${escapeHtml(corp.state || '-')}</p>
                                     <p><strong>District:</strong> ${escapeHtml(corp.district || '-')}</p>
                                     <p><strong>Pincode:</strong> ${escapeHtml(corp.pincode || '-')}</p>
@@ -1313,7 +1493,6 @@ $(document).ready(function() {
     // MODAL CLEANUP
     // =============================================
     $('#corpModal').on('hidden.bs.modal', function() {
-        // Reset form when modal is closed
         resetForm();
         $('#corpSaveBtn').prop('disabled', false).html('Save Corporation');
     });
