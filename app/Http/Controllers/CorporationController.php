@@ -19,12 +19,14 @@ use Maatwebsite\Excel\Facades\Excel;
 class CorporationController extends Controller
 {
     protected CorporationService $corporationService;
+    protected ImportService $importService;
 
     public function __construct(
         CorporationService $corporationService,
-
+        ImportService $importService
     ) {
         $this->corporationService = $corporationService;
+        $this->importService = $importService;
     }
 
     public function index()
@@ -34,22 +36,33 @@ class CorporationController extends Controller
 
     public function list(Request $request)
     {
-        $query = Corporation::query();
+        try {
+            $query = Corporation::query()
+                ->select('corporations.*')
+                ->selectRaw('ST_AsGeoJSON(boundary) as boundary_geojson');
 
-        if ($request->filled('corp_name')) {
-            $query->where('name', 'like', '%' . $request->corp_name . '%');
+            if ($request->filled('corp_name')) {
+                $query->where('name', 'like', '%' . $request->corp_name . '%');
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            $corporations = $query->latest()->paginate(12);
+
+            return response()->json([
+                'status' => true,
+                'data'   => $corporations,
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to load corporations: ' . $e->getMessage(),
+            ], 500);
         }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $corporations = $query->latest()->paginate(12);
-
-        return response()->json([
-            'status' => true,
-            'data'   => $corporations,
-        ]);
     }
 
     // =====================================================================
@@ -137,6 +150,18 @@ class CorporationController extends Controller
         );
     }
 
+    /**
+     * Fetch a corporation with boundary safely converted to GeoJSON text,
+     * instead of raw binary — safe to pass to response()->json().
+     */
+    private function findWithGeoJson(int $id): Corporation
+    {
+        return Corporation::query()
+            ->select('corporations.*')
+            ->selectRaw('ST_AsGeoJSON(boundary) as boundary_geojson')
+            ->findOrFail($id);
+    }
+
     // =====================================================================
     // CRUD
     // =====================================================================
@@ -173,8 +198,6 @@ class CorporationController extends Controller
                 ? CommonHelper::uploadProfileImage($request->file('image'), 'corporation/profile')
                 : 'https://ui-avatars.com/api/?name=' . urlencode($request->name) . '&background=1679AB&color=fff';
 
-            // Create the row first, WITHOUT boundary — geometry can't go
-            // through normal mass assignment, it needs a raw SQL update.
             $corporation = Corporation::create([
                 'name'        => $request->name,
                 'code'        => $request->code,
@@ -235,7 +258,7 @@ class CorporationController extends Controller
             return response()->json([
                 'status'       => true,
                 'message'      => 'Corporation created successfully with data imports.',
-                'data'         => $corporation->fresh(),
+                'data'         => $this->findWithGeoJson($corporation->id),
                 'import_stats' => $importStats,
             ]);
         } catch (\Throwable $e) {
@@ -254,7 +277,19 @@ class CorporationController extends Controller
 
     public function show(Corporation $corporation)
     {
-        return response()->json(['status' => true, 'data' => $corporation]);
+        try {
+            return response()->json([
+                'status' => true,
+                'data'   => $this->findWithGeoJson($corporation->id),
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to load corporation: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function update(Request $request, Corporation $corporation)
@@ -351,7 +386,7 @@ class CorporationController extends Controller
             return response()->json([
                 'status'       => true,
                 'message'      => 'Corporation updated successfully with data imports.',
-                'data'         => $corporation->fresh(),
+                'data'         => $this->findWithGeoJson($corporation->id),
                 'import_stats' => $importStats,
             ]);
         } catch (\Throwable $e) {

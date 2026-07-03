@@ -21,6 +21,13 @@ class Corporation extends Model
         'image',
         'boundary',
     ];
+
+    // Raw GEOMETRY column is binary WKB — never JSON-safe.
+    // Hide it from array/JSON output everywhere the model is serialized.
+    protected $hidden = [
+        'boundary',
+    ];
+
     public function zones()
     {
         return $this->hasMany(Zone::class, 'corp_id');
