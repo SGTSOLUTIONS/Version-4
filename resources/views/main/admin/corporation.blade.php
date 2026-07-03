@@ -41,8 +41,11 @@
         </div>
     </div>
 
-    <div class="card-grid" id="corporationsGrid">
-        <!-- Corporations will be loaded here -->
+    <!-- Corporation Grid using Bootstrap Row/Col -->
+    <div class="container-fluid px-0">
+        <div class="row g-4" id="corporationsGrid">
+            <!-- Corporations will be loaded here -->
+        </div>
     </div>
 
     <!-- Pagination Container -->
@@ -335,14 +338,7 @@
             animation: slideOutRight 0.4s ease forwards;
         }
 
-        /* Card Grid Styles */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
+        /* Card Styles - Updated for Bootstrap Grid */
         .acard {
             background: #fff;
             border-radius: 12px;
@@ -351,6 +347,7 @@
             transition: transform 0.2s, box-shadow 0.2s;
             display: flex;
             flex-direction: column;
+            height: 100%; /* Make card fill the column */
         }
 
         .acard:hover {
@@ -362,9 +359,10 @@
         .acard-img-wrap {
             position: relative;
             width: 100%;
-            height: 380px;
+            height: 220px; /* Slightly smaller for better grid fit */
             background: #f0f2f5;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .acard-img-wrap img {
@@ -376,10 +374,6 @@
             object-fit: cover;
             display: block;
         }
-
-
-        /* If you prefer a fixed height approach with better responsiveness */
-
 
         .acard-overlay {
             position: absolute;
@@ -583,12 +577,8 @@
             font-weight: 600;
         }
 
-        /* Responsive */
+        /* Responsive Adjustments */
         @media (max-width: 768px) {
-            .card-grid {
-                grid-template-columns: 1fr;
-            }
-
             .data-toolbar {
                 flex-direction: column;
                 align-items: stretch !important;
@@ -602,6 +592,21 @@
                 max-width: calc(100% - 20px);
                 right: 10px;
                 top: 10px;
+            }
+
+            .acard-img-wrap {
+                height: 180px; /* Smaller height on mobile */
+            }
+        }
+
+        @media (max-width: 576px) {
+            .acard-img-wrap {
+                height: 160px;
+            }
+
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
             }
         }
     </style>
@@ -740,17 +745,17 @@
             }
 
             // =============================================
-            // RENDER CARDS
+            // RENDER CARDS - UPDATED WITH BOOTSTRAP GRID
             // =============================================
             function renderCards(corporations) {
                 if (!corporations || corporations.length === 0) {
                     $('#corporationsGrid').html(`
-                <div class="text-center py-5 w-100">
-                    <i class="bi bi-building fs-1 text-muted"></i>
-                    <h5 class="mt-2">No Corporations Found</h5>
-                    <p class="text-muted">Try adjusting your search or filters</p>
-                </div>
-            `);
+                        <div class="col-12 text-center py-5">
+                            <i class="bi bi-building fs-1 text-muted"></i>
+                            <h5 class="mt-2">No Corporations Found</h5>
+                            <p class="text-muted">Try adjusting your search or filters</p>
+                        </div>
+                    `);
                     return;
                 }
 
@@ -758,8 +763,7 @@
                 const assetBase = "{{ asset('') }}";
 
                 $.each(corporations, function(index, corp) {
-                    let imageUrl = corp.image ? assetBase + corp.image : assetBase +
-                        'images/default-corp.png';
+                    let imageUrl = corp.image ? assetBase + corp.image : assetBase + 'images/default-corp.png';
 
                     let badgeClass = {
                         active: 'bg-success',
@@ -768,45 +772,47 @@
                     } [corp.status] || 'bg-secondary';
 
                     html += `
-                <div class="acard">
-                    <div class="acard-img-wrap">
-                        <img src="${imageUrl}"
-                            onerror="this.src='${assetBase}images/default-corp.png'"
-                            alt="${escapeHtml(corp.name)}">
-                        <div class="acard-overlay"></div>
-                        <span class="acard-tag">${corp.type ?? 'Corporation'}</span>
-                    </div>
-                    <div class="acard-body">
-                        <div class="acard-meta">
-                            <i class="bi bi-geo-alt"></i>
-                            ${escapeHtml(corp.state ?? '-')}
-                            <span class="dot"></span>
-                            ${escapeHtml(corp.district ?? '-')}
+                        <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                            <div class="acard">
+                                <div class="acard-img-wrap">
+                                    <img src="${imageUrl}"
+                                        onerror="this.src='${assetBase}images/default-corp.png'"
+                                        alt="${escapeHtml(corp.name)}">
+                                    <div class="acard-overlay"></div>
+                                    <span class="acard-tag">${corp.type ?? 'Corporation'}</span>
+                                </div>
+                                <div class="acard-body">
+                                    <div class="acard-meta">
+                                        <i class="bi bi-geo-alt"></i>
+                                        ${escapeHtml(corp.state ?? '-')}
+                                        <span class="dot"></span>
+                                        ${escapeHtml(corp.district ?? '-')}
+                                    </div>
+                                    <h3 class="acard-title">${escapeHtml(corp.name)}</h3>
+                                    <p class="acard-desc">${escapeHtml(corp.description ?? 'No description available')}</p>
+                                    <div class="acard-footer">
+                                        <span class="acard-author">${escapeHtml(corp.code)}</span>
+                                        <span class="badge ${badgeClass}">${corp.status}</span>
+                                    </div>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <button class="btn btn-info btn-sm flex-fill view-btn" data-id="${corp.id}">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                        <button class="btn btn-warning btn-sm flex-fill edit-btn" data-id="${corp.id}">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        ${userRole === 'admin' ? `
+                                            <button class="btn btn-danger btn-sm flex-fill delete-btn"
+                                                    data-id="${corp.id}"
+                                                    data-name="${escapeHtml(corp.name)}">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <h3 class="acard-title">${escapeHtml(corp.name)}</h3>
-                        <p class="acard-desc">${escapeHtml(corp.description ?? 'No description available')}</p>
-                        <div class="acard-footer">
-                            <span class="acard-author">${escapeHtml(corp.code)}</span>
-                            <span class="badge ${badgeClass}">${corp.status}</span>
-                        </div>
-                        <div class="d-flex gap-2 mt-3">
-                            <button class="btn btn-info btn-sm flex-fill view-btn" data-id="${corp.id}">
-                                <i class="bi bi-eye"></i> View
-                            </button>
-                            <button class="btn btn-warning btn-sm flex-fill edit-btn" data-id="${corp.id}">
-                                <i class="bi bi-pencil"></i> Edit
-                            </button>
-                            ${userRole === 'admin' ? `
-                                    <button class="btn btn-danger btn-sm flex-fill delete-btn"
-                                            data-id="${corp.id}"
-                                            data-name="${escapeHtml(corp.name)}">
-                                        <i class="bi bi-trash"></i> Delete
-                                    </button>
-                                ` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
+                    `;
                 });
 
                 $('#corporationsGrid').html(html);
@@ -873,8 +879,8 @@
                 .total);
 
                 let infoHtml = `<div class="text-center text-muted mt-3" id="paginationInfo">
-            Showing ${start} to ${end} of ${pagination.total} corporations
-        </div>`;
+                    Showing ${start} to ${end} of ${pagination.total} corporations
+                </div>`;
 
                 if ($('#paginationInfo').length === 0) {
                     $('#paginationContainer').after(infoHtml);
@@ -942,13 +948,13 @@
                     if (value.error) {
                         hasErrors = true;
                         html += `
-                    <div class="col-12">
-                        <div class="alert alert-danger mb-0">
-                            <strong>${importTypes[key]?.label || key}:</strong><br>
-                            ❌ ${escapeHtml(value.message)}
-                        </div>
-                    </div>
-                `;
+                            <div class="col-12">
+                                <div class="alert alert-danger mb-0">
+                                    <strong>${importTypes[key]?.label || key}:</strong><br>
+                                    ❌ ${escapeHtml(value.message)}
+                                </div>
+                            </div>
+                        `;
                     } else if (value.inserted !== undefined || value.updated !== undefined || value
                         .skipped !== undefined) {
                         hasData = true;
@@ -956,63 +962,63 @@
                         let color = importTypes[key]?.color || '#6b7280';
 
                         html += `
-                    <div class="col-md-6">
-                        <div class="import-stat-card">
-                            <div class="stat-icon" style="color: ${color}">
-                                <i class="bi ${importTypes[key]?.icon || 'bi-file-spreadsheet'}"></i>
-                            </div>
-                            <div class="stat-title">${importTypes[key]?.label || key}</div>
-                            <div class="stat-numbers">
-                                <span>Total: <strong>${total}</strong></span>
-                                <span class="num-inserted">+${value.inserted || 0}</span>
-                                <span class="num-updated">↻${value.updated || 0}</span>
-                                ${value.skipped > 0 ? `<span class="num-skipped">⚠${value.skipped}</span>` : ''}
-                            </div>
-                            ${value.skipped > 0 && value.skipped_details && value.skipped_details.length > 0 ? `
-                                    <div class="mt-2 text-start" style="font-size: 12px;">
-                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
-                                            View skipped details (${value.skipped})
-                                        </button>
-                                        <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
-                                            ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
-                                            ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
-                                        </div>
+                            <div class="col-md-6">
+                                <div class="import-stat-card">
+                                    <div class="stat-icon" style="color: ${color}">
+                                        <i class="bi ${importTypes[key]?.icon || 'bi-file-spreadsheet'}"></i>
                                     </div>
-                                ` : ''}
-                        </div>
-                    </div>
-                `;
+                                    <div class="stat-title">${importTypes[key]?.label || key}</div>
+                                    <div class="stat-numbers">
+                                        <span>Total: <strong>${total}</strong></span>
+                                        <span class="num-inserted">+${value.inserted || 0}</span>
+                                        <span class="num-updated">↻${value.updated || 0}</span>
+                                        ${value.skipped > 0 ? `<span class="num-skipped">⚠${value.skipped}</span>` : ''}
+                                    </div>
+                                    ${value.skipped > 0 && value.skipped_details && value.skipped_details.length > 0 ? `
+                                        <div class="mt-2 text-start" style="font-size: 12px;">
+                                            <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
+                                                View skipped details (${value.skipped})
+                                            </button>
+                                            <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
+                                                ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
+                                                ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
                     }
                 });
 
                 if (!hasData && !hasErrors) {
                     html = `
-                <div class="text-center py-4">
-                    <i class="bi bi-check-circle" style="font-size: 48px; color: #10b981;"></i>
-                    <h6 class="mt-2">No files were imported</h6>
-                    <p class="text-muted">The corporation was created without any data imports.</p>
-                </div>
-            `;
+                        <div class="col-12 text-center py-4">
+                            <i class="bi bi-check-circle" style="font-size: 48px; color: #10b981;"></i>
+                            <h6 class="mt-2">No files were imported</h6>
+                            <p class="text-muted">The corporation was created without any data imports.</p>
+                        </div>
+                    `;
                 }
 
                 if (hasErrors && hasData) {
                     html += `
-                <div class="col-12 mt-2">
-                    <div class="alert alert-warning mb-0">
-                        ⚠️ Some imports had errors. Please check the details above.
-                    </div>
-                </div>
-            `;
+                        <div class="col-12 mt-2">
+                            <div class="alert alert-warning mb-0">
+                                ⚠️ Some imports had errors. Please check the details above.
+                            </div>
+                        </div>
+                    `;
                 }
 
                 if (!hasErrors && hasData) {
                     html += `
-                <div class="col-12 mt-2">
-                    <div class="alert alert-success mb-0">
-                        ✅ All imports completed successfully!
-                    </div>
-                </div>
-            `;
+                        <div class="col-12 mt-2">
+                            <div class="alert alert-success mb-0">
+                                ✅ All imports completed successfully!
+                            </div>
+                        </div>
+                    `;
                 }
 
                 html += '</div>';
@@ -1318,12 +1324,12 @@
                 }
 
                 $('#viewModalBody').html(`
-            <div class="text-center py-4">
-                <div class="spinner-border text-success" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
-        `);
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                `);
                 $('#viewModal').modal('show');
 
                 $.ajax({
@@ -1342,44 +1348,44 @@
                         } [corp.status] || 'bg-secondary';
 
                         let html = `
-                    <div class="row">
-                        <div class="col-md-4 text-center mb-3">
-                            <img src="${imageUrl}"
-                                 alt="${escapeHtml(corp.name)}"
-                                 style="max-height: 150px; border-radius: 8px; object-fit: cover;"
-                                 onerror="this.src='${assetBase}images/default-corp.png'">
-                        </div>
-                        <div class="col-md-8">
-                            <h4>${escapeHtml(corp.name)}</h4>
-                            <div class="row mt-3">
-                                <div class="col-sm-6">
-                                    <p><strong>Code:</strong> ${escapeHtml(corp.code)}</p>
-                                    <p><strong>Type:</strong> ${escapeHtml(corp.type || 'Municipal Corporation')}</p>
-                                    <p><strong>Status:</strong> <span class="badge ${badgeClass}">${corp.status}</span></p>
+                            <div class="row">
+                                <div class="col-md-4 text-center mb-3">
+                                    <img src="${imageUrl}"
+                                         alt="${escapeHtml(corp.name)}"
+                                         style="max-height: 150px; border-radius: 8px; object-fit: cover;"
+                                         onerror="this.src='${assetBase}images/default-corp.png'">
                                 </div>
-                                <div class="col-sm-6">
-                                    <p><strong>State:</strong> ${escapeHtml(corp.state || '-')}</p>
-                                    <p><strong>District:</strong> ${escapeHtml(corp.district || '-')}</p>
-                                    <p><strong>Pincode:</strong> ${escapeHtml(corp.pincode || '-')}</p>
+                                <div class="col-md-8">
+                                    <h4>${escapeHtml(corp.name)}</h4>
+                                    <div class="row mt-3">
+                                        <div class="col-sm-6">
+                                            <p><strong>Code:</strong> ${escapeHtml(corp.code)}</p>
+                                            <p><strong>Type:</strong> ${escapeHtml(corp.type || 'Municipal Corporation')}</p>
+                                            <p><strong>Status:</strong> <span class="badge ${badgeClass}">${corp.status}</span></p>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <p><strong>State:</strong> ${escapeHtml(corp.state || '-')}</p>
+                                            <p><strong>District:</strong> ${escapeHtml(corp.district || '-')}</p>
+                                            <p><strong>Pincode:</strong> ${escapeHtml(corp.pincode || '-')}</p>
+                                        </div>
+                                    </div>
+                                    <p><strong>Description:</strong></p>
+                                    <p class="text-muted">${escapeHtml(corp.description || 'No description')}</p>
+                                    ${corp.boundary_file ? `
+                                        <p><strong>Boundary:</strong> <span class="text-success">✓ Uploaded</span></p>
+                                    ` : ''}
                                 </div>
                             </div>
-                            <p><strong>Description:</strong></p>
-                            <p class="text-muted">${escapeHtml(corp.description || 'No description')}</p>
-                            ${corp.boundary_file ? `
-                                    <p><strong>Boundary:</strong> <span class="text-success">✓ Uploaded</span></p>
-                                ` : ''}
-                        </div>
-                    </div>
-                `;
+                        `;
                         $('#viewModalBody').html(html);
                     },
                     error: function(xhr) {
                         $('#viewModalBody').html(`
-                    <div class="text-center py-4 text-danger">
-                        <i class="bi bi-exclamation-circle fs-1"></i>
-                        <h5 class="mt-2">Failed to load corporation details</h5>
-                    </div>
-                `);
+                            <div class="text-center py-4 text-danger">
+                                <i class="bi bi-exclamation-circle fs-1"></i>
+                                <h5 class="mt-2">Failed to load corporation details</h5>
+                            </div>
+                        `);
                     }
                 });
             });
