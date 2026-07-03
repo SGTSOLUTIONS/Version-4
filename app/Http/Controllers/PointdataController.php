@@ -578,6 +578,7 @@ class PointdataController extends Controller
                             DB::table($professionalTaxTableName)
                                 ->where('id', $existing->id)
                                 ->update([
+                                    'corporation_id' => $corpId,
                                     'gisid' => $request->point_gisid,
                                     'old_pt_number' => $professional['old_pt_number'] ?? null,
                                     'establishment_name' => $professional['establishment_name'] ?? null,
@@ -590,6 +591,7 @@ class PointdataController extends Controller
                         } else {
                             // Insert new
                             DB::table($professionalTaxTableName)->insert([
+                                'corporation_id' => $corpId,
                                 'gisid' => $request->point_gisid,
                                 'assessment' => $request->assessment,
                                 'pt_number' => $professional['pt_number'],

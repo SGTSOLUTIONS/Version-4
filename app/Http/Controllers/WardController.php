@@ -245,13 +245,19 @@ class WardController extends Controller
                     'message' => 'Ward created successfully',
                     'data' => $ward->load(['zone.corporation', 'zone'])
                 ], 201);
+            } catch (\Throwable $e) {
+                try {
+                    if (DB::transactionLevel() > 0) {
+                        DB::rollBack();
+                    }
+                } catch (\Throwable $rollbackError) {
+                }
 
-            } catch (\Exception $e) {
-                // Rollback transaction on error
-                DB::rollBack();
-                throw $e;
+                return response()->json([
+                    'status' => false,
+                    'message' => $e->getMessage(),
+                ], 500);
             }
-
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -431,13 +437,19 @@ class WardController extends Controller
                     'message' => 'Ward updated successfully',
                     'data' => $ward->load(['zone.corporation', 'zone'])
                 ]);
+            } catch (\Throwable $e) {
+                try {
+                    if (DB::transactionLevel() > 0) {
+                        DB::rollBack();
+                    }
+                } catch (\Throwable $rollbackError) {
+                }
 
-            } catch (\Exception $e) {
-                // Rollback transaction on error
-                DB::rollBack();
-                throw $e;
+                return response()->json([
+                    'status' => false,
+                    'message' => $e->getMessage(),
+                ], 500);
             }
-
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -479,13 +491,11 @@ class WardController extends Controller
                     'status' => true,
                     'message' => 'Ward deleted successfully'
                 ]);
-
             } catch (\Exception $e) {
                 // Rollback transaction on error
                 DB::rollBack();
                 throw $e;
             }
-
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
