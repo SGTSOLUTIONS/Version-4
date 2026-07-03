@@ -9,8 +9,8 @@ use App\Imports\UgdTaxImport;
 use App\Imports\WaterTaxImport;
 use App\Models\Corporation;
 use App\Services\CorporationService;
+use App\Services\ImportService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -19,91 +19,132 @@ use Maatwebsite\Excel\Facades\Excel;
 class CorporationController extends Controller
 {
     protected CorporationService $corporationService;
+    protected ImportService $importService;
 
-    public function __construct(CorporationService $corporationService)
-    {
+    public function __construct(
+        CorporationService $corporationService,
+        ImportService $importService
+    ) {
         $this->corporationService = $corporationService;
+        $this->importService = $importService;
     }
 
     public function index()
     {
-        $user = Auth::user();
-
-        if ($user->role == 'commissioner') {
-            return view('main.admin.corporation', ['isCommissioner' => true]);
-        }
-
-        return view('main.admin.corporation', ['isCommissioner' => false]);
+        return view('main.admin.corporation');
     }
 
     public function list(Request $request)
     {
-        try {
-            $user = Auth::user();
-            $query = Corporation::query();
+        $query = Corporation::query();
 
-            if ($user->role == 'commissioner') {
-                $query->where('id', $user->corporation_id);
-            }
-
-            if ($request->filled('corp_name')) {
-                $query->where('name', 'like', '%' . $request->corp_name . '%');
-            }
-
-            if ($request->filled('status')) {
-                $query->where('status', $request->status);
-            }
-
-            $corporations = $query->latest()->paginate(12);
-
-            return response()->json([
-                'status' => true,
-                'data'   => $corporations,
-            ]);
-        } catch (\Throwable $e) {
-            report($e);
-
-            return response()->json([
-                'status'  => false,
-                'message' => 'Failed to load corporations: ' . $e->getMessage(),
-            ], 500);
+        if ($request->filled('corp_name')) {
+            $query->where('name', 'like', '%' . $request->corp_name . '%');
         }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $corporations = $query->latest()->paginate(12);
+
+        return response()->json([
+            'status' => true,
+            'data'   => $corporations,
+        ]);
     }
 
-    /**
-     * Extract a clean GeoJSON geometry object from an uploaded boundary file.
-     * Returns the full { "type": ..., "coordinates": ... } structure so it
-     * round-trips correctly and (if you ever move to a real spatial column)
-     * is valid input for ST_GeomFromGeoJSON().
-     */
-    private function extractBoundaryGeometry($file): array
+    // =====================================================================
+    // GeoJSON -> WKT helpers (boundary column is GEOMETRY, so it can only
+    // accept WKT/WKB via ST_GeomFromText, never raw JSON text)
+    // =====================================================================
+
+    private function extractGeoJsonGeometry($file): array
     {
         $geojsonData = json_decode(file_get_contents($file->getRealPath()), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException('Boundary file is not valid JSON.');
+            throw new \Exception('Boundary file is not valid JSON.');
         }
 
         $geometry = $geojsonData['features'][0]['geometry'] ?? null;
 
         if (!$geometry || !isset($geometry['type'], $geometry['coordinates'])) {
-            throw new \RuntimeException('Invalid GeoJSON format.');
+            throw new \Exception('Invalid GeoJSON format.');
         }
 
         return $geometry;
     }
 
-    public function store(Request $request)
+    private function geoJsonToWkt(array $geometry): string
     {
-        $user = Auth::user();
+        $type = $geometry['type'] ?? null;
+        $coords = $geometry['coordinates'] ?? null;
 
-        if ($user->role == 'commissioner') {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Commissioners cannot create new corporations',
-            ], 403);
+        if (!$type || !is_array($coords)) {
+            throw new \Exception('Unsupported or malformed geometry.');
         }
 
+        return match ($type) {
+            'Point'           => 'POINT(' . $this->pointToWkt($coords) . ')',
+            'LineString'      => 'LINESTRING(' . $this->lineToWkt($coords) . ')',
+            'Polygon'         => 'POLYGON(' . $this->polygonToWkt($coords) . ')',
+            'MultiPoint'      => 'MULTIPOINT(' . $this->multiPointToWkt($coords) . ')',
+            'MultiLineString' => 'MULTILINESTRING(' . $this->multiLineToWkt($coords) . ')',
+            'MultiPolygon'    => 'MULTIPOLYGON(' . $this->multiPolygonToWkt($coords) . ')',
+            default           => throw new \Exception("Unsupported geometry type: {$type}"),
+        };
+    }
+
+    private function pointToWkt(array $point): string
+    {
+        return (float) $point[0] . ' ' . (float) $point[1];
+    }
+
+    private function lineToWkt(array $points): string
+    {
+        return implode(',', array_map(fn ($p) => $this->pointToWkt($p), $points));
+    }
+
+    private function polygonToWkt(array $rings): string
+    {
+        return implode(',', array_map(fn ($ring) => '(' . $this->lineToWkt($ring) . ')', $rings));
+    }
+
+    private function multiPointToWkt(array $points): string
+    {
+        return implode(',', array_map(fn ($p) => '(' . $this->pointToWkt($p) . ')', $points));
+    }
+
+    private function multiLineToWkt(array $lines): string
+    {
+        return implode(',', array_map(fn ($line) => '(' . $this->lineToWkt($line) . ')', $lines));
+    }
+
+    private function multiPolygonToWkt(array $polygons): string
+    {
+        return implode(',', array_map(fn ($polygon) => '(' . $this->polygonToWkt($polygon) . ')', $polygons));
+    }
+
+    /**
+     * Write WKT into the GEOMETRY column via raw SQL. SRID 0 is used so MySQL
+     * does not enforce lon/lat range validation (these coordinates are
+     * projected meters, not degrees).
+     */
+    private function saveBoundary(int $corporationId, string $wkt): void
+    {
+        DB::statement(
+            'UPDATE corporations SET boundary = ST_GeomFromText(?, 0) WHERE id = ?',
+            [$wkt, $corporationId]
+        );
+    }
+
+    // =====================================================================
+    // CRUD
+    // =====================================================================
+
+    public function store(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'name'                  => 'required|string|max:255',
             'code'                  => 'required|string|max:100|unique:corporations,code',
@@ -112,12 +153,12 @@ class CorporationController extends Controller
             'pincode'               => 'required|string|max:20',
             'status'                => 'required|string|max:50',
             'description'           => 'required|string',
-            'image'                 => 'required|image|mimes:jpg,jpeg,png',
+            'image'                 => 'required|image|mimes:jpg,jpeg,png|max:2048',
             'boundary_file'         => 'required|file',
-            'mis_file'              => 'nullable|file|mimes:xlsx,xls,csv',
-            'water_tax_file'        => 'nullable|file|mimes:xlsx,xls,csv',
-            'ugd_tax_file'          => 'nullable|file|mimes:xlsx,xls,csv',
-            'professional_tax_file' => 'nullable|file|mimes:xlsx,xls,csv',
+            'mis_file'              => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+            'water_tax_file'        => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+            'ugd_tax_file'          => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+            'professional_tax_file' => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
         ]);
 
         if ($validator->fails()) {
@@ -127,49 +168,83 @@ class CorporationController extends Controller
             ], 422);
         }
 
+        DB::beginTransaction();
+
         try {
-            // Do the lightweight, transaction-safe work (row + tables) inside a transaction.
-            $corporation = DB::transaction(function () use ($request) {
-                $profileImagePath = $request->hasFile('image')
-                    ? CommonHelper::uploadProfileImage($request->file('image'), 'corporation/profile')
-                    : 'https://ui-avatars.com/api/?name=' . urlencode($request->name) . '&background=1679AB&color=fff';
+            $profileImagePath = $request->hasFile('image')
+                ? CommonHelper::uploadProfileImage($request->file('image'), 'corporation/profile')
+                : 'https://ui-avatars.com/api/?name=' . urlencode($request->name) . '&background=1679AB&color=fff';
 
-                $boundary = null;
+            // Create the row first, WITHOUT boundary — geometry can't go
+            // through normal mass assignment, it needs a raw SQL update.
+            $corporation = Corporation::create([
+                'name'        => $request->name,
+                'code'        => $request->code,
+                'state'       => $request->state,
+                'district'    => $request->district,
+                'pincode'     => $request->pincode,
+                'status'      => $request->status,
+                'description' => $request->description,
+                'image'       => $profileImagePath,
+            ]);
 
-                if ($request->hasFile('boundary_file')) {
-                    $boundary = json_encode($this->extractBoundaryGeometry($request->file('boundary_file')));
-                }
+            if ($request->hasFile('boundary_file')) {
+                $geometry = $this->extractGeoJsonGeometry($request->file('boundary_file'));
+                $wkt = $this->geoJsonToWkt($geometry);
+                $this->saveBoundary($corporation->id, $wkt);
+            }
 
-                $corporation = Corporation::create([
-                    'name'        => $request->name,
-                    'code'        => $request->code,
-                    'state'       => $request->state,
-                    'district'    => $request->district,
-                    'pincode'     => $request->pincode,
-                    'status'      => $request->status,
-                    'description' => $request->description,
-                    'image'       => $profileImagePath,
-                    'boundary'    => $boundary,
-                ]);
+            $createTable = $this->corporationService->createCorporationTables($corporation->id);
 
-                if (!$this->corporationService->createCorporationTables($corporation->id)) {
-                    throw new \RuntimeException('Corporation tables could not be created.');
-                }
+            if (!$createTable) {
+                throw new \Exception('Corporation tables could not be created.');
+            }
 
-                return $corporation;
-            });
+            $importStats = [];
 
-            // Run heavy imports outside the transaction so long-running Excel
-            // processing doesn't hold DB locks / risk a dropped connection.
-            $importStats = $this->runImports($request, $corporation->id);
+            if ($request->hasFile('mis_file')) {
+                $misImport = new MisImport($corporation->id);
+                Excel::import($misImport, $request->file('mis_file'));
+                $importStats['mis'] = $misImport->getStats();
+            }
+
+            if ($request->hasFile('water_tax_file')) {
+                $waterTaxImport = new WaterTaxImport($corporation->id);
+                Excel::import($waterTaxImport, $request->file('water_tax_file'));
+                $importStats['water_tax'] = method_exists($waterTaxImport, 'getStats')
+                    ? $waterTaxImport->getStats()
+                    : ['message' => 'Imported successfully'];
+            }
+
+            if ($request->hasFile('ugd_tax_file')) {
+                $ugdTaxImport = new UgdTaxImport($corporation->id);
+                Excel::import($ugdTaxImport, $request->file('ugd_tax_file'));
+                $importStats['ugd_tax'] = method_exists($ugdTaxImport, 'getStats')
+                    ? $ugdTaxImport->getStats()
+                    : ['message' => 'Imported successfully'];
+            }
+
+            if ($request->hasFile('professional_tax_file')) {
+                $professionalTaxImport = new ProfessionalTaxImport($corporation->id);
+                Excel::import($professionalTaxImport, $request->file('professional_tax_file'));
+                $importStats['professional_tax'] = method_exists($professionalTaxImport, 'getStats')
+                    ? $professionalTaxImport->getStats()
+                    : ['message' => 'Imported successfully'];
+            }
+
+            DB::commit();
 
             return response()->json([
                 'status'       => true,
                 'message'      => 'Corporation created successfully with data imports.',
-                'data'         => $corporation,
+                'data'         => $corporation->fresh(),
                 'import_stats' => $importStats,
             ]);
         } catch (\Throwable $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
             report($e);
 
             return response()->json([
@@ -181,58 +256,26 @@ class CorporationController extends Controller
 
     public function show(Corporation $corporation)
     {
-        try {
-            $user = Auth::user();
-
-            if ($user->role == 'commissioner' && $corporation->id != $user->corporation_id) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Unauthorized to view this corporation',
-                ], 403);
-            }
-
-            return response()->json(['status' => true, 'data' => $corporation]);
-        } catch (\Throwable $e) {
-            report($e);
-
-            return response()->json([
-                'status'  => false,
-                'message' => 'Failed to load corporation: ' . $e->getMessage(),
-            ], 500);
-        }
+        return response()->json(['status' => true, 'data' => $corporation]);
     }
 
     public function update(Request $request, Corporation $corporation)
     {
-        $user = Auth::user();
-
-        if ($user->role == 'commissioner' && $corporation->id != $user->corporation_id) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Unauthorized to update this corporation',
-            ], 403);
-        }
-
-        $rules = [
-            'name'        => 'required|string|max:255',
-            'state'       => 'required|string|max:255',
-            'district'    => 'required|string|max:255',
-            'pincode'     => 'required|string|max:20',
-            'status'      => 'required|string|max:50',
-            'description' => 'required|string',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ];
-
-        if ($user->role == 'admin') {
-            $rules['code']                  = 'required|string|max:100|unique:corporations,code,' . $corporation->id;
-            $rules['boundary_file']         = 'nullable|file';
-            $rules['mis_file']              = 'nullable|file|mimes:xlsx,xls,csv';
-            $rules['water_tax_file']        = 'nullable|file|mimes:xlsx,xls,csv';
-            $rules['ugd_tax_file']          = 'nullable|file|mimes:xlsx,xls,csv';
-            $rules['professional_tax_file'] = 'nullable|file|mimes:xlsx,xls,csv';
-        }
-
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->all(), [
+            'name'                  => 'required|string|max:255',
+            'code'                  => 'required|string|max:100|unique:corporations,code,' . $corporation->id,
+            'state'                 => 'required|string|max:255',
+            'district'              => 'required|string|max:255',
+            'pincode'               => 'required|string|max:20',
+            'status'                => 'required|string|max:50',
+            'description'           => 'required|string',
+            'image'                 => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'boundary_file'         => 'nullable|file',
+            'mis_file'              => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+            'water_tax_file'        => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+            'ugd_tax_file'          => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+            'professional_tax_file' => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+        ]);
 
         if ($validator->fails()) {
             return response()->json([
@@ -241,52 +284,83 @@ class CorporationController extends Controller
             ], 422);
         }
 
+        DB::beginTransaction();
+
         try {
-            DB::transaction(function () use ($request, $corporation, $user) {
-                if ($request->hasFile('image')) {
-                    if ($corporation->image && !str_starts_with($corporation->image, 'http')) {
-                        Storage::disk('public')->delete($corporation->image);
-                    }
-
-                    $corporation->image = CommonHelper::uploadProfileImage(
-                        $request->file('image'),
-                        'corporation/profile'
-                    );
+            if ($request->hasFile('image')) {
+                if ($corporation->image && !str_starts_with($corporation->image, 'http')) {
+                    Storage::disk('public')->delete($corporation->image);
                 }
 
-                if ($user->role == 'admin' && $request->hasFile('boundary_file')) {
-                    $corporation->boundary = json_encode(
-                        $this->extractBoundaryGeometry($request->file('boundary_file'))
-                    );
-                }
+                $corporation->image = CommonHelper::uploadProfileImage(
+                    $request->file('image'),
+                    'corporation/profile'
+                );
+            }
 
-                $corporation->name        = $request->name;
-                $corporation->state       = $request->state;
-                $corporation->district    = $request->district;
-                $corporation->pincode     = $request->pincode;
-                $corporation->status      = $request->status;
-                $corporation->description = $request->description;
+            $createTable = $this->corporationService->createCorporationTables($corporation->id);
 
-                if ($user->role == 'admin' && $request->has('code')) {
-                    $corporation->code = $request->code;
-                }
+            if ($request->hasFile('boundary_file')) {
+                $geometry = $this->extractGeoJsonGeometry($request->file('boundary_file'));
+                $wkt = $this->geoJsonToWkt($geometry);
+                $this->saveBoundary($corporation->id, $wkt);
+            }
 
-                $corporation->save();
-            });
+            $corporation->name = $request->name;
+            $corporation->code = $request->code;
+            $corporation->state = $request->state;
+            $corporation->district = $request->district;
+            $corporation->pincode = $request->pincode;
+            $corporation->status = $request->status;
+            $corporation->description = $request->description;
+
+            $corporation->save();
 
             $importStats = [];
 
-            if ($user->role == 'admin') {
-                $importStats = $this->runImports($request, $corporation->id);
+            if ($request->hasFile('mis_file')) {
+                $misImport = new MisImport($corporation->id);
+                Excel::import($misImport, $request->file('mis_file'));
+                $importStats['mis'] = $misImport->getStats();
             }
+
+            if ($request->hasFile('water_tax_file')) {
+                $waterTaxImport = new WaterTaxImport($corporation->id);
+                Excel::import($waterTaxImport, $request->file('water_tax_file'));
+                $importStats['water_tax'] = method_exists($waterTaxImport, 'getStats')
+                    ? $waterTaxImport->getStats()
+                    : ['message' => 'Imported successfully'];
+            }
+
+            if ($request->hasFile('ugd_tax_file')) {
+                $ugdTaxImport = new UgdTaxImport($corporation->id);
+                Excel::import($ugdTaxImport, $request->file('ugd_tax_file'));
+                $importStats['ugd_tax'] = method_exists($ugdTaxImport, 'getStats')
+                    ? $ugdTaxImport->getStats()
+                    : ['message' => 'Imported successfully'];
+            }
+
+            if ($request->hasFile('professional_tax_file')) {
+                $professionalTaxImport = new ProfessionalTaxImport($corporation->id);
+                Excel::import($professionalTaxImport, $request->file('professional_tax_file'));
+                $importStats['professional_tax'] = method_exists($professionalTaxImport, 'getStats')
+                    ? $professionalTaxImport->getStats()
+                    : ['message' => 'Imported successfully'];
+            }
+
+            DB::commit();
 
             return response()->json([
                 'status'       => true,
-                'message'      => 'Corporation updated successfully.',
+                'message'      => 'Corporation updated successfully with data imports.',
                 'data'         => $corporation->fresh(),
                 'import_stats' => $importStats,
             ]);
         } catch (\Throwable $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
             report($e);
 
             return response()->json([
@@ -298,32 +372,28 @@ class CorporationController extends Controller
 
     public function destroy(Corporation $corporation)
     {
-        $user = Auth::user();
-
-        if ($user->role == 'commissioner') {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Commissioners cannot delete corporations',
-            ], 403);
-        }
+        DB::beginTransaction();
 
         try {
-            DB::transaction(function () use ($corporation) {
-                foreach (['image'] as $field) {
-                    if ($corporation->$field && !str_starts_with($corporation->$field, 'http')) {
-                        Storage::disk('public')->delete($corporation->$field);
-                    }
-                }
+            if ($corporation->image && !str_starts_with($corporation->image, 'http')) {
+                Storage::disk('public')->delete($corporation->image);
+            }
 
-                $this->corporationService->dropCorporationTables($corporation->id);
-                $corporation->delete();
-            });
+            $this->corporationService->dropCorporationTables($corporation->id);
+
+            $corporation->delete();
+
+            DB::commit();
 
             return response()->json([
                 'status'  => true,
                 'message' => 'Corporation deleted successfully.',
             ]);
         } catch (\Throwable $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
             report($e);
 
             return response()->json([
@@ -331,49 +401,5 @@ class CorporationController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
-    }
-
-    /**
-     * Run all optional data imports for a corporation and collect stats.
-     * Kept outside DB transactions since Excel imports can be large/slow
-     * and shouldn't hold a long-lived transaction open.
-     */
-    private function runImports(Request $request, int $corporationId): array
-    {
-        $importStats = [];
-
-        if ($request->hasFile('mis_file')) {
-            $misImport = new MisImport($corporationId);
-            Excel::import($misImport, $request->file('mis_file'));
-            $importStats['mis'] = method_exists($misImport, 'getStats')
-                ? $misImport->getStats()
-                : ['message' => 'Imported successfully'];
-        }
-
-        if ($request->hasFile('water_tax_file')) {
-            $waterTaxImport = new WaterTaxImport($corporationId);
-            Excel::import($waterTaxImport, $request->file('water_tax_file'));
-            $importStats['water_tax'] = method_exists($waterTaxImport, 'getStats')
-                ? $waterTaxImport->getStats()
-                : ['message' => 'Imported successfully'];
-        }
-
-        if ($request->hasFile('ugd_tax_file')) {
-            $ugdTaxImport = new UgdTaxImport($corporationId);
-            Excel::import($ugdTaxImport, $request->file('ugd_tax_file'));
-            $importStats['ugd_tax'] = method_exists($ugdTaxImport, 'getStats')
-                ? $ugdTaxImport->getStats()
-                : ['message' => 'Imported successfully'];
-        }
-
-        if ($request->hasFile('professional_tax_file')) {
-            $professionalTaxImport = new ProfessionalTaxImport($corporationId);
-            Excel::import($professionalTaxImport, $request->file('professional_tax_file'));
-            $importStats['professional_tax'] = method_exists($professionalTaxImport, 'getStats')
-                ? $professionalTaxImport->getStats()
-                : ['message' => 'Imported successfully'];
-        }
-
-        return $importStats;
     }
 }
