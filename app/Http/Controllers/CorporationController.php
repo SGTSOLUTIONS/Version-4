@@ -25,7 +25,6 @@ class CorporationController extends Controller
 
     ) {
         $this->corporationService = $corporationService;
-
     }
 
     public function index()
@@ -113,27 +112,27 @@ class CorporationController extends Controller
 
     private function lineToWkt(array $points): string
     {
-        return implode(',', array_map(fn ($p) => $this->pointToWkt($p), $points));
+        return implode(',', array_map(fn($p) => $this->pointToWkt($p), $points));
     }
 
     private function polygonToWkt(array $rings): string
     {
-        return implode(',', array_map(fn ($ring) => '(' . $this->lineToWkt($ring) . ')', $rings));
+        return implode(',', array_map(fn($ring) => '(' . $this->lineToWkt($ring) . ')', $rings));
     }
 
     private function multiPointToWkt(array $points): string
     {
-        return implode(',', array_map(fn ($p) => '(' . $this->pointToWkt($p) . ')', $points));
+        return implode(',', array_map(fn($p) => '(' . $this->pointToWkt($p) . ')', $points));
     }
 
     private function multiLineToWkt(array $lines): string
     {
-        return implode(',', array_map(fn ($line) => '(' . $this->lineToWkt($line) . ')', $lines));
+        return implode(',', array_map(fn($line) => '(' . $this->lineToWkt($line) . ')', $lines));
     }
 
     private function multiPolygonToWkt(array $polygons): string
     {
-        return implode(',', array_map(fn ($polygon) => '(' . $this->polygonToWkt($polygon) . ')', $polygons));
+        return implode(',', array_map(fn($polygon) => '(' . $this->polygonToWkt($polygon) . ')', $polygons));
     }
 
     /**
@@ -261,16 +260,18 @@ class CorporationController extends Controller
                 'import_stats' => $importStats,
             ]);
         } catch (\Throwable $e) {
+
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
 
-            report($e);
-
             return response()->json([
-                'status'  => false,
+                'status' => false,
                 'message' => $e->getMessage(),
-            ], 500);
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
     }
 

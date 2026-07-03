@@ -59,14 +59,30 @@ class CorporationService
                 $table->decimal('balance', 12, 2)->nullable();
 
                 $table->enum('usage', [
-                    'Residential', 'Commercial', 'Industrial', 'Institutional',
-                    'Vacant', 'Agricultural', 'Mixed', 'Hospital', 'School',
-                    'Temple', 'Others'
+                    'Residential',
+                    'Commercial',
+                    'Industrial',
+                    'Institutional',
+                    'Vacant',
+                    'Agricultural',
+                    'Mixed',
+                    'Hospital',
+                    'School',
+                    'Temple',
+                    'Others'
                 ])->nullable();
 
                 $table->enum('type', [
-                    'Owner', 'Tenant', 'Mixed', 'Government', 'Lease',
-                    'Trust', 'Partnership', 'Private Limited', 'Public Limited', 'Others'
+                    'Owner',
+                    'Tenant',
+                    'Mixed',
+                    'Government',
+                    'Lease',
+                    'Trust',
+                    'Partnership',
+                    'Private Limited',
+                    'Public Limited',
+                    'Others'
                 ])->nullable();
 
                 $table->string('zone')->nullable();
@@ -106,14 +122,22 @@ class CorporationService
                 $table->decimal('balance', 12, 2)->nullable();
 
                 $table->enum('usage', [
-                    'Residential', 'Commercial', 'Industrial', 'Institutional',
-                    'Vacant', 'Others'
+                    'Residential',
+                    'Commercial',
+                    'Industrial',
+                    'Institutional',
+                    'Vacant',
+                    'Others'
                 ])->nullable();
 
                 $table->string('slab_description')->nullable();
 
                 $table->enum('DBC_type', [
-                    'Owner', 'Tenant', 'Mixed', 'Government', 'Others'
+                    'Owner',
+                    'Tenant',
+                    'Mixed',
+                    'Government',
+                    'Others'
                 ])->nullable();
 
                 $table->timestamps();

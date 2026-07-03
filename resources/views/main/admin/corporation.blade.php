@@ -356,23 +356,41 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
         }
 
+        /* Card Image Styles - Show full logo, no cropping */
         .acard-img-wrap {
             position: relative;
             width: 100%;
             height: 220px;
-            background: #f0f2f5;
+            background: #f8f9fa;
             overflow: hidden;
             flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            box-sizing: border-box;
         }
 
         .acard-img-wrap img {
-            position: absolute;
-            top: 0;
-            left: 0;
+            position: relative;
+            /* not absolute — let flex centering do the work */
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            /* shows the WHOLE logo, no cropping, adds letterbox space instead */
             display: block;
+        }
+
+        @media (max-width: 768px) {
+            .acard-img-wrap {
+                height: 180px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .acard-img-wrap {
+                height: 160px;
+            }
         }
 
         .acard-overlay {
@@ -804,12 +822,12 @@
                                             <i class="bi bi-pencil"></i> Edit
                                         </button>
                                         ${userRole === 'admin' ? `
-                                                    <button class="btn btn-danger btn-sm flex-fill delete-btn"
-                                                            data-id="${corp.id}"
-                                                            data-name="${escapeHtml(corp.name)}">
-                                                        <i class="bi bi-trash"></i> Delete
-                                                    </button>
-                                                ` : ''}
+                                                        <button class="btn btn-danger btn-sm flex-fill delete-btn"
+                                                                data-id="${corp.id}"
+                                                                data-name="${escapeHtml(corp.name)}">
+                                                            <i class="bi bi-trash"></i> Delete
+                                                        </button>
+                                                    ` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -977,16 +995,16 @@
                                         ${value.skipped > 0 ? `<span class="num-skipped">⚠${value.skipped}</span>` : ''}
                                     </div>
                                     ${value.skipped > 0 && value.skipped_details && value.skipped_details.length > 0 ? `
-                                                <div class="mt-2 text-start" style="font-size: 12px;">
-                                                    <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
-                                                        View skipped details (${value.skipped})
-                                                    </button>
-                                                    <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
-                                                        ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
-                                                        ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
+                                                    <div class="mt-2 text-start" style="font-size: 12px;">
+                                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
+                                                            View skipped details (${value.skipped})
+                                                        </button>
+                                                        <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
+                                                            ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
+                                                            ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ` : ''}
+                                                ` : ''}
                                 </div>
                             </div>
                         `;
@@ -1374,8 +1392,8 @@
                                     <p><strong>Description:</strong></p>
                                     <p class="text-muted">${escapeHtml(corp.description || 'No description')}</p>
                                     ${corp.boundary_file ? `
-                                                <p><strong>Boundary:</strong> <span class="text-success">✓ Uploaded</span></p>
-                                            ` : ''}
+                                                    <p><strong>Boundary:</strong> <span class="text-success">✓ Uploaded</span></p>
+                                                ` : ''}
                                 </div>
                             </div>
                         `;
