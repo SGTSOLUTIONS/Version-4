@@ -333,20 +333,90 @@
         transform: translateY(-4px);
         box-shadow: 0 8px 25px rgba(0,0,0,0.12);
     }
+/* Card Image Styles - Fully Responsive with Cover Fit */
+.acard-img-wrap {
+    position: relative;
+    width: 100%;
+    padding-bottom: 60%; /* 5:3 aspect ratio - adjust as needed */
+    background: #f0f2f5;
+    overflow: hidden;
+}
 
+.acard-img-wrap img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Responsive aspect ratios */
+@media (max-width: 768px) {
     .acard-img-wrap {
-        position: relative;
+        padding-bottom: 65%; /* Slightly taller on tablets */
+    }
+}
+
+@media (max-width: 576px) {
+    .acard-img-wrap {
+        padding-bottom: 70%; /* Taller on mobile for better visibility */
+    }
+}
+
+@media (max-width: 400px) {
+    .acard-img-wrap {
+        padding-bottom: 75%; /* Even taller on very small screens */
+    }
+}
+
+/* If you prefer a fixed height approach with better responsiveness */
+.acard-img-wrap-fixed {
+    position: relative;
+    height: 200px;
+    background: #f0f2f5;
+    overflow: hidden;
+}
+
+.acard-img-wrap-fixed img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .acard-img-wrap-fixed {
         height: 180px;
-        background: #f0f2f5;
-        overflow: hidden;
     }
+}
 
-    .acard-img-wrap img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+@media (max-width: 576px) {
+    .acard-img-wrap-fixed {
+        height: 160px;
     }
+}
 
+@media (max-width: 400px) {
+    .acard-img-wrap-fixed {
+        height: 140px;
+    }
+}
+
+/* For images that fail to load */
+.acard-img-wrap img.error,
+.acard-img-wrap-fixed img.error {
+    object-fit: contain;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+/* Optional: Center the image if it doesn't cover properly */
+.acard-img-wrap img,
+.acard-img-wrap-fixed img {
+    object-position: center center;
+}
     .acard-overlay {
         position: absolute;
         top: 0;
