@@ -336,6 +336,7 @@ class PointdataController extends Controller
             $ugdTaxTableName = "ugd_tax_{$corpId}";
             $professionalTaxTableName = "professional_tax_{$corpId}";
 
+
             // Check if tables exist
             if (!Schema::hasTable($misTableName)) {
                 return response()->json([
@@ -343,7 +344,18 @@ class PointdataController extends Controller
                     'message' => "MIS table ({$misTableName}) not found"
                 ], 422);
             }
-
+            $exist = DB::table($pointDataTableName)
+                ->where('assessment', $request->assessment)
+                ->exists();
+                 if (!$exist) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation errors',
+                        'errors' => [
+                            'assessment_type' => ['Assessment Already entered . ']
+                        ]
+                    ], 422);
+                }
             // Validate assessment type
             if ($request->assessment_type === 'OLD') {
                 $exists = DB::table($misTableName)
@@ -905,26 +917,27 @@ class PointdataController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
-    }public function pointDataFilter(Request $request)
-{
-    $user = User::find(Auth::id());
-    $ward = Ward::find($user->ward_id);
-    $pointDataTable = "point_data_{$ward->id}";
-
-    $query = DB::table($pointDataTable);
-
-    if ($request->filled('assessment')) {
-        $query->where('assessment', 'like', $request->assessment . '%');
     }
-    if ($request->filled('old_assessment')) {
-        $query->where('old_assessment', 'like', $request->old_assessment . '%');
-    }
-    if ($request->filled('owner_name')) {
-        $query->where('owner_name', 'like', '%' . $request->owner_name . '%');
-    }
+    public function pointDataFilter(Request $request)
+    {
+        $user = User::find(Auth::id());
+        $ward = Ward::find($user->ward_id);
+        $pointDataTable = "point_data_{$ward->id}";
 
-    $results = $query->orderByDesc('id')->limit(50)->get();
+        $query = DB::table($pointDataTable);
 
-    return response()->json(['success' => true, 'data' => $results]);
-}
+        if ($request->filled('assessment')) {
+            $query->where('assessment', 'like', $request->assessment . '%');
+        }
+        if ($request->filled('old_assessment')) {
+            $query->where('old_assessment', 'like', $request->old_assessment . '%');
+        }
+        if ($request->filled('owner_name')) {
+            $query->where('owner_name', 'like', '%' . $request->owner_name . '%');
+        }
+
+        $results = $query->orderByDesc('id')->limit(50)->get();
+
+        return response()->json(['success' => true, 'data' => $results]);
+    }
 }
