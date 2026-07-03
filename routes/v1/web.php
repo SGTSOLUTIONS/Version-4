@@ -102,7 +102,7 @@ Route::middleware(['auth', 'role:commissioner'])->prefix('commissioner')->name('
     Route::put('corporations/{corporation}', [CorporationController::class, 'update'])->name('corporations.update');
     // Ward routes
     Route::get('wards/list', [WardController::class, 'list'])->name('ward.list');
-     Route::resource('wards', WardController::class);
+    Route::resource('wards', WardController::class);
     Route::get('wards/{ward}', [WardController::class, 'show'])->name('wards.show');
     Route::post('wards', [WardController::class, 'store'])->name('wards.store');
     Route::put('wards/{ward}', [WardController::class, 'update'])->name('wards.update');
@@ -157,6 +157,9 @@ Route::middleware(['auth', 'role:surveyor,teamleader'])->group(function () {
         ->name('store.pointdata');
     Route::post('/line-data', [PointdataController::class, 'lineDataStore'])
         ->name('store.linedata');
+    Route::get('/point-data/filter', [PointdataController::class, 'pointDataFilter'])->name('pointdata.filter');
+    Route::get('/point-data/{id}', [PointdataController::class, 'editData'])->name('pointdata.edit');
+    Route::put('/point-data/{id}', [PointdataController::class, 'pointDataUpdate'])->name('pointdata.update');
 });
 
 Route::get('/survey/map', [MapController::class, 'map'])->name('teamleader.map');

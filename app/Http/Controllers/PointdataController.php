@@ -625,10 +625,9 @@ class PointdataController extends Controller
                     'ration_no' => $request->ration_no,
                     'no_of_persons' => $request->number_persons,
                     'eb' => $request->eb,
-                    'worker_name' => $user->name ?? null,
+                    'worker_name' => $user->id ?? null,
                     'remarks' => $request->remarks,
                     'water_tax' => $request->watertax_no,
-
                     'point_gisid' => $request->point_gisid,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -716,4 +715,216 @@ class PointdataController extends Controller
             'lines' => $lines
         ]);
     }
+
+
+
+
+    public function editData(Request $request, $id)
+    {
+        try {
+            $user = User::find(Auth::id());
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'User not found'], 404);
+            }
+
+            $ward = Ward::find($user->ward_id);
+            $zone = Zone::find($ward->zone_id);
+            $corporation = Corporation::find($zone->corp_id);
+
+            $wardId = $ward->id;
+            $corpId = $corporation->id;
+
+            $pointDataTable        = "point_data_{$wardId}";
+            $waterTaxTable         = "water_tax_{$corpId}";
+            $ugdTaxTable           = "ugd_tax_{$corpId}";
+            $professionalTaxTable  = "professional_tax_{$corpId}";
+
+            $pointData = DB::table($pointDataTable)->where('id', $id)->first();
+
+            if (!$pointData) {
+                return response()->json(['success' => false, 'message' => 'Point data not found'], 404);
+            }
+
+            $waterTax = DB::table($waterTaxTable)
+                ->where('watertax_no', $pointData->water_tax)
+                ->first();
+
+            $ugdTax = DB::table($ugdTaxTable)
+                ->where('gisid', $pointData->point_gisid)
+                ->first();
+
+            $professionalTax = DB::table($professionalTaxTable)
+                ->where('gisid', $pointData->point_gisid)
+                ->where('assessment', $pointData->assessment)
+                ->get();
+
+            return response()->json([
+                'success'      => true,
+                'point_data'   => $pointData,
+                'water_tax'    => $waterTax,
+                'ugd_tax'      => $ugdTax,
+                'professional' => $professionalTax,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function pointDataUpdate(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            // same rules as pointDataStore...
+            'assessment_type' => 'required|in:OLD,NEW,VACANT,OTHER_WARD',
+            'owner_name'       => 'required|string|max:255',
+            'phone_number'     => 'required|digits:10',
+            'new_door_no'      => 'required|string|max:100',
+            'floor'            => 'required|integer|min:0',
+            'bill_usage'       => 'required|in:Residential,Commercial',
+            'present_owner_name' => 'required|string|max:255',
+            'old_door_no'      => 'required|string|max:100',
+            'professional'     => 'nullable|array',
+            'professional.*.id' => 'nullable|integer',
+            'professional.*.pt_number' => 'nullable|string|max:100',
+            'removed_professional_ids' => 'nullable|array',
+            'removed_professional_ids.*' => 'integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $user = User::find(Auth::id());
+            $ward = Ward::find($user->ward_id);
+            $zone = Zone::find($ward->zone_id);
+            $corporation = Corporation::find($zone->corp_id);
+            $wardId = $ward->id;
+            $corpId = $corporation->id;
+
+            $pointDataTable       = "point_data_{$wardId}";
+            $waterTaxTable        = "water_tax_{$corpId}";
+            $ugdTaxTable          = "ugd_tax_{$corpId}";
+            $professionalTaxTable = "professional_tax_{$corpId}";
+
+            $existing = DB::table($pointDataTable)->where('id', $id)->first();
+            if (!$existing) {
+                return response()->json(['success' => false, 'message' => 'Point data not found'], 404);
+            }
+
+            DB::beginTransaction();
+            try {
+                // 1. Update point_data
+                DB::table($pointDataTable)->where('id', $id)->update([
+                    'assessment_type'     => $request->assessment_type,
+                    'assessment'          => $request->assessment,
+                    'owner_name'          => $request->owner_name,
+                    'phone_number'        => $request->phone_number,
+                    'new_door_no'         => $request->new_door_no,
+                    'floor'               => $request->floor,
+                    'bill_usage'          => $request->bill_usage,
+                    'old_assessment'      => $request->old_assessment,
+                    'present_owner_name'  => $request->present_owner_name,
+                    'old_door_no'         => $request->old_door_no,
+                    'aadhar_no'           => $request->aadhar_no,
+                    'ration_no'           => $request->ration_no,
+                    'no_of_persons'       => $request->number_persons,
+                    'eb'                  => $request->eb,
+                    'remarks'             => $request->remarks,
+                    'water_tax'           => $request->watertax_no,
+                    'updated_at'          => now(),
+                ]);
+
+                // 2. Water tax update
+                if ($request->filled('watertax_no')) {
+                    DB::table($waterTaxTable)->where('watertax_no', $request->watertax_no)->update([
+                        'gisid'             => $existing->point_gisid,
+                        'usage'             => $request->water_usage,
+                        'DBC_type'          => $request->water_DBC_type,
+                        'slab_description'  => $request->water_slab_description,
+                        'updated_at'        => now(),
+                    ]);
+                }
+
+                // 3. UGD update
+                if ($request->filled('ugd_no')) {
+                    DB::table($ugdTaxTable)->where('ugd_no', $request->ugd_no)->update([
+                        'gisid'             => $existing->point_gisid,
+                        'usage'             => $request->ugd_usage,
+                        'DBC_type'          => $request->ugd_DBC_type,
+                        'slab_description'  => $request->ugd_slab_description,
+                        'updated_at'        => now(),
+                    ]);
+                }
+
+                // 4. Professional tax: update existing / insert new
+                if ($request->has('professional') && is_array($request->professional)) {
+                    foreach ($request->professional as $prof) {
+                        if (empty($prof['pt_number'])) continue;
+
+                        if (!empty($prof['id'])) {
+                            DB::table($professionalTaxTable)->where('id', $prof['id'])->update([
+                                'old_pt_number'      => $prof['old_pt_number'] ?? null,
+                                'establishment_name' => $prof['establishment_name'] ?? null,
+                                'profession_type'    => $prof['profession_type'] ?? null,
+                                'employee_count'     => $prof['employee_count'] ?? null,
+                                'half_year_tax'      => $prof['half_year_tax'] ?? null,
+                                'remarks'            => $prof['pt_remarks'] ?? null,
+                                'updated_at'         => now(),
+                            ]);
+                        } else {
+                            DB::table($professionalTaxTable)->insert([
+                                'corporation_id'     => $corpId,
+                                'gisid'              => $existing->point_gisid,
+                                'assessment'         => $request->assessment,
+                                'pt_number'          => $prof['pt_number'],
+                                'old_pt_number'      => $prof['old_pt_number'] ?? null,
+                                'establishment_name' => $prof['establishment_name'] ?? null,
+                                'profession_type'    => $prof['profession_type'] ?? null,
+                                'employee_count'     => $prof['employee_count'] ?? null,
+                                'half_year_tax'      => $prof['half_year_tax'] ?? null,
+                                'remarks'            => $prof['pt_remarks'] ?? null,
+                                'created_at'         => now(),
+                                'updated_at'         => now(),
+                            ]);
+                        }
+                    }
+                }
+
+                // 5. Delete professional tax rows the user removed in the UI
+                if ($request->filled('removed_professional_ids')) {
+                    DB::table($professionalTaxTable)
+                        ->whereIn('id', $request->removed_professional_ids)
+                        ->delete();
+                }
+
+                DB::commit();
+                return response()->json(['success' => true, 'message' => 'Point data updated successfully.']);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }public function pointDataFilter(Request $request)
+{
+    $user = User::find(Auth::id());
+    $ward = Ward::find($user->ward_id);
+    $pointDataTable = "point_data_{$ward->id}";
+
+    $query = DB::table($pointDataTable);
+
+    if ($request->filled('assessment')) {
+        $query->where('assessment', 'like', $request->assessment . '%');
+    }
+    if ($request->filled('old_assessment')) {
+        $query->where('old_assessment', 'like', $request->old_assessment . '%');
+    }
+    if ($request->filled('owner_name')) {
+        $query->where('owner_name', 'like', '%' . $request->owner_name . '%');
+    }
+
+    $results = $query->orderByDesc('id')->limit(50)->get();
+
+    return response()->json(['success' => true, 'data' => $results]);
+}
 }
