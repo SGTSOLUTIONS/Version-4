@@ -379,51 +379,7 @@
 
 
         /* If you prefer a fixed height approach with better responsiveness */
-        .acard-img-wrap-fixed {
-            position: relative;
-            height: 180px;
-            background: #f0f2f5;
-            overflow: hidden;
-        }
 
-        .acard-img-wrap-fixed img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            .acard-img-wrap-fixed {
-                height: 180px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .acard-img-wrap-fixed {
-                height: 160px;
-            }
-        }
-
-        @media (max-width: 400px) {
-            .acard-img-wrap-fixed {
-                height: 140px;
-            }
-        }
-
-        /* For images that fail to load */
-        .acard-img-wrap img.error,
-        .acard-img-wrap-fixed img.error {
-            object-fit: contain;
-            padding: 20px;
-            background: #f8f9fa;
-        }
-
-        /* Optional: Center the image if it doesn't cover properly */
-        .acard-img-wrap img,
-        .acard-img-wrap-fixed img {
-            object-position: center center;
-        }
 
         .acard-overlay {
             position: absolute;
