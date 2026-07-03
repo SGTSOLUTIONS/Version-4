@@ -362,8 +362,7 @@
         .acard-img-wrap {
             position: relative;
             width: 100%;
-            /* padding-bottom: 60%; */
-            /* 5:3 aspect ratio - adjust as needed */
+            height: 380px;
             background: #f0f2f5;
             overflow: hidden;
         }
