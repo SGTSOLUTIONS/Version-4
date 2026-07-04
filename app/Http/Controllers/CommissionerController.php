@@ -34,6 +34,9 @@ class CommissionerController extends Controller
                 'corporation' => null,
                 'user' => $user,
                 'taxBreakdown' => $this->getEmptyTaxBreakdown(),
+                'wardBoundaries' => ['type' => 'FeatureCollection', 'features' => []],
+                'wardCenters' => [],
+                'zoneColors' => [],
             ]);
         }
 
@@ -235,6 +238,15 @@ class CommissionerController extends Controller
             'connected' => $connectedAssessments,
         ];
 
+        // ─── Ward Boundary Data for Map ───
+        $wardBoundaries = $this->getWardBoundaries($corporation->id);
+        $wardCenters = $this->getWardCenters($corporation->id);
+
+        // ─── Zone-wise Color Mapping ───
+        $zoneColors = $zones->mapWithKeys(function ($zone) {
+            return [$zone->id => $this->getWardColor($zone->id)];
+        })->toArray();
+
         return view('main.commissioner.dashboard', compact(
             'stats',
             'zoneData',
@@ -249,7 +261,10 @@ class CommissionerController extends Controller
             'taxBreakdown',
             'waterTaxData',
             'ugdData',
-            'professionalTaxData'
+            'professionalTaxData',
+            'wardBoundaries',
+            'wardCenters',
+            'zoneColors'
         ));
     }
 
@@ -309,6 +324,180 @@ class CommissionerController extends Controller
         ];
     }
 
+    // ─── Map Methods ───
+
+    /**
+     * Get ward boundary data for map visualization
+     */
+    private function getWardBoundaries($corporationId)
+    {
+        $zones = Zone::where('corporation_id', $corporationId)->with(['wards'])->get();
+        $wardIds = $zones->flatMap(fn($zone) => $zone->wards->pluck('id'))->toArray();
+
+        $features = [];
+
+        foreach ($wardIds as $wardId) {
+            // Get ward boundary from polygons table
+            $table = 'polygons_' . $wardId;
+
+            if (Schema::hasTable($table)) {
+                try {
+                    $boundaries = DB::table($table)
+                        ->select('id', 'ward_id', 'geometry', 'building_no', 'type', 'floors', 'owner_name')
+                        ->get();
+
+                    foreach ($boundaries as $boundary) {
+                        if ($boundary->geometry) {
+                            // Parse geometry
+                            $geometry = $this->parseGeometry($boundary->geometry);
+
+                            if ($geometry) {
+                                $ward = Ward::find($wardId);
+                                $features[] = [
+                                    'type' => 'Feature',
+                                    'properties' => [
+                                        'id' => $boundary->id,
+                                        'ward_id' => $wardId,
+                                        'ward_no' => $ward ? $ward->ward_no : 'N/A',
+                                        'ward_name' => $ward ? $ward->ward_name : 'Ward ' . $wardId,
+                                        'building_no' => $boundary->building_no ?? 'N/A',
+                                        'type' => $boundary->type ?? 'N/A',
+                                        'floors' => $boundary->floors ?? 0,
+                                        'owner_name' => $boundary->owner_name ?? 'N/A',
+                                        'color' => $this->getWardColor($wardId),
+                                    ],
+                                    'geometry' => $geometry,
+                                ];
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Skip if error
+                }
+            }
+        }
+
+        return [
+            'type' => 'FeatureCollection',
+            'features' => $features,
+        ];
+    }
+
+    /**
+     * Get ward centers for labels
+     */
+    private function getWardCenters($corporationId)
+    {
+        $zones = Zone::where('corporation_id', $corporationId)->with(['wards'])->get();
+        $wardIds = $zones->flatMap(fn($zone) => $zone->wards->pluck('id'))->toArray();
+
+        $centers = [];
+
+        foreach ($wardIds as $wardId) {
+            $table = 'polygons_' . $wardId;
+
+            if (Schema::hasTable($table)) {
+                try {
+                    // Get centroid from geometry
+                    $centroid = DB::table($table)
+                        ->select(DB::raw('ST_Centroid(geometry) as center'))
+                        ->first();
+
+                    if ($centroid && $centroid->center) {
+                        $centerData = $this->parseGeometry($centroid->center);
+                        if ($centerData && isset($centerData['coordinates'])) {
+                            $ward = Ward::find($wardId);
+                            $centers[] = [
+                                'ward_id' => $wardId,
+                                'ward_no' => $ward ? $ward->ward_no : 'N/A',
+                                'ward_name' => $ward ? $ward->ward_name : 'Ward ' . $wardId,
+                                'lng' => $centerData['coordinates'][0],
+                                'lat' => $centerData['coordinates'][1],
+                            ];
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Skip if error
+                }
+            }
+        }
+
+        return $centers;
+    }
+
+    /**
+     * Parse geometry from database format
+     */
+    private function parseGeometry($geometry)
+    {
+        // Check if it's already GeoJSON
+        if (is_string($geometry) && strpos($geometry, '{') === 0) {
+            $decoded = json_decode($geometry, true);
+            if ($decoded && isset($decoded['type'])) {
+                return $decoded;
+            }
+        }
+
+        // Check if it's WKT format
+        if (is_string($geometry) && strpos($geometry, 'POLYGON') === 0) {
+            return $this->wktToGeoJson($geometry);
+        }
+
+        // If it's a MySQL geometry object
+        if (is_object($geometry) && method_exists($geometry, 'getWKT')) {
+            return $this->wktToGeoJson($geometry->getWKT());
+        }
+
+        return null;
+    }
+
+    /**
+     * Convert WKT to GeoJSON
+     */
+    private function wktToGeoJson($wkt)
+    {
+        // Simple WKT to GeoJSON conversion for POLYGON
+        if (strpos($wkt, 'POLYGON') === 0) {
+            preg_match('/\(\((.*?)\)\)/', $wkt, $matches);
+            if (isset($matches[1])) {
+                $coordinates = [];
+                $points = explode(',', $matches[1]);
+                foreach ($points as $point) {
+                    $coords = array_map('trim', explode(' ', $point));
+                    if (count($coords) >= 2) {
+                        $coordinates[] = [(float)$coords[0], (float)$coords[1]];
+                    }
+                }
+                // Close the polygon if not already closed
+                if (count($coordinates) > 0) {
+                    $first = $coordinates[0];
+                    $last = $coordinates[count($coordinates) - 1];
+                    if ($first[0] != $last[0] || $first[1] != $last[1]) {
+                        $coordinates[] = $first;
+                    }
+                }
+                return [
+                    'type' => 'Polygon',
+                    'coordinates' => [$coordinates],
+                ];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get color for ward based on ID
+     */
+    private function getWardColor($wardId)
+    {
+        $colors = [
+            '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
+            '#14b8a6', '#f97316', '#ec4899', '#6366f1', '#06b6d4',
+            '#22c55e', '#eab308', '#f43f5e', '#0ea5e9', '#a855f7',
+        ];
+        return $colors[$wardId % count($colors)];
+    }
+
     // ─── Building Methods ───
 
     /**
@@ -329,6 +518,7 @@ class CommissionerController extends Controller
 
         return $total;
     }
+
     /**
      * Get buildings by ward IDs (from polygon tables)
      */
@@ -519,10 +709,7 @@ class CommissionerController extends Controller
             return 0;
         }
 
-
-
         $total = DB::table($misTable)->count();
-
 
         return $total;
     }
@@ -536,7 +723,6 @@ class CommissionerController extends Controller
         if (!Schema::hasTable($misTable)) {
             return 0;
         }
-
 
         $assessments = [];
 
@@ -552,7 +738,6 @@ class CommissionerController extends Controller
         $total = 0;
 
         foreach ($wardIds as $wardId) {
-
             $table = 'point_data_' . $wardId;
             if (Schema::hasTable($table)) {
                 try {
@@ -672,7 +857,6 @@ class CommissionerController extends Controller
             return 0;
         }
 
-
         $assessments = [];
 
         try {
@@ -686,7 +870,6 @@ class CommissionerController extends Controller
         }
         $total = 0;
         foreach ($wardIds as $wardId) {
-
             $table = 'point_data_' . $wardId;
             if (Schema::hasTable($table)) {
                 try {

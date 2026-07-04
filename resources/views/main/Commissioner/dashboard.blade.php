@@ -4,6 +4,9 @@
 @section('page_title', 'Commissioner Dashboard')
 
 @push('styles')
+<!-- OpenLayers CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css">
+
 <style>
     /* ─── Font Variables ─── */
     :root {
@@ -449,6 +452,93 @@
         font-size: 0.9rem;
     }
 
+    /* ─── Map Styles ─── */
+    .map-container {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #f0f5f9;
+        border: 1px solid #e5e7eb;
+    }
+
+    .map-legend {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        padding: 12px 16px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        font-size: 0.75rem;
+        z-index: 10;
+        max-height: 200px;
+        overflow-y: auto;
+        min-width: 120px;
+    }
+    .map-legend strong {
+        display: block;
+        margin-bottom: 6px;
+        color: #0a2e1a;
+    }
+    .map-legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 2px 0;
+    }
+    .map-legend-color {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    .map-tooltip {
+        display: none;
+        position: absolute;
+        background: rgba(0,0,0,0.85);
+        color: white;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        pointer-events: none;
+        z-index: 20;
+        max-width: 250px;
+        backdrop-filter: blur(4px);
+        font-family: var(--font-sans);
+    }
+
+    .map-controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        gap: 6px;
+        flex-direction: column;
+        z-index: 10;
+    }
+    .map-control-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #1f2937;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .map-control-btn:hover {
+        background: #f0fdf4;
+        border-color: #10b981;
+    }
+
     /* ─── Responsive ─── */
     @media (max-width: 768px) {
         .hierarchy-flow { gap: 0.6rem; padding: 0.8rem; }
@@ -458,6 +548,9 @@
         .zone-card .zone-stats { grid-template-columns: 1fr; }
         .quick-actions { grid-template-columns: 1fr 1fr; }
         .ol-page-header { flex-direction: column; }
+        .map-legend { bottom: 10px; right: 10px; font-size: 0.65rem; padding: 8px 12px; }
+        .map-controls { top: 10px; right: 10px; }
+        .map-control-btn { width: 30px; height: 30px; font-size: 14px; }
     }
 </style>
 @endpush
@@ -527,6 +620,32 @@
     <div class="hierarchy-item">
         <i class="bi bi-link-45deg" style="color:#8b5cf6;"></i>
         Connected <span class="count">{{ isset($hierarchyStats['connected']) ? number_format($hierarchyStats['connected']) : '0' }}</span>
+    </div>
+</div>
+
+{{-- ── Interactive Ward Map ── --}}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="ds-card">
+            <div class="ds-card-head">
+                <div class="ds-card-title">
+                    <i class="bi bi-map me-2" style="color:#10b981;"></i>
+                    Ward Boundary Map
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <span style="font-size:0.68rem; color:#9ca3af;">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Hover for details • {{ count($wardBoundaries['features'] ?? []) }} buildings
+                    </span>
+                    <button onclick="resetMapView()" class="map-control-btn" style="width:30px; height:30px; font-size:12px; border-radius:6px; background:#f0fdf4; border-color:#10b981;">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="ds-card-body" style="padding:0;">
+                <div id="commissioner-map" style="width:100%; height:500px; background:#f0f5f9;"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1017,8 +1136,12 @@
 @endsection
 
 @push('scripts')
+<!-- OpenLayers JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.min.js"></script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
+        // ── Animate Performance Bars ──
         const bars = document.querySelectorAll('.perf-bar .fill');
         bars.forEach(bar => {
             const w = bar.style.width;
@@ -1027,6 +1150,300 @@
                 bar.style.width = w;
             }, 200);
         });
+
+        // ── Initialize OpenLayers Map ──
+        const wardBoundaries = @json($wardBoundaries);
+        const wardCenters = @json($wardCenters);
+
+        if (wardBoundaries && wardBoundaries.features && wardBoundaries.features.length > 0) {
+            // Create map
+            const mapContainer = document.getElementById('commissioner-map');
+
+            // Determine initial center
+            let centerLon = 78.9629; // Default: Hyderabad
+            let centerLat = 17.3850;
+
+            if (wardCenters && wardCenters.length > 0) {
+                const avgLon = wardCenters.reduce((sum, c) => sum + c.lng, 0) / wardCenters.length;
+                const avgLat = wardCenters.reduce((sum, c) => sum + c.lat, 0) / wardCenters.length;
+                centerLon = avgLon;
+                centerLat = avgLat;
+            }
+
+            // Create vector source for ward boundaries
+            const vectorSource = new ol.source.Vector({
+                features: []
+            });
+
+            // Convert GeoJSON features to OpenLayers features
+            wardBoundaries.features.forEach(function(feature) {
+                if (feature.geometry && feature.geometry.type === 'Polygon') {
+                    const coordinates = feature.geometry.coordinates[0].map(function(coord) {
+                        return [coord[0], coord[1]];
+                    });
+
+                    const polygon = new ol.geom.Polygon([coordinates]);
+                    const olFeature = new ol.Feature({
+                        geometry: polygon,
+                        ...feature.properties
+                    });
+
+                    vectorSource.addFeature(olFeature);
+                }
+            });
+
+            // Style function for ward boundaries
+            const wardStyle = function(feature) {
+                const color = feature.get('color') || '#10b981';
+                return new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: color + '40' // 25% opacity
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: color,
+                        width: 2
+                    }),
+                    text: new ol.style.Text({
+                        text: 'Ward ' + (feature.get('ward_no') || ''),
+                        font: 'bold 12px Segoe UI, sans-serif',
+                        fill: new ol.style.Fill({
+                            color: '#1f2937'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: 'white',
+                            width: 2
+                        }),
+                        placement: 'point',
+                        textAlign: 'center',
+                        offsetY: -8
+                    })
+                });
+            };
+
+            // Hover style
+            const hoverStyle = function(feature) {
+                const color = feature.get('color') || '#10b981';
+                return new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: color + '80' // 50% opacity
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: '#ffffff',
+                        width: 3
+                    }),
+                    text: new ol.style.Text({
+                        text: 'Ward ' + (feature.get('ward_no') || ''),
+                        font: 'bold 14px Segoe UI, sans-serif',
+                        fill: new ol.style.Fill({
+                            color: '#0a2e1a'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: 'white',
+                            width: 3
+                        }),
+                        placement: 'point',
+                        offsetY: -10
+                    })
+                });
+            };
+
+            // Vector layer
+            const vectorLayer = new ol.layer.Vector({
+                source: vectorSource,
+                style: wardStyle
+            });
+
+            // Create map
+            const map = new ol.Map({
+                target: 'commissioner-map',
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM({
+                            url: 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+                        })
+                    }),
+                    vectorLayer
+                ],
+                view: new ol.View({
+                    center: ol.proj.fromLonLat([centerLon, centerLat]),
+                    zoom: 15,
+                    maxZoom: 20,
+                    minZoom: 10
+                }),
+                controls: [
+                    new ol.control.Zoom({
+                        zoomInTipLabel: 'Zoom in',
+                        zoomOutTipLabel: 'Zoom out'
+                    }),
+                    new ol.control.Attribution({
+                        collapsed: true
+                    }),
+                    new ol.control.Rotate()
+                ]
+            });
+
+            // ── Make map globally accessible for reset ──
+            window.commissionerMap = map;
+            window.defaultCenter = [centerLon, centerLat];
+            window.defaultZoom = 15;
+
+            // ── Tooltip ──
+            const tooltipElement = document.createElement('div');
+            tooltipElement.className = 'map-tooltip';
+            tooltipElement.id = 'map-tooltip';
+            mapContainer.appendChild(tooltipElement);
+
+            let hoveredFeature = null;
+            let hoverTimeout = null;
+
+            // Mouse move for hover and tooltip
+            map.on('pointermove', function(evt) {
+                const pixel = evt.pixel;
+                const hit = map.forEachFeatureAtPixel(pixel, function(feature) {
+                    return feature;
+                });
+
+                // Clear previous hover
+                if (hoveredFeature) {
+                    hoveredFeature.setStyle(undefined);
+                    hoveredFeature = null;
+                }
+
+                tooltipElement.style.display = 'none';
+
+                if (hit) {
+                    // Highlight hovered feature
+                    hoveredFeature = hit;
+                    hit.setStyle(hoverStyle);
+
+                    // Show tooltip
+                    const props = hit.getProperties();
+                    const tooltipContent = `
+                        <strong>Ward ${props.ward_no || 'N/A'}</strong><br>
+                        Building: ${props.building_no || 'N/A'}<br>
+                        Type: ${props.type || 'N/A'}<br>
+                        Floors: ${props.floors || 0}<br>
+                        Owner: ${props.owner_name || 'N/A'}
+                    `;
+                    tooltipElement.innerHTML = tooltipContent;
+                    tooltipElement.style.display = 'block';
+
+                    // Position tooltip
+                    const coordinate = evt.coordinate;
+                    const pixelPosition = map.getPixelFromCoordinate(coordinate);
+                    tooltipElement.style.left = (pixelPosition[0] + 10) + 'px';
+                    tooltipElement.style.top = (pixelPosition[1] - 10) + 'px';
+
+                    // Change cursor
+                    mapContainer.style.cursor = 'pointer';
+                } else {
+                    mapContainer.style.cursor = 'default';
+                }
+            });
+
+            // ── Zoom to fit all features ──
+            function fitToBounds() {
+                if (vectorSource.getFeatures().length > 0) {
+                    const extent = vectorSource.getExtent();
+                    if (extent && !isNaN(extent[0])) {
+                        map.getView().fit(extent, {
+                            padding: [50, 50, 50, 50],
+                            maxZoom: 16
+                        });
+                    }
+                }
+            }
+
+            // Fit to bounds after a short delay
+            setTimeout(fitToBounds, 300);
+
+            // ── Reset map view ──
+            window.resetMapView = function() {
+                map.getView().animate({
+                    center: ol.proj.fromLonLat(window.defaultCenter),
+                    zoom: window.defaultZoom,
+                    duration: 500
+                });
+            };
+
+            // ── Zoom functions ──
+            window.zoomIn = function() {
+                const view = map.getView();
+                view.animate({
+                    zoom: view.getZoom() + 1,
+                    duration: 250
+                });
+            };
+
+            window.zoomOut = function() {
+                const view = map.getView();
+                view.animate({
+                    zoom: view.getZoom() - 1,
+                    duration: 250
+                });
+            };
+
+            // ── Add zoom controls ──
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'map-controls';
+            controlsDiv.innerHTML = `
+                <button onclick="window.zoomIn()" class="map-control-btn" title="Zoom In">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+                <button onclick="window.zoomOut()" class="map-control-btn" title="Zoom Out">
+                    <i class="bi bi-dash-lg"></i>
+                </button>
+            `;
+            mapContainer.appendChild(controlsDiv);
+
+            // ── Legend ──
+            const legendDiv = document.createElement('div');
+            legendDiv.className = 'map-legend';
+            let legendHtml = '<strong>Ward Legend</strong>';
+
+            const wardColors = {};
+            wardBoundaries.features.forEach(function(f) {
+                const wardId = f.properties.ward_id;
+                const wardNo = f.properties.ward_no;
+                const color = f.properties.color;
+                if (!wardColors[wardId]) {
+                    wardColors[wardId] = { wardNo: wardNo, color: color };
+                }
+            });
+
+            Object.values(wardColors).slice(0, 15).forEach(function(item) {
+                legendHtml += `
+                    <div class="map-legend-item">
+                        <span class="map-legend-color" style="background:${item.color};"></span>
+                        <span>Ward ${item.wardNo}</span>
+                    </div>
+                `;
+            });
+
+            if (Object.keys(wardColors).length > 15) {
+                legendHtml += `<div style="font-size:0.65rem; color:#9ca3af; margin-top:4px;">+${Object.keys(wardColors).length - 15} more</div>`;
+            }
+
+            legendDiv.innerHTML = legendHtml;
+            mapContainer.appendChild(legendDiv);
+
+            // ── Handle window resize ──
+            window.addEventListener('resize', function() {
+                map.updateSize();
+            });
+
+            console.log('🗺️ Commissioner Map initialized with ' + vectorSource.getFeatures().length + ' ward boundaries');
+        } else {
+            // No boundaries found
+            const mapContainer = document.getElementById('commissioner-map');
+            mapContainer.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:center; height:100%; flex-direction:column; color:#9ca3af; background:#f9fafb; border-radius:12px;">
+                    <i class="bi bi-map" style="font-size:3rem; opacity:0.3; margin-bottom:1rem;"></i>
+                    <p style="font-size:0.9rem;">No ward boundaries found for this corporation</p>
+                    <p style="font-size:0.75rem;">Please add polygon data for wards</p>
+                </div>
+            `;
+        }
     });
 </script>
 @endpush
