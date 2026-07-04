@@ -35,6 +35,7 @@ class Ward extends Model
         'extent_right' => 'decimal:6',
         'extent_top' => 'decimal:6',
         'extent_bottom' => 'decimal:6',
+        'boundary' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];

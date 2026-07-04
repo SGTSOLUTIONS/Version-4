@@ -241,7 +241,9 @@ class CommissionerController extends Controller
         ];
 
         // ─── Ward Boundary Data for Map ───
-        $mapData = $this->getMapData($corporation->id);
+        // Reuses the $zones collection already loaded above (with wards),
+        // instead of re-querying the DB with a possibly mismatched column.
+        $mapData = $this->getMapData($zones);
         $wardBoundaries = $mapData['boundaries'];
         $wardCenters = $mapData['centers'];
         $zoneColors = $mapData['zoneColors'];
@@ -327,208 +329,53 @@ class CommissionerController extends Controller
     // ─── Map Data Methods ───
 
     /**
-     * Get all map data including boundaries and centers
+     * Build map data straight from wards.boundary. The boundary column
+     * already stores GeoJSON-shaped coordinates (Polygon or MultiPolygon)
+     * in EPSG:3857 meters — the same projection OpenLayers uses by
+     * default — so no per-ward lookup tables and no lon/lat conversion
+     * are needed.
      */
-    private function getMapData($corporationId)
+    private function getMapData($zones)
     {
-        $zones = Zone::where('corp_id', $corporationId)->with(['wards'])->get();
-        $wardIds = $zones->flatMap(fn($zone) => $zone->wards->pluck('id'))->toArray();
-
         $features = [];
         $centers = [];
-        $colors = [];
 
-        foreach ($wardIds as $wardId) {
-            // Get ward from database
-            $ward = Ward::find($wardId);
-            if (!$ward) continue;
+        foreach ($zones as $zone) {
+            $color = $this->getWardColor($zone->id);
 
-            $color = $this->getWardColor($wardId);
-            $colors[$wardId] = $color;
-
-            // Try to get boundary from polygons table
-            $table = 'polygons_' . $wardId;
-
-            if (Schema::hasTable($table)) {
-                try {
-                    // Check if geometry column exists
-                    $columns = Schema::getColumnListing($table);
-
-                    if (in_array('geometry', $columns) || in_array('geom', $columns) || in_array('the_geom', $columns)) {
-                        $geomColumn = 'geometry';
-                        if (!in_array('geometry', $columns)) {
-                            $geomColumn = in_array('geom', $columns) ? 'geom' : 'the_geom';
-                        }
-
-                        $boundaries = DB::table($table)
-                            ->select('id', 'ward_id', $geomColumn . ' as geometry', 'building_no', 'type', 'floors', 'owner_name')
-                            ->get();
-
-                        foreach ($boundaries as $boundary) {
-                            if ($boundary->geometry) {
-                                $geometry = $this->parseGeometry($boundary->geometry);
-
-                                if ($geometry) {
-                                    $features[] = [
-                                        'type' => 'Feature',
-                                        'properties' => [
-                                            'id' => $boundary->id,
-                                            'ward_id' => $wardId,
-                                            'ward_no' => $ward->ward_no ?? 'N/A',
-                                            'ward_name' => $ward->ward_name ?? 'Ward ' . $wardId,
-                                            'building_no' => $boundary->building_no ?? 'N/A',
-                                            'type' => $boundary->type ?? 'N/A',
-                                            'floors' => $boundary->floors ?? 0,
-                                            'owner_name' => $boundary->owner_name ?? 'N/A',
-                                            'color' => $color,
-                                        ],
-                                        'geometry' => $geometry,
-                                    ];
-
-                                    // Calculate center from polygon
-                                    if ($geometry['type'] === 'Polygon' && isset($geometry['coordinates'][0])) {
-                                        $coords = $geometry['coordinates'][0];
-                                        if (count($coords) > 0) {
-                                            $lng = 0;
-                                            $lat = 0;
-                                            $count = count($coords);
-                                            foreach ($coords as $coord) {
-                                                $lng += $coord[0];
-                                                $lat += $coord[1];
-                                            }
-                                            $centers[] = [
-                                                'ward_id' => $wardId,
-                                                'ward_no' => $ward->ward_no ?? 'N/A',
-                                                'ward_name' => $ward->ward_name ?? 'Ward ' . $wardId,
-                                                'lng' => $lng / $count,
-                                                'lat' => $lat / $count,
-                                            ];
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Error fetching boundary for ward ' . $wardId . ': ' . $e->getMessage());
+            foreach ($zone->wards as $ward) {
+                $geometry = $this->extractWardBoundary($ward);
+                if (!$geometry) {
+                    continue;
                 }
-            }
-        }
-
-        // If no boundaries found, try point_data tables as fallback
-        if (empty($features)) {
-            foreach ($wardIds as $wardId) {
-                $ward = Ward::find($wardId);
-                if (!$ward) continue;
-
-                $table = 'point_data_' . $wardId;
-                if (Schema::hasTable($table)) {
-                    try {
-                        $points = DB::table($table)
-                            ->select('id', 'ward_id', 'lat', 'lng', 'building_no', 'type', 'floors', 'owner_name')
-                            ->get();
-
-                        foreach ($points as $point) {
-                            if ($point->lat && $point->lng) {
-                                // Create a small polygon around point for visualization
-                                $size = 0.0001;
-                                $coords = [
-                                    [$point->lng - $size, $point->lat - $size],
-                                    [$point->lng + $size, $point->lat - $size],
-                                    [$point->lng + $size, $point->lat + $size],
-                                    [$point->lng - $size, $point->lat + $size],
-                                    [$point->lng - $size, $point->lat - $size],
-                                ];
-
-                                $features[] = [
-                                    'type' => 'Feature',
-                                    'properties' => [
-                                        'id' => $point->id,
-                                        'ward_id' => $wardId,
-                                        'ward_no' => $ward->ward_no ?? 'N/A',
-                                        'ward_name' => $ward->ward_name ?? 'Ward ' . $wardId,
-                                        'building_no' => $point->building_no ?? 'N/A',
-                                        'type' => $point->type ?? 'N/A',
-                                        'floors' => $point->floors ?? 0,
-                                        'owner_name' => $point->owner_name ?? 'N/A',
-                                        'color' => $color ?? '#10b981',
-                                    ],
-                                    'geometry' => [
-                                        'type' => 'Polygon',
-                                        'coordinates' => [$coords],
-                                    ],
-                                ];
-
-                                $centers[] = [
-                                    'ward_id' => $wardId,
-                                    'ward_no' => $ward->ward_no ?? 'N/A',
-                                    'ward_name' => $ward->ward_name ?? 'Ward ' . $wardId,
-                                    'lng' => $point->lng,
-                                    'lat' => $point->lat,
-                                ];
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Error fetching point data for ward ' . $wardId . ': ' . $e->getMessage());
-                    }
-                }
-            }
-        }
-
-        // If still no features, create dummy data for demo
-        if (empty($features)) {
-            // Create demo polygons for each ward
-            $baseLat = 17.3850;
-            $baseLng = 78.9629;
-            $offset = 0.01;
-
-            foreach ($wardIds as $index => $wardId) {
-                $ward = Ward::find($wardId);
-                if (!$ward) continue;
-
-                $lat = $baseLat + ($index * $offset * 0.5);
-                $lng = $baseLng + ($index * $offset * 0.3);
-
-                $coords = [
-                    [$lng - $offset, $lat - $offset],
-                    [$lng + $offset, $lat - $offset],
-                    [$lng + $offset, $lat + $offset],
-                    [$lng - $offset, $lat + $offset],
-                    [$lng - $offset, $lat - $offset],
-                ];
-
-                $color = $this->getWardColor($wardId);
 
                 $features[] = [
                     'type' => 'Feature',
                     'properties' => [
-                        'id' => $wardId,
-                        'ward_id' => $wardId,
-                        'ward_no' => $ward->ward_no ?? ($index + 1),
-                        'ward_name' => $ward->ward_name ?? 'Ward ' . ($index + 1),
-                        'building_no' => 'N/A',
-                        'type' => 'Demo',
-                        'floors' => 0,
-                        'owner_name' => 'N/A',
+                        'id' => $ward->id,
+                        'ward_id' => $ward->id,
+                        'ward_no' => $ward->ward_no ?? 'N/A',
+                        'ward_name' => 'Ward ' . ($ward->ward_no ?? $ward->id),
+                        'zone_id' => $zone->id,
+                        'zone_name' => $zone->zone_name ?? 'N/A',
                         'color' => $color,
                     ],
-                    'geometry' => [
-                        'type' => 'Polygon',
-                        'coordinates' => [$coords],
-                    ],
+                    'geometry' => $geometry,
                 ];
 
-                $centers[] = [
-                    'ward_id' => $wardId,
-                    'ward_no' => $ward->ward_no ?? ($index + 1),
-                    'ward_name' => $ward->ward_name ?? 'Ward ' . ($index + 1),
-                    'lng' => $lng,
-                    'lat' => $lat,
-                ];
+                $center = $this->getPolygonCenter($geometry['type'], $geometry['coordinates']);
+                if ($center) {
+                    $centers[] = [
+                        'ward_id' => $ward->id,
+                        'ward_no' => $ward->ward_no ?? 'N/A',
+                        'ward_name' => 'Ward ' . ($ward->ward_no ?? $ward->id),
+                        'x' => $center['x'],
+                        'y' => $center['y'],
+                    ];
+                }
             }
         }
 
-        // Get zone colors
         $zoneColors = $zones->mapWithKeys(function ($zone) {
             return [$zone->id => $this->getWardColor($zone->id)];
         })->toArray();
@@ -541,151 +388,83 @@ class CommissionerController extends Controller
             'centers' => $centers,
             'zoneColors' => $zoneColors,
             'totalFeatures' => count($features),
-            'totalWards' => count($wardIds),
+            'totalWards' => count($centers),
         ];
     }
 
     /**
-     * Parse geometry from database format with improved support
+     * Decode a ward's boundary column into ['type' => ..., 'coordinates' => ...].
+     * Coordinates are left untouched — they're already EPSG:3857 meters.
      */
-    private function parseGeometry($geometry)
+    private function extractWardBoundary($ward)
     {
-        if (!$geometry) return null;
-
-        // If it's already a GeoJSON string
-        if (is_string($geometry) && strpos($geometry, '{') === 0) {
-            $decoded = json_decode($geometry, true);
-            if ($decoded && isset($decoded['type'])) {
-                return $decoded;
-            }
+        $raw = $ward->boundary;
+        if (!$raw) {
+            return null;
         }
 
-        // If it's WKT format
-        if (is_string($geometry)) {
-            // POLYGON
-            if (strpos($geometry, 'POLYGON') === 0) {
-                return $this->wktToGeoJson($geometry);
-            }
-            // MULTIPOLYGON
-            if (strpos($geometry, 'MULTIPOLYGON') === 0) {
-                return $this->multiWktToGeoJson($geometry);
-            }
+        // If the Ward model casts 'boundary' => 'array', $raw is already
+        // decoded. Handle both cases defensively.
+        $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+
+        if (!is_array($decoded) || !isset($decoded['coordinates'])) {
+            return null;
         }
 
-        // If it's a MySQL geometry object
-        if (is_object($geometry)) {
-            if (method_exists($geometry, 'getWKT')) {
-                $wkt = $geometry->getWKT();
-                if ($wkt) {
-                    if (strpos($wkt, 'POLYGON') === 0) {
-                        return $this->wktToGeoJson($wkt);
-                    }
-                    if (strpos($wkt, 'MULTIPOLYGON') === 0) {
-                        return $this->multiWktToGeoJson($wkt);
-                    }
-                }
-            }
-            if (method_exists($geometry, 'asText')) {
-                $wkt = $geometry->asText();
-                if ($wkt) {
-                    if (strpos($wkt, 'POLYGON') === 0) {
-                        return $this->wktToGeoJson($wkt);
-                    }
-                    if (strpos($wkt, 'MULTIPOLYGON') === 0) {
-                        return $this->multiWktToGeoJson($wkt);
-                    }
-                }
-            }
-        }
+        $coordinates = $decoded['coordinates'];
+        $type = $decoded['type'] ?? $this->guessGeometryType($coordinates);
 
-        return null;
+        return [
+            'type' => $type,
+            'coordinates' => $coordinates,
+        ];
     }
 
     /**
-     * Convert WKT POLYGON to GeoJSON
+     * Some boundary columns store MultiPolygon-shaped coordinates even
+     * for a single polygon (common when the underlying DB column type is
+     * MULTIPOLYGON), and don't always include an explicit "type" key.
+     * Detect the nesting depth instead of assuming.
      */
-    private function wktToGeoJson($wkt)
+    private function guessGeometryType($coordinates)
     {
-        // Match POLYGON((x1 y1, x2 y2, ...))
-        if (preg_match('/POLYGON\s*\(\(([^)]+)\)\)/', $wkt, $matches)) {
-            $points = explode(',', $matches[1]);
-            $coordinates = [];
+        $depth = 0;
+        $cursor = $coordinates;
 
-            foreach ($points as $point) {
-                $coords = array_map('trim', explode(' ', trim($point)));
-                if (count($coords) >= 2) {
-                    $lng = floatval($coords[0]);
-                    $lat = floatval($coords[1]);
-                    $coordinates[] = [$lng, $lat];
-                }
-            }
-
-            // Close polygon if not closed
-            if (count($coordinates) > 0) {
-                $first = $coordinates[0];
-                $last = $coordinates[count($coordinates) - 1];
-                if ($first[0] != $last[0] || $first[1] != $last[1]) {
-                    $coordinates[] = $first;
-                }
-            }
-
-            if (count($coordinates) >= 4) {
-                return [
-                    'type' => 'Polygon',
-                    'coordinates' => [$coordinates],
-                ];
-            }
+        while (is_array($cursor) && isset($cursor[0]) && is_array($cursor[0])) {
+            $depth++;
+            $cursor = $cursor[0];
         }
 
-        return null;
+        // depth 2 = Polygon (rings -> points), depth 3+ = MultiPolygon (polygons -> rings -> points)
+        return $depth >= 3 ? 'MultiPolygon' : 'Polygon';
     }
 
     /**
-     * Convert WKT MULTIPOLYGON to GeoJSON
+     * Centroid of the first ring, in the same EPSG:3857 meters as the input.
      */
-    private function multiWktToGeoJson($wkt)
+    private function getPolygonCenter($type, $coordinates)
     {
-        // Match MULTIPOLYGON(((x1 y1, x2 y2, ...)), ((x1 y1, x2 y2, ...)))
-        $polygons = [];
+        $ring = $type === 'MultiPolygon' ? ($coordinates[0][0] ?? []) : ($coordinates[0] ?? []);
 
-        preg_match_all('/\(\(([^)]+)\)\)/', $wkt, $matches);
-        if (isset($matches[1])) {
-            foreach ($matches[1] as $polygonPoints) {
-                $points = explode(',', $polygonPoints);
-                $coordinates = [];
-
-                foreach ($points as $point) {
-                    $coords = array_map('trim', explode(' ', trim($point)));
-                    if (count($coords) >= 2) {
-                        $lng = floatval($coords[0]);
-                        $lat = floatval($coords[1]);
-                        $coordinates[] = [$lng, $lat];
-                    }
-                }
-
-                if (count($coordinates) >= 4) {
-                    $first = $coordinates[0];
-                    $last = $coordinates[count($coordinates) - 1];
-                    if ($first[0] != $last[0] || $first[1] != $last[1]) {
-                        $coordinates[] = $first;
-                    }
-                    $polygons[] = [$coordinates];
-                }
-            }
+        if (empty($ring)) {
+            return null;
         }
 
-        if (count($polygons) > 0) {
-            return [
-                'type' => 'MultiPolygon',
-                'coordinates' => $polygons,
-            ];
+        $x = 0;
+        $y = 0;
+        $count = count($ring);
+
+        foreach ($ring as $point) {
+            $x += $point[0];
+            $y += $point[1];
         }
 
-        return null;
+        return ['x' => $x / $count, 'y' => $y / $count];
     }
 
     /**
-     * Get color for ward based on ID
+     * Get color for ward/zone based on ID
      */
     private function getWardColor($wardId)
     {
