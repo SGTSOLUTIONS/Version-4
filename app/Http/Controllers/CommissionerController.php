@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Log;
 
 class CommissionerController extends Controller
 {
@@ -35,10 +34,6 @@ class CommissionerController extends Controller
                 'corporation' => null,
                 'user' => $user,
                 'taxBreakdown' => $this->getEmptyTaxBreakdown(),
-                'wardBoundaries' => ['type' => 'FeatureCollection', 'features' => []],
-                'wardCenters' => [],
-                'zoneColors' => [],
-                'mapData' => null,
             ]);
         }
 
@@ -240,14 +235,6 @@ class CommissionerController extends Controller
             'connected' => $connectedAssessments,
         ];
 
-        // ─── Ward Boundary Data for Map ───
-        // Reuses the $zones collection already loaded above (with wards),
-        // instead of re-querying the DB with a possibly mismatched column.
-        $mapData = $this->getMapData($zones);
-        $wardBoundaries = $mapData['boundaries'];
-        $wardCenters = $mapData['centers'];
-        $zoneColors = $mapData['zoneColors'];
-
         return view('main.commissioner.dashboard', compact(
             'stats',
             'zoneData',
@@ -262,11 +249,7 @@ class CommissionerController extends Controller
             'taxBreakdown',
             'waterTaxData',
             'ugdData',
-            'professionalTaxData',
-            'wardBoundaries',
-            'wardCenters',
-            'zoneColors',
-            'mapData'
+            'professionalTaxData'
         ));
     }
 
@@ -326,157 +309,6 @@ class CommissionerController extends Controller
         ];
     }
 
-    // ─── Map Data Methods ───
-
-    /**
-     * Build map data straight from wards.boundary. The boundary column
-     * already stores GeoJSON-shaped coordinates (Polygon or MultiPolygon)
-     * in EPSG:3857 meters — the same projection OpenLayers uses by
-     * default — so no per-ward lookup tables and no lon/lat conversion
-     * are needed.
-     */
-    private function getMapData($zones)
-    {
-        $features = [];
-        $centers = [];
-
-        foreach ($zones as $zone) {
-            $color = $this->getWardColor($zone->id);
-
-            foreach ($zone->wards as $ward) {
-                $geometry = $this->extractWardBoundary($ward);
-                if (!$geometry) {
-                    continue;
-                }
-
-                $features[] = [
-                    'type' => 'Feature',
-                    'properties' => [
-                        'id' => $ward->id,
-                        'ward_id' => $ward->id,
-                        'ward_no' => $ward->ward_no ?? 'N/A',
-                        'ward_name' => 'Ward ' . ($ward->ward_no ?? $ward->id),
-                        'zone_id' => $zone->id,
-                        'zone_name' => $zone->zone_name ?? 'N/A',
-                        'color' => $color,
-                    ],
-                    'geometry' => $geometry,
-                ];
-
-                $center = $this->getPolygonCenter($geometry['type'], $geometry['coordinates']);
-                if ($center) {
-                    $centers[] = [
-                        'ward_id' => $ward->id,
-                        'ward_no' => $ward->ward_no ?? 'N/A',
-                        'ward_name' => 'Ward ' . ($ward->ward_no ?? $ward->id),
-                        'x' => $center['x'],
-                        'y' => $center['y'],
-                    ];
-                }
-            }
-        }
-
-        $zoneColors = $zones->mapWithKeys(function ($zone) {
-            return [$zone->id => $this->getWardColor($zone->id)];
-        })->toArray();
-
-        return [
-            'boundaries' => [
-                'type' => 'FeatureCollection',
-                'features' => $features,
-            ],
-            'centers' => $centers,
-            'zoneColors' => $zoneColors,
-            'totalFeatures' => count($features),
-            'totalWards' => count($centers),
-        ];
-    }
-
-    /**
-     * Decode a ward's boundary column into ['type' => ..., 'coordinates' => ...].
-     * Coordinates are left untouched — they're already EPSG:3857 meters.
-     */
-    private function extractWardBoundary($ward)
-    {
-        $raw = $ward->boundary;
-        if (!$raw) {
-            return null;
-        }
-
-        // If the Ward model casts 'boundary' => 'array', $raw is already
-        // decoded. Handle both cases defensively.
-        $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
-
-        if (!is_array($decoded) || !isset($decoded['coordinates'])) {
-            return null;
-        }
-
-        $coordinates = $decoded['coordinates'];
-        $type = $decoded['type'] ?? $this->guessGeometryType($coordinates);
-
-        return [
-            'type' => $type,
-            'coordinates' => $coordinates,
-        ];
-    }
-
-    /**
-     * Some boundary columns store MultiPolygon-shaped coordinates even
-     * for a single polygon (common when the underlying DB column type is
-     * MULTIPOLYGON), and don't always include an explicit "type" key.
-     * Detect the nesting depth instead of assuming.
-     */
-    private function guessGeometryType($coordinates)
-    {
-        $depth = 0;
-        $cursor = $coordinates;
-
-        while (is_array($cursor) && isset($cursor[0]) && is_array($cursor[0])) {
-            $depth++;
-            $cursor = $cursor[0];
-        }
-
-        // depth 2 = Polygon (rings -> points), depth 3+ = MultiPolygon (polygons -> rings -> points)
-        return $depth >= 3 ? 'MultiPolygon' : 'Polygon';
-    }
-
-    /**
-     * Centroid of the first ring, in the same EPSG:3857 meters as the input.
-     */
-    private function getPolygonCenter($type, $coordinates)
-    {
-        $ring = $type === 'MultiPolygon' ? ($coordinates[0][0] ?? []) : ($coordinates[0] ?? []);
-
-        if (empty($ring)) {
-            return null;
-        }
-
-        $x = 0;
-        $y = 0;
-        $count = count($ring);
-
-        foreach ($ring as $point) {
-            $x += $point[0];
-            $y += $point[1];
-        }
-
-        return ['x' => $x / $count, 'y' => $y / $count];
-    }
-
-    /**
-     * Get color for ward/zone based on ID
-     */
-    private function getWardColor($wardId)
-    {
-        $colors = [
-            '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6',
-            '#14b8a6', '#f97316', '#ec4899', '#6366f1', '#06b6d4',
-            '#22c55e', '#eab308', '#f43f5e', '#0ea5e9', '#a855f7',
-            '#34d399', '#60a5fa', '#fbbf24', '#f87171', '#a78bfa',
-        ];
-        return $colors[$wardId % count($colors)];
-    }
-
     // ─── Building Methods ───
 
     /**
@@ -497,7 +329,6 @@ class CommissionerController extends Controller
 
         return $total;
     }
-
     /**
      * Get buildings by ward IDs (from polygon tables)
      */
@@ -688,7 +519,10 @@ class CommissionerController extends Controller
             return 0;
         }
 
+
+
         $total = DB::table($misTable)->count();
+
 
         return $total;
     }
@@ -702,6 +536,7 @@ class CommissionerController extends Controller
         if (!Schema::hasTable($misTable)) {
             return 0;
         }
+
 
         $assessments = [];
 
@@ -717,6 +552,7 @@ class CommissionerController extends Controller
         $total = 0;
 
         foreach ($wardIds as $wardId) {
+
             $table = 'point_data_' . $wardId;
             if (Schema::hasTable($table)) {
                 try {
@@ -836,6 +672,7 @@ class CommissionerController extends Controller
             return 0;
         }
 
+
         $assessments = [];
 
         try {
@@ -849,6 +686,7 @@ class CommissionerController extends Controller
         }
         $total = 0;
         foreach ($wardIds as $wardId) {
+
             $table = 'point_data_' . $wardId;
             if (Schema::hasTable($table)) {
                 try {
