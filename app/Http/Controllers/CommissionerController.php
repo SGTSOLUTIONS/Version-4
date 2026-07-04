@@ -331,7 +331,7 @@ class CommissionerController extends Controller
      */
     private function getMapData($corporationId)
     {
-        $zones = Zone::where('corporation_id', $corporationId)->with(['wards'])->get();
+        $zones = Zone::where('corp_id', $corporationId)->with(['wards'])->get();
         $wardIds = $zones->flatMap(fn($zone) => $zone->wards->pluck('id'))->toArray();
 
         $features = [];
