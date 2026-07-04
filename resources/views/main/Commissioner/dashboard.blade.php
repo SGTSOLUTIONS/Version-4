@@ -9,6 +9,29 @@
     :root {
         --font-mono: 'Courier New', monospace;
         --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        --bg-dark: #0b1120;
+        --bg-card: #131e33;
+        --bg-card-hover: #1a2a45;
+        --text-primary: #e8edf5;
+        --text-secondary: #8899bb;
+        --text-muted: #5a6d8a;
+        --border-color: #1e2d4a;
+        --accent-green: #34d399;
+        --accent-blue: #60a5fa;
+        --accent-gold: #fbbf24;
+        --accent-purple: #a78bfa;
+        --accent-red: #f87171;
+        --accent-teal: #2dd4bf;
+        --accent-pink: #f472b6;
+        --accent-orange: #fb923c;
+        --accent-indigo: #818cf8;
+        --accent-cyan: #22d3ee;
+    }
+
+    /* ─── Base Dark ─── */
+    body {
+        background-color: var(--bg-dark);
+        color: var(--text-primary);
     }
 
     /* ─── Hierarchy Visualization ─── */
@@ -17,116 +40,134 @@
         align-items: center;
         justify-content: center;
         gap: 1.5rem;
-        padding: 1.5rem;
-        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-        border-radius: 12px;
+        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, #0f1a2e, #162040);
+        border-radius: 16px;
         margin-bottom: 1.5rem;
         flex-wrap: wrap;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     }
     .hierarchy-item {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        background: white;
-        padding: 0.6rem 1.2rem;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        gap: 0.6rem;
+        background: var(--bg-card);
+        padding: 0.6rem 1.4rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
         font-weight: 600;
-        color: #0a2e1a;
-        font-size: 0.9rem;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .hierarchy-item:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent-green);
+        box-shadow: 0 4px 20px rgba(52,211,153,0.15);
     }
     .hierarchy-item .count {
-        background: #10b981;
-        color: white;
+        background: var(--accent-green);
+        color: #0b1120;
         border-radius: 20px;
-        padding: 0.1rem 0.7rem;
-        font-size: 0.8rem;
+        padding: 0.1rem 0.8rem;
+        font-size: 0.75rem;
         font-weight: 700;
     }
     .hierarchy-arrow {
-        color: #10b981;
+        color: var(--accent-green);
         font-size: 1.5rem;
         font-weight: 300;
+        opacity: 0.6;
     }
 
     /* ─── Stat Cards ─── */
     .comm-stat {
-        background: white;
-        border-radius: 12px;
+        background: var(--bg-card);
+        border-radius: 14px;
         padding: 1.2rem 1.2rem 1rem 1.2rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        border: 1px solid rgba(0,0,0,0.04);
-        transition: all 0.2s;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
         height: 100%;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
     .comm-stat:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        transform: translateY(-3px);
+        border-color: var(--accent-green);
+        box-shadow: 0 8px 30px rgba(52,211,153,0.1);
+        background: var(--bg-card-hover);
     }
     .comm-stat .label {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #9ca3af;
+        letter-spacing: 0.8px;
+        color: var(--text-secondary);
         font-weight: 600;
     }
     .comm-stat .value {
         font-size: 1.5rem;
         font-weight: 700;
-        color: #0a2e1a;
+        color: var(--text-primary);
         margin-top: 0.2rem;
         font-family: var(--font-mono);
     }
-    .comm-stat .value.green { color: #10b981; }
-    .comm-stat .value.red { color: #ef4444; }
-    .comm-stat .value.blue { color: #3b82f6; }
-    .comm-stat .value.gold { color: #f59e0b; }
-    .comm-stat .value.purple { color: #8b5cf6; }
+    .comm-stat .value.green { color: var(--accent-green); }
+    .comm-stat .value.red { color: var(--accent-red); }
+    .comm-stat .value.blue { color: var(--accent-blue); }
+    .comm-stat .value.gold { color: var(--accent-gold); }
+    .comm-stat .value.purple { color: var(--accent-purple); }
+    .comm-stat .value.teal { color: var(--accent-teal); }
+    .comm-stat .value.pink { color: var(--accent-pink); }
+    .comm-stat .value.orange { color: var(--accent-orange); }
+    .comm-stat .value.indigo { color: var(--accent-indigo); }
+    .comm-stat .value.cyan { color: var(--accent-cyan); }
     .comm-stat .icon-wrap {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.1rem;
-        color: white;
+        color: #0b1120;
         flex-shrink: 0;
     }
-    .comm-stat .icon-wrap.green { background: #10b981; }
-    .comm-stat .icon-wrap.blue { background: #3b82f6; }
-    .comm-stat .icon-wrap.gold { background: #f59e0b; }
-    .comm-stat .icon-wrap.red { background: #ef4444; }
-    .comm-stat .icon-wrap.purple { background: #8b5cf6; }
-    .comm-stat .icon-wrap.teal { background: #14b8a6; }
-    .comm-stat .icon-wrap.indigo { background: #6366f1; }
-    .comm-stat .icon-wrap.pink { background: #ec4899; }
-    .comm-stat .icon-wrap.orange { background: #f97316; }
-    .comm-stat .icon-wrap.cyan { background: #06b6d4; }
+    .comm-stat .icon-wrap.green { background: var(--accent-green); }
+    .comm-stat .icon-wrap.blue { background: var(--accent-blue); }
+    .comm-stat .icon-wrap.gold { background: var(--accent-gold); }
+    .comm-stat .icon-wrap.red { background: var(--accent-red); }
+    .comm-stat .icon-wrap.purple { background: var(--accent-purple); }
+    .comm-stat .icon-wrap.teal { background: var(--accent-teal); }
+    .comm-stat .icon-wrap.indigo { background: var(--accent-indigo); }
+    .comm-stat .icon-wrap.pink { background: var(--accent-pink); }
+    .comm-stat .icon-wrap.orange { background: var(--accent-orange); }
+    .comm-stat .icon-wrap.cyan { background: var(--accent-cyan); }
 
     /* ─── Zone Cards ─── */
     .zone-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.2rem;
-        border: 1px solid rgba(0,0,0,0.04);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        transition: all 0.2s;
+        background: var(--bg-card);
+        border-radius: 14px;
+        padding: 1.2rem 1.4rem;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
         height: 100%;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
     .zone-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-        border-color: #10b981;
+        transform: translateY(-4px);
+        border-color: var(--accent-green);
+        box-shadow: 0 8px 30px rgba(52,211,153,0.12);
+        background: var(--bg-card-hover);
     }
     .zone-card .zone-name {
         font-weight: 700;
         font-size: 1.05rem;
-        color: #0a2e1a;
+        color: var(--text-primary);
     }
     .zone-card .zone-officer {
-        font-size: 0.78rem;
-        color: #6b7280;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
         margin-top: -0.1rem;
     }
     .zone-card .zone-stats {
@@ -136,11 +177,11 @@
         margin-top: 0.7rem;
     }
     .zone-card .zone-stats span {
-        font-size: 0.75rem;
-        color: #6b7280;
+        font-size: 0.72rem;
+        color: var(--text-secondary);
     }
     .zone-card .zone-stats strong {
-        color: #0a2e1a;
+        color: var(--text-primary);
         font-weight: 600;
         font-family: var(--font-mono);
     }
@@ -150,90 +191,89 @@
         align-items: center;
         margin-top: 0.7rem;
         padding-top: 0.7rem;
-        border-top: 1px solid #f3f4f6;
+        border-top: 1px solid var(--border-color);
     }
     .zone-card .zone-collection {
         font-weight: 700;
-        color: #10b981;
+        color: var(--accent-green);
         font-family: var(--font-mono);
         font-size: 1rem;
     }
     .zone-card .zone-pending {
         font-weight: 600;
-        color: #ef4444;
+        color: var(--accent-red);
         font-family: var(--font-mono);
-        font-size: 0.85rem;
+        font-size: 0.8rem;
     }
     .zone-card .tax-tags {
         display: flex;
         gap: 0.3rem;
         flex-wrap: wrap;
-        margin-top: 0.3rem;
+        margin-top: 0.4rem;
     }
     .zone-card .tax-tag {
         font-size: 0.6rem;
-        padding: 0.1rem 0.5rem;
+        padding: 0.15rem 0.6rem;
         border-radius: 10px;
-        background: #f3f4f6;
-        color: #6b7280;
+        color: var(--text-primary);
+        background: rgba(255,255,255,0.06);
     }
-    .tax-tag.water { background: #dbeafe; color: #2563eb; }
-    .tax-tag.ugd { background: #fef3c7; color: #d97706; }
-    .tax-tag.professional { background: #e0e7ff; color: #4f46e5; }
+    .tax-tag.water { background: rgba(96,165,250,0.2); color: var(--accent-blue); }
+    .tax-tag.ugd { background: rgba(251,191,36,0.2); color: var(--accent-gold); }
+    .tax-tag.professional { background: rgba(129,140,248,0.2); color: var(--accent-indigo); }
 
     /* ─── Tables ─── */
     .comm-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
     }
     .comm-table thead th {
-        background: #f9fafb;
-        color: #6b7280;
+        background: rgba(255,255,255,0.04);
+        color: var(--text-secondary);
         font-weight: 600;
         text-transform: uppercase;
-        font-size: 0.65rem;
-        letter-spacing: 0.5px;
+        font-size: 0.6rem;
+        letter-spacing: 0.6px;
         padding: 0.7rem 0.8rem;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--border-color);
         text-align: left;
     }
     .comm-table tbody td {
         padding: 0.65rem 0.8rem;
-        border-bottom: 1px solid #f3f4f6;
-        color: #1f2937;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        color: var(--text-primary);
     }
     .comm-table tbody tr:hover {
-        background: #f9fafb;
+        background: rgba(255,255,255,0.03);
     }
     .comm-table .badge-status {
-        padding: 0.2rem 0.6rem;
+        padding: 0.2rem 0.7rem;
         border-radius: 20px;
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         font-weight: 600;
         display: inline-block;
     }
-    .badge-status.paid { background: #dcfce7; color: #059669; }
-    .badge-status.pending { background: #fef3c7; color: #d97706; }
-    .badge-status.overdue { background: #fee2e2; color: #dc2626; }
-    .badge-status.active { background: #dbeafe; color: #2563eb; }
+    .badge-status.paid { background: rgba(52,211,153,0.2); color: var(--accent-green); }
+    .badge-status.pending { background: rgba(251,191,36,0.2); color: var(--accent-gold); }
+    .badge-status.overdue { background: rgba(248,113,113,0.2); color: var(--accent-red); }
+    .badge-status.active { background: rgba(96,165,250,0.2); color: var(--accent-blue); }
 
     .btn-view {
-        color: #10b981;
-        font-size: 0.85rem;
-        padding: 0.2rem 0.6rem;
+        color: var(--accent-green);
+        font-size: 0.7rem;
+        padding: 0.2rem 0.7rem;
         border-radius: 6px;
-        border: 1px solid rgba(16,185,129,0.2);
-        background: rgba(16,185,129,0.05);
-        transition: all 0.15s;
+        border: 1px solid rgba(52,211,153,0.25);
+        background: rgba(52,211,153,0.08);
+        transition: all 0.2s;
         text-decoration: none;
         display: inline-block;
-        font-size: 0.7rem;
     }
     .btn-view:hover {
-        background: #10b981;
-        color: white;
-        border-color: #10b981;
+        background: var(--accent-green);
+        color: #0b1120;
+        border-color: var(--accent-green);
         text-decoration: none;
     }
 
@@ -249,30 +289,31 @@
         gap: 0.5rem;
         padding: 0.6rem 0.9rem;
         border-radius: 10px;
-        border: 1px solid #e5e7eb;
-        background: white;
-        color: #1f2937;
-        font-size: 0.78rem;
+        border: 1px solid var(--border-color);
+        background: rgba(255,255,255,0.03);
+        color: var(--text-primary);
+        font-size: 0.75rem;
         font-weight: 500;
-        transition: all 0.15s;
+        transition: all 0.2s;
         text-decoration: none;
     }
     .quick-action-btn:hover {
-        border-color: #10b981;
-        background: #f0fdf4;
-        color: #0a2e1a;
+        border-color: var(--accent-green);
+        background: rgba(52,211,153,0.08);
+        color: var(--accent-green);
         text-decoration: none;
+        transform: translateY(-1px);
     }
     .quick-action-btn i {
         font-size: 1rem;
-        color: #10b981;
+        color: var(--accent-green);
     }
 
-    /* ─── Performance Table ─── */
+    /* ─── Performance Bar ─── */
     .perf-bar {
-        height: 5px;
+        height: 6px;
         border-radius: 20px;
-        background: #f3f4f6;
+        background: rgba(255,255,255,0.08);
         overflow: hidden;
         min-width: 60px;
         flex: 1;
@@ -288,34 +329,36 @@
         display: flex;
         align-items: center;
         gap: 0.7rem;
-        padding: 0.5rem 0.7rem;
+        padding: 0.5rem 0.8rem;
         border-radius: 8px;
-        background: #f9fafb;
-        transition: background 0.15s;
+        background: rgba(255,255,255,0.03);
+        transition: all 0.2s;
+        border: 1px solid transparent;
     }
     .activity-item:hover {
-        background: #f3f4f6;
+        background: rgba(255,255,255,0.06);
+        border-color: var(--border-color);
     }
     .activity-item .act-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 6px;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
     }
     .activity-item .act-text {
-        font-size: 0.78rem;
-        color: #1f2937;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
         flex: 1;
     }
     .activity-item .act-text strong {
-        color: #0a2e1a;
+        color: var(--text-primary);
     }
     .activity-item .act-time {
-        font-size: 0.65rem;
-        color: #9ca3af;
+        font-size: 0.6rem;
+        color: var(--text-muted);
         white-space: nowrap;
     }
 
@@ -323,72 +366,75 @@
     .error-state {
         text-align: center;
         padding: 3rem 1rem;
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #fee2e2;
-        background: #fef2f2;
+        background: var(--bg-card);
+        border-radius: 14px;
+        border: 1px solid rgba(248,113,113,0.3);
+        background: rgba(248,113,113,0.05);
     }
     .error-state i {
         font-size: 3rem;
-        color: #ef4444;
+        color: var(--accent-red);
         margin-bottom: 1rem;
         display: block;
     }
     .error-state h5 {
-        color: #991b1b;
+        color: var(--accent-red);
         font-weight: 600;
     }
     .error-state p {
-        color: #7f1d1d;
-        opacity: 0.8;
+        color: var(--text-secondary);
     }
 
     /* ─── DS Card Override ─── */
     .ds-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        border: 1px solid rgba(0,0,0,0.04);
+        background: var(--bg-card);
+        border-radius: 14px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    .ds-card:hover {
+        border-color: rgba(52,211,153,0.2);
     }
     .ds-card-head {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem 1.2rem;
-        border-bottom: 1px solid #f3f4f6;
+        padding: 0.9rem 1.2rem;
+        border-bottom: 1px solid var(--border-color);
         flex-wrap: wrap;
         gap: 0.5rem;
     }
     .ds-card-title {
         font-weight: 600;
-        color: #0a2e1a;
-        font-size: 0.95rem;
+        color: var(--text-primary);
+        font-size: 0.9rem;
     }
     .ds-card-body {
         padding: 1.2rem;
     }
 
     .ds-pill {
-        padding: 4px 12px;
+        padding: 4px 14px;
         border-radius: 20px;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         font-weight: 600;
         display: inline-block;
     }
     .ds-pill.paid {
-        background: #dcfce7;
-        color: #059669;
-        border: 1px solid #10b98120;
+        background: rgba(52,211,153,0.15);
+        color: var(--accent-green);
+        border: 1px solid rgba(52,211,153,0.2);
     }
 
     .rv-submit {
-        background: #10b981;
-        color: white;
+        background: var(--accent-green);
+        color: #0b1120;
         border: none;
-        padding: 8px 20px;
-        border-radius: 8px;
+        padding: 8px 22px;
+        border-radius: 10px;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         transition: all 0.2s;
         text-decoration: none;
         display: inline-flex;
@@ -396,9 +442,11 @@
         gap: 6px;
     }
     .rv-submit:hover {
-        background: #059669;
-        color: white;
+        background: #2dd4bf;
+        color: #0b1120;
         text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 20px rgba(52,211,153,0.3);
     }
 
     .ol-page-header {
@@ -412,13 +460,13 @@
     .ol-page-title {
         font-size: 1.5rem;
         font-weight: 700;
-        color: #0a2e1a;
+        color: var(--text-primary);
         margin: 0;
     }
     .ol-page-sub {
-        color: #6b7280;
+        color: var(--text-secondary);
         margin: 0.2rem 0 0 0;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
     }
 
     /* ─── Tax Breakdown ─── */
@@ -427,37 +475,53 @@
         justify-content: space-between;
         align-items: center;
         padding: 0.5rem 0;
-        border-bottom: 1px solid #f3f4f6;
+        border-bottom: 1px solid var(--border-color);
     }
     .tax-breakdown-item:last-child {
         border-bottom: none;
     }
     .tax-breakdown-item .tax-label {
-        font-size: 0.78rem;
-        color: #6b7280;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
     }
     .tax-breakdown-item .tax-count {
         font-weight: 600;
-        color: #0a2e1a;
+        color: var(--text-primary);
         font-family: var(--font-mono);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
     .tax-breakdown-item .tax-amount {
         font-weight: 600;
-        color: #10b981;
+        color: var(--accent-green);
         font-family: var(--font-mono);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 
     /* ─── Responsive ─── */
     @media (max-width: 768px) {
         .hierarchy-flow { gap: 0.6rem; padding: 0.8rem; }
-        .hierarchy-item { font-size: 0.7rem; padding: 0.3rem 0.8rem; }
+        .hierarchy-item { font-size: 0.65rem; padding: 0.3rem 0.8rem; }
         .hierarchy-arrow { font-size: 1rem; }
         .comm-stat .value { font-size: 1.1rem; }
         .zone-card .zone-stats { grid-template-columns: 1fr; }
         .quick-actions { grid-template-columns: 1fr 1fr; }
         .ol-page-header { flex-direction: column; }
+    }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
     }
 </style>
 @endpush
@@ -475,14 +539,14 @@
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
         @if(isset($corporation) && $corporation)
-        <span style="font-size:0.7rem; padding:4px 12px; background:#f0fdf4; color:#10b981; border-radius:20px; border:1px solid #10b98120;">
+        <span style="font-size:0.65rem; padding:4px 14px; background:rgba(52,211,153,0.12); color:var(--accent-green); border-radius:20px; border:1px solid rgba(52,211,153,0.2);">
             <i class="bi bi-building me-1"></i> {{ $corporation->name }}
         </span>
         @endif
-        <span class="ds-pill paid" style="font-size:0.65rem; padding:4px 10px;">
-            <i class="bi bi-circle-fill me-1" style="font-size:6px; vertical-align:1px;"></i>Live
+        <span class="ds-pill paid" style="font-size:0.6rem; padding:4px 12px;">
+            <i class="bi bi-circle-fill me-1" style="font-size:6px; vertical-align:1px; color:var(--accent-green);"></i>Live
         </span>
-        <a href="#" class="rv-submit" style="width:auto; height:38px; padding:0 1.2rem; font-size:0.8rem !important; border-radius:9px !important; display:inline-flex; align-items:center; gap:6px; animation:none;">
+        <a href="#" class="rv-submit" style="width:auto; height:38px; padding:0 1.2rem; font-size:0.75rem !important; border-radius:10px !important; display:inline-flex; align-items:center; gap:6px; animation:none;">
             <i class="bi bi-download" style="font-size:13px;"></i>
             Export Report
         </a>
@@ -500,32 +564,32 @@
 {{-- ── Hierarchy Flow ── --}}
 <div class="hierarchy-flow">
     <div class="hierarchy-item">
-        <i class="bi bi-diagram-3" style="color:#10b981;"></i>
+        <i class="bi bi-diagram-3" style="color:var(--accent-green);"></i>
         Zones <span class="count">{{ $hierarchyStats['zones'] ?? 0 }}</span>
     </div>
     <span class="hierarchy-arrow">→</span>
     <div class="hierarchy-item">
-        <i class="bi bi-grid-3x3-gap-fill" style="color:#3b82f6;"></i>
+        <i class="bi bi-grid-3x3-gap-fill" style="color:var(--accent-blue);"></i>
         Wards <span class="count">{{ $hierarchyStats['wards'] ?? 0 }}</span>
     </div>
     <span class="hierarchy-arrow">→</span>
     <div class="hierarchy-item">
-        <i class="bi bi-building" style="color:#f59e0b;"></i>
+        <i class="bi bi-building" style="color:var(--accent-gold);"></i>
         Buildings <span class="count">{{ isset($hierarchyStats['buildings']) ? number_format($hierarchyStats['buildings']) : '0' }}</span>
     </div>
     <span class="hierarchy-arrow">→</span>
     <div class="hierarchy-item">
-        <i class="bi bi-clipboard-data" style="color:#8b5cf6;"></i>
+        <i class="bi bi-clipboard-data" style="color:var(--accent-purple);"></i>
         Assessments <span class="count">{{ isset($hierarchyStats['assessments']) ? number_format($hierarchyStats['assessments']) : '0' }}</span>
     </div>
     <span class="hierarchy-arrow">→</span>
     <div class="hierarchy-item">
-        <i class="bi bi-check2-circle" style="color:#14b8a6;"></i>
+        <i class="bi bi-check2-circle" style="color:var(--accent-teal);"></i>
         Surveyed <span class="count">{{ isset($hierarchyStats['surveyed']) ? number_format($hierarchyStats['surveyed']) : '0' }}</span>
     </div>
     <span class="hierarchy-arrow">→</span>
     <div class="hierarchy-item">
-        <i class="bi bi-link-45deg" style="color:#8b5cf6;"></i>
+        <i class="bi bi-link-45deg" style="color:var(--accent-purple);"></i>
         Connected <span class="count">{{ isset($hierarchyStats['connected']) ? number_format($hierarchyStats['connected']) : '0' }}</span>
     </div>
 </div>
@@ -751,8 +815,8 @@
     <div class="col-xl-7">
         <div class="ds-card h-100">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-pie-chart me-2"></i>Tax Breakdown</div>
-                <span style="font-size:0.68rem; color:#9ca3af;">{{ now()->format('F Y') }}</span>
+                <div class="ds-card-title"><i class="bi bi-pie-chart me-2" style="color:var(--accent-green);"></i>Tax Breakdown</div>
+                <span style="font-size:0.65rem; color:var(--text-muted);">{{ now()->format('F Y') }}</span>
             </div>
             <div class="ds-card-body">
                 @if(isset($taxBreakdown) && count($taxBreakdown) > 0)
@@ -784,7 +848,7 @@
                         </div>
                     @endforeach
                 @else
-                    <div class="text-center py-3 text-muted">No tax data available</div>
+                    <div class="text-center py-3 text-muted" style="color:var(--text-muted);">No tax data available</div>
                 @endif
             </div>
         </div>
@@ -796,8 +860,8 @@
     <div class="col-12">
         <div class="ds-card">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-graph-up me-2" style="color:#10b981;"></i>Zone-wise Collection Performance</div>
-                <span style="font-size:0.68rem; color:#9ca3af;">{{ now()->format('F Y') }}</span>
+                <div class="ds-card-title"><i class="bi bi-graph-up me-2" style="color:var(--accent-green);"></i>Zone-wise Collection Performance</div>
+                <span style="font-size:0.65rem; color:var(--text-muted);">{{ now()->format('F Y') }}</span>
             </div>
             <div class="ds-card-body" style="overflow-x:auto;">
                 <table class="comm-table">
@@ -813,22 +877,22 @@
                     <tbody>
                         @forelse($performanceZones ?? [] as $zone)
                         <tr>
-                            <td style="font-weight:600; color:#0a2e1a;">{{ $zone['name'] }}</td>
-                            <td style="font-family:var(--font-mono); color:#6b7280;">{{ $zone['target'] }}</td>
-                            <td style="font-family:var(--font-mono); font-weight:600; color:#059669;">{{ $zone['collected'] }}</td>
-                            <td style="font-family:var(--font-mono); color:#dc2626;">{{ $zone['pending'] }}</td>
+                            <td style="font-weight:600; color:var(--text-primary);">{{ $zone['name'] }}</td>
+                            <td style="font-family:var(--font-mono); color:var(--text-secondary);">{{ $zone['target'] }}</td>
+                            <td style="font-family:var(--font-mono); font-weight:600; color:var(--accent-green);">{{ $zone['collected'] }}</td>
+                            <td style="font-family:var(--font-mono); color:var(--accent-red);">{{ $zone['pending'] }}</td>
                             <td>
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <div class="perf-bar">
-                                        <div class="fill" style="width:{{ $zone['achievement'] }}%; background:{{ $zone['achievement'] >= 80 ? '#10b981' : ($zone['achievement'] >= 60 ? '#f59e0b' : '#ef4444') }};"></div>
+                                        <div class="fill" style="width:{{ $zone['achievement'] }}%; background:{{ $zone['achievement'] >= 80 ? 'var(--accent-green)' : ($zone['achievement'] >= 60 ? 'var(--accent-gold)' : 'var(--accent-red)') }};"></div>
                                     </div>
-                                    <span style="font-family:var(--font-mono); font-size:0.75rem; min-width:36px; color:#374151;">{{ $zone['achievement'] }}%</span>
+                                    <span style="font-family:var(--font-mono); font-size:0.75rem; min-width:36px; color:var(--text-secondary);">{{ $zone['achievement'] }}%</span>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center py-3 text-muted">No zones found for this corporation</td>
+                            <td colspan="5" class="text-center py-3 text-muted" style="color:var(--text-muted);">No zones found for this corporation</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -842,8 +906,8 @@
 <div class="row g-3 mb-4">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="fw-bold mb-0" style="color:#0a2e1a;"><i class="bi bi-diagram-3 me-2" style="color:#10b981;"></i>Zone Overview</h6>
-            <a href="{{ route('admin.zones.index') }}" style="font-size:0.78rem; color:#10b981; text-decoration:none;">View All Zones <i class="bi bi-arrow-right ms-1"></i></a>
+            <h6 class="fw-bold mb-0" style="color:var(--text-primary);"><i class="bi bi-diagram-3 me-2" style="color:var(--accent-green);"></i>Zone Overview</h6>
+            <a href="{{ route('admin.zones.index') }}" style="font-size:0.75rem; color:var(--accent-green); text-decoration:none; transition:all 0.2s;">View All Zones <i class="bi bi-arrow-right ms-1"></i></a>
         </div>
         <div class="row g-3">
             @forelse($zoneData ?? [] as $zone)
@@ -854,13 +918,13 @@
                             <div class="zone-name">{{ $zone['name'] }}</div>
                             <div class="zone-officer"><i class="bi bi-person-badge me-1"></i>{{ $zone['officer'] }}</div>
                         </div>
-                        <span style="font-size:1.2rem; color:#10b981;"><i class="bi bi-building"></i></span>
+                        <span style="font-size:1.2rem; color:var(--accent-green);"><i class="bi bi-building"></i></span>
                     </div>
                     <div class="zone-stats">
-                        <span><i class="bi bi-grid-3x3-gap-fill me-1" style="color:#3b82f6;"></i>Wards: <strong>{{ $zone['wards'] }}</strong></span>
-                        <span><i class="bi bi-building me-1" style="color:#f59e0b;"></i>Buildings: <strong>{{ number_format($zone['buildings']) }}</strong></span>
-                        <span><i class="bi bi-clipboard-data me-1" style="color:#8b5cf6;"></i>Assessments: <strong>{{ number_format($zone['assessments']) }}</strong></span>
-                        <span><i class="bi bi-eye me-1" style="color:#14b8a6;"></i>Surveyed: <strong>{{ number_format($zone['surveyed']) }}</strong></span>
+                        <span><i class="bi bi-grid-3x3-gap-fill me-1" style="color:var(--accent-blue);"></i>Wards: <strong>{{ $zone['wards'] }}</strong></span>
+                        <span><i class="bi bi-building me-1" style="color:var(--accent-gold);"></i>Buildings: <strong>{{ number_format($zone['buildings']) }}</strong></span>
+                        <span><i class="bi bi-clipboard-data me-1" style="color:var(--accent-purple);"></i>Assessments: <strong>{{ number_format($zone['assessments']) }}</strong></span>
+                        <span><i class="bi bi-eye me-1" style="color:var(--accent-teal);"></i>Surveyed: <strong>{{ number_format($zone['surveyed']) }}</strong></span>
                     </div>
                     <div class="tax-tags">
                         <span class="tax-tag water"><i class="bi bi-droplet me-1"></i>{{ $zone['water_tax'] ?? 0 }}</span>
@@ -875,7 +939,7 @@
             </div>
             @empty
             <div class="col-12">
-                <div class="text-center py-4 text-muted">
+                <div class="text-center py-4" style="color:var(--text-muted);">
                     <i class="bi bi-diagram-3 fs-2 d-block mb-2"></i>
                     No zones found for this corporation
                 </div>
@@ -890,8 +954,8 @@
     <div class="col-md-4">
         <div class="ds-card">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-droplet me-2" style="color:#2563eb;"></i>Water Tax</div>
-                <a href="#" style="font-size:0.7rem; color:#10b981; text-decoration:none;">View All</a>
+                <div class="ds-card-title"><i class="bi bi-droplet me-2" style="color:var(--accent-blue);"></i>Water Tax</div>
+                <a href="#" style="font-size:0.65rem; color:var(--accent-green); text-decoration:none; transition:all 0.2s;">View All</a>
             </div>
             <div style="overflow-x:auto;">
                 <table class="comm-table">
@@ -905,12 +969,12 @@
                     <tbody>
                         @forelse($waterTaxData ?? [] as $item)
                         <tr>
-                            <td style="font-weight:600; font-size:0.75rem;">{{ $item['no'] }}</td>
-                            <td style="font-family:var(--font-mono); font-size:0.8rem;">{{ $item['amount'] }}</td>
+                            <td style="font-weight:600; font-size:0.7rem; color:var(--text-primary);">{{ $item['no'] }}</td>
+                            <td style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary);">{{ $item['amount'] }}</td>
                             <td><span class="badge-status {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="text-center py-2 text-muted" style="font-size:0.75rem;">No data</td></tr>
+                        <tr><td colspan="3" class="text-center py-2" style="font-size:0.75rem; color:var(--text-muted);">No data</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -921,8 +985,8 @@
     <div class="col-md-4">
         <div class="ds-card">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-pipe me-2" style="color:#d97706;"></i>UGD Tax</div>
-                <a href="#" style="font-size:0.7rem; color:#10b981; text-decoration:none;">View All</a>
+                <div class="ds-card-title"><i class="bi bi-pipe me-2" style="color:var(--accent-gold);"></i>UGD Tax</div>
+                <a href="#" style="font-size:0.65rem; color:var(--accent-green); text-decoration:none; transition:all 0.2s;">View All</a>
             </div>
             <div style="overflow-x:auto;">
                 <table class="comm-table">
@@ -936,12 +1000,12 @@
                     <tbody>
                         @forelse($ugdData ?? [] as $item)
                         <tr>
-                            <td style="font-weight:600; font-size:0.75rem;">{{ $item['no'] }}</td>
-                            <td style="font-family:var(--font-mono); font-size:0.8rem;">{{ $item['amount'] }}</td>
+                            <td style="font-weight:600; font-size:0.7rem; color:var(--text-primary);">{{ $item['no'] }}</td>
+                            <td style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary);">{{ $item['amount'] }}</td>
                             <td><span class="badge-status {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="text-center py-2 text-muted" style="font-size:0.75rem;">No data</td></tr>
+                        <tr><td colspan="3" class="text-center py-2" style="font-size:0.75rem; color:var(--text-muted);">No data</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -952,8 +1016,8 @@
     <div class="col-md-4">
         <div class="ds-card">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-briefcase me-2" style="color:#4f46e5;"></i>Professional Tax</div>
-                <a href="#" style="font-size:0.7rem; color:#10b981; text-decoration:none;">View All</a>
+                <div class="ds-card-title"><i class="bi bi-briefcase me-2" style="color:var(--accent-indigo);"></i>Professional Tax</div>
+                <a href="#" style="font-size:0.65rem; color:var(--accent-green); text-decoration:none; transition:all 0.2s;">View All</a>
             </div>
             <div style="overflow-x:auto;">
                 <table class="comm-table">
@@ -967,12 +1031,12 @@
                     <tbody>
                         @forelse($professionalTaxData ?? [] as $item)
                         <tr>
-                            <td style="font-weight:600; font-size:0.75rem;">{{ $item['no'] }}</td>
-                            <td style="font-family:var(--font-mono); font-size:0.8rem;">{{ $item['amount'] }}</td>
+                            <td style="font-weight:600; font-size:0.7rem; color:var(--text-primary);">{{ $item['no'] }}</td>
+                            <td style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary);">{{ $item['amount'] }}</td>
                             <td><span class="badge-status {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="text-center py-2 text-muted" style="font-size:0.75rem;">No data</td></tr>
+                        <tr><td colspan="3" class="text-center py-2" style="font-size:0.75rem; color:var(--text-muted);">No data</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -986,15 +1050,15 @@
     <div class="col-12">
         <div class="ds-card">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-activity me-2" style="color:#10b981;"></i>Recent Activities</div>
-                <span style="font-size:0.68rem; color:#9ca3af;">Live</span>
+                <div class="ds-card-title"><i class="bi bi-activity me-2" style="color:var(--accent-green);"></i>Recent Activities</div>
+                <span style="font-size:0.65rem; color:var(--text-muted);">Live</span>
             </div>
             <div class="ds-card-body">
                 <div class="row g-2">
                     @forelse($activities ?? [] as $activity)
                     <div class="col-xl-3 col-lg-4 col-md-6">
                         <div class="activity-item">
-                            <div class="act-icon" style="background:{{ $activity['color'] }}15; color:{{ $activity['color'] }};">
+                            <div class="act-icon" style="background:{{ $activity['color'] }}20; color:{{ $activity['color'] }};">
                                 <i class="bi bi-{{ $activity['icon'] }}"></i>
                             </div>
                             <div class="act-text">{!! $activity['text'] !!}</div>
@@ -1003,7 +1067,7 @@
                     </div>
                     @empty
                     <div class="col-12">
-                        <div class="text-center py-3 text-muted">No recent activities</div>
+                        <div class="text-center py-3" style="color:var(--text-muted);">No recent activities</div>
                     </div>
                     @endforelse
                 </div>
@@ -1025,7 +1089,7 @@
             bar.style.width = '0%';
             setTimeout(() => {
                 bar.style.width = w;
-            }, 200);
+            }, 300);
         });
     });
 </script>
