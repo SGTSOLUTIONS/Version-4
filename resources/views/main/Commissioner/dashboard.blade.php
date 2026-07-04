@@ -636,7 +636,7 @@
                     <span style="font-size:0.68rem; color:#9ca3af;">
                         <i class="bi bi-info-circle me-1"></i>
                         @if(isset($mapData) && $mapData['totalFeatures'] > 0)
-                            {{ $mapData['totalFeatures'] }} buildings • {{ $mapData['totalWards'] }} wards
+                            {{ $mapData['totalFeatures'] }} ward boundaries
                         @else
                             No boundaries found
                         @endif
@@ -1180,26 +1180,32 @@
                 <div style="display:flex; align-items:center; justify-content:center; height:100%; flex-direction:column; color:#9ca3af; background:#f9fafb; border-radius:0 0 12px 12px;">
                     <i class="bi bi-map" style="font-size:3rem; opacity:0.3; margin-bottom:1rem;"></i>
                     <p style="font-size:0.9rem; font-weight:500;">No ward boundaries found</p>
-                    <p style="font-size:0.75rem;">Please add polygon data for wards in the system</p>
+                    <p style="font-size:0.75rem;">No wards in this corporation have a boundary set yet</p>
                     <p style="font-size:0.7rem; color:#d97706; margin-top:0.5rem;">
                         <i class="bi bi-info-circle me-1"></i>
-                        Check tables: polygons_{wardId} with geometry column
+                        Check the wards.boundary column for this corporation's wards
                     </p>
                 </div>
             `;
             return;
         }
 
-        // Determine initial center from ward centers or use default
-        let centerLon = 78.9629; // Default: Hyderabad
-        let centerLat = 17.3850;
+        // Ward boundary coordinates are already in EPSG:3857 (Web Mercator
+        // meters) — the same projection OpenLayers uses by default — so
+        // NO fromLonLat() conversion is applied anywhere below. Doing so
+        // would treat meters as degrees and point the map at nonsense
+        // coordinates.
+
+        // Determine initial center from ward centers or use a sane fallback
+        let centerX = 8700000; // fallback, roughly matches this corporation's data
+        let centerY = 1400000;
 
         if (wardCenters && wardCenters.length > 0) {
-            const avgLon = wardCenters.reduce((sum, c) => sum + parseFloat(c.lng), 0) / wardCenters.length;
-            const avgLat = wardCenters.reduce((sum, c) => sum + parseFloat(c.lat), 0) / wardCenters.length;
-            centerLon = avgLon;
-            centerLat = avgLat;
-            console.log('Center from wards:', centerLon, centerLat);
+            const avgX = wardCenters.reduce((sum, c) => sum + parseFloat(c.x), 0) / wardCenters.length;
+            const avgY = wardCenters.reduce((sum, c) => sum + parseFloat(c.y), 0) / wardCenters.length;
+            centerX = avgX;
+            centerY = avgY;
+            console.log('Center from wards (EPSG:3857 meters):', centerX, centerY);
         }
 
         // Create vector source for ward boundaries
@@ -1340,7 +1346,7 @@
                 vectorLayer
             ],
             view: new ol.View({
-                center: ol.proj.fromLonLat([centerLon, centerLat]),
+                center: [centerX, centerY], // already EPSG:3857 — no fromLonLat()
                 zoom: 14,
                 maxZoom: 20,
                 minZoom: 10
@@ -1359,7 +1365,7 @@
 
         // ── Make map globally accessible ──
         window.commissionerMap = map;
-        window.defaultCenter = [centerLon, centerLat];
+        window.defaultCenter = [centerX, centerY];
         window.defaultZoom = 14;
 
         // ── Hide loading ──
@@ -1398,10 +1404,7 @@
                 const props = hit.getProperties();
                 const tooltipContent = `
                     <strong>Ward ${props.ward_no || 'N/A'}</strong><br>
-                    Building: ${props.building_no || 'N/A'}<br>
-                    Type: ${props.type || 'N/A'}<br>
-                    Floors: ${props.floors || 0}<br>
-                    Owner: ${props.owner_name || 'N/A'}
+                    Zone: ${props.zone_name || 'N/A'}
                 `;
                 tooltipElement.innerHTML = tooltipContent;
                 tooltipElement.style.display = 'block';
@@ -1438,7 +1441,7 @@
         // ── Reset map view ──
         window.resetMapView = function() {
             map.getView().animate({
-                center: ol.proj.fromLonLat(window.defaultCenter),
+                center: window.defaultCenter,
                 zoom: window.defaultZoom,
                 duration: 500
             });
