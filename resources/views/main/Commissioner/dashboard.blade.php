@@ -593,7 +593,18 @@
         </div>
     </div>
 </div>
-
+{{-- ══════════════════════════ WARD BOUNDARY MAP ══════════════════════════ --}}
+<div class="gov-section">
+    <div class="gov-card">
+        <div class="gov-card-head">
+            <div class="gov-card-title"><i class="bi bi-map"></i> Ward Boundaries</div>
+            <span class="gov-card-meta">{{ $hierarchyStats['wards'] ?? 0 }} wards mapped</span>
+        </div>
+        <div class="gov-card-body">
+            <div id="wardMap" style="width:100%; height:460px; border-radius:6px; border:1px solid var(--border);"></div>
+        </div>
+    </div>
+</div>
 {{-- ══════════════════════════ REVENUE SNAPSHOT ══════════════════════════ --}}
 <div class="gov-section">
     <div class="gov-eyebrow">
@@ -948,18 +959,7 @@
     </div>
 </div>
 
-{{-- ══════════════════════════ WARD BOUNDARY MAP ══════════════════════════ --}}
-<div class="gov-section">
-    <div class="gov-card">
-        <div class="gov-card-head">
-            <div class="gov-card-title"><i class="bi bi-map"></i> Ward Boundaries</div>
-            <span class="gov-card-meta">{{ $hierarchyStats['wards'] ?? 0 }} wards mapped</span>
-        </div>
-        <div class="gov-card-body">
-            <div id="wardMap" style="width:100%; height:460px; border-radius:6px; border:1px solid var(--border);"></div>
-        </div>
-    </div>
-</div>
+
 
 {{-- ══════════════════════════ ACTIVITY LOG ══════════════════════════ --}}
 <div class="gov-section">
