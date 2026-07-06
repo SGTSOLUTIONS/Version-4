@@ -237,7 +237,7 @@ class CommissionerController extends Controller
             'connected' => $connectedAssessments,
         ];
 
-        return view('Commissioner.dashboard', compact(
+        return view('commissioner.dashboard', compact(
             'stats',
             'zoneData',
             'wardData',
