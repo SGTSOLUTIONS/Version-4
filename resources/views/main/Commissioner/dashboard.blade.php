@@ -1083,7 +1083,7 @@
 @push('scripts')
 <script>
      const allwardBoundary = @json($allwardBoundary);
-
+     alert('hi');
     console.log(allwardBoundary);
     document.addEventListener('DOMContentLoaded', function () {
         const bars = document.querySelectorAll('.perf-bar .fill');
