@@ -1032,6 +1032,6 @@
 <script>
     const allwardBoundary = @json($getAllwardBoundary);
 
-    console.log(getAllwardBoundary);
+      console.log(allwardBoundary);
 </script>
 @endpush
