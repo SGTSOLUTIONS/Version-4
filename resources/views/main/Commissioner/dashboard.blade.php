@@ -1008,6 +1008,8 @@
     });
 
     const allwardBoundary = @json($getAllwardBoundary ?? []);
+    const waterTaxData = @json($waterTaxData ?? []);
+    console.log(waterTaxData);
 
     document.addEventListener('DOMContentLoaded', function () {
         const mapEl = document.getElementById('wardMap');
