@@ -34,7 +34,11 @@
 
 
     </style>
+<!-- In the head section -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
 
+<!-- Before closing body tag -->
+<script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
     @stack('styles')
 </head>
 

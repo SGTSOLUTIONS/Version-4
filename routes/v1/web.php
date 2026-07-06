@@ -86,7 +86,26 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('teams/{id}/remove-multiple', [TeamManagementController::class, 'removeMultipleSurveyors'])->name('teams.removeMultiple');
     Route::delete('teams/{id}', [TeamManagementController::class, 'destroy'])->name('teams.destroy');
 });
+// Add this inside your routes file
+Route::get('/api/corporation/{id}/boundaries', function($id) {
+    $corporation = App\Models\Corporation::find($id);
+    if (!$corporation) {
+        return response()->json(['error' => 'Corporation not found'], 404);
+    }
 
+    // Get all wards for this corporation with their boundaries
+    $wards = App\Models\Ward::where('corporation_id', $id)->get();
+    $boundaries = [];
+
+    foreach ($wards as $ward) {
+        // Check if ward has boundary data
+        if (isset($ward->boundary) && !empty($ward->boundary)) {
+            $boundaries[] = $ward->boundary;
+        }
+    }
+
+    return response()->json(['boundaries' => $boundaries]);
+})->name('api.corporation.boundaries');
 // ─── Commissioner ─────────────────────────────────────────
 Route::middleware(['auth', 'role:commissioner'])->prefix('commissioner')->name('commissioner.')->group(function () {
     Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');

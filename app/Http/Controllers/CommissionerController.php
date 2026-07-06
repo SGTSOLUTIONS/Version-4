@@ -34,6 +34,7 @@ class CommissionerController extends Controller
                 'corporation' => null,
                 'user' => $user,
                 'taxBreakdown' => $this->getEmptyTaxBreakdown(),
+                'allwardBoundary' => [],
             ]);
         }
 
@@ -236,7 +237,7 @@ class CommissionerController extends Controller
             'connected' => $connectedAssessments,
         ];
 
-        return view('main.commissioner.dashboard', compact(
+        return view('commissioner.dashboard', compact(
             'stats',
             'zoneData',
             'wardData',
@@ -251,7 +252,7 @@ class CommissionerController extends Controller
             'waterTaxData',
             'ugdData',
             'professionalTaxData',
-            'allwardBoundary'
+            'allwardBoundary',
         ));
     }
 
@@ -514,19 +515,25 @@ class CommissionerController extends Controller
     /**
      * Get active assessments from MIS
      */
-    private function getActiveAssessments($corporationId)
+    private function getActiveAssessments($corporationId, $wardIds)
     {
         $misTable = 'mis_' . $corporationId;
         if (!Schema::hasTable($misTable)) {
             return 0;
         }
 
+        // If we have ward IDs, filter by them
+        if (!empty($wardIds) && Schema::hasColumn($misTable, 'ward_id')) {
+            try {
+                return DB::table($misTable)
+                    ->whereIn('ward_id', $wardIds)
+                    ->count();
+            } catch (\Exception $e) {
+                return DB::table($misTable)->count();
+            }
+        }
 
-
-        $total = DB::table($misTable)->count();
-
-
-        return $total;
+        return DB::table($misTable)->count();
     }
 
     /**
@@ -539,11 +546,17 @@ class CommissionerController extends Controller
             return 0;
         }
 
-
         $assessments = [];
 
         try {
-            $assessments = DB::table($misTable)->pluck('assessment')->filter()->toArray();
+            // Try to get assessment numbers from MIS
+            if (Schema::hasColumn($misTable, 'assessment')) {
+                $assessments = DB::table($misTable)->pluck('assessment')->filter()->toArray();
+            } elseif (Schema::hasColumn($misTable, 'assessment_no')) {
+                $assessments = DB::table($misTable)->pluck('assessment_no')->filter()->toArray();
+            } else {
+                return 0;
+            }
         } catch (\Exception $e) {
             return 0;
         }
@@ -551,16 +564,23 @@ class CommissionerController extends Controller
         if (empty($assessments)) {
             return 0;
         }
+
         $total = 0;
 
         foreach ($wardIds as $wardId) {
-
             $table = 'point_data_' . $wardId;
             if (Schema::hasTable($table)) {
                 try {
-                    $total += DB::table($table)
-                        ->whereNotIn('assessment', $assessments)
-                        ->count();
+                    // Check if assessment column exists
+                    if (Schema::hasColumn($table, 'assessment')) {
+                        $total += DB::table($table)
+                            ->whereNotIn('assessment', $assessments)
+                            ->count();
+                    } elseif (Schema::hasColumn($table, 'assessment_no')) {
+                        $total += DB::table($table)
+                            ->whereNotIn('assessment_no', $assessments)
+                            ->count();
+                    }
                 } catch (\Exception $e) {
                     // Skip if error
                 }
@@ -674,11 +694,17 @@ class CommissionerController extends Controller
             return 0;
         }
 
-
         $assessments = [];
 
         try {
-            $assessments = DB::table($misTable)->pluck('assessment')->filter()->toArray();
+            // Try to get assessment numbers from MIS
+            if (Schema::hasColumn($misTable, 'assessment')) {
+                $assessments = DB::table($misTable)->pluck('assessment')->filter()->toArray();
+            } elseif (Schema::hasColumn($misTable, 'assessment_no')) {
+                $assessments = DB::table($misTable)->pluck('assessment_no')->filter()->toArray();
+            } else {
+                return 0;
+            }
         } catch (\Exception $e) {
             return 0;
         }
@@ -686,15 +712,21 @@ class CommissionerController extends Controller
         if (empty($assessments)) {
             return 0;
         }
+
         $total = 0;
         foreach ($wardIds as $wardId) {
-
             $table = 'point_data_' . $wardId;
             if (Schema::hasTable($table)) {
                 try {
-                    $total += DB::table($table)
-                        ->whereIn('assessment', $assessments)
-                        ->count();
+                    if (Schema::hasColumn($table, 'assessment')) {
+                        $total += DB::table($table)
+                            ->whereIn('assessment', $assessments)
+                            ->count();
+                    } elseif (Schema::hasColumn($table, 'assessment_no')) {
+                        $total += DB::table($table)
+                            ->whereIn('assessment_no', $assessments)
+                            ->count();
+                    }
                 } catch (\Exception $e) {
                     // Skip if error
                 }
@@ -703,6 +735,7 @@ class CommissionerController extends Controller
 
         return $total;
     }
+
     private function getAllwardBoundary($corporationId)
     {
         $table = 'ward_' . $corporationId;
@@ -710,11 +743,9 @@ class CommissionerController extends Controller
 
         if (Schema::hasTable($table)) {
             try {
-
                 $wards = DB::table($table)->get();
 
                 foreach ($wards as $ward) {
-
                     if (!empty($ward->boundary)) {
                         $totalBoundaries[] = $ward->boundary;
                     }
@@ -726,6 +757,7 @@ class CommissionerController extends Controller
 
         return $totalBoundaries;
     }
+
     /**
      * Get connected by ward IDs (point_data with matching gis_id in MIS)
      */
@@ -1034,8 +1066,7 @@ class CommissionerController extends Controller
     }
 
     /**
-     * Get Water Tax collection
-     */
+     * Get Water Tax collection     */
     private function getWaterTaxCollection($corporationId)
     {
         $table = 'water_tax_' . $corporationId;
