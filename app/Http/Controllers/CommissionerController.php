@@ -254,48 +254,50 @@ class CommissionerController extends Controller
         ));
     }
     private function getAllwardBoundary($corporationId)
-{
-    $boundaries = [];
+    {
+        $boundaries = [];
 
-    try {
+        try {
 
-        // Corporation-க்கு உள்ள அனைத்து Zones
-        $zones = Zone::where('corp_id', $corporationId)->get();
+            // Corporation-க்கு உள்ள அனைத்து Zones
+            $zones = Zone::where('corp_id', $corporationId)->get();
 
-        foreach ($zones as $zone) {
+            foreach ($zones as $zone) {
 
-            // அந்த Zone-க்கு உள்ள அனைத்து Wards
-            $wards = Ward::where('zone_id', $zone->id)->get();
+                // அந்த Zone-க்கு உள்ள அனைத்து Wards
+                $wards = Ward::where('zone_id', $zone->id)->get();
 
-            foreach ($wards as $ward) {
+                foreach ($wards as $ward) {
 
-                if (empty($ward->boundary)) {
-                    continue;
+                    if (empty($ward->boundary)) {
+                        continue;
+                    }
+                    if (is_array($ward->boundary)) {
+                        $boundary = $ward->boundary;
+                    } elseif (is_string($ward->boundary)) {
+                        $boundary = json_decode($ward->boundary, true);
+                    } else {
+                        $boundary = [];
+                    }
+
+                    $boundaries[] = [
+                        'ward_id'  => $ward->id,
+                        'ward_no'  => $ward->ward_no,
+                        'boundary' => $boundary,
+                    ];
+
+
                 }
-
-                $decoded = json_decode($ward->boundary, true);
-
-                $boundaries[] = [
-                    'zone_id'   => $zone->id,
-                    'zone_name' => $zone->name ?? '',
-                    'ward_id'   => $ward->id,
-                    'ward_no'   => $ward->ward_no,
-                    'boundary'  => json_last_error() === JSON_ERROR_NONE
-                        ? $decoded
-                        : $ward->boundary,
-                ];
             }
+        } catch (\Exception $e) {
+
+            \Log::error($e->getMessage());
+
+            return [];
         }
 
-    } catch (\Exception $e) {
-
-        \Log::error($e->getMessage());
-
-        return [];
+        return $boundaries;
     }
-
-    return $boundaries;
-}
     /**
      * Get empty stats (for error state)
      */
