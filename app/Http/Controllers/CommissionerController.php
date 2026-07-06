@@ -1162,7 +1162,7 @@ class CommissionerController extends Controller
                     'owner' => $item->owner_name ?? 'N/A',
                     'building' => $item->building_no ?? 'N/A',
                     'amount' => $this->formatCurrency($item->amount ?? 0),
-                    'status' => $item->status ?? 'pending',
+                    'status' => $item->gisid ?? 'pending',
                     'ward' => $ward ? 'Ward ' . $ward->ward_no : 'N/A',
                 ];
             }
