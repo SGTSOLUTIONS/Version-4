@@ -546,7 +546,7 @@
 </div>
 <div class="gov-page-head">
     <div>
-        <h1 class="gov-page-title">Commissioner Dashboard</h1>
+        <h1 class="gov-page-title">Executive Dashboard</h1>
         <p class="gov-page-sub">Consolidated view of zones, wards, assessments and revenue collection</p>
     </div>
     <div class="gov-page-date">
