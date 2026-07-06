@@ -176,10 +176,10 @@ class CorporationController extends Controller
             'description'           => 'required|string',
             'image'                 => 'required|image|mimes:jpg,jpeg,png|max:2048',
             'boundary_file'         => 'required|file',
-            'mis_file'              => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
-            'water_tax_file'        => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
-            'ugd_tax_file'          => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
-            'professional_tax_file' => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+            'mis_file'              => 'nullable|file|mimes:xlsx,xls,csv',
+            'water_tax_file'        => 'nullable|file|mimes:xlsx,xls,csv',
+            'ugd_tax_file'          => 'nullable|file|mimes:xlsx,xls,csv',
+            'professional_tax_file' => 'nullable|file|mimes:xlsx,xls,csv',
         ]);
 
         if ($validator->fails()) {
@@ -304,10 +304,10 @@ class CorporationController extends Controller
             'description'           => 'required|string',
             'image'                 => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'boundary_file'         => 'nullable|file',
-            'mis_file'              => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
-            'water_tax_file'        => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
-            'ugd_tax_file'          => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
-            'professional_tax_file' => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+            'mis_file'              => 'nullable|file|mimes:xlsx,xls,csv',
+            'water_tax_file'        => 'nullable|file|mimes:xlsx,xls,csv',
+            'ugd_tax_file'          => 'nullable|file|mimes:xlsx,xls,csv',
+            'professional_tax_file' => 'nullable|file|mimes:xlsx,xls,csv',
         ]);
 
         if ($validator->fails()) {
