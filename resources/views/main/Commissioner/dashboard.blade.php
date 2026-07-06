@@ -1442,7 +1442,7 @@
         const corporationId = {{ isset($corporation) ? $corporation->id : 'null' }};
         const corporationName = '{{ isset($corporation) ? addslashes($corporation->name) : '' }}';
         const boundaries = @json(isset($allwardBoundary) ? $allwardBoundary : []);
-
+console.log(boundaries);
         // Create vector source for boundaries
         vectorSource = new ol.source.Vector({
             features: []
