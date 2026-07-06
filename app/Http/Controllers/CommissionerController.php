@@ -1200,7 +1200,7 @@ class CommissionerController extends Controller
             $results = DB::table($table)
                 ->select($select)
                 ->orderBy('created_at', 'desc')
-                ->limit($limit)
+                ->limit(10)
                 ->get();
 
             foreach ($results as $item) {
