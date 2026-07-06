@@ -145,7 +145,7 @@ class CommissionerController extends Controller
                 ->where('zone_id', $zone->id)
                 ->where('corporation_id', $corporation->id)
                 ->first();
-    return response()->json($allwardBoundary);
+
             return [
                 'id' => $zone->id,
                 'name' => $zone->zone_name,
