@@ -55,6 +55,7 @@ class CommissionerController extends Controller
 
         // ─── Survey & Connection Statistics ───
         $surveyedAssessments = $this->getSurveyedAssessments($allWardIds);
+        $allwardBoundary = $this->getAllwardBoundary($corporation->id);
         $connectedAssessments = $this->getConnectedAssessments($corporation->id, $allWardIds);
 
         // ─── Collection Statistics ───
@@ -144,7 +145,7 @@ class CommissionerController extends Controller
                 ->where('zone_id', $zone->id)
                 ->where('corporation_id', $corporation->id)
                 ->first();
-
+    return response()->json($allwardBoundary);
             return [
                 'id' => $zone->id,
                 'name' => $zone->zone_name,
@@ -701,7 +702,29 @@ class CommissionerController extends Controller
 
         return $total;
     }
+    private function getAllwardBoundary($corporationId)
+    {
+        $table = 'ward_' . $corporationId;
+        $totalBoundaries = [];
 
+        if (Schema::hasTable($table)) {
+            try {
+
+                $wards = DB::table($table)->get();
+
+                foreach ($wards as $ward) {
+
+                    if (!empty($ward->boundary)) {
+                        $totalBoundaries[] = $ward->boundary;
+                    }
+                }
+            } catch (\Exception $e) {
+                return [];
+            }
+        }
+
+        return $totalBoundaries;
+    }
     /**
      * Get connected by ward IDs (point_data with matching gis_id in MIS)
      */
