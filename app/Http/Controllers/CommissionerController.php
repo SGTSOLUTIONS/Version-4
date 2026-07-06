@@ -250,7 +250,8 @@ class CommissionerController extends Controller
             'taxBreakdown',
             'waterTaxData',
             'ugdData',
-            'professionalTaxData'
+            'professionalTaxData',
+            'allwardBoundary'
         ));
     }
 
