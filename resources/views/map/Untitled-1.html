@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SGT Solutions · A4 Flip Brochure</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(145deg, #0b2a3b, #1a4b5e);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 20px;
+      gap: 30px;
+    }
+
+    /* A4 exact proportions: 1123px x 794px @ 96dpi (landscape) */
+    .flip-wrapper {
+      perspective: 2400px;
+      width: 1123px;
+      height: 794px;
+      flex-shrink: 0;
+      border-radius: 20px;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
+      transition: box-shadow 0.4s;
+    }
+
+    .flip-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+      transform: rotateY(0deg);
+      border-radius: 20px;
+    }
+
+    .flip-inner.flipped {
+      transform: rotateY(-180deg);
+    }
+
+    .front-face,
+    .back-face {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .back-face {
+      transform: rotateY(180deg);
+      background: #f5fafc;
+    }
+
+    /* ----- FRONT LAYOUT (3 cols) ----- */
+    .brochure {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+    }
+
+    .left-panel {
+      width: 33.333%;
+      background: linear-gradient(145deg, #083344, #0b4b5e);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -20%;
+      width: 100%;
+      height: 140%;
+      background: radial-gradient(circle, rgba(0, 210, 180, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .glow-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: linear-gradient(180deg, #00d4b0, #1fa2ff, #00d4b0);
+      opacity: 0.5;
+      z-index: 5;
+    }
+
+    .left-top-image {
+      height: 220px;
+      background: url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800') center/cover no-repeat;
+      position: relative;
+      z-index: 1;
+      border-bottom: 3px solid rgba(0, 210, 180, 0.3);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 12px 14px 6px;
+      z-index: 3;
+      position: relative;
+    }
+
+    .dashboard-grid img {
+      width: 100%;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2px solid rgba(0, 210, 180, 0.4);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s;
+    }
+
+    .dashboard-grid img:hover {
+      transform: scale(1.03);
+    }
+
+    .surveyor-icon {
+      position: relative;
+      z-index: 3;
+      padding: 8px 16px 0;
+      text-align: center;
+    }
+
+    .surveyor-icon img {
+      width: 140px;
+      filter: drop-shadow(0 12px 25px rgba(0, 0, 0, 0.5));
+    }
+
+    .contact-box {
+      margin-top: auto;
+      background: linear-gradient(90deg, #06222e, #0b4b5e);
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-top: 3px solid #00d4b0;
+      position: relative;
+      z-index: 4;
+    }
+
+    .qr-code {
+      width: 78px;
+      height: 78px;
+      background: white;
+      padding: 6px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 210, 180, 0.25);
+    }
+
+    .qr-code img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .contact-title {
+      color: white;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .contact-title span {
+      color: #00d4b0;
+    }
+
+    .quote-strip {
+      background: linear-gradient(90deg, #1fa2ff, #00d4b0);
+      padding: 12px 18px;
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      clip-path: polygon(6% 0%, 100% 0%, 94% 100%, 0% 100%);
+      margin: 10px 16px 8px;
+      text-align: center;
+      letter-spacing: 0.3px;
+      box-shadow: 0 6px 25px rgba(0, 210, 180, 0.2);
+      position: relative;
+      z-index: 3;
+    }
+
+    /* center panel */
+    .center-panel {
+      width: 33.333%;
+      background: linear-gradient(180deg, #f0faf7, #e0f3ed);
+      position: relative;
+      padding: 28px 18px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .center-panel .pattern-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(0, 168, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 168, 255, 0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .logo {
+      text-align: center;
+      z-index: 2;
+      margin-bottom: 4px;
+    }
+
+    .logo img {
+      width: 90px;
+      background: white;
+      border-radius: 50%;
+      padding: 12px;
+      box-shadow: 0 8px 30px rgba(0, 210, 180, 0.12);
+    }
+
+    .company-name {
+      font-size: 54px;
+      font-weight: 900;
+      color: #083344;
+      line-height: 1;
+      z-index: 2;
+      letter-spacing: -1px;
+      text-align: center;
+    }
+
+    .company-name span {
+      color: #1fa2ff;
+    }
+
+    .tagline {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0b4b5e;
+      text-align: center;
+      line-height: 1.2;
+      margin: 8px 0 2px;
+      z-index: 2;
+    }
+
+    .sub-tagline {
+      font-size: 16px;
+      font-weight: 500;
+      color: #1f5f72;
+      text-align: center;
+      padding: 0 10px;
+      z-index: 2;
+      line-height: 1.4;
+      margin-top: 4px;
+    }
+
+    .drone-center {
+      z-index: 2;
+      margin: 6px 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .drone-center img {
+      width: 320px;
+      filter: drop-shadow(0 18px 40px rgba(0, 210, 180, 0.12));
+    }
+
+    .city-section {
+      margin-top: auto;
+      width: 100%;
+      height: 180px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.0), rgba(0, 0, 0, 0.4)),
+        url('https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1200') center/cover no-repeat;
+      position: relative;
+      z-index: 2;
+      border-top: 4px solid rgba(0, 210, 180, 0.3);
+    }
+
+    .city-map-overlay {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      right: 20px;
+      height: 100px;
+      border: 3px solid #00d4b0;
+      border-radius: 16px;
+      background: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800') center/cover no-repeat;
+      box-shadow: 0 8px 30px rgba(0, 210, 180, 0.08);
+    }
+
+    .pin {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #00d4b0;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 0 0 3px #1fa2ff;
+      animation: pulse-pin 2s infinite;
+    }
+    .pin:nth-child(1) { top: 28px; left: 30px; }
+    .pin:nth-child(2) { top: 45px; left: 200px; }
+    .pin:nth-child(3) { top: 30px; right: 50px; }
+
+    @keyframes pulse-pin {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    .city-title {
+      position: absolute;
+      bottom: 18px;
+      width: 100%;
+      text-align: center;
+      color: white;
+      text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    }
+    .city-title h1 {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+    .city-title p {
+      font-size: 18px;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    /* right panel */
+    .right-panel {
+      width: 33.333%;
+      background: linear-gradient(145deg, #083344, #0b4b5e);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .right-panel::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      left: -10%;
+      width: 60%;
+      height: 120%;
+      background: radial-gradient(circle, rgba(0, 210, 180, 0.06), transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-image {
+      height: 100%;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.6)),
+        url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200') center/cover no-repeat;
+      display: flex;
+      align-items: center;
+      padding: 40px 30px;
+    }
+
+    .hero-content {
+      color: white;
+      width: 100%;
+    }
+
+    .hero-content h1 {
+      font-size: 60px;
+      font-weight: 900;
+      line-height: 1.1;
+      text-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+    }
+    .hero-content h1 span { color: #00d4b0; }
+
+    .hero-content p {
+      font-size: 20px;
+      font-weight: 400;
+      margin: 16px 0 20px;
+      opacity: 0.95;
+      line-height: 1.4;
+    }
+
+    .service-list {
+      background: rgba(0, 210, 180, 0.08);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(0, 210, 180, 0.15);
+      border-radius: 20px;
+      padding: 18px 22px;
+    }
+
+    .service-list ul {
+      list-style: square;
+      padding-left: 22px;
+      font-weight: 500;
+      line-height: 2.1;
+      columns: 1;
+    }
+    .service-list ul li::marker { color: #00d4b0; }
+    .service-list ul li { font-size: 14px; }
+
+    /* ----- BACK LAYOUT (3 cols) ----- */
+    .page-back {
+      display: grid;
+      grid-template-columns: 33% 34% 33%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #e6f3ef, #d4eaf0);
+      overflow: hidden;
+    }
+
+    .col {
+      padding: 16px 14px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #083344;
+      letter-spacing: -0.3px;
+      margin-bottom: 2px;
+    }
+    .section-title .accent { color: #1fa2ff; }
+
+    .text-sm {
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #1a4a5a;
+    }
+
+    .card-mini {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(4px);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(0, 210, 180, 0.06);
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    .card-mini:hover { transform: translateY(-2px); }
+
+    .card-mini img {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-body {
+      padding: 8px 12px 10px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0b4b5e;
+    }
+    .card-title .accent { color: #00d4b0; }
+
+    .feature-list {
+      padding-left: 16px;
+      margin-top: 2px;
+      font-size: 11.5px;
+      line-height: 1.6;
+    }
+    .feature-list li::marker { color: #00d4b0; }
+
+    .about-img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 16px;
+      border: 2px solid rgba(0, 210, 180, 0.06);
+      margin: 2px 0 4px;
+    }
+
+    .middle-col {
+      background: rgba(255, 255, 255, 0.2);
+      border-left: 1px solid rgba(0, 210, 180, 0.08);
+      border-right: 1px solid rgba(0, 210, 180, 0.08);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .grid-2 img {
+      width: 100%;
+      height: 76px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 2px solid rgba(0, 210, 180, 0.06);
+    }
+
+    .key-features-box {
+      background: linear-gradient(135deg, #0b4b5e, #1fa2ff);
+      color: white;
+      padding: 14px 14px;
+      border-radius: 20px;
+      margin-top: 4px;
+      box-shadow: 0 10px 30px rgba(0, 168, 255, 0.15);
+      flex-shrink: 0;
+    }
+    .key-features-box h3 {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+    .key-features-box h3 .accent { color: #00d4b0; }
+    .key-features-box ul {
+      columns: 2;
+      column-gap: 8px;
+      padding-left: 16px;
+      list-style: square;
+      font-size: 11.5px;
+      font-weight: 500;
+    }
+    .key-features-box ul li::marker { color: #00d4b0; }
+
+    .right-col {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .photo-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .photo-grid-2 img {
+      width: 100%;
+      height: 76px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 2px solid rgba(0, 210, 180, 0.06);
+    }
+
+    .quote-box {
+      margin-top: 8px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #083344;
+      text-align: center;
+      padding: 18px 12px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(4px);
+      border-radius: 30px 30px 30px 4px;
+      border-left: 6px solid #00d4b0;
+      box-shadow: 0 4px 20px rgba(0, 210, 180, 0.04);
+      line-height: 1.3;
+    }
+    .quote-box .accent { color: #1fa2ff; }
+
+    /* controls */
+    .controls {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 14px 44px;
+      background: linear-gradient(135deg, #1fa2ff, #00d4b0);
+      color: white;
+      border: none;
+      border-radius: 60px;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(0, 168, 255, 0.25);
+      transition: all 0.25s;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: 0.5px;
+    }
+    .btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 14px 40px rgba(0, 168, 255, 0.35);
+    }
+    .btn:active { transform: scale(0.96); }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid #00d4b0;
+      color: #00d4b0;
+      box-shadow: none;
+    }
+    .btn-outline:hover {
+      background: rgba(0, 210, 180, 0.06);
+      box-shadow: 0 8px 30px rgba(0, 210, 180, 0.1);
+    }
+
+    @media (max-width: 1150px) {
+      .flip-wrapper {
+        width: 100%;
+        height: auto;
+        perspective: 800px;
+      }
+      .flip-inner {
+        transform: none !important;
+        transition: none !important;
+      }
+      .front-face,
+      .back-face {
+        position: relative;
+        transform: none !important;
+        backface-visibility: visible;
+        border-radius: 20px;
+      }
+      .brochure,
+      .page-back {
+        flex-direction: column;
+        height: auto;
+      }
+      .left-panel,
+      .center-panel,
+      .right-panel {
+        width: 100%;
+        height: auto;
+        min-height: 400px;
+      }
+      .page-back {
+        display: flex;
+        flex-direction: column;
+      }
+      .col {
+        width: 100%;
+      }
+      .middle-col {
+        border: none;
+        border-top: 1px solid rgba(0, 210, 180, 0.08);
+        border-bottom: 1px solid rgba(0, 210, 180, 0.08);
+      }
+      .controls {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+      }
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      .company-name { font-size: 40px; }
+      .hero-content h1 { font-size: 44px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="flip-wrapper" id="brochureWrapper">
+  <div class="flip-inner" id="flipInner">
+    <!-- FRONT -->
+    <div class="front-face">
+      <div class="brochure">
+        <!-- left panel -->
+        <div class="left-panel">
+          <div class="glow-line"></div>
+          <div class="left-top-image"></div>
+          <div class="dashboard-grid">
+            <img src="https://picsum.photos/200/200?random=1" alt="grid1" />
+            <img src="https://picsum.photos/200/200?random=2" alt="grid2" />
+            <img src="https://picsum.photos/200/200?random=3" alt="grid3" />
+            <img src="https://picsum.photos/200/200?random=4" alt="grid4" />
+          </div>
+          <div class="surveyor-icon">
+            <img src="https://pngimg.com/uploads/construction_worker/construction_worker_PNG34.png" alt="surveyor" />
+          </div>
+          <div class="quote-strip">Empowering Smart Governance Through Geospatial Intelligence</div>
+          <div class="contact-box">
+            <div class="qr-code">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://sgtsolutions.com" alt="QR" />
+            </div>
+            <div class="contact-title">Contact <span>SGT</span></div>
+          </div>
+        </div>
+
+        <!-- center panel -->
+        <div class="center-panel">
+          <div class="pattern-bg"></div>
+          <div class="logo">
+            <img src="https://via.placeholder.com/90x90/0b4b5e/ffffff?text=SGT" alt="SGT" />
+          </div>
+          <div class="company-name">SGT <span>Solutions</span></div>
+          <div class="tagline">Transforming Governance Through<br />Geospatial Intelligence</div>
+          <div class="sub-tagline">End-to-End GIS, Drone Survey, LiDAR,<br />Remote Sensing &amp; Smart Governance</div>
+          <div class="drone-center">
+            <img src="https://pngimg.com/uploads/drone/drone_PNG204.png" alt="drone" />
+          </div>
+          <div class="city-section">
+            <div class="city-map-overlay">
+              <div class="pin"></div><div class="pin"></div><div class="pin"></div>
+            </div>
+            <div class="city-title">
+              <h1>SGT Solutions</h1>
+              <p>Smart · Sustainable · Geospatial</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- right panel -->
+        <div class="right-panel">
+          <div class="hero-image">
+            <div class="hero-content">
+              <h1>GIS<br />Drone<br /><span>LiDAR</span></h1>
+              <p>Advanced Mapping, Remote Sensing, Spatial Analytics &amp; Smart Governance.</p>
+              <div class="service-list">
+                <ul>
+                  <li>Property Tax Assessment</li><li>Drone Survey</li><li>DGPS Survey</li>
+                  <li>LiDAR Mapping</li><li>Photogrammetry</li><li>Web GIS Development</li>
+                  <li>Mobile GIS Apps</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BACK -->
+    <div class="back-face">
+      <div class="page-back">
+        <!-- col 1 -->
+        <div class="col">
+          <div class="section-title">About <span class="accent">SGT</span> Solutions</div>
+          <p class="text-sm">SGT is a leading geospatial technology company providing GIS, Drone Survey, LiDAR, Remote Sensing, Smart Governance and Spatial Revenue Intelligence for governments and enterprises.</p>
+          <img class="about-img" src="https://images.unsplash.com/photo-1508614589042-9fc7f6ffa32a?w=800" alt="about" />
+          <div class="section-title" style="font-size: 18px;">Spatial Revenue <span class="accent">Intelligence</span></div>
+          <p class="text-sm">SRIS integrates property tax assessment, change detection, building footprint extraction, and smart governance analytics.</p>
+          <div class="card-mini">
+            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800" alt="tax" />
+            <div class="card-body">
+              <div class="card-title">Property Tax &amp; <span class="accent">Smart Governance</span></div>
+              <ul class="feature-list"><li>GIS-based property tax</li><li>Municipal ward boundary</li><li>Ownership verification</li></ul>
+            </div>
+          </div>
+          <div class="card-mini">
+            <img src="https://images.unsplash.com/photo-1517976487492-5750f3195933?w=800" alt="LiDAR" />
+            <div class="card-body">
+              <div class="card-title"><span class="accent">LiDAR</span> Mapping</div>
+              <ul class="feature-list"><li>Digital twin &amp; 3D city</li><li>Point cloud &amp; terrain</li><li>Asset extraction</li></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- col 2 -->
+        <div class="col middle-col">
+          <div class="card-mini">
+            <div class="card-body">
+              <div class="card-title">Property Tax Assessment &amp; <span class="accent">Governance</span></div>
+              <p class="text-sm">GIS mapping, ownership, boundary management and governance dashboards.</p>
+            </div>
+          </div>
+          <div class="grid-2">
+            <img src="https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=800" alt="drone1" />
+            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800" alt="city" />
+          </div>
+          <div class="card-mini">
+            <div class="card-body">
+              <div class="card-title">Drone &amp; <span class="accent">DGPS</span> Survey</div>
+              <p class="text-sm">High-accuracy drone mapping, orthophoto, survey-grade DGPS and corridor mapping.</p>
+            </div>
+          </div>
+          <div class="grid-2">
+            <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800" alt="survey" />
+            <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800" alt="tech" />
+          </div>
+          <div class="card-mini">
+            <div class="card-body">
+              <div class="card-title"><span class="accent">LiDAR</span> Mapping</div>
+              <p class="text-sm">3D city modeling, terrain analysis, digital elevation models and asset extraction.</p>
+            </div>
+          </div>
+          <div class="grid-2">
+            <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800" alt="meeting" />
+            <img src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?w=800" alt="dashboard" />
+          </div>
+          <div class="key-features-box">
+            <h3>Key <span class="accent">Features</span></h3>
+            <ul>
+              <li>Property Tax Mapping</li><li>Building Footprint</li><li>Revenue Intelligence</li>
+              <li>Smart Governance</li><li>Change Detection</li><li>Asset Mapping</li>
+              <li>Drone Survey</li><li>GIS Dashboard</li><li>Spatial Analytics</li><li>LiDAR Mapping</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- col 3 -->
+        <div class="col right-col">
+          <div class="photo-grid-2">
+            <img src="https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=800" alt="photo1" />
+            <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800" alt="photo2" />
+          </div>
+          <div class="card-mini">
+            <div class="card-body">
+              <div class="card-title"><span class="accent">Photogrammetry</span></div>
+              <p class="text-sm">Drone-based photogrammetry generates orthophotos, DSM, DTM and 3D models.</p>
+            </div>
+          </div>
+          <div class="card-mini">
+            <div class="card-body">
+              <div class="card-title">Web GIS &amp; <span class="accent">Mobile GIS</span></div>
+              <p class="text-sm">Interactive portals, mobile field data collection, dashboard analytics and map services.</p>
+            </div>
+          </div>
+          <div class="card-mini">
+            <div class="card-body">
+              <div class="card-title">Website <span class="accent">Development</span></div>
+              <p class="text-sm">Corporate websites, GIS-enabled portals, e-governance systems and custom web apps.</p>
+            </div>
+          </div>
+          <div class="card-mini">
+            <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800" alt="AI" />
+            <div class="card-body">
+              <div class="card-title">AI Website &amp; <span class="accent">GIS Portal</span></div>
+              <p class="text-sm">AI-powered geospatial platforms, smart dashboards, automated analytics and enterprise GIS.</p>
+            </div>
+          </div>
+          <div class="quote-box">
+            “Empowering <span class="accent">Smart Governance</span> Through Geospatial Intelligence”
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn" id="flipBtn">↻ Flip Brochure</button>
+  <button class="btn btn-outline" id="exportPdfBtn">📄 Export as PDF</button>
+</div>
+
+<script>
+  (function() {
+    const flipInner = document.getElementById('flipInner');
+    const flipBtn = document.getElementById('flipBtn');
+    const exportBtn = document.getElementById('exportPdfBtn');
+    const wrapper = document.getElementById('brochureWrapper');
+    let isFlipped = false;
+
+    flipBtn.addEventListener('click', () => {
+      isFlipped = !isFlipped;
+      flipInner.classList.toggle('flipped');
+      flipBtn.textContent = isFlipped ? '↻ Show Front' : '↻ Flip Brochure';
+    });
+
+    exportBtn.addEventListener('click', async () => {
+      try {
+        exportBtn.textContent = '⏳ Generating...';
+        exportBtn.disabled = true;
+        const canvas = await html2canvas(wrapper, {
+          scale: 2.5,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: null,
+          logging: false,
+          width: 1123,
+          height: 794,
+          onclone: (doc) => {
+            const inner = doc.getElementById('flipInner');
+            if (isFlipped) inner.classList.add('flipped');
+            else inner.classList.remove('flipped');
+          }
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('landscape', 'px', [1123, 794]);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save('SGT_Solutions_Brochure.pdf');
+        exportBtn.textContent = '📄 Export as PDF';
+        exportBtn.disabled = false;
+      } catch (error) {
+        console.error(error);
+        alert('Export failed. Please try again.');
+        exportBtn.textContent = '📄 Export as PDF';
+        exportBtn.disabled = false;
+      }
+    });
+  })();
+</script>
+</body>
+</html>
