@@ -68,7 +68,7 @@ class CommissionerController extends Controller
         $ugdCollection = $this->getUgdCollection($corporation->id);
         $professionalTaxCollection = $this->getProfessionalTaxCollection($corporation->id);
         $misCollection = $this->getMisCollection($corporation->id);
-        $getAllwardBoundary =$this->getAllwardBoundary($corporation->id);
+        $getAllwardBoundary = $this->getAllwardBoundary($corporation->id);
         // ─── Assessment Status ───
         $activeAssessments = $this->getActiveAssessments($corporation->id, $allWardIds);
         $notinmis = $this->getNotInMis($corporation->id, $allWardIds);
@@ -253,54 +253,43 @@ class CommissionerController extends Controller
             'getAllwardBoundary'
         ));
     }
-private function getAllwardBoundary($corporationId)
+    private function getAllwardBoundary($corporationId)
 {
-    $table = 'ward_' . $corporationId;
-
-    // Array to store all ward boundaries
     $boundaries = [];
-
-    // Check if table exists
-    if (!Schema::hasTable($table)) {
-        return $boundaries;
-    }
 
     try {
 
-        // Get all wards
-        $wards = DB::table($table)->get();
-return $wards;
-        foreach ($wards as $ward) {
+        // Corporation-க்கு உள்ள அனைத்து Zones
+        $zones = Zone::where('corp_id', $corporationId)->get();
 
-            if (empty($ward->boundary)) {
-                continue;
-            }
+        foreach ($zones as $zone) {
 
-            // If boundary is stored as JSON
-            $decoded = json_decode($ward->boundary, true);
+            // அந்த Zone-க்கு உள்ள அனைத்து Wards
+            $wards = Ward::where('zone_id', $zone->id)->get();
 
-            if (json_last_error() === JSON_ERROR_NONE) {
+            foreach ($wards as $ward) {
+
+                if (empty($ward->boundary)) {
+                    continue;
+                }
+
+                $decoded = json_decode($ward->boundary, true);
 
                 $boundaries[] = [
-                    'ward_id'   => $ward->id ?? null,
-                    'ward_no'   => $ward->ward_no ?? null,
-                    'boundary'  => $decoded,
-                ];
-
-            } else {
-
-                // If boundary is plain text / polygon string
-                $boundaries[] = [
-                    'ward_id'   => $ward->id ?? null,
-                    'ward_no'   => $ward->ward_no ?? null,
-                    'boundary'  => $ward->boundary,
+                    'zone_id'   => $zone->id,
+                    'zone_name' => $zone->name ?? '',
+                    'ward_id'   => $ward->id,
+                    'ward_no'   => $ward->ward_no,
+                    'boundary'  => json_last_error() === JSON_ERROR_NONE
+                        ? $decoded
+                        : $ward->boundary,
                 ];
             }
         }
 
     } catch (\Exception $e) {
 
-        \Log::error('Error loading ward boundaries: ' . $e->getMessage());
+        \Log::error($e->getMessage());
 
         return [];
     }
