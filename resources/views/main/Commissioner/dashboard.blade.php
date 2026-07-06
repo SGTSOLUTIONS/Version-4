@@ -527,7 +527,7 @@
 @endpush
 
 @section('content')
-
+<h1 style="color:red">TEST PAGE</h1>
 {{-- ── Page Header ── --}}
 <div class="ol-page-header">
     <div>
