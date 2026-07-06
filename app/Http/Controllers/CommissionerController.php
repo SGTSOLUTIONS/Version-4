@@ -269,7 +269,7 @@ private function getAllwardBoundary($corporationId)
 
         // Get all wards
         $wards = DB::table($table)->get();
-
+return $wards;
         foreach ($wards as $ward) {
 
             if (empty($ward->boundary)) {
