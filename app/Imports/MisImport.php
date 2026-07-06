@@ -2,19 +2,21 @@
 
 namespace App\Imports;
 
-use App\Models\Corporation;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Concerns\OnEachRow;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Row;
 
-class MisImport implements ToCollection, WithHeadingRow, WithValidation
+class MisImport implements OnEachRow, WithHeadingRow, WithChunkReading, WithBatchInserts, WithValidation
 {
     protected $corporationId;
     protected $tableName;
+
     protected $skippedRows = [];
     protected $updatedRows = [];
     protected $insertedRows = [];
@@ -25,134 +27,145 @@ class MisImport implements ToCollection, WithHeadingRow, WithValidation
         $this->tableName = "mis_" . $corporationId;
     }
 
-    /**
-     * Process the collection of rows
-     */
-    public function collection(Collection $rows)
+    public function onRow(Row $row)
     {
         if (!Schema::hasTable($this->tableName)) {
-            throw new \Exception("MIS table for corporation {$this->corporationId} does not exist.");
+            throw new \Exception("MIS table {$this->tableName} not found.");
         }
 
-        foreach ($rows as $index => $row) {
-            try {
-                $assessment = trim($row['assessment'] ?? '');
+        $index = $row->getIndex();
+        $row = $row->toArray();
 
-                // Skip if assessment is empty
-                if (empty($assessment)) {
-                    $this->skippedRows[] = [
-                        'row' => $index + 2,
-                        'reason' => 'Assessment number is empty'
-                    ];
-                    continue;
-                }
+        try {
 
-                // Check if record exists
-                $existingRecord = DB::table($this->tableName)
-                    ->where('corporation_id', $this->corporationId)
-                    ->where('assessment', $assessment)
-                    ->first();
+            $assessment = trim($row['assessment'] ?? '');
 
-                $data = [
-                    'corporation_id' => $this->corporationId,
-                    'gisid' => $row['gisid'] ?? null,
-                    'ward_no' => $row['ward_no'] ?? null,
-                    'assessment' => $assessment,
-                    'old_assessment' => $row['old_assessment'] ?? null,
-                    'road_name' => $row['road_name'] ?? null,
-                    'owner_name' => $row['owner_name'] ?? null,
-                    'old_door_no' => $row['old_door_no'] ?? null,
-                    'new_door_no' => $row['new_door_no'] ?? null,
-                    'phone_number' => $row['phone_number'] ?? null,
-                    'plot_area' => $this->parseDecimal($row['plot_area'] ?? null),
-                    'half_year_tax' => $this->parseDecimal($row['half_year_tax'] ?? null),
-                    'balance' => $this->parseDecimal($row['balance'] ?? null),
-                    'usage' => $this->validateEnumValue($row['usage'] ?? null, 'usage'),
-                    'type' => $this->validateEnumValue($row['type'] ?? null, 'type'),
-                    'zone' => $row['zone'] ?? null,
+            if ($assessment == '') {
+                $this->skippedRows[] = [
+                    'row' => $index,
+                    'reason' => 'Assessment Empty'
                 ];
+                return;
+            }
 
-                if ($existingRecord) {
-                    // Update existing record
-                    DB::table($this->tableName)
-                        ->where('id', $existingRecord->id)
-                        ->update(array_merge($data, ['updated_at' => now()]));
+            $data = [
+                'corporation_id' => $this->corporationId,
+                'gisid' => $row['gisid'] ?? null,
+                'ward_no' => $row['ward_no'] ?? null,
+                'assessment' => $assessment,
+                'old_assessment' => $row['old_assessment'] ?? null,
+                'road_name' => $row['road_name'] ?? null,
+                'owner_name' => $row['owner_name'] ?? null,
+                'old_door_no' => $row['old_door_no'] ?? null,
+                'new_door_no' => $row['new_door_no'] ?? null,
+                'phone_number' => $row['phone_number'] ?? null,
+                'plot_area' => $this->parseDecimal($row['plot_area'] ?? null),
+                'half_year_tax' => $this->parseDecimal($row['half_year_tax'] ?? null),
+                'balance' => $this->parseDecimal($row['balance'] ?? null),
+                'usage' => $this->validateEnumValue($row['usage'] ?? null, 'usage'),
+                'type' => $this->validateEnumValue($row['type'] ?? null, 'type'),
+                'zone' => $row['zone'] ?? null,
+            ];
 
-                    $this->updatedRows[] = $assessment;
-                } else {
-                    // Insert new record
-                    DB::table($this->tableName)->insert(array_merge($data, [
+            $exists = DB::table($this->tableName)
+                ->where('corporation_id', $this->corporationId)
+                ->where('assessment', $assessment)
+                ->first();
+
+            if ($exists) {
+
+                DB::table($this->tableName)
+                    ->where('id', $exists->id)
+                    ->update(array_merge($data, [
+                        'updated_at' => now()
+                    ]));
+
+                $this->updatedRows[] = $assessment;
+
+            } else {
+
+                DB::table($this->tableName)
+                    ->insert(array_merge($data, [
                         'created_at' => now(),
                         'updated_at' => now()
                     ]));
 
-                    $this->insertedRows[] = $assessment;
-                }
-
-            } catch (\Exception $e) {
-                $this->skippedRows[] = [
-                    'row' => $index + 2,
-                    'reason' => $e->getMessage()
-                ];
-                Log::error("Error importing MIS row " . ($index + 2) . ": " . $e->getMessage());
+                $this->insertedRows[] = $assessment;
             }
+
+        } catch (\Exception $e) {
+
+            Log::error($e->getMessage());
+
+            $this->skippedRows[] = [
+                'row' => $index,
+                'reason' => $e->getMessage()
+            ];
         }
     }
 
-    /**
-     * Parse decimal values from Excel
-     */
+    public function chunkSize(): int
+    {
+        return 1000;
+    }
+
+    public function batchSize(): int
+    {
+        return 1000;
+    }
+
     private function parseDecimal($value)
     {
-        if (empty($value)) {
+        if ($value === null || $value === '') {
             return null;
         }
 
-        // Remove any currency symbols and commas
-        $cleaned = preg_replace('/[^0-9.-]/', '', $value);
-
-        return $cleaned !== '' ? (float) $cleaned : null;
+        return (float)preg_replace('/[^0-9.\-]/', '', $value);
     }
 
-    /**
-     * Validate and get enum value
-     */
     private function validateEnumValue($value, $field)
     {
-        if (empty($value)) {
+        if (!$value) {
             return null;
         }
 
-        $allowedValues = [
+        $allowed = [
             'usage' => [
-                'Residential', 'Commercial', 'Industrial', 'Institutional',
-                'Vacant', 'Agricultural', 'Mixed', 'Hospital', 'School',
-                'Temple', 'Others'
+                'Residential',
+                'Commercial',
+                'Industrial',
+                'Institutional',
+                'Vacant',
+                'Agricultural',
+                'Mixed',
+                'Hospital',
+                'School',
+                'Temple',
+                'Others'
             ],
             'type' => [
-                'Owner', 'Tenant', 'Mixed', 'Government', 'Lease',
-                'Trust', 'Partnership', 'Private Limited', 'Public Limited', 'Others'
+                'Owner',
+                'Tenant',
+                'Mixed',
+                'Government',
+                'Lease',
+                'Trust',
+                'Partnership',
+                'Private Limited',
+                'Public Limited',
+                'Others'
             ]
         ];
 
-        $normalized = trim($value);
-
-        // Try to match case-insensitively
-        $matched = collect($allowedValues[$field])->first(function($allowed) use ($normalized) {
-            return strcasecmp($allowed, $normalized) === 0;
-        });
-
-        if ($matched) {
-            return $matched;
+        foreach ($allowed[$field] as $item) {
+            if (strcasecmp($item, trim($value)) == 0) {
+                return $item;
+            }
         }
 
-        // If no match found, return null or default
         return null;
     }
 
-    /**
-     * Define validation rules
-     */
     public function rules(): array
     {
         return [
@@ -165,22 +178,6 @@ class MisImport implements ToCollection, WithHeadingRow, WithValidation
         ];
     }
 
-    /**
-     * Get custom validation messages
-     */
-    public function customValidationMessages()
-    {
-        return [
-            'assessment.max' => 'Assessment number must not exceed 100 characters',
-            'plot_area.numeric' => 'Plot area must be a valid number',
-            'half_year_tax.numeric' => 'Half year tax must be a valid number',
-            'balance.numeric' => 'Balance must be a valid number',
-        ];
-    }
-
-    /**
-     * Get import statistics
-     */
     public function getStats()
     {
         return [
@@ -188,8 +185,6 @@ class MisImport implements ToCollection, WithHeadingRow, WithValidation
             'updated' => count($this->updatedRows),
             'skipped' => count($this->skippedRows),
             'skipped_details' => $this->skippedRows,
-            'inserted_assessments' => $this->insertedRows,
-            'updated_assessments' => $this->updatedRows,
         ];
     }
 }
