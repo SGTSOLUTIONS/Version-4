@@ -34,6 +34,116 @@
         color: var(--text-primary);
     }
 
+    /* ─── Map Container ─── */
+    #map-container {
+        width: 100%;
+        height: 500px;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        position: relative;
+    }
+    #map-container .ol-viewport {
+        border-radius: 14px;
+    }
+    .ol-control button {
+        background-color: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    .ol-control button:hover {
+        background-color: var(--bg-card-hover) !important;
+    }
+    .ol-scale-line {
+        background: rgba(11, 17, 32, 0.8) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-color) !important;
+        padding: 4px 10px !important;
+        border-radius: 6px !important;
+        font-size: 0.7rem !important;
+    }
+    .ol-attribution {
+        background: rgba(11, 17, 32, 0.8) !important;
+        color: var(--text-muted) !important;
+        font-size: 0.6rem !important;
+        padding: 2px 8px !important;
+        border-radius: 6px !important;
+    }
+    .ol-attribution a {
+        color: var(--accent-green) !important;
+    }
+
+    /* ─── Map Legend ─── */
+    .map-legend {
+        position: absolute;
+        bottom: 30px;
+        right: 30px;
+        background: rgba(11, 17, 32, 0.92);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px 16px;
+        z-index: 10;
+        min-width: 160px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .map-legend .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        padding: 3px 0;
+    }
+    .map-legend .legend-item .color-box {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        flex-shrink: 0;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .map-legend .legend-title {
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 0.75rem;
+        margin-bottom: 4px;
+    }
+
+    /* ─── Map Loading Overlay ─── */
+    .map-loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(11, 17, 32, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        z-index: 5;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        transition: opacity 0.5s ease;
+    }
+    .map-loading.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+    .map-loading .spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--border-color);
+        border-top-color: var(--accent-green);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 12px;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
     /* ─── Hierarchy Visualization ─── */
     .hierarchy-flow {
         display: flex;
@@ -506,6 +616,9 @@
         .zone-card .zone-stats { grid-template-columns: 1fr; }
         .quick-actions { grid-template-columns: 1fr 1fr; }
         .ol-page-header { flex-direction: column; }
+        #map-container { height: 350px; }
+        .map-legend { bottom: 15px; right: 15px; padding: 8px 12px; min-width: 120px; }
+        .map-legend .legend-item { font-size: 0.6rem; }
     }
 
     /* ─── Scrollbar ─── */
@@ -591,6 +704,51 @@
     <div class="hierarchy-item">
         <i class="bi bi-link-45deg" style="color:var(--accent-purple);"></i>
         Connected <span class="count">{{ isset($hierarchyStats['connected']) ? number_format($hierarchyStats['connected']) : '0' }}</span>
+    </div>
+</div>
+
+{{-- ── MAP SECTION ── --}}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="ds-card">
+            <div class="ds-card-head">
+                <div class="ds-card-title">
+                    <i class="bi bi-map me-2" style="color:var(--accent-green);"></i>
+                    HTA Boundaries Map
+                </div>
+                <div>
+                    <span class="ds-pill paid" style="font-size:0.6rem;">
+                        <i class="bi bi-geo-alt me-1"></i> {{ isset($corporation) ? $corporation->name : 'No Corporation' }}
+                    </span>
+                    <button class="btn-view ms-2" onclick="resetMapView()" style="cursor:pointer;">
+                        <i class="bi bi-house"></i> Reset View
+                    </button>
+                </div>
+            </div>
+            <div class="ds-card-body" style="padding:0;">
+                <div id="map-container">
+                    <div class="map-loading" id="mapLoading">
+                        <div class="spinner"></div>
+                        <span>Loading map data...</span>
+                    </div>
+                    <div class="map-legend">
+                        <div class="legend-title">HTA Boundaries</div>
+                        <div class="legend-item">
+                            <div class="color-box" style="background:rgba(52,211,153,0.3); border:2px solid #34d399;"></div>
+                            <span>Ward Boundary</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="color-box" style="background:rgba(96,165,250,0.2); border:2px solid #60a5fa;"></div>
+                            <span>Zone Boundary</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="color-box" style="background:rgba(251,191,36,0.2); border:2px solid #fbbf24;"></div>
+                            <span>Corporation Boundary</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -802,7 +960,7 @@
             </div>
             <div class="ds-card-body">
                 <div class="quick-actions">
-                    <a href="{{ route('commissioner.map') ?? '#' }}" class="quick-action-btn"><i class="bi bi-map"></i> View Map</a>
+                    <a href="#" class="quick-action-btn" onclick="focusMapOnCorporation()"><i class="bi bi-map"></i> View Map</a>
                     <a href="#" class="quick-action-btn"><i class="bi bi-file-spreadsheet"></i> Collection Report</a>
                     <a href="#" class="quick-action-btn"><i class="bi bi-exclamation-triangle"></i> Pending Report</a>
                     <a href="#" class="quick-action-btn"><i class="bi bi-file-earmark-excel"></i> Export Excel</a>
@@ -907,7 +1065,7 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="fw-bold mb-0" style="color:var(--text-primary);"><i class="bi bi-diagram-3 me-2" style="color:var(--accent-green);"></i>Zone Overview</h6>
-            <a href="{{ route('admin.zones.index') }}" style="font-size:0.75rem; color:var(--accent-green); text-decoration:none; transition:all 0.2s;">View All Zones <i class="bi bi-arrow-right ms-1"></i></a>
+            <a href="#" style="font-size:0.75rem; color:var(--accent-green); text-decoration:none; transition:all 0.2s;">View All Zones <i class="bi bi-arrow-right ms-1"></i></a>
         </div>
         <div class="row g-3">
             @forelse($zoneData ?? [] as $zone)
@@ -1082,15 +1240,291 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const bars = document.querySelectorAll('.perf-bar .fill');
-        bars.forEach(bar => {
-            const w = bar.style.width;
-            bar.style.width = '0%';
-            setTimeout(() => {
-                bar.style.width = w;
-            }, 300);
+    let map = null;
+    let mapInitialized = false;
+    let vectorSource = null;
+    let vectorLayer = null;
+    let currentFeatures = [];
+
+    /**
+     * Initialize the OpenLayers map
+     */
+    function initMap() {
+        if (mapInitialized) return;
+
+        const container = document.getElementById('map-container');
+        if (!container) return;
+
+        // Get corporation data from PHP
+        const corporationId = {{ isset($corporation) ? $corporation->id : 'null' }};
+        const corporationName = '{{ isset($corporation) ? addslashes($corporation->name) : '' }}';
+        const boundaries = @json(isset($allwardBoundary) ? $allwardBoundary : []);
+
+        // Create vector source
+        vectorSource = new ol.source.Vector({
+            features: []
         });
+
+        // Create vector layer with styling
+        vectorLayer = new ol.layer.Vector({
+            source: vectorSource,
+            style: function(feature) {
+                const type = feature.get('type') || 'ward';
+                let color, fillColor, strokeWidth = 2;
+
+                switch(type) {
+                    case 'corporation':
+                        color = '#fbbf24';
+                        fillColor = 'rgba(251, 191, 36, 0.1)';
+                        strokeWidth = 3;
+                        break;
+                    case 'zone':
+                        color = '#60a5fa';
+                        fillColor = 'rgba(96, 165, 250, 0.15)';
+                        strokeWidth = 2.5;
+                        break;
+                    case 'ward':
+                    default:
+                        color = '#34d399';
+                        fillColor = 'rgba(52, 211, 153, 0.2)';
+                        strokeWidth = 2;
+                        break;
+                }
+
+                return new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: fillColor
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: color,
+                        width: strokeWidth,
+                        lineDash: type === 'corporation' ? [8, 4] : undefined
+                    }),
+                    text: new ol.style.Text({
+                        text: feature.get('name') || '',
+                        fill: new ol.style.Fill({
+                            color: '#e8edf5'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: 'rgba(11, 17, 32, 0.8)',
+                            width: 3
+                        }),
+                        font: '12px "Segoe UI", sans-serif',
+                        textAlign: 'center',
+                        textBaseline: 'middle',
+                        offsetY: -10
+                    })
+                });
+            }
+        });
+
+        // Create the map
+        map = new ol.Map({
+            target: 'map-container',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM({
+                        attributions: [
+                            '© OpenStreetMap contributors'
+                        ]
+                    })
+                }),
+                vectorLayer
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([78.9629, 20.5937]), // Default center (India)
+                zoom: 5
+            }),
+            controls: ol.control.defaults({
+                attributionOptions: {
+                    collapsible: true
+                }
+            }).extend([
+                new ol.control.ScaleLine({
+                    units: 'metric'
+                })
+            ])
+        });
+
+        mapInitialized = true;
+
+        // Hide loading overlay
+        document.getElementById('mapLoading').classList.add('hidden');
+
+        // Load boundaries
+        if (boundaries && boundaries.length > 0) {
+            loadBoundaries(boundaries);
+        } else {
+            // If no boundaries, load sample data or show message
+            console.log('No boundary data available');
+            addNoDataMessage();
+        }
+
+        // Handle resize
+        window.addEventListener('resize', function() {
+            if (map) {
+                setTimeout(() => map.updateSize(), 200);
+            }
+        });
+    }
+
+    /**
+     * Load boundaries from GeoJSON data
+     */
+    function loadBoundaries(boundaryData) {
+        try {
+            // Parse boundary data
+            const features = [];
+
+            boundaryData.forEach((boundary, index) => {
+                if (typeof boundary === 'string') {
+                    try {
+                        const parsed = JSON.parse(boundary);
+                        if (parsed && parsed.type === 'Polygon' || parsed.type === 'MultiPolygon') {
+                            const feature = new ol.Feature({
+                                geometry: new ol.geom.Polygon(parsed.coordinates).transform('EPSG:4326', 'EPSG:3857'),
+                                name: `Ward ${index + 1}`,
+                                type: 'ward',
+                                id: index + 1
+                            });
+                            features.push(feature);
+                        } else if (parsed && parsed.type === 'Feature') {
+                            const geom = new ol.format.GeoJSON().readGeometry(parsed.geometry);
+                            const feature = new ol.Feature({
+                                geometry: geom.transform('EPSG:4326', 'EPSG:3857'),
+                                name: parsed.properties?.name || `Ward ${index + 1}`,
+                                type: parsed.properties?.type || 'ward',
+                                id: parsed.properties?.id || index + 1
+                            });
+                            features.push(feature);
+                        }
+                    } catch (e) {
+                        console.warn('Failed to parse boundary:', e);
+                    }
+                }
+            });
+
+            if (features.length > 0) {
+                vectorSource.addFeatures(features);
+                currentFeatures = features;
+
+                // Fit map to show all features
+                const extent = vectorSource.getExtent();
+                if (extent && !isNaN(extent[0]) && !isNaN(extent[1]) &&
+                    !isNaN(extent[2]) && !isNaN(extent[3])) {
+                    map.getView().fit(extent, {
+                        padding: [50, 50, 50, 50],
+                        maxZoom: 16
+                    });
+                }
+            } else {
+                addNoDataMessage();
+            }
+        } catch (error) {
+            console.error('Error loading boundaries:', error);
+            addNoDataMessage();
+        }
+    }
+
+    /**
+     * Add a message when no data is available
+     */
+    function addNoDataMessage() {
+        // Add a feature showing the corporation center if available
+        const corporationId = {{ isset($corporation) ? $corporation->id : 'null' }};
+        if (corporationId) {
+            // Try to get ward boundaries from the corporation
+            fetchBoundariesFromServer(corporationId);
+        }
+    }
+
+    /**
+     * Fetch boundaries from server via AJAX
+     */
+    function fetchBoundariesFromServer(corporationId) {
+        const loading = document.getElementById('mapLoading');
+        loading.classList.remove('hidden');
+
+        fetch(`/api/corporation/${corporationId}/boundaries`)
+            .then(response => response.json())
+            .then(data => {
+                loading.classList.add('hidden');
+                if (data && data.boundaries && data.boundaries.length > 0) {
+                    loadBoundaries(data.boundaries);
+                } else {
+                    // Show a placeholder message on map
+                    console.log('No boundaries available for this corporation');
+                }
+            })
+            .catch(error => {
+                loading.classList.add('hidden');
+                console.error('Error fetching boundaries:', error);
+            });
+    }
+
+    /**
+     * Reset map view to show all boundaries
+     */
+    function resetMapView() {
+        if (!map || !vectorSource) return;
+
+        const extent = vectorSource.getExtent();
+        if (extent && !isNaN(extent[0]) && !isNaN(extent[1]) &&
+            !isNaN(extent[2]) && !isNaN(extent[3])) {
+            map.getView().fit(extent, {
+                padding: [50, 50, 50, 50],
+                maxZoom: 16,
+                duration: 1000
+            });
+        } else {
+            map.getView().setCenter(ol.proj.fromLonLat([78.9629, 20.5937]));
+            map.getView().setZoom(5);
+        }
+    }
+
+    /**
+     * Focus map on corporation boundaries
+     */
+    function focusMapOnCorporation() {
+        resetMapView();
+        return false;
+    }
+
+    /**
+     * Add sample ward boundary for demonstration (if no data)
+     */
+    function addSampleBoundaries() {
+        // Example polygon coordinates (India centered)
+        const coords = [
+            [78.9629, 20.5937],
+            [78.98, 20.61],
+            [78.99, 20.58],
+            [78.97, 20.57],
+            [78.95, 20.59],
+            [78.9629, 20.5937]
+        ];
+
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon([coords.map(c => ol.proj.fromLonLat(c))]),
+            name: 'Sample Ward',
+            type: 'ward'
+        });
+
+        vectorSource.addFeature(feature);
+        map.getView().fit(vectorSource.getExtent(), { padding: [50, 50, 50, 50] });
+    }
+
+    // Initialize map when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wait a moment for the layout to render
+        setTimeout(initMap, 500);
+    });
+
+    // Re-initialize if needed after page fully loads
+    window.addEventListener('load', function() {
+        if (!mapInitialized) {
+            setTimeout(initMap, 1000);
+        }
     });
 </script>
 @endpush
