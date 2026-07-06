@@ -5,408 +5,128 @@
 
 @push('styles')
 <style>
-    /* ─── Theme Colors ─── */
+    /* ─── Font Variables ─── */
     :root {
-        /* Dark Theme Base */
-        --bg-dark: #0a0e1a;
-        --bg-card: #111827;
-        --bg-card-hover: #1a2332;
-        --bg-card-alt: #0f1729;
-
-        /* Text Colors */
-        --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
-        --text-muted: #64748b;
-
-        /* Border */
-        --border-color: #1e293b;
-        --border-light: #2d3a4f;
-
-        /* Accent Colors - Emerald Green Theme */
-        --accent-green: #10b981;
-        --accent-green-dark: #059669;
-        --accent-green-light: #34d399;
-        --accent-green-glow: rgba(16, 185, 129, 0.15);
-
-        /* Supporting Colors */
-        --accent-blue: #3b82f6;
-        --accent-gold: #f59e0b;
-        --accent-purple: #8b5cf6;
-        --accent-red: #ef4444;
-        --accent-teal: #14b8a6;
-        --accent-pink: #ec4899;
-        --accent-orange: #f97316;
-        --accent-indigo: #6366f1;
-        --accent-cyan: #06b6d4;
-
-        /* Fonts */
-        --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-        --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        --font-mono: 'Courier New', monospace;
+        --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
 
-    /* ─── Base Dark ─── */
-    body {
-        background-color: var(--bg-dark);
-        color: var(--text-primary);
-        font-family: var(--font-sans);
-    }
-
-    /* ─── Map Container ─── */
-    #map-container {
-        width: 100%;
-        height: 550px;
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid var(--border-color);
-        background: var(--bg-card);
-        position: relative;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
-    }
-    #map-container .ol-viewport {
-        border-radius: 16px;
-    }
-
-    /* OpenLayers Control Overrides */
-    .ol-control button {
-        background-color: var(--bg-card) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
-        transition: all 0.2s ease !important;
-        width: 36px !important;
-        height: 36px !important;
-        font-size: 18px !important;
-    }
-    .ol-control button:hover {
-        background-color: var(--bg-card-hover) !important;
-        border-color: var(--accent-green) !important;
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.2) !important;
-    }
-    .ol-control button:focus {
-        outline: none !important;
-    }
-    .ol-zoom {
-        top: 16px !important;
-        left: 16px !important;
-    }
-    .ol-zoom .ol-zoom-in {
-        border-radius: 8px 8px 0 0 !important;
-    }
-    .ol-zoom .ol-zoom-out {
-        border-radius: 0 0 8px 8px !important;
-        border-top: none !important;
-    }
-
-    .ol-scale-line {
-        background: rgba(17, 24, 39, 0.9) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-color) !important;
-        padding: 4px 12px !important;
-        border-radius: 8px !important;
-        font-size: 0.7rem !important;
-        bottom: 20px !important;
-        left: 20px !important;
-        backdrop-filter: blur(8px) !important;
-    }
-    .ol-scale-line-inner {
-        border-color: var(--text-secondary) !important;
-        color: var(--text-secondary) !important;
-    }
-
-    .ol-attribution {
-        background: rgba(17, 24, 39, 0.9) !important;
-        color: var(--text-muted) !important;
-        font-size: 0.6rem !important;
-        padding: 4px 12px !important;
-        border-radius: 8px !important;
-        backdrop-filter: blur(8px) !important;
-        border: 1px solid var(--border-color) !important;
-        bottom: 20px !important;
-        right: 20px !important;
-    }
-    .ol-attribution a {
-        color: var(--accent-green) !important;
-        text-decoration: none !important;
-    }
-    .ol-attribution a:hover {
-        color: var(--accent-green-light) !important;
-        text-decoration: underline !important;
-    }
-
-    /* ─── Map Legend ─── */
-    .map-legend {
-        position: absolute;
-        bottom: 80px;
-        right: 20px;
-        background: rgba(17, 24, 39, 0.92);
-        backdrop-filter: blur(12px);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 14px 18px;
-        z-index: 10;
-        min-width: 170px;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-        transition: all 0.3s ease;
-    }
-    .map-legend:hover {
-        border-color: var(--accent-green);
-        box-shadow: 0 4px 40px rgba(16, 185, 129, 0.1);
-    }
-    .map-legend .legend-title {
-        color: var(--text-primary);
-        font-weight: 600;
-        font-size: 0.75rem;
-        margin-bottom: 6px;
-        letter-spacing: 0.5px;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 6px;
-    }
-    .map-legend .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.7rem;
-        color: var(--text-secondary);
-        padding: 4px 0;
-        transition: all 0.2s ease;
-    }
-    .map-legend .legend-item:hover {
-        color: var(--text-primary);
-    }
-    .map-legend .legend-item .color-box {
-        width: 20px;
-        height: 20px;
-        border-radius: 6px;
-        flex-shrink: 0;
-        border: 1px solid rgba(255,255,255,0.08);
-        transition: all 0.3s ease;
-    }
-    .map-legend .legend-item:hover .color-box {
-        transform: scale(1.05);
-    }
-    .map-legend .legend-item .color-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        flex-shrink: 0;
-    }
-
-    /* ─── Map Loading Overlay ─── */
-    .map-loading {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(10, 14, 26, 0.85);
-        backdrop-filter: blur(4px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 16px;
-        z-index: 5;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        transition: opacity 0.6s ease;
-        flex-direction: column;
-        gap: 16px;
-    }
-    .map-loading.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-    .map-loading .spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid var(--border-color);
-        border-top-color: var(--accent-green);
-        border-radius: 50%;
-        animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }
-    .map-loading .loading-text {
-        font-weight: 500;
-        letter-spacing: 0.5px;
-    }
-    .map-loading .loading-text span {
-        color: var(--accent-green);
-    }
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    /* ─── Hierarchy Flow ─── */
+    /* ─── Hierarchy Visualization ─── */
     .hierarchy-flow {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 1.2rem;
-        padding: 1.2rem 2rem;
-        background: linear-gradient(135deg, #0f1729, #111827);
-        border-radius: 16px;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        border-radius: 12px;
         margin-bottom: 1.5rem;
         flex-wrap: wrap;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
     }
     .hierarchy-item {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
-        background: var(--bg-card);
-        padding: 0.5rem 1.2rem;
+        gap: 0.5rem;
+        background: white;
+        padding: 0.6rem 1.2rem;
         border-radius: 10px;
-        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         font-weight: 600;
-        color: var(--text-primary);
-        font-size: 0.8rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-    .hierarchy-item:hover {
-        transform: translateY(-2px);
-        border-color: var(--accent-green);
-        box-shadow: 0 4px 20px rgba(16,185,129,0.12);
-        background: var(--bg-card-hover);
+        color: #0a2e1a;
+        font-size: 0.9rem;
     }
     .hierarchy-item .count {
-        background: var(--accent-green);
-        color: #0a0e1a;
+        background: #10b981;
+        color: white;
         border-radius: 20px;
         padding: 0.1rem 0.7rem;
-        font-size: 0.7rem;
+        font-size: 0.8rem;
         font-weight: 700;
     }
     .hierarchy-arrow {
-        color: var(--accent-green);
-        font-size: 1.2rem;
+        color: #10b981;
+        font-size: 1.5rem;
         font-weight: 300;
-        opacity: 0.5;
     }
 
     /* ─── Stat Cards ─── */
     .comm-stat {
-        background: var(--bg-card);
-        border-radius: 14px;
+        background: white;
+        border-radius: 12px;
         padding: 1.2rem 1.2rem 1rem 1.2rem;
-        border: 1px solid var(--border-color);
-        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.04);
+        transition: all 0.2s;
         height: 100%;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        position: relative;
-        overflow: hidden;
-    }
-    .comm-stat::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .comm-stat:hover::before {
-        opacity: 1;
     }
     .comm-stat:hover {
-        transform: translateY(-3px);
-        border-color: var(--accent-green);
-        box-shadow: 0 8px 30px rgba(16,185,129,0.08);
-        background: var(--bg-card-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
     }
     .comm-stat .label {
-        font-size: 0.6rem;
+        font-size: 0.65rem;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
-        color: var(--text-secondary);
+        letter-spacing: 0.5px;
+        color: #9ca3af;
         font-weight: 600;
     }
     .comm-stat .value {
         font-size: 1.5rem;
         font-weight: 700;
-        color: var(--text-primary);
+        color: #0a2e1a;
         margin-top: 0.2rem;
         font-family: var(--font-mono);
     }
-    .comm-stat .value.green { color: var(--accent-green); }
-    .comm-stat .value.red { color: var(--accent-red); }
-    .comm-stat .value.blue { color: var(--accent-blue); }
-    .comm-stat .value.gold { color: var(--accent-gold); }
-    .comm-stat .value.purple { color: var(--accent-purple); }
-    .comm-stat .value.teal { color: var(--accent-teal); }
-    .comm-stat .value.pink { color: var(--accent-pink); }
-    .comm-stat .value.orange { color: var(--accent-orange); }
-    .comm-stat .value.indigo { color: var(--accent-indigo); }
-    .comm-stat .value.cyan { color: var(--accent-cyan); }
-
+    .comm-stat .value.green { color: #10b981; }
+    .comm-stat .value.red { color: #ef4444; }
+    .comm-stat .value.blue { color: #3b82f6; }
+    .comm-stat .value.gold { color: #f59e0b; }
+    .comm-stat .value.purple { color: #8b5cf6; }
     .comm-stat .icon-wrap {
-        width: 38px;
-        height: 38px;
+        width: 36px;
+        height: 36px;
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.1rem;
-        color: #0a0e1a;
+        color: white;
         flex-shrink: 0;
-        transition: all 0.3s ease;
     }
-    .comm-stat:hover .icon-wrap {
-        transform: scale(1.05);
-    }
-    .comm-stat .icon-wrap.green { background: var(--accent-green); }
-    .comm-stat .icon-wrap.blue { background: var(--accent-blue); }
-    .comm-stat .icon-wrap.gold { background: var(--accent-gold); }
-    .comm-stat .icon-wrap.red { background: var(--accent-red); }
-    .comm-stat .icon-wrap.purple { background: var(--accent-purple); }
-    .comm-stat .icon-wrap.teal { background: var(--accent-teal); }
-    .comm-stat .icon-wrap.indigo { background: var(--accent-indigo); }
-    .comm-stat .icon-wrap.pink { background: var(--accent-pink); }
-    .comm-stat .icon-wrap.orange { background: var(--accent-orange); }
-    .comm-stat .icon-wrap.cyan { background: var(--accent-cyan); }
+    .comm-stat .icon-wrap.green { background: #10b981; }
+    .comm-stat .icon-wrap.blue { background: #3b82f6; }
+    .comm-stat .icon-wrap.gold { background: #f59e0b; }
+    .comm-stat .icon-wrap.red { background: #ef4444; }
+    .comm-stat .icon-wrap.purple { background: #8b5cf6; }
+    .comm-stat .icon-wrap.teal { background: #14b8a6; }
+    .comm-stat .icon-wrap.indigo { background: #6366f1; }
+    .comm-stat .icon-wrap.pink { background: #ec4899; }
+    .comm-stat .icon-wrap.orange { background: #f97316; }
+    .comm-stat .icon-wrap.cyan { background: #06b6d4; }
 
     /* ─── Zone Cards ─── */
     .zone-card {
-        background: var(--bg-card);
-        border-radius: 14px;
-        padding: 1.2rem 1.4rem;
-        border: 1px solid var(--border-color);
-        transition: all 0.3s ease;
+        background: white;
+        border-radius: 12px;
+        padding: 1.2rem;
+        border: 1px solid rgba(0,0,0,0.04);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transition: all 0.2s;
         height: 100%;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        position: relative;
-        overflow: hidden;
-    }
-    .zone-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, var(--accent-green), transparent);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .zone-card:hover::before {
-        opacity: 1;
     }
     .zone-card:hover {
-        transform: translateY(-4px);
-        border-color: var(--accent-green);
-        box-shadow: 0 8px 30px rgba(16,185,129,0.08);
-        background: var(--bg-card-hover);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        border-color: #10b981;
     }
     .zone-card .zone-name {
         font-weight: 700;
         font-size: 1.05rem;
-        color: var(--text-primary);
+        color: #0a2e1a;
     }
     .zone-card .zone-officer {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
+        font-size: 0.78rem;
+        color: #6b7280;
         margin-top: -0.1rem;
     }
     .zone-card .zone-stats {
@@ -416,11 +136,11 @@
         margin-top: 0.7rem;
     }
     .zone-card .zone-stats span {
-        font-size: 0.72rem;
-        color: var(--text-secondary);
+        font-size: 0.75rem;
+        color: #6b7280;
     }
     .zone-card .zone-stats strong {
-        color: var(--text-primary);
+        color: #0a2e1a;
         font-weight: 600;
         font-family: var(--font-mono);
     }
@@ -430,92 +150,91 @@
         align-items: center;
         margin-top: 0.7rem;
         padding-top: 0.7rem;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid #f3f4f6;
     }
     .zone-card .zone-collection {
         font-weight: 700;
-        color: var(--accent-green);
+        color: #10b981;
         font-family: var(--font-mono);
         font-size: 1rem;
     }
     .zone-card .zone-pending {
         font-weight: 600;
-        color: var(--accent-red);
+        color: #ef4444;
         font-family: var(--font-mono);
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
     .zone-card .tax-tags {
         display: flex;
         gap: 0.3rem;
         flex-wrap: wrap;
-        margin-top: 0.4rem;
+        margin-top: 0.3rem;
     }
     .zone-card .tax-tag {
         font-size: 0.6rem;
-        padding: 0.15rem 0.6rem;
+        padding: 0.1rem 0.5rem;
         border-radius: 10px;
-        color: var(--text-primary);
-        background: rgba(255,255,255,0.06);
+        background: #f3f4f6;
+        color: #6b7280;
     }
-    .tax-tag.water { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
-    .tax-tag.ugd { background: rgba(245,158,11,0.15); color: var(--accent-gold); }
-    .tax-tag.professional { background: rgba(99,102,241,0.15); color: var(--accent-indigo); }
+    .tax-tag.water { background: #dbeafe; color: #2563eb; }
+    .tax-tag.ugd { background: #fef3c7; color: #d97706; }
+    .tax-tag.professional { background: #e0e7ff; color: #4f46e5; }
 
     /* ─── Tables ─── */
     .comm-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.8rem;
+        font-size: 0.82rem;
     }
     .comm-table thead th {
-        background: rgba(255,255,255,0.03);
-        color: var(--text-secondary);
+        background: #f9fafb;
+        color: #6b7280;
         font-weight: 600;
         text-transform: uppercase;
-        font-size: 0.6rem;
-        letter-spacing: 0.6px;
+        font-size: 0.65rem;
+        letter-spacing: 0.5px;
         padding: 0.7rem 0.8rem;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid #e5e7eb;
         text-align: left;
     }
     .comm-table tbody td {
         padding: 0.65rem 0.8rem;
-        border-bottom: 1px solid rgba(255,255,255,0.03);
-        color: var(--text-primary);
+        border-bottom: 1px solid #f3f4f6;
+        color: #1f2937;
     }
     .comm-table tbody tr:hover {
-        background: rgba(255,255,255,0.02);
+        background: #f9fafb;
     }
     .comm-table .badge-status {
-        padding: 0.2rem 0.7rem;
+        padding: 0.2rem 0.6rem;
         border-radius: 20px;
-        font-size: 0.6rem;
+        font-size: 0.65rem;
         font-weight: 600;
         display: inline-block;
     }
-    .badge-status.paid { background: rgba(16,185,129,0.15); color: var(--accent-green); }
-    .badge-status.pending { background: rgba(245,158,11,0.15); color: var(--accent-gold); }
-    .badge-status.overdue { background: rgba(239,68,68,0.15); color: var(--accent-red); }
-    .badge-status.active { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+    .badge-status.paid { background: #dcfce7; color: #059669; }
+    .badge-status.pending { background: #fef3c7; color: #d97706; }
+    .badge-status.overdue { background: #fee2e2; color: #dc2626; }
+    .badge-status.active { background: #dbeafe; color: #2563eb; }
 
     .btn-view {
-        color: var(--accent-green);
-        font-size: 0.7rem;
-        padding: 0.25rem 0.8rem;
-        border-radius: 8px;
-        border: 1px solid rgba(16,185,129,0.25);
-        background: rgba(16,185,129,0.08);
-        transition: all 0.2s;
+        color: #10b981;
+        font-size: 0.85rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 6px;
+        border: 1px solid rgba(16,185,129,0.2);
+        background: rgba(16,185,129,0.05);
+        transition: all 0.15s;
         text-decoration: none;
         display: inline-block;
-        cursor: pointer;
+        font-size: 0.7rem;
     }
     .btn-view:hover {
-        background: var(--accent-green);
-        color: #0a0e1a;
-        border-color: var(--accent-green);
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
         text-decoration: none;
-        box-shadow: 0 4px 20px rgba(16,185,129,0.2);
     }
 
     /* ─── Quick Actions ─── */
@@ -530,33 +249,30 @@
         gap: 0.5rem;
         padding: 0.6rem 0.9rem;
         border-radius: 10px;
-        border: 1px solid var(--border-color);
-        background: rgba(255,255,255,0.02);
-        color: var(--text-primary);
-        font-size: 0.75rem;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #1f2937;
+        font-size: 0.78rem;
         font-weight: 500;
-        transition: all 0.2s;
+        transition: all 0.15s;
         text-decoration: none;
-        cursor: pointer;
     }
     .quick-action-btn:hover {
-        border-color: var(--accent-green);
-        background: rgba(16,185,129,0.08);
-        color: var(--accent-green);
+        border-color: #10b981;
+        background: #f0fdf4;
+        color: #0a2e1a;
         text-decoration: none;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 20px rgba(16,185,129,0.08);
     }
     .quick-action-btn i {
         font-size: 1rem;
-        color: var(--accent-green);
+        color: #10b981;
     }
 
-    /* ─── Performance Bar ─── */
+    /* ─── Performance Table ─── */
     .perf-bar {
-        height: 6px;
+        height: 5px;
         border-radius: 20px;
-        background: rgba(255,255,255,0.06);
+        background: #f3f4f6;
         overflow: hidden;
         min-width: 60px;
         flex: 1;
@@ -564,7 +280,7 @@
     .perf-bar .fill {
         height: 100%;
         border-radius: 20px;
-        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: width 0.6s ease;
     }
 
     /* ─── Activity Items ─── */
@@ -572,36 +288,34 @@
         display: flex;
         align-items: center;
         gap: 0.7rem;
-        padding: 0.5rem 0.8rem;
+        padding: 0.5rem 0.7rem;
         border-radius: 8px;
-        background: rgba(255,255,255,0.02);
-        transition: all 0.2s;
-        border: 1px solid transparent;
+        background: #f9fafb;
+        transition: background 0.15s;
     }
     .activity-item:hover {
-        background: rgba(255,255,255,0.04);
-        border-color: var(--border-color);
+        background: #f3f4f6;
     }
     .activity-item .act-icon {
-        width: 30px;
-        height: 30px;
-        border-radius: 8px;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
     }
     .activity-item .act-text {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
+        font-size: 0.78rem;
+        color: #1f2937;
         flex: 1;
     }
     .activity-item .act-text strong {
-        color: var(--text-primary);
+        color: #0a2e1a;
     }
     .activity-item .act-time {
-        font-size: 0.6rem;
-        color: var(--text-muted);
+        font-size: 0.65rem;
+        color: #9ca3af;
         white-space: nowrap;
     }
 
@@ -609,90 +323,82 @@
     .error-state {
         text-align: center;
         padding: 3rem 1rem;
-        background: var(--bg-card);
-        border-radius: 14px;
-        border: 1px solid rgba(239,68,68,0.3);
-        background: rgba(239,68,68,0.05);
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #fee2e2;
+        background: #fef2f2;
     }
     .error-state i {
         font-size: 3rem;
-        color: var(--accent-red);
+        color: #ef4444;
         margin-bottom: 1rem;
         display: block;
     }
     .error-state h5 {
-        color: var(--accent-red);
+        color: #991b1b;
         font-weight: 600;
     }
     .error-state p {
-        color: var(--text-secondary);
+        color: #7f1d1d;
+        opacity: 0.8;
     }
 
     /* ─── DS Card Override ─── */
     .ds-card {
-        background: var(--bg-card);
-        border-radius: 14px;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        transition: all 0.3s ease;
-        overflow: hidden;
-    }
-    .ds-card:hover {
-        border-color: rgba(16,185,129,0.2);
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.04);
     }
     .ds-card-head {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.9rem 1.2rem;
-        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 1.2rem;
+        border-bottom: 1px solid #f3f4f6;
         flex-wrap: wrap;
         gap: 0.5rem;
-        background: rgba(255,255,255,0.02);
     }
     .ds-card-title {
         font-weight: 600;
-        color: var(--text-primary);
-        font-size: 0.9rem;
+        color: #0a2e1a;
+        font-size: 0.95rem;
     }
     .ds-card-body {
         padding: 1.2rem;
     }
 
     .ds-pill {
-        padding: 4px 14px;
+        padding: 4px 12px;
         border-radius: 20px;
-        font-size: 0.65rem;
+        font-size: 0.7rem;
         font-weight: 600;
         display: inline-block;
     }
     .ds-pill.paid {
-        background: rgba(16,185,129,0.12);
-        color: var(--accent-green);
-        border: 1px solid rgba(16,185,129,0.2);
+        background: #dcfce7;
+        color: #059669;
+        border: 1px solid #10b98120;
     }
 
     .rv-submit {
-        background: var(--accent-green);
-        color: #0a0e1a;
+        background: #10b981;
+        color: white;
         border: none;
-        padding: 8px 22px;
-        border-radius: 10px;
+        padding: 8px 20px;
+        border-radius: 8px;
         font-weight: 600;
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         transition: all 0.2s;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        cursor: pointer;
     }
     .rv-submit:hover {
-        background: var(--accent-green-light);
-        color: #0a0e1a;
+        background: #059669;
+        color: white;
         text-decoration: none;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 20px rgba(16,185,129,0.3);
     }
 
     .ol-page-header {
@@ -706,17 +412,13 @@
     .ol-page-title {
         font-size: 1.5rem;
         font-weight: 700;
-        color: var(--text-primary);
+        color: #0a2e1a;
         margin: 0;
-        letter-spacing: -0.5px;
-    }
-    .ol-page-title span {
-        color: var(--accent-green);
     }
     .ol-page-sub {
-        color: var(--text-secondary);
+        color: #6b7280;
         margin: 0.2rem 0 0 0;
-        font-size: 0.82rem;
+        font-size: 0.85rem;
     }
 
     /* ─── Tax Breakdown ─── */
@@ -725,100 +427,47 @@
         justify-content: space-between;
         align-items: center;
         padding: 0.5rem 0;
-        border-bottom: 1px solid var(--border-color);
-        transition: all 0.2s ease;
+        border-bottom: 1px solid #f3f4f6;
     }
     .tax-breakdown-item:last-child {
         border-bottom: none;
     }
-    .tax-breakdown-item:hover {
-        padding-left: 4px;
-        background: rgba(255,255,255,0.02);
-        border-radius: 4px;
-    }
     .tax-breakdown-item .tax-label {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        display: flex;
-        align-items: center;
-        gap: 6px;
+        font-size: 0.78rem;
+        color: #6b7280;
     }
     .tax-breakdown-item .tax-count {
         font-weight: 600;
-        color: var(--text-primary);
+        color: #0a2e1a;
         font-family: var(--font-mono);
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
     .tax-breakdown-item .tax-amount {
         font-weight: 600;
-        color: var(--accent-green);
+        color: #10b981;
         font-family: var(--font-mono);
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
 
     /* ─── Responsive ─── */
     @media (max-width: 768px) {
         .hierarchy-flow { gap: 0.6rem; padding: 0.8rem; }
-        .hierarchy-item { font-size: 0.65rem; padding: 0.3rem 0.8rem; }
+        .hierarchy-item { font-size: 0.7rem; padding: 0.3rem 0.8rem; }
         .hierarchy-arrow { font-size: 1rem; }
         .comm-stat .value { font-size: 1.1rem; }
         .zone-card .zone-stats { grid-template-columns: 1fr; }
         .quick-actions { grid-template-columns: 1fr 1fr; }
         .ol-page-header { flex-direction: column; }
-        #map-container { height: 350px; }
-        .map-legend { bottom: 70px; right: 10px; padding: 10px 14px; min-width: 130px; }
-        .map-legend .legend-item { font-size: 0.6rem; }
-        .map-legend .legend-item .color-box { width: 16px; height: 16px; }
-        .ol-scale-line { display: none; }
     }
-
-    @media (max-width: 480px) {
-        .hierarchy-item { font-size: 0.55rem; padding: 0.2rem 0.6rem; gap: 0.3rem; }
-        .hierarchy-arrow { font-size: 0.8rem; }
-        .comm-stat { padding: 0.8rem; }
-        .comm-stat .value { font-size: 0.95rem; }
-        .ds-card-head { flex-direction: column; align-items: flex-start; }
-        .quick-actions { grid-template-columns: 1fr; }
-    }
-
-    /* ─── Scrollbar ─── */
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-        background: var(--bg-dark);
-    }
-    ::-webkit-scrollbar-thumb {
-        background: var(--border-color);
-        border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--text-muted);
-    }
-
-    /* ─── Smooth Animations ─── */
-    .fade-in {
-        animation: fadeIn 0.5s ease forwards;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .fade-in-delay-1 { animation-delay: 0.1s; }
-    .fade-in-delay-2 { animation-delay: 0.2s; }
-    .fade-in-delay-3 { animation-delay: 0.3s; }
-    .fade-in-delay-4 { animation-delay: 0.4s; }
-    .fade-in-delay-5 { animation-delay: 0.5s; }
 </style>
 @endpush
 
 @section('content')
 
 {{-- ── Page Header ── --}}
-<div class="ol-page-header fade-in">
+<div class="ol-page-header">
     <div>
-        <h1 class="ol-page-title">Commissioner <span>Dashboard</span></h1>
+        <h1 class="ol-page-title">Commissioner Dashboard</h1>
         <p class="ol-page-sub">
             {{ isset($corporation) && $corporation ? $corporation->name . ' — Complete revenue hierarchy overview' : 'Revenue overview' }}
             — {{ now()->format('l, d F Y') }}
@@ -826,14 +475,14 @@
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
         @if(isset($corporation) && $corporation)
-        <span style="font-size:0.65rem; padding:4px 14px; background:rgba(16,185,129,0.12); color:var(--accent-green); border-radius:20px; border:1px solid rgba(16,185,129,0.2);">
+        <span style="font-size:0.7rem; padding:4px 12px; background:#f0fdf4; color:#10b981; border-radius:20px; border:1px solid #10b98120;">
             <i class="bi bi-building me-1"></i> {{ $corporation->name }}
         </span>
         @endif
-        <span class="ds-pill paid" style="font-size:0.6rem; padding:4px 12px;">
-            <i class="bi bi-circle-fill me-1" style="font-size:6px; vertical-align:1px; color:var(--accent-green);"></i>Live
+        <span class="ds-pill paid" style="font-size:0.65rem; padding:4px 10px;">
+            <i class="bi bi-circle-fill me-1" style="font-size:6px; vertical-align:1px;"></i>Live
         </span>
-        <a href="#" class="rv-submit" style="width:auto; height:38px; padding:0 1.2rem; font-size:0.75rem !important; border-radius:10px !important; display:inline-flex; align-items:center; gap:6px; animation:none;">
+        <a href="#" class="rv-submit" style="width:auto; height:38px; padding:0 1.2rem; font-size:0.8rem !important; border-radius:9px !important; display:inline-flex; align-items:center; gap:6px; animation:none;">
             <i class="bi bi-download" style="font-size:13px;"></i>
             Export Report
         </a>
@@ -841,7 +490,7 @@
 </div>
 
 @if(isset($error))
-    <div class="error-state fade-in">
+    <div class="error-state">
         <i class="bi bi-exclamation-triangle"></i>
         <h5>{{ $error }}</h5>
         <p>Please contact your administrator to assign a corporation to your account.</p>
@@ -849,93 +498,41 @@
 @else
 
 {{-- ── Hierarchy Flow ── --}}
-<div class="hierarchy-flow fade-in">
+<div class="hierarchy-flow">
     <div class="hierarchy-item">
-        <i class="bi bi-diagram-3" style="color:var(--accent-green);"></i>
+        <i class="bi bi-diagram-3" style="color:#10b981;"></i>
         Zones <span class="count">{{ $hierarchyStats['zones'] ?? 0 }}</span>
     </div>
     <span class="hierarchy-arrow">→</span>
     <div class="hierarchy-item">
-        <i class="bi bi-grid-3x3-gap-fill" style="color:var(--accent-blue);"></i>
+        <i class="bi bi-grid-3x3-gap-fill" style="color:#3b82f6;"></i>
         Wards <span class="count">{{ $hierarchyStats['wards'] ?? 0 }}</span>
     </div>
     <span class="hierarchy-arrow">→</span>
     <div class="hierarchy-item">
-        <i class="bi bi-building" style="color:var(--accent-gold);"></i>
+        <i class="bi bi-building" style="color:#f59e0b;"></i>
         Buildings <span class="count">{{ isset($hierarchyStats['buildings']) ? number_format($hierarchyStats['buildings']) : '0' }}</span>
     </div>
     <span class="hierarchy-arrow">→</span>
     <div class="hierarchy-item">
-        <i class="bi bi-clipboard-data" style="color:var(--accent-purple);"></i>
+        <i class="bi bi-clipboard-data" style="color:#8b5cf6;"></i>
         Assessments <span class="count">{{ isset($hierarchyStats['assessments']) ? number_format($hierarchyStats['assessments']) : '0' }}</span>
     </div>
     <span class="hierarchy-arrow">→</span>
     <div class="hierarchy-item">
-        <i class="bi bi-check2-circle" style="color:var(--accent-teal);"></i>
+        <i class="bi bi-check2-circle" style="color:#14b8a6;"></i>
         Surveyed <span class="count">{{ isset($hierarchyStats['surveyed']) ? number_format($hierarchyStats['surveyed']) : '0' }}</span>
     </div>
     <span class="hierarchy-arrow">→</span>
     <div class="hierarchy-item">
-        <i class="bi bi-link-45deg" style="color:var(--accent-purple);"></i>
+        <i class="bi bi-link-45deg" style="color:#8b5cf6;"></i>
         Connected <span class="count">{{ isset($hierarchyStats['connected']) ? number_format($hierarchyStats['connected']) : '0' }}</span>
-    </div>
-</div>
-
-{{-- ── MAP SECTION ── --}}
-<div class="row g-3 mb-4">
-    <div class="col-12">
-        <div class="ds-card fade-in">
-            <div class="ds-card-head">
-                <div class="ds-card-title">
-                    <i class="bi bi-map me-2" style="color:var(--accent-green);"></i>
-                    HTA Boundaries Map
-                </div>
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <span class="ds-pill paid" style="font-size:0.6rem;">
-                        <i class="bi bi-geo-alt me-1"></i> {{ isset($corporation) ? $corporation->name : 'No Corporation' }}
-                    </span>
-                    <button class="btn-view" onclick="resetMapView()" style="cursor:pointer;">
-                        <i class="bi bi-house"></i> Reset View
-                    </button>
-                    <button class="btn-view" onclick="toggleLegend()" style="cursor:pointer;">
-                        <i class="bi bi-eye"></i> Legend
-                    </button>
-                </div>
-            </div>
-            <div class="ds-card-body" style="padding:0;">
-                <div id="map-container">
-                    <div class="map-loading" id="mapLoading">
-                        <div class="spinner"></div>
-                        <div class="loading-text">Loading <span>HTA Boundaries</span>...</div>
-                    </div>
-                    <div class="map-legend" id="mapLegend">
-                        <div class="legend-title">📌 HTA Boundaries</div>
-                        <div class="legend-item">
-                            <div class="color-box" style="background:rgba(16,185,129,0.25); border:2px solid #10b981;"></div>
-                            <span>Ward Boundary</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="color-box" style="background:rgba(59,130,246,0.2); border:2px solid #3b82f6;"></div>
-                            <span>Zone Boundary</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="color-box" style="background:rgba(245,158,11,0.15); border:2px solid #f59e0b; border-style:dashed;"></div>
-                            <span>Corporation Boundary</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="color-dot" style="background:#ef4444;"></div>
-                            <span>Survey Points</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
 {{-- ── Top Statistics ── --}}
 <div class="row g-3 mb-4">
-    <div class="col-xl-3 col-lg-4 col-md-6 fade-in fade-in-delay-1">
+    <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -946,7 +543,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-4 col-md-6 fade-in fade-in-delay-2">
+    <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -957,7 +554,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-4 col-md-6 fade-in fade-in-delay-3">
+    <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -968,7 +565,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-4 col-md-6 fade-in fade-in-delay-4">
+    <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -979,7 +576,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-4 col-md-6 fade-in fade-in-delay-5">
+    <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -990,7 +587,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-4 col-md-6 fade-in fade-in-delay-1">
+    <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1001,7 +598,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-4 col-md-6 fade-in fade-in-delay-2">
+    <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1012,7 +609,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-4 col-md-6 fade-in fade-in-delay-3">
+    <div class="col-xl-3 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1027,7 +624,7 @@
 
 {{-- ── Assessment Status & Collection Stats ── --}}
 <div class="row g-3 mb-4">
-    <div class="col-xl-2 col-lg-4 col-md-6 fade-in fade-in-delay-1">
+    <div class="col-xl-2 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1038,7 +635,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-2 col-lg-4 col-md-6 fade-in fade-in-delay-2">
+    <div class="col-xl-2 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1049,7 +646,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-2 col-lg-4 col-md-6 fade-in fade-in-delay-3">
+    <div class="col-xl-2 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1060,7 +657,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-2 col-lg-4 col-md-6 fade-in fade-in-delay-4">
+    <div class="col-xl-2 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1071,7 +668,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-2 col-lg-4 col-md-6 fade-in fade-in-delay-5">
+    <div class="col-xl-2 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1082,7 +679,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-2 col-lg-4 col-md-6 fade-in fade-in-delay-1">
+    <div class="col-xl-2 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1097,7 +694,7 @@
 
 {{-- ── Collection Stats ── --}}
 <div class="row g-3 mb-4">
-    <div class="col-xl-4 col-lg-4 col-md-6 fade-in fade-in-delay-2">
+    <div class="col-xl-4 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1108,7 +705,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-4 col-lg-4 col-md-6 fade-in fade-in-delay-3">
+    <div class="col-xl-4 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1119,7 +716,7 @@
             </div>
         </div>
     </div>
-    <div class="col-xl-4 col-lg-4 col-md-6 fade-in fade-in-delay-4">
+    <div class="col-xl-4 col-lg-4 col-md-6">
         <div class="comm-stat">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -1134,14 +731,14 @@
 
 {{-- ── Row: Quick Actions + Tax Breakdown ── --}}
 <div class="row g-3 mb-4">
-    <div class="col-xl-5 fade-in fade-in-delay-5">
+    <div class="col-xl-5">
         <div class="ds-card h-100">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-lightning me-2" style="color:var(--accent-green);"></i>Quick Actions</div>
+                <div class="ds-card-title">Commissioner Quick Actions</div>
             </div>
             <div class="ds-card-body">
                 <div class="quick-actions">
-                    <button class="quick-action-btn" onclick="focusMapOnCorporation()"><i class="bi bi-map"></i> View Map</button>
+                    <a href="{{ route('commissioner.map') ?? '#' }}" class="quick-action-btn"><i class="bi bi-map"></i> View Map</a>
                     <a href="#" class="quick-action-btn"><i class="bi bi-file-spreadsheet"></i> Collection Report</a>
                     <a href="#" class="quick-action-btn"><i class="bi bi-exclamation-triangle"></i> Pending Report</a>
                     <a href="#" class="quick-action-btn"><i class="bi bi-file-earmark-excel"></i> Export Excel</a>
@@ -1151,11 +748,11 @@
         </div>
     </div>
 
-    <div class="col-xl-7 fade-in fade-in-delay-1">
+    <div class="col-xl-7">
         <div class="ds-card h-100">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-pie-chart me-2" style="color:var(--accent-green);"></i>Tax Breakdown</div>
-                <span style="font-size:0.65rem; color:var(--text-muted);">{{ now()->format('F Y') }}</span>
+                <div class="ds-card-title"><i class="bi bi-pie-chart me-2"></i>Tax Breakdown</div>
+                <span style="font-size:0.68rem; color:#9ca3af;">{{ now()->format('F Y') }}</span>
             </div>
             <div class="ds-card-body">
                 @if(isset($taxBreakdown) && count($taxBreakdown) > 0)
@@ -1187,7 +784,7 @@
                         </div>
                     @endforeach
                 @else
-                    <div class="text-center py-3 text-muted" style="color:var(--text-muted);">No tax data available</div>
+                    <div class="text-center py-3 text-muted">No tax data available</div>
                 @endif
             </div>
         </div>
@@ -1196,11 +793,11 @@
 
 {{-- ── Zone Performance ── --}}
 <div class="row g-3 mb-4">
-    <div class="col-12 fade-in">
+    <div class="col-12">
         <div class="ds-card">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-graph-up me-2" style="color:var(--accent-green);"></i>Zone-wise Collection Performance</div>
-                <span style="font-size:0.65rem; color:var(--text-muted);">{{ now()->format('F Y') }}</span>
+                <div class="ds-card-title"><i class="bi bi-graph-up me-2" style="color:#10b981;"></i>Zone-wise Collection Performance</div>
+                <span style="font-size:0.68rem; color:#9ca3af;">{{ now()->format('F Y') }}</span>
             </div>
             <div class="ds-card-body" style="overflow-x:auto;">
                 <table class="comm-table">
@@ -1216,22 +813,22 @@
                     <tbody>
                         @forelse($performanceZones ?? [] as $zone)
                         <tr>
-                            <td style="font-weight:600; color:var(--text-primary);">{{ $zone['name'] }}</td>
-                            <td style="font-family:var(--font-mono); color:var(--text-secondary);">{{ $zone['target'] }}</td>
-                            <td style="font-family:var(--font-mono); font-weight:600; color:var(--accent-green);">{{ $zone['collected'] }}</td>
-                            <td style="font-family:var(--font-mono); color:var(--accent-red);">{{ $zone['pending'] }}</td>
+                            <td style="font-weight:600; color:#0a2e1a;">{{ $zone['name'] }}</td>
+                            <td style="font-family:var(--font-mono); color:#6b7280;">{{ $zone['target'] }}</td>
+                            <td style="font-family:var(--font-mono); font-weight:600; color:#059669;">{{ $zone['collected'] }}</td>
+                            <td style="font-family:var(--font-mono); color:#dc2626;">{{ $zone['pending'] }}</td>
                             <td>
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <div class="perf-bar">
-                                        <div class="fill" style="width:{{ $zone['achievement'] }}%; background:{{ $zone['achievement'] >= 80 ? 'var(--accent-green)' : ($zone['achievement'] >= 60 ? 'var(--accent-gold)' : 'var(--accent-red)') }};"></div>
+                                        <div class="fill" style="width:{{ $zone['achievement'] }}%; background:{{ $zone['achievement'] >= 80 ? '#10b981' : ($zone['achievement'] >= 60 ? '#f59e0b' : '#ef4444') }};"></div>
                                     </div>
-                                    <span style="font-family:var(--font-mono); font-size:0.75rem; min-width:36px; color:var(--text-secondary);">{{ $zone['achievement'] }}%</span>
+                                    <span style="font-family:var(--font-mono); font-size:0.75rem; min-width:36px; color:#374151;">{{ $zone['achievement'] }}%</span>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center py-3 text-muted" style="color:var(--text-muted);">No zones found for this corporation</td>
+                            <td colspan="5" class="text-center py-3 text-muted">No zones found for this corporation</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -1245,25 +842,25 @@
 <div class="row g-3 mb-4">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="fw-bold mb-0" style="color:var(--text-primary);"><i class="bi bi-diagram-3 me-2" style="color:var(--accent-green);"></i>Zone Overview</h6>
-            <a href="#" style="font-size:0.75rem; color:var(--accent-green); text-decoration:none; transition:all 0.2s;">View All Zones <i class="bi bi-arrow-right ms-1"></i></a>
+            <h6 class="fw-bold mb-0" style="color:#0a2e1a;"><i class="bi bi-diagram-3 me-2" style="color:#10b981;"></i>Zone Overview</h6>
+            <a href="{{ route('admin.zones.index') }}" style="font-size:0.78rem; color:#10b981; text-decoration:none;">View All Zones <i class="bi bi-arrow-right ms-1"></i></a>
         </div>
         <div class="row g-3">
             @forelse($zoneData ?? [] as $zone)
-            <div class="col-xl-3 col-lg-4 col-md-6 fade-in">
+            <div class="col-xl-3 col-lg-4 col-md-6">
                 <div class="zone-card">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <div class="zone-name">{{ $zone['name'] }}</div>
                             <div class="zone-officer"><i class="bi bi-person-badge me-1"></i>{{ $zone['officer'] }}</div>
                         </div>
-                        <span style="font-size:1.2rem; color:var(--accent-green);"><i class="bi bi-building"></i></span>
+                        <span style="font-size:1.2rem; color:#10b981;"><i class="bi bi-building"></i></span>
                     </div>
                     <div class="zone-stats">
-                        <span><i class="bi bi-grid-3x3-gap-fill me-1" style="color:var(--accent-blue);"></i>Wards: <strong>{{ $zone['wards'] }}</strong></span>
-                        <span><i class="bi bi-building me-1" style="color:var(--accent-gold);"></i>Buildings: <strong>{{ number_format($zone['buildings']) }}</strong></span>
-                        <span><i class="bi bi-clipboard-data me-1" style="color:var(--accent-purple);"></i>Assessments: <strong>{{ number_format($zone['assessments']) }}</strong></span>
-                        <span><i class="bi bi-eye me-1" style="color:var(--accent-teal);"></i>Surveyed: <strong>{{ number_format($zone['surveyed']) }}</strong></span>
+                        <span><i class="bi bi-grid-3x3-gap-fill me-1" style="color:#3b82f6;"></i>Wards: <strong>{{ $zone['wards'] }}</strong></span>
+                        <span><i class="bi bi-building me-1" style="color:#f59e0b;"></i>Buildings: <strong>{{ number_format($zone['buildings']) }}</strong></span>
+                        <span><i class="bi bi-clipboard-data me-1" style="color:#8b5cf6;"></i>Assessments: <strong>{{ number_format($zone['assessments']) }}</strong></span>
+                        <span><i class="bi bi-eye me-1" style="color:#14b8a6;"></i>Surveyed: <strong>{{ number_format($zone['surveyed']) }}</strong></span>
                     </div>
                     <div class="tax-tags">
                         <span class="tax-tag water"><i class="bi bi-droplet me-1"></i>{{ $zone['water_tax'] ?? 0 }}</span>
@@ -1278,7 +875,7 @@
             </div>
             @empty
             <div class="col-12">
-                <div class="text-center py-4" style="color:var(--text-muted);">
+                <div class="text-center py-4 text-muted">
                     <i class="bi bi-diagram-3 fs-2 d-block mb-2"></i>
                     No zones found for this corporation
                 </div>
@@ -1290,11 +887,11 @@
 
 {{-- ── Tax Tables ── --}}
 <div class="row g-3 mb-4">
-    <div class="col-md-4 fade-in">
+    <div class="col-md-4">
         <div class="ds-card">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-droplet me-2" style="color:var(--accent-blue);"></i>Water Tax</div>
-                <a href="#" style="font-size:0.65rem; color:var(--accent-green); text-decoration:none; transition:all 0.2s;">View All</a>
+                <div class="ds-card-title"><i class="bi bi-droplet me-2" style="color:#2563eb;"></i>Water Tax</div>
+                <a href="#" style="font-size:0.7rem; color:#10b981; text-decoration:none;">View All</a>
             </div>
             <div style="overflow-x:auto;">
                 <table class="comm-table">
@@ -1308,12 +905,12 @@
                     <tbody>
                         @forelse($waterTaxData ?? [] as $item)
                         <tr>
-                            <td style="font-weight:600; font-size:0.7rem; color:var(--text-primary);">{{ $item['no'] }}</td>
-                            <td style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary);">{{ $item['amount'] }}</td>
+                            <td style="font-weight:600; font-size:0.75rem;">{{ $item['no'] }}</td>
+                            <td style="font-family:var(--font-mono); font-size:0.8rem;">{{ $item['amount'] }}</td>
                             <td><span class="badge-status {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="text-center py-2" style="font-size:0.75rem; color:var(--text-muted);">No data</td></tr>
+                        <tr><td colspan="3" class="text-center py-2 text-muted" style="font-size:0.75rem;">No data</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -1321,11 +918,11 @@
         </div>
     </div>
 
-    <div class="col-md-4 fade-in fade-in-delay-2">
+    <div class="col-md-4">
         <div class="ds-card">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-pipe me-2" style="color:var(--accent-gold);"></i>UGD Tax</div>
-                <a href="#" style="font-size:0.65rem; color:var(--accent-green); text-decoration:none; transition:all 0.2s;">View All</a>
+                <div class="ds-card-title"><i class="bi bi-pipe me-2" style="color:#d97706;"></i>UGD Tax</div>
+                <a href="#" style="font-size:0.7rem; color:#10b981; text-decoration:none;">View All</a>
             </div>
             <div style="overflow-x:auto;">
                 <table class="comm-table">
@@ -1339,12 +936,12 @@
                     <tbody>
                         @forelse($ugdData ?? [] as $item)
                         <tr>
-                            <td style="font-weight:600; font-size:0.7rem; color:var(--text-primary);">{{ $item['no'] }}</td>
-                            <td style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary);">{{ $item['amount'] }}</td>
+                            <td style="font-weight:600; font-size:0.75rem;">{{ $item['no'] }}</td>
+                            <td style="font-family:var(--font-mono); font-size:0.8rem;">{{ $item['amount'] }}</td>
                             <td><span class="badge-status {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="text-center py-2" style="font-size:0.75rem; color:var(--text-muted);">No data</td></tr>
+                        <tr><td colspan="3" class="text-center py-2 text-muted" style="font-size:0.75rem;">No data</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -1352,11 +949,11 @@
         </div>
     </div>
 
-    <div class="col-md-4 fade-in fade-in-delay-3">
+    <div class="col-md-4">
         <div class="ds-card">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-briefcase me-2" style="color:var(--accent-indigo);"></i>Professional Tax</div>
-                <a href="#" style="font-size:0.65rem; color:var(--accent-green); text-decoration:none; transition:all 0.2s;">View All</a>
+                <div class="ds-card-title"><i class="bi bi-briefcase me-2" style="color:#4f46e5;"></i>Professional Tax</div>
+                <a href="#" style="font-size:0.7rem; color:#10b981; text-decoration:none;">View All</a>
             </div>
             <div style="overflow-x:auto;">
                 <table class="comm-table">
@@ -1370,12 +967,12 @@
                     <tbody>
                         @forelse($professionalTaxData ?? [] as $item)
                         <tr>
-                            <td style="font-weight:600; font-size:0.7rem; color:var(--text-primary);">{{ $item['no'] }}</td>
-                            <td style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary);">{{ $item['amount'] }}</td>
+                            <td style="font-weight:600; font-size:0.75rem;">{{ $item['no'] }}</td>
+                            <td style="font-family:var(--font-mono); font-size:0.8rem;">{{ $item['amount'] }}</td>
                             <td><span class="badge-status {{ $item['status'] }}">{{ ucfirst($item['status']) }}</span></td>
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="text-center py-2" style="font-size:0.75rem; color:var(--text-muted);">No data</td></tr>
+                        <tr><td colspan="3" class="text-center py-2 text-muted" style="font-size:0.75rem;">No data</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -1386,18 +983,18 @@
 
 {{-- ── Recent Activities ── --}}
 <div class="row g-3 mb-4">
-    <div class="col-12 fade-in">
+    <div class="col-12">
         <div class="ds-card">
             <div class="ds-card-head">
-                <div class="ds-card-title"><i class="bi bi-activity me-2" style="color:var(--accent-green);"></i>Recent Activities</div>
-                <span style="font-size:0.65rem; color:var(--text-muted);">Live</span>
+                <div class="ds-card-title"><i class="bi bi-activity me-2" style="color:#10b981;"></i>Recent Activities</div>
+                <span style="font-size:0.68rem; color:#9ca3af;">Live</span>
             </div>
             <div class="ds-card-body">
                 <div class="row g-2">
                     @forelse($activities ?? [] as $activity)
                     <div class="col-xl-3 col-lg-4 col-md-6">
                         <div class="activity-item">
-                            <div class="act-icon" style="background:{{ $activity['color'] }}20; color:{{ $activity['color'] }};">
+                            <div class="act-icon" style="background:{{ $activity['color'] }}15; color:{{ $activity['color'] }};">
                                 <i class="bi bi-{{ $activity['icon'] }}"></i>
                             </div>
                             <div class="act-text">{!! $activity['text'] !!}</div>
@@ -1406,7 +1003,7 @@
                     </div>
                     @empty
                     <div class="col-12">
-                        <div class="text-center py-3" style="color:var(--text-muted);">No recent activities</div>
+                        <div class="text-center py-3 text-muted">No recent activities</div>
                     </div>
                     @endforelse
                 </div>
@@ -1421,318 +1018,20 @@
 
 @push('scripts')
 <script>
-    let map = null;
-    let mapInitialized = false;
-    let vectorSource = null;
-    let vectorLayer = null;
-    let pointLayer = null;
-    let currentFeatures = [];
-    let legendVisible = true;
-
-    /**
-     * Initialize the OpenLayers map
-     */
-    function initMap() {
-        if (mapInitialized) return;
-
-        const container = document.getElementById('map-container');
-        if (!container) return;
-
-        // Get corporation data from PHP
-        const corporationId = {{ isset($corporation) ? $corporation->id : 'null' }};
-        const corporationName = '{{ isset($corporation) ? addslashes($corporation->name) : '' }}';
-        const boundaries = @json(isset($allwardBoundary) ? $allwardBoundary : []);
-console.log(boundaries);
-        // Create vector source for boundaries
-        vectorSource = new ol.source.Vector({
-            features: []
+    document.addEventListener('DOMContentLoaded', function () {
+        const bars = document.querySelectorAll('.perf-bar .fill');
+        bars.forEach(bar => {
+            const w = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = w;
+            }, 200);
         });
-
-        // Create vector source for points
-        const pointSource = new ol.source.Vector({
-            features: []
-        });
-
-        // Create vector layer for boundaries with styling
-        vectorLayer = new ol.layer.Vector({
-            source: vectorSource,
-            style: function(feature) {
-                const type = feature.get('type') || 'ward';
-                let color, fillColor, strokeWidth = 2, lineDash = undefined;
-
-                switch(type) {
-                    case 'corporation':
-                        color = '#f59e0b';
-                        fillColor = 'rgba(245, 158, 11, 0.08)';
-                        strokeWidth = 3;
-                        lineDash = [8, 6];
-                        break;
-                    case 'zone':
-                        color = '#3b82f6';
-                        fillColor = 'rgba(59, 130, 246, 0.1)';
-                        strokeWidth = 2.5;
-                        break;
-                    case 'ward':
-                    default:
-                        color = '#10b981';
-                        fillColor = 'rgba(16, 185, 129, 0.12)';
-                        strokeWidth = 2;
-                        break;
-                }
-
-                return new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: fillColor
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: color,
-                        width: strokeWidth,
-                        lineDash: lineDash
-                    }),
-                    text: new ol.style.Text({
-                        text: feature.get('name') || '',
-                        fill: new ol.style.Fill({
-                            color: '#f1f5f9'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: 'rgba(10, 14, 26, 0.85)',
-                            width: 4
-                        }),
-                        font: '12px "Inter", "Segoe UI", sans-serif',
-                        textAlign: 'center',
-                        textBaseline: 'middle',
-                        offsetY: -10
-                    })
-                });
-            }
-        });
-
-        // Create point layer for survey points
-        pointLayer = new ol.layer.Vector({
-            source: pointSource,
-            style: new ol.style.Style({
-                image: new ol.style.Circle({
-                    radius: 6,
-                    fill: new ol.style.Fill({
-                        color: '#ef4444'
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: 'rgba(255,255,255,0.8)',
-                        width: 2
-                    })
-                }),
-                text: new ol.style.Text({
-                    text: '•',
-                    fill: new ol.style.Fill({
-                        color: '#ef4444'
-                    }),
-                    font: '16px sans-serif'
-                })
-            })
-        });
-
-        // Create the map
-        map = new ol.Map({
-            target: 'map-container',
-            layers: [
-                new ol.layer.Tile({
-                    source: new ol.source.OSM({
-                        attributions: [
-                            '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
-                        ]
-                    })
-                }),
-                vectorLayer,
-                pointLayer
-            ],
-            view: new ol.View({
-                center: ol.proj.fromLonLat([78.9629, 20.5937]), // Default center (India)
-                zoom: 5,
-                minZoom: 4,
-                maxZoom: 20
-            }),
-            controls: ol.control.defaults({
-                attributionOptions: {
-                    collapsible: true
-                }
-            }).extend([
-                new ol.control.ScaleLine({
-                    units: 'metric'
-                })
-            ])
-        });
-
-        mapInitialized = true;
-
-        // Hide loading overlay
-        document.getElementById('mapLoading').classList.add('hidden');
-
-        // Load boundaries
-        if (boundaries && boundaries.length > 0) {
-            loadBoundaries(boundaries);
-        } else {
-            // If no boundaries, try to fetch from server
-            if (corporationId) {
-                fetchBoundariesFromServer(corporationId);
-            } else {
-                addNoDataMessage();
-            }
-        }
-
-        // Handle resize
-        window.addEventListener('resize', function() {
-            if (map) {
-                setTimeout(() => map.updateSize(), 300);
-            }
-        });
-    }
-
-    /**
-     * Load boundaries from GeoJSON data
-     */
-    function loadBoundaries(boundaryData) {
-        try {
-            const features = [];
-
-            boundaryData.forEach((boundary, index) => {
-                if (typeof boundary === 'string') {
-                    try {
-                        const parsed = JSON.parse(boundary);
-                        if (parsed && (parsed.type === 'Polygon' || parsed.type === 'MultiPolygon')) {
-                            const geom = new ol.geom.Polygon(parsed.coordinates);
-                            const feature = new ol.Feature({
-                                geometry: geom.transform('EPSG:4326', 'EPSG:3857'),
-                                name: `Ward ${index + 1}`,
-                                type: 'ward',
-                                id: index + 1
-                            });
-                            features.push(feature);
-                        } else if (parsed && parsed.type === 'Feature') {
-                            const geom = new ol.format.GeoJSON().readGeometry(parsed.geometry);
-                            if (geom) {
-                                const feature = new ol.Feature({
-                                    geometry: geom.transform('EPSG:4326', 'EPSG:3857'),
-                                    name: parsed.properties?.name || `Ward ${index + 1}`,
-                                    type: parsed.properties?.type || 'ward',
-                                    id: parsed.properties?.id || index + 1
-                                });
-                                features.push(feature);
-                            }
-                        }
-                    } catch (e) {
-                        console.warn('Failed to parse boundary:', e);
-                    }
-                }
-            });
-
-            if (features.length > 0) {
-                vectorSource.addFeatures(features);
-                currentFeatures = features;
-
-                // Fit map to show all features
-                const extent = vectorSource.getExtent();
-                if (extent && !isNaN(extent[0]) && !isNaN(extent[1]) &&
-                    !isNaN(extent[2]) && !isNaN(extent[3])) {
-                    map.getView().fit(extent, {
-                        padding: [60, 60, 60, 60],
-                        maxZoom: 16,
-                        duration: 1000
-                    });
-                }
-            } else {
-                addNoDataMessage();
-            }
-        } catch (error) {
-            console.error('Error loading boundaries:', error);
-            addNoDataMessage();
-        }
-    }
-
-    /**
-     * Add a message when no data is available
-     */
-    function addNoDataMessage() {
-        // Show a placeholder on the map
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Point(ol.proj.fromLonLat([78.9629, 20.5937])),
-            name: 'No boundary data available'
-        });
-        // Don't add as a real feature, just show message
-        console.log('No boundary data available for this corporation');
-    }
-
-    /**
-     * Fetch boundaries from server via AJAX
-     */
-    function fetchBoundariesFromServer(corporationId) {
-        const loading = document.getElementById('mapLoading');
-        loading.classList.remove('hidden');
-
-        fetch(`/api/corporation/${corporationId}/boundaries`)
-            .then(response => response.json())
-            .then(data => {
-                loading.classList.add('hidden');
-                if (data && data.boundaries && data.boundaries.length > 0) {
-                    loadBoundaries(data.boundaries);
-                } else {
-                    addNoDataMessage();
-                }
-            })
-            .catch(error => {
-                loading.classList.add('hidden');
-                console.error('Error fetching boundaries:', error);
-                addNoDataMessage();
-            });
-    }
-
-    /**
-     * Reset map view to show all boundaries
-     */
-    function resetMapView() {
-        if (!map || !vectorSource) return;
-
-        const extent = vectorSource.getExtent();
-        if (extent && !isNaN(extent[0]) && !isNaN(extent[1]) &&
-            !isNaN(extent[2]) && !isNaN(extent[3])) {
-            map.getView().fit(extent, {
-                padding: [60, 60, 60, 60],
-                maxZoom: 16,
-                duration: 1000
-            });
-        } else {
-            map.getView().setCenter(ol.proj.fromLonLat([78.9629, 20.5937]));
-            map.getView().setZoom(5);
-        }
-    }
-
-    /**
-     * Focus map on corporation boundaries
-     */
-    function focusMapOnCorporation() {
-        resetMapView();
-        return false;
-    }
-
-    /**
-     * Toggle legend visibility
-     */
-    function toggleLegend() {
-        const legend = document.getElementById('mapLegend');
-        legendVisible = !legendVisible;
-        legend.style.display = legendVisible ? 'block' : 'none';
-    }
-
-    // Initialize map when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
-        // Wait for the layout to render
-        setTimeout(initMap, 500);
     });
+</script>
+<script>
+    const allwardBoundary = @json($getAllwardBoundary);
 
-    // Re-initialize if needed after page fully loads
-    window.addEventListener('load', function() {
-        if (!mapInitialized) {
-            setTimeout(initMap, 1000);
-        }
-    });
+    console.log(getAllwardBoundary);
 </script>
 @endpush
