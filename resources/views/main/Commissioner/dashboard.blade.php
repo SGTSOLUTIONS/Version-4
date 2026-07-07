@@ -10,8 +10,8 @@
         rel="stylesheet">
     <style>
         /* ══════════════════════════════════════════════
-                   DESIGN TOKENS — Government Revenue Portal
-                   ══════════════════════════════════════════════ */
+               DESIGN TOKENS — Government Revenue Portal
+               ══════════════════════════════════════════════ */
         :root {
             --font-display: 'Merriweather', Georgia, serif;
             --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -45,8 +45,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   OFFICIAL LETTERHEAD BAR
-                   ══════════════════════════════════════════════ */
+               OFFICIAL LETTERHEAD BAR
+               ══════════════════════════════════════════════ */
         .gov-letterhead {
             display: flex;
             align-items: center;
@@ -142,8 +142,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   BREADCRUMB + PAGE TITLE
-                   ══════════════════════════════════════════════ */
+               BREADCRUMB + PAGE TITLE
+               ══════════════════════════════════════════════ */
         .gov-breadcrumb {
             font-family: var(--font-body);
             font-size: 0.72rem;
@@ -201,8 +201,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   SECTION EYEBROWS (structural labels, not decoration)
-                   ══════════════════════════════════════════════ */
+               SECTION EYEBROWS (structural labels, not decoration)
+               ══════════════════════════════════════════════ */
         .gov-section {
             margin-bottom: 1.75rem;
         }
@@ -235,8 +235,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   HIERARCHY LEDGER (numbered process — genuinely sequential)
-                   ══════════════════════════════════════════════ */
+               HIERARCHY LEDGER (numbered process — genuinely sequential)
+               ══════════════════════════════════════════════ */
         .ledger-flow {
             display: flex;
             align-items: stretch;
@@ -298,8 +298,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   KPI CARDS — flat, official, minimal shadow
-                   ══════════════════════════════════════════════ */
+               KPI CARDS — flat, official, minimal shadow
+               ══════════════════════════════════════════════ */
         .kpi-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -360,8 +360,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   OFFICIAL CARD (containers for tables / lists)
-                   ══════════════════════════════════════════════ */
+               OFFICIAL CARD (containers for tables / lists)
+               ══════════════════════════════════════════════ */
         .gov-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -413,8 +413,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   TABLES — ledger style
-                   ══════════════════════════════════════════════ */
+               TABLES — ledger style
+               ══════════════════════════════════════════════ */
         .gov-table {
             width: 100%;
             border-collapse: collapse;
@@ -488,8 +488,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   ZONE REGISTER CARDS
-                   ══════════════════════════════════════════════ */
+               ZONE REGISTER CARDS
+               ══════════════════════════════════════════════ */
         .zone-register {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -581,8 +581,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   ACTION REGISTRY (quick actions)
-                   ══════════════════════════════════════════════ */
+               ACTION REGISTRY (quick actions)
+               ══════════════════════════════════════════════ */
         .action-registry {
             display: flex;
             flex-direction: column;
@@ -630,8 +630,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   PERFORMANCE BAR
-                   ══════════════════════════════════════════════ */
+               PERFORMANCE BAR
+               ══════════════════════════════════════════════ */
         .gov-perf-bar {
             height: 6px;
             border-radius: 3px;
@@ -648,8 +648,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   ACTIVITY LOG
-                   ══════════════════════════════════════════════ */
+               ACTIVITY LOG
+               ══════════════════════════════════════════════ */
         .log-entry {
             display: flex;
             gap: 0.75rem;
@@ -692,8 +692,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   ERROR STATE
-                   ══════════════════════════════════════════════ */
+               ERROR STATE
+               ══════════════════════════════════════════════ */
         .gov-error {
             text-align: center;
             padding: 3rem 1rem;
@@ -722,8 +722,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                   RESPONSIVE
-                   ══════════════════════════════════════════════ */
+               RESPONSIVE
+               ══════════════════════════════════════════════ */
         @media (max-width: 768px) {
             .ledger-flow {
                 flex-direction: column;
@@ -1352,10 +1352,10 @@
                 }, 200);
             });
         });
-        // Redirect function
-        function openWard(wardId) {
-            window.location.href = '/ward/map/' + wardId;
-        }
+ // Redirect function
+            function openWard(wardId) {
+                window.location.href = 'commissioner/ward/map/' + wardId;
+            }
 
         const allwardBoundary = @json($getAllwardBoundary ?? []);
         const waterTaxData = @json($waterTaxData ?? []);
