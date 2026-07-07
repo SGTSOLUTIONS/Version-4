@@ -1354,7 +1354,7 @@
         });
         // Redirect function
         function openWard(wardId) {
-            window.location.href = 'commissioner/ward/map/' + wardId;
+            window.location.href = '/ward/map/' + wardId;
         }
 
         const allwardBoundary = @json($getAllwardBoundary ?? []);
