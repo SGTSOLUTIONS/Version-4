@@ -126,7 +126,7 @@ Route::middleware(['auth', 'role:commissioner'])->prefix('commissioner')->name('
     Route::post('wards', [WardController::class, 'store'])->name('wards.store');
     Route::put('wards/{ward}', [WardController::class, 'update'])->name('wards.update');
 
-    Route::get('/ward/map/{id}', [CommissionerController::class, 'showMap'])
+    Route::get('map/{id}', [CommissionerController::class, 'showMap'])
         ->name('ward.showmap');
 
     // Add commissioner specific routes here
