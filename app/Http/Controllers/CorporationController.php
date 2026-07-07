@@ -35,10 +35,18 @@ class CorporationController extends Controller
     public function list(Request $request)
     {
         try {
+            $user = auth()->user();
+
             $query = Corporation::query()
                 ->select('corporations.*')
                 ->selectRaw('ST_AsGeoJSON(boundary) as boundary_geojson');
 
+            // Commissioner can see only their corporation
+            if ($user->role == 'commissioner') {
+                $query->where('id', $user->corporation_id);
+            }
+
+            // Admin can use filters
             if ($request->filled('corp_name')) {
                 $query->where('name', 'like', '%' . $request->corp_name . '%');
             }
@@ -404,36 +412,36 @@ class CorporationController extends Controller
     }
 
     public function destroy(Corporation $corporation)
-{
-    try {
-        $this->corporationService->dropCorporationTables($corporation->id);
-
-        DB::beginTransaction();
-
-        if ($corporation->image && !str_starts_with($corporation->image, 'http')) {
-            Storage::disk('public')->delete($corporation->image);
-        }
-
-        $corporation->delete();
-
-        DB::commit();
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Corporation deleted successfully.',
-        ]);
-    } catch (\Throwable $e) {
+    {
         try {
-            if (DB::transactionLevel() > 0) {
-                DB::rollBack();
-            }
-        } catch (\Throwable $rollbackError) {
-        }
+            $this->corporationService->dropCorporationTables($corporation->id);
 
-        return response()->json([
-            'status' => false,
-            'message' => $e->getMessage(),
-        ], 500);
+            DB::beginTransaction();
+
+            if ($corporation->image && !str_starts_with($corporation->image, 'http')) {
+                Storage::disk('public')->delete($corporation->image);
+            }
+
+            $corporation->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Corporation deleted successfully.',
+            ]);
+        } catch (\Throwable $e) {
+            try {
+                if (DB::transactionLevel() > 0) {
+                    DB::rollBack();
+                }
+            } catch (\Throwable $rollbackError) {
+            }
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
-}
 }
