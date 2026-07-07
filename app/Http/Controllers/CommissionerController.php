@@ -58,12 +58,6 @@ class CommissionerController extends Controller
         $surveyedAssessments = $this->getSurveyedAssessments($allWardIds);
         $connectedAssessments = $this->getConnectedAssessments($corporation->id, $allWardIds);
 
-        // ─── Collection Statistics ───
-        $totalcredits = $this->getTotalCredits($corporation->id);
-        $halfyearbalance = $this->getHalfYearBalance($corporation->id);
-        $yearCollection = $this->getYearCollection($corporation->id);
-        $totalCollection = $this->getTotalCollection($corporation->id);
-
         // ─── Half Year Tax Totals ───
         $misHalfYearTax = $this->getMisHalfYearTax($corporation->id);
         $waterTaxHalfYearTax = $this->getWaterTaxHalfYearTax($corporation->id);
@@ -71,7 +65,7 @@ class CommissionerController extends Controller
         $professionalTaxHalfYearTax = $this->getProfessionalTaxHalfYearTax($corporation->id);
         $totalHalfYearTax = $this->getHalfYearTaxTotal($corporation->id);
 
-        // ─── Tax-wise Collection ───
+        // ─── Tax-wise Collection (Paid Amounts) ───
         $waterTaxCollection = $this->getWaterTaxCollection($corporation->id);
         $ugdCollection = $this->getUgdCollection($corporation->id);
         $professionalTaxCollection = $this->getProfessionalTaxCollection($corporation->id);
@@ -95,10 +89,10 @@ class CommissionerController extends Controller
             'notin_mis' => $notinmis,
             'overdue_assessments' => $overdueAssessments,
             'paid_assessments' => $paidAssessments,
-            'total_credits' => $totalcredits,
-            'half_year_balance' => $halfyearbalance,
-            'year_collection' => $yearCollection,
-            'total_collection' => $totalCollection,
+            'total_credits' => $this->getTotalCredits($corporation->id),
+            'half_year_balance' => $this->getHalfYearBalance($corporation->id),
+            'year_collection' => $this->getYearCollection($corporation->id),
+            'total_collection' => $this->getTotalCollection($corporation->id),
             'surveyed' => $surveyedAssessments,
             'connected' => $connectedAssessments,
             'mis_count' => $misCount,
@@ -229,7 +223,7 @@ class CommissionerController extends Controller
         $buildingData = $this->getBuildingData($allWardIds, 10);
         $assessmentData = $this->getAssessmentData($corporation->id, 10);
 
-        // ─── Tax Data Tables ───
+        // ─── Tax Data Tables (Based on actual fields) ───
         $waterTaxData = $this->getWaterTaxData($corporation->id, 5);
         $ugdData = $this->getUgdData($corporation->id, 5);
         $professionalTaxData = $this->getProfessionalTaxData($corporation->id, 5);
@@ -266,7 +260,9 @@ class CommissionerController extends Controller
         ));
     }
 
-    // ─── Half Year Tax Methods ───
+    // ════════════════════════════════════════════════════════════════
+    // HALF YEAR TAX METHODS
+    // ════════════════════════════════════════════════════════════════
 
     private function getHalfYearTaxTotal($corporationId)
     {
@@ -287,8 +283,8 @@ class CommissionerController extends Controller
             try {
                 if (Schema::hasColumn($table, 'half_year_tax')) {
                     $total += DB::table($table)->sum('half_year_tax');
-                } elseif (Schema::hasColumn($table, 'amount')) {
-                    $total += DB::table($table)->sum('amount');
+                } elseif (Schema::hasColumn($table, 'ugd_tax_amount')) {
+                    $total += DB::table($table)->sum('ugd_tax_amount');
                 }
             } catch (\Exception $e) {
                 continue;
@@ -323,8 +319,8 @@ class CommissionerController extends Controller
         }
 
         try {
-            if (Schema::hasColumn($table, 'half_year_tax')) {
-                return DB::table($table)->sum('half_year_tax');
+            if (Schema::hasColumn($table, 'slab_rate')) {
+                return DB::table($table)->sum('slab_rate');
             }
         } catch (\Exception $e) {
             return 0;
@@ -340,8 +336,8 @@ class CommissionerController extends Controller
         }
 
         try {
-            if (Schema::hasColumn($table, 'half_year_tax')) {
-                return DB::table($table)->sum('half_year_tax');
+            if (Schema::hasColumn($table, 'ugd_tax_amount')) {
+                return DB::table($table)->sum('ugd_tax_amount');
             }
         } catch (\Exception $e) {
             return 0;
@@ -366,19 +362,101 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    // ─── Zone Performance Methods ───
+    // ════════════════════════════════════════════════════════════════
+    // COLLECTION METHODS (Paid Amounts)
+    // ════════════════════════════════════════════════════════════════
+
+    private function getMisCollection($corporationId)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'half_year_tax') && Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)
+                    ->where('balance', '=', 0)
+                    ->sum('half_year_tax');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getWaterTaxCollection($corporationId)
+    {
+        $table = 'water_tax_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'slab_rate') && Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)
+                    ->where('balance', '=', 0)
+                    ->sum('slab_rate');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getUgdCollection($corporationId)
+    {
+        $table = 'ugd_tax_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'ugd_tax_amount') && Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)
+                    ->where('balance', '=', 0)
+                    ->sum('ugd_tax_amount');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getProfessionalTaxCollection($corporationId)
+    {
+        $table = 'professional_tax_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'half_year_tax') && Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)
+                    ->where('balance', '=', 0)
+                    ->sum('half_year_tax');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // ZONE PERFORMANCE METHODS
+    // ════════════════════════════════════════════════════════════════
 
     private function getTotalHalfYearTaxByWards($corporationId, $wardIds)
     {
         $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_id')) {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
             return 0;
         }
 
         try {
             if (Schema::hasColumn($table, 'half_year_tax')) {
                 return DB::table($table)
-                    ->whereIn('ward_id', $wardIds)
+                    ->whereIn('ward_no', $wardIds)
                     ->sum('half_year_tax');
             }
         } catch (\Exception $e) {
@@ -390,15 +468,15 @@ class CommissionerController extends Controller
     private function getCollectedByWards($corporationId, $wardIds)
     {
         $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_id')) {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
             return 0;
         }
 
         try {
-            if (Schema::hasColumn($table, 'status') && Schema::hasColumn($table, 'half_year_tax')) {
+            if (Schema::hasColumn($table, 'half_year_tax') && Schema::hasColumn($table, 'balance')) {
                 return DB::table($table)
-                    ->whereIn('ward_id', $wardIds)
-                    ->where('status', 'paid')
+                    ->whereIn('ward_no', $wardIds)
+                    ->where('balance', '=', 0)
                     ->sum('half_year_tax');
             }
         } catch (\Exception $e) {
@@ -407,7 +485,229 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    // ─── Building Methods ───
+    // ════════════════════════════════════════════════════════════════
+    // ASSESSMENT METHODS
+    // ════════════════════════════════════════════════════════════════
+
+    private function getTotalAssessments($corporationId)
+    {
+        $table = 'mis_' . $corporationId;
+        if (Schema::hasTable($table)) {
+            try {
+                return DB::table($table)->count();
+            } catch (\Exception $e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    private function getTotalAssessmentsByWards($corporationId, $wardIds)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
+            return 0;
+        }
+
+        try {
+            return DB::table($table)->whereIn('ward_no', $wardIds)->count();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    private function getActiveAssessments($corporationId)
+    {
+        $misTable = 'mis_' . $corporationId;
+        if (!Schema::hasTable($misTable)) {
+            return 0;
+        }
+        return DB::table($misTable)->count();
+    }
+
+    private function getPaidAssessments($corporationId)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)
+                    ->where('balance', '=', 0)
+                    ->count();
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getOverdueAssessments($corporationId)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)
+                    ->where('balance', '>', 0)
+                    ->count();
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getNotInMis($corporationId, $wardIds)
+    {
+        $misTable = 'mis_' . $corporationId;
+        if (!Schema::hasTable($misTable)) {
+            return 0;
+        }
+
+        $assessments = [];
+        try {
+            $assessments = DB::table($misTable)->pluck('assessment')->filter()->toArray();
+        } catch (\Exception $e) {
+            return 0;
+        }
+
+        if (empty($assessments)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table)) {
+                try {
+                    $total += DB::table($table)
+                        ->whereNotIn('assessment', $assessments)
+                        ->count();
+                } catch (\Exception $e) {
+                    // Skip
+                }
+            }
+        }
+        return $total;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // SURVEY METHODS
+    // ════════════════════════════════════════════════════════════════
+
+    private function getSurveyedAssessments($wardIds)
+    {
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table)) {
+                try {
+                    $total += DB::table($table)->count();
+                } catch (\Exception $e) {
+                    // Skip
+                }
+            }
+        }
+        return $total;
+    }
+
+    private function getSurveyedByWards($wardIds)
+    {
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table)) {
+                try {
+                    $total += DB::table($table)->count();
+                } catch (\Exception $e) {
+                    // Skip
+                }
+            }
+        }
+        return $total;
+    }
+
+    private function getConnectedAssessments($corporationId, $wardIds)
+    {
+        $misTable = 'mis_' . $corporationId;
+        if (!Schema::hasTable($misTable)) {
+            return 0;
+        }
+
+        $gisids = [];
+        try {
+            if (Schema::hasColumn($misTable, 'gisid')) {
+                $gisids = DB::table($misTable)->pluck('gisid')->filter()->toArray();
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+
+        if (empty($gisids)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table) && Schema::hasColumn($table, 'gisid')) {
+                try {
+                    $total += DB::table($table)
+                        ->whereIn('gisid', $gisids)
+                        ->count();
+                } catch (\Exception $e) {
+                    // Skip
+                }
+            }
+        }
+        return $total;
+    }
+
+    private function getConnectedByWards($corporationId, $wardIds)
+    {
+        $misTable = 'mis_' . $corporationId;
+        if (!Schema::hasTable($misTable)) {
+            return 0;
+        }
+
+        $gisids = [];
+        try {
+            if (Schema::hasColumn($misTable, 'gisid')) {
+                $gisids = DB::table($misTable)->pluck('gisid')->filter()->toArray();
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+
+        if (empty($gisids)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table) && Schema::hasColumn($table, 'gisid')) {
+                try {
+                    $total += DB::table($table)
+                        ->whereIn('gisid', $gisids)
+                        ->count();
+                } catch (\Exception $e) {
+                    // Skip
+                }
+            }
+        }
+        return $total;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // BUILDING METHODS
+    // ════════════════════════════════════════════════════════════════
 
     private function getTotalBuildings($wardIds)
     {
@@ -500,272 +800,9 @@ class CommissionerController extends Controller
         ];
     }
 
-    // ─── Assessment Methods ───
-
-    private function getTotalAssessments($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (Schema::hasTable($table)) {
-            try {
-                return DB::table($table)->count();
-            } catch (\Exception $e) {
-                return 0;
-            }
-        }
-        return 0;
-    }
-
-    private function getTotalAssessmentsByWards($corporationId, $wardIds)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_id')) {
-            return 0;
-        }
-
-        try {
-            return DB::table($table)->whereIn('ward_id', $wardIds)->count();
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    private function getAssessmentData($corporationId, $limit = 10)
-    {
-        $assessments = [];
-        $table = 'mis_' . $corporationId;
-
-        if (!Schema::hasTable($table)) {
-            return $assessments;
-        }
-
-        try {
-            $columns = Schema::getColumnListing($table);
-            $select = ['id'];
-            if (in_array('assessment_no', $columns)) $select[] = 'assessment_no';
-            if (in_array('owner_name', $columns)) $select[] = 'owner_name';
-            if (in_array('building_no', $columns)) $select[] = 'building_no';
-            if (in_array('type', $columns)) $select[] = 'type';
-            if (in_array('amount', $columns)) $select[] = 'amount';
-            if (in_array('tax', $columns)) $select[] = 'tax as amount';
-            if (in_array('status', $columns)) $select[] = 'status';
-            if (in_array('created_at', $columns)) $select[] = 'created_at';
-            if (in_array('gis_id', $columns)) $select[] = 'gis_id';
-            if (in_array('ward_id', $columns)) $select[] = 'ward_id';
-            if (in_array('paid_at', $columns)) $select[] = 'paid_at';
-
-            $results = DB::table($table)
-                ->select($select)
-                ->orderBy('created_at', 'desc')
-                ->limit($limit)
-                ->get();
-
-            foreach ($results as $assessment) {
-                $ward = isset($assessment->ward_id) ? Ward::find($assessment->ward_id) : null;
-                $assessments[] = [
-                    'no' => $assessment->assessment_no ?? 'AST' . str_pad($assessment->id, 6, '0', STR_PAD_LEFT),
-                    'owner' => $assessment->owner_name ?? 'N/A',
-                    'building' => $assessment->building_no ?? 'N/A',
-                    'type' => $assessment->type ?? 'N/A',
-                    'tax' => $this->formatCurrency($assessment->amount ?? 0),
-                    'status' => $assessment->status ?? 'pending',
-                    'gis_id' => $assessment->gis_id ?? null,
-                    'ward' => $ward ? 'Ward ' . $ward->ward_no : 'N/A',
-                    'paid_at' => $assessment->paid_at ?? null,
-                ];
-            }
-        } catch (\Exception $e) {
-            // Skip
-        }
-
-        return $assessments;
-    }
-
-    private function getActiveAssessments($corporationId)
-    {
-        $misTable = 'mis_' . $corporationId;
-        if (!Schema::hasTable($misTable)) {
-            return 0;
-        }
-        return DB::table($misTable)->count();
-    }
-
-    private function getNotInMis($corporationId, $wardIds)
-    {
-        $misTable = 'mis_' . $corporationId;
-        if (!Schema::hasTable($misTable)) {
-            return 0;
-        }
-
-        $assessments = [];
-        try {
-            $assessments = DB::table($misTable)->pluck('assessment')->filter()->toArray();
-        } catch (\Exception $e) {
-            return 0;
-        }
-
-        if (empty($assessments)) {
-            return 0;
-        }
-
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table)) {
-                try {
-                    $total += DB::table($table)
-                        ->whereNotIn('assessment', $assessments)
-                        ->count();
-                } catch (\Exception $e) {
-                    // Skip
-                }
-            }
-        }
-        return $total;
-    }
-
-    private function getOverdueAssessments($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->where('balance', '>', 1000)
-                    ->count();
-            }
-        } catch (\Exception $e) {
-            // Skip
-        }
-        return 0;
-    }
-
-    private function getPaidAssessments($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'status')) {
-                return DB::table($table)
-                    ->where('status', 'paid')
-                    ->count();
-            }
-        } catch (\Exception $e) {
-            // Skip
-        }
-        return 0;
-    }
-
-    // ─── Survey Methods ───
-
-    private function getSurveyedAssessments($wardIds)
-    {
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table)) {
-                try {
-                    $total += DB::table($table)->count();
-                } catch (\Exception $e) {
-                    // Skip
-                }
-            }
-        }
-        return $total;
-    }
-
-    private function getSurveyedByWards($wardIds)
-    {
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table)) {
-                try {
-                    $total += DB::table($table)->count();
-                } catch (\Exception $e) {
-                    // Skip
-                }
-            }
-        }
-        return $total;
-    }
-
-    private function getConnectedAssessments($corporationId, $wardIds)
-    {
-        $misTable = 'mis_' . $corporationId;
-        if (!Schema::hasTable($misTable)) {
-            return 0;
-        }
-
-        $assessments = [];
-        try {
-            $assessments = DB::table($misTable)->pluck('assessment')->filter()->toArray();
-        } catch (\Exception $e) {
-            return 0;
-        }
-
-        if (empty($assessments)) {
-            return 0;
-        }
-
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table)) {
-                try {
-                    $total += DB::table($table)
-                        ->whereIn('assessment', $assessments)
-                        ->count();
-                } catch (\Exception $e) {
-                    // Skip
-                }
-            }
-        }
-        return $total;
-    }
-
-    private function getConnectedByWards($corporationId, $wardIds)
-    {
-        $misTable = 'mis_' . $corporationId;
-        if (!Schema::hasTable($misTable)) {
-            return 0;
-        }
-
-        $gisIds = [];
-        try {
-            if (Schema::hasColumn($misTable, 'gis_id')) {
-                $gisIds = DB::table($misTable)->pluck('gis_id')->filter()->toArray();
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-
-        if (empty($gisIds)) {
-            return 0;
-        }
-
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table) && Schema::hasColumn($table, 'gis_id')) {
-                try {
-                    $total += DB::table($table)
-                        ->whereIn('gis_id', $gisIds)
-                        ->count();
-                } catch (\Exception $e) {
-                    // Skip
-                }
-            }
-        }
-        return $total;
-    }
-
-    // ─── Tax Type Count Methods ───
+    // ════════════════════════════════════════════════════════════════
+    // TAX TYPE COUNT METHODS
+    // ════════════════════════════════════════════════════════════════
 
     private function getWaterTaxCount($corporationId)
     {
@@ -809,12 +846,12 @@ class CommissionerController extends Controller
     private function getWaterTaxByWards($corporationId, $wardIds)
     {
         $table = 'water_tax_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_id')) {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
             return 0;
         }
 
         try {
-            return DB::table($table)->whereIn('ward_id', $wardIds)->count();
+            return DB::table($table)->whereIn('ward_no', $wardIds)->count();
         } catch (\Exception $e) {
             return 0;
         }
@@ -823,12 +860,12 @@ class CommissionerController extends Controller
     private function getUgdByWards($corporationId, $wardIds)
     {
         $table = 'ugd_tax_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_id')) {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
             return 0;
         }
 
         try {
-            return DB::table($table)->whereIn('ward_id', $wardIds)->count();
+            return DB::table($table)->whereIn('ward_no', $wardIds)->count();
         } catch (\Exception $e) {
             return 0;
         }
@@ -837,18 +874,20 @@ class CommissionerController extends Controller
     private function getProfessionalTaxByWards($corporationId, $wardIds)
     {
         $table = 'professional_tax_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_id')) {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
             return 0;
         }
 
         try {
-            return DB::table($table)->whereIn('ward_id', $wardIds)->count();
+            return DB::table($table)->whereIn('ward_no', $wardIds)->count();
         } catch (\Exception $e) {
             return 0;
         }
     }
 
-    // ─── Collection Methods ───
+    // ════════════════════════════════════════════════════════════════
+    // COLLECTION STATS METHODS
+    // ════════════════════════════════════════════════════════════════
 
     private function getTotalCredits($corporationId)
     {
@@ -910,10 +949,10 @@ class CommissionerController extends Controller
         }
 
         try {
-            if (Schema::hasColumn($table, 'status') && Schema::hasColumn($table, 'amount')) {
+            if (Schema::hasColumn($table, 'half_year_tax') && Schema::hasColumn($table, 'balance')) {
                 return DB::table($table)
-                    ->where('status', 'paid')
-                    ->sum('amount');
+                    ->where('balance', '=', 0)
+                    ->sum('half_year_tax');
             }
         } catch (\Exception $e) {
             return 0;
@@ -924,16 +963,16 @@ class CommissionerController extends Controller
     private function getCollectionByWards($corporationId, $wardIds)
     {
         $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_id')) {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
             return 0;
         }
 
         try {
-            if (Schema::hasColumn($table, 'status') && Schema::hasColumn($table, 'amount')) {
+            if (Schema::hasColumn($table, 'half_year_tax') && Schema::hasColumn($table, 'balance')) {
                 return DB::table($table)
-                    ->whereIn('ward_id', $wardIds)
-                    ->where('status', 'paid')
-                    ->sum('amount');
+                    ->whereIn('ward_no', $wardIds)
+                    ->where('balance', '=', 0)
+                    ->sum('half_year_tax');
             }
         } catch (\Exception $e) {
             return 0;
@@ -944,15 +983,15 @@ class CommissionerController extends Controller
     private function getPendingByWards($corporationId, $wardIds)
     {
         $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_id')) {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
             return 0;
         }
 
         try {
-            if (Schema::hasColumn($table, 'status')) {
+            if (Schema::hasColumn($table, 'balance')) {
                 return DB::table($table)
-                    ->whereIn('ward_id', $wardIds)
-                    ->whereIn('status', ['pending', 'overdue'])
+                    ->whereIn('ward_no', $wardIds)
+                    ->where('balance', '>', 0)
                     ->count();
             }
         } catch (\Exception $e) {
@@ -961,83 +1000,9 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    private function getMisCollection($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'status') && Schema::hasColumn($table, 'amount')) {
-                return DB::table($table)
-                    ->where('status', 'paid')
-                    ->sum('amount');
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getWaterTaxCollection($corporationId)
-    {
-        $table = 'water_tax_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'status') && Schema::hasColumn($table, 'amount')) {
-                return DB::table($table)
-                    ->where('status', 'paid')
-                    ->sum('amount');
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getUgdCollection($corporationId)
-    {
-        $table = 'ugd_tax_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'status') && Schema::hasColumn($table, 'amount')) {
-                return DB::table($table)
-                    ->where('status', 'paid')
-                    ->sum('amount');
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getProfessionalTaxCollection($corporationId)
-    {
-        $table = 'professional_tax_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'status') && Schema::hasColumn($table, 'amount')) {
-                return DB::table($table)
-                    ->where('status', 'paid')
-                    ->sum('amount');
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    // ─── Owner Methods ───
+    // ════════════════════════════════════════════════════════════════
+    // OWNER METHODS
+    // ════════════════════════════════════════════════════════════════
 
     private function getTotalOwners($corporationId)
     {
@@ -1057,7 +1022,9 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    // ─── Tax Data Methods ───
+    // ════════════════════════════════════════════════════════════════
+    // TAX DATA METHODS (For Tables)
+    // ════════════════════════════════════════════════════════════════
 
     private function getWaterTaxData($corporationId, $limit = 5)
     {
@@ -1070,18 +1037,19 @@ class CommissionerController extends Controller
 
         try {
             $results = DB::table($table)
-                ->orderBy('created_at', 'desc')
+                ->orderBy('id', 'desc')
                 ->limit($limit)
                 ->get();
 
             foreach ($results as $item) {
-                $status = (!empty($item->gis_id)) ? 'paid' : 'pending';
+                $status = (!empty($item->gisid)) ? 'paid' : 'pending';
+                $amount = $item->slab_rate ?? 0;
 
                 $data[] = [
-                    'no' => $item->assessment_no ?? 'WT' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
-                    'amount' => $this->formatCurrency($item->half_year_tax ?? 0),
+                    'no' => $item->watertax_no ?? 'WT' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
+                    'amount' => $this->formatCurrency($amount),
                     'status' => $status,
-                    'gis_id' => $item->gis_id ?? null,
+                    'gis_id' => $item->gisid ?? null,
                 ];
             }
         } catch (\Exception $e) {
@@ -1102,18 +1070,19 @@ class CommissionerController extends Controller
 
         try {
             $results = DB::table($table)
-                ->orderBy('created_at', 'desc')
+                ->orderBy('id', 'desc')
                 ->limit($limit)
                 ->get();
 
             foreach ($results as $item) {
-                $status = (!empty($item->gis_id)) ? 'paid' : 'pending';
+                $status = (!empty($item->gisid)) ? 'paid' : 'pending';
+                $amount = $item->ugd_tax_amount ?? 0;
 
                 $data[] = [
-                    'no' => $item->assessment_no ?? 'UGD' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
-                    'amount' => $this->formatCurrency($item->half_year_tax ?? 0),
+                    'no' => $item->ugd_no ?? 'UGD' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
+                    'amount' => $this->formatCurrency($amount),
                     'status' => $status,
-                    'gis_id' => $item->gis_id ?? null,
+                    'gis_id' => $item->gisid ?? null,
                 ];
             }
         } catch (\Exception $e) {
@@ -1134,18 +1103,19 @@ class CommissionerController extends Controller
 
         try {
             $results = DB::table($table)
-                ->orderBy('created_at', 'desc')
+                ->orderBy('id', 'desc')
                 ->limit($limit)
                 ->get();
 
             foreach ($results as $item) {
-                $status = (!empty($item->gis_id)) ? 'paid' : 'pending';
+                $status = (!empty($item->gisid)) ? 'paid' : 'pending';
+                $amount = $item->half_year_tax ?? 0;
 
                 $data[] = [
-                    'no' => $item->assessment_no ?? 'PT' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
-                    'amount' => $this->formatCurrency($item->half_year_tax ?? 0),
+                    'no' => $item->pt_number ?? 'PT' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
+                    'amount' => $this->formatCurrency($amount),
                     'status' => $status,
-                    'gis_id' => $item->gis_id ?? null,
+                    'gis_id' => $item->gisid ?? null,
                 ];
             }
         } catch (\Exception $e) {
@@ -1155,7 +1125,9 @@ class CommissionerController extends Controller
         return $data;
     }
 
-    // ─── Activity Methods ───
+    // ════════════════════════════════════════════════════════════════
+    // ACTIVITY METHODS
+    // ════════════════════════════════════════════════════════════════
 
     private function getRecentActivities($corporationId)
     {
@@ -1200,16 +1172,22 @@ class CommissionerController extends Controller
                 $icon = $typeIcons[$tableType] ?? 'file-text';
 
                 $recentItems = DB::table($table)
-                    ->orderBy('created_at', 'desc')
+                    ->orderBy('id', 'desc')
                     ->limit(3)
                     ->get();
 
                 foreach ($recentItems as $item) {
-                    $itemNo = $item->assessment_no ?? $typeLabel . str_pad($item->id, 6, '0', STR_PAD_LEFT);
+                    // Get the appropriate number field
+                    $numberField = 'assessment_no';
+                    if ($tableType == 'water_tax') $numberField = 'watertax_no';
+                    elseif ($tableType == 'ugd_tax') $numberField = 'ugd_no';
+                    elseif ($tableType == 'professional_tax') $numberField = 'pt_number';
+
+                    $itemNo = $item->$numberField ?? $typeLabel . str_pad($item->id, 6, '0', STR_PAD_LEFT);
                     $ownerName = $item->owner_name ?? 'N/A';
 
                     $statusText = '';
-                    if (!empty($item->gis_id)) {
+                    if (!empty($item->gisid)) {
                         $statusText = '✓ Completed';
                     } else {
                         $statusText = '⏳ Pending';
@@ -1219,50 +1197,22 @@ class CommissionerController extends Controller
                         'icon' => $icon,
                         'color' => $color,
                         'text' => '<strong>' . $typeLabel . '</strong> ' . $itemNo . ' - ' . $ownerName . ' (' . $statusText . ')',
-                        'time' => $this->getTimeAgo($item->created_at ?? $item->updated_at ?? now()),
+                        'time' => $this->getTimeAgo(now()),
                     ];
                 }
-
-                $recentUpdates = DB::table($table)
-                    ->whereNotNull('updated_at')
-                    ->orderBy('updated_at', 'desc')
-                    ->limit(2)
-                    ->get();
-
-                foreach ($recentUpdates as $item) {
-                    $itemNo = $item->assessment_no ?? $typeLabel . str_pad($item->id, 6, '0', STR_PAD_LEFT);
-
-                    $exists = false;
-                    foreach ($activities as $activity) {
-                        if (strpos($activity['text'], $itemNo) !== false && strpos($activity['text'], 'updated') !== false) {
-                            $exists = true;
-                            break;
-                        }
-                    }
-
-                    if (!$exists && isset($item->updated_at)) {
-                        $activities[] = [
-                            'icon' => 'arrow-repeat',
-                            'color' => '#8b5cf6',
-                            'text' => '<strong>' . $typeLabel . '</strong> ' . $itemNo . ' was updated',
-                            'time' => $this->getTimeAgo($item->updated_at),
-                        ];
-                    }
-                }
-
             } catch (\Exception $e) {
                 // Skip if error
             }
         }
 
-        // Get entries from point_data tables
+        // Get entries from point_data tables (survey activities)
         try {
             $wardIds = $this->getWardIds($corporationId);
             foreach ($wardIds as $wardId) {
                 $table = 'point_data_' . $wardId;
                 if (Schema::hasTable($table)) {
                     $recentPoints = DB::table($table)
-                        ->orderBy('created_at', 'desc')
+                        ->orderBy('id', 'desc')
                         ->limit(2)
                         ->get();
 
@@ -1271,7 +1221,7 @@ class CommissionerController extends Controller
                             'icon' => 'pin-map',
                             'color' => '#e11d48',
                             'text' => '<strong>Survey Entry</strong> - Building ' . ($point->building_no ?? 'N/A') . ' surveyed in Ward ' . $wardId,
-                            'time' => $this->getTimeAgo($point->created_at ?? now()),
+                            'time' => $this->getTimeAgo(now()),
                         ];
                     }
                 }
@@ -1280,13 +1230,7 @@ class CommissionerController extends Controller
             // Skip
         }
 
-        // Sort by time and take latest 10
-        usort($activities, function ($a, $b) {
-            $timeA = $this->parseTimeAgo($a['time']);
-            $timeB = $this->parseTimeAgo($b['time']);
-            return $timeB - $timeA;
-        });
-
+        // Sort and take latest 10
         return array_slice($activities, 0, 10);
     }
 
@@ -1303,7 +1247,9 @@ class CommissionerController extends Controller
         return $wardIds;
     }
 
-    // ─── Helper Methods ───
+    // ════════════════════════════════════════════════════════════════
+    // HELPER METHODS
+    // ════════════════════════════════════════════════════════════════
 
     private function formatCurrency($amount)
     {
@@ -1338,24 +1284,6 @@ class CommissionerController extends Controller
         } catch (\Exception $e) {
             return 'N/A';
         }
-    }
-
-    private function parseTimeAgo($timeString)
-    {
-        if (strpos($timeString, 'seconds ago') !== false) {
-            $seconds = (int) filter_var($timeString, FILTER_SANITIZE_NUMBER_INT);
-            return now()->subSeconds($seconds)->timestamp;
-        } elseif (strpos($timeString, 'minutes ago') !== false) {
-            $minutes = (int) filter_var($timeString, FILTER_SANITIZE_NUMBER_INT);
-            return now()->subMinutes($minutes)->timestamp;
-        } elseif (strpos($timeString, 'hours ago') !== false) {
-            $hours = (int) filter_var($timeString, FILTER_SANITIZE_NUMBER_INT);
-            return now()->subHours($hours)->timestamp;
-        } elseif (strpos($timeString, 'days ago') !== false) {
-            $days = (int) filter_var($timeString, FILTER_SANITIZE_NUMBER_INT);
-            return now()->subDays($days)->timestamp;
-        }
-        return strtotime($timeString) ?: 0;
     }
 
     private function getAllwardBoundary($corporationId)
