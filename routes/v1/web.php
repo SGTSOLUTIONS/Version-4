@@ -87,7 +87,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('teams/{id}', [TeamManagementController::class, 'destroy'])->name('teams.destroy');
 });
 // Add this inside your routes file
-Route::get('/api/corporation/{id}/boundaries', function($id) {
+Route::get('/api/corporation/{id}/boundaries', function ($id) {
     $corporation = App\Models\Corporation::find($id);
     if (!$corporation) {
         return response()->json(['error' => 'Corporation not found'], 404);
@@ -126,8 +126,8 @@ Route::middleware(['auth', 'role:commissioner'])->prefix('commissioner')->name('
     Route::post('wards', [WardController::class, 'store'])->name('wards.store');
     Route::put('wards/{ward}', [WardController::class, 'update'])->name('wards.update');
 
-
-    Route::get('/ward/map/{id}', [CommissionerController::class, 'showMap'])->name('ward.showmap');
+    Route::get('/ward/map/{id}', [CommissionerController::class, 'showMap'])
+        ->name('ward.showmap');
 
     // Add commissioner specific routes here
 });

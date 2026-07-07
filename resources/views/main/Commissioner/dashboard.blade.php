@@ -1353,9 +1353,11 @@
             });
         });
  // Redirect function
-            function openWard(wardId) {
-                window.location.href = 'commissioner/ward/map/' + wardId;
-            }
+window.openWard = function (wardId) {
+    let url = "{{ route('commissioner.ward.showmap', ':id') }}";
+    url = url.replace(':id', wardId);
+    window.location.href = url;
+};
 
         const allwardBoundary = @json($getAllwardBoundary ?? []);
         const waterTaxData = @json($waterTaxData ?? []);
