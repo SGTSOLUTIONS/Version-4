@@ -41,6 +41,7 @@ class CommissionerController extends Controller
 
         $zones = $corporation->zones()->with(['wards'])->get();
         $allWardIds = $zones->flatMap(fn($zone) => $zone->wards->pluck('id'))->toArray();
+        $allWardNos = $zones->flatMap(fn($zone) => $zone->wards->pluck('ward_no'))->toArray();
 
         // ─── Hierarchy Statistics ───
         $totalZones = $zones->count();
@@ -58,14 +59,14 @@ class CommissionerController extends Controller
         $surveyedAssessments = $this->getSurveyedAssessments($allWardIds);
         $connectedAssessments = $this->getConnectedAssessments($corporation->id, $allWardIds);
 
-        // ─── Half Year Tax Totals ───
+        // ─── Half Year Tax Totals (All Tables) ───
         $misHalfYearTax = $this->getMisHalfYearTax($corporation->id);
         $waterTaxHalfYearTax = $this->getWaterTaxHalfYearTax($corporation->id);
         $ugdHalfYearTax = $this->getUgdHalfYearTax($corporation->id);
         $professionalTaxHalfYearTax = $this->getProfessionalTaxHalfYearTax($corporation->id);
         $totalHalfYearTax = $this->getHalfYearTaxTotal($corporation->id);
 
-        // ─── Balance Totals ───
+        // ─── Balance Totals (All Tables) ───
         $misBalance = $this->getMisBalance($corporation->id);
         $waterTaxBalance = $this->getWaterTaxBalance($corporation->id);
         $ugdBalance = $this->getUgdBalance($corporation->id);
@@ -105,7 +106,7 @@ class CommissionerController extends Controller
             'total_balance' => $totalBalance,
         ];
 
-        // ─── Tax Breakdown ───
+        // ─── Tax Breakdown (All Tables) ───
         $taxBreakdown = [
             'mis' => [
                 'count' => $misCount,
@@ -137,16 +138,17 @@ class CommissionerController extends Controller
         $zoneData = $zones->map(function ($zone) use ($corporation) {
             $wards = $zone->wards;
             $wardIds = $wards->pluck('id')->toArray();
+            $wardNos = $wards->pluck('ward_no')->toArray();
 
             $buildingsCount = $this->getBuildingsByWards($wardIds);
-            $assessmentsCount = $this->getTotalAssessmentsByWards($corporation->id, $wardIds);
-            $balance = $this->getBalanceByWards($corporation->id, $wardIds);
+            $assessmentsCount = $this->getTotalAssessmentsByWards($corporation->id, $wardNos);
+            $balance = $this->getBalanceByWards($corporation->id, $wardNos);
             $surveyed = $this->getSurveyedByWards($wardIds);
             $connected = $this->getConnectedByWards($corporation->id, $wardIds);
 
-            $zoneWaterTax = $this->getWaterTaxByWards($corporation->id, $wardIds);
-            $zoneUgd = $this->getUgdByWards($corporation->id, $wardIds);
-            $zoneProfessionalTax = $this->getProfessionalTaxByWards($corporation->id, $wardIds);
+            $zoneWaterTax = $this->getWaterTaxByWards($corporation->id, $wardNos);
+            $zoneUgd = $this->getUgdByWards($corporation->id, $wardNos);
+            $zoneProfessionalTax = $this->getProfessionalTaxByWards($corporation->id, $wardNos);
 
             $officer = User::where('role', 'teamleader')
                 ->where('zone_id', $zone->id)
@@ -169,12 +171,12 @@ class CommissionerController extends Controller
             ];
         });
 
-        // ─── Zone-wise Performance ───
+        // ─── Zone-wise Tax Summary ───
         $performanceZones = $zones->map(function ($zone) use ($corporation) {
-            $wardIds = $zone->wards->pluck('id')->toArray();
+            $wardNos = $zone->wards->pluck('ward_no')->toArray();
 
-            $totalHalfYearTax = $this->getTotalHalfYearTaxByWards($corporation->id, $wardIds);
-            $balance = $this->getBalanceByWards($corporation->id, $wardIds);
+            $totalHalfYearTax = $this->getTotalHalfYearTaxByWards($corporation->id, $wardNos);
+            $balance = $this->getBalanceByWards($corporation->id, $wardNos);
             $paid = $totalHalfYearTax - $balance;
 
             return [
@@ -192,9 +194,10 @@ class CommissionerController extends Controller
             ->get()
             ->map(function ($ward) use ($corporation) {
                 $wardIds = [$ward->id];
+                $wardNos = [$ward->ward_no];
                 $buildingsCount = $this->getBuildingsByWards($wardIds);
-                $assessmentsCount = $this->getTotalAssessmentsByWards($corporation->id, $wardIds);
-                $balance = $this->getBalanceByWards($corporation->id, $wardIds);
+                $assessmentsCount = $this->getTotalAssessmentsByWards($corporation->id, $wardNos);
+                $balance = $this->getBalanceByWards($corporation->id, $wardNos);
                 $surveyed = $this->getSurveyedByWards($wardIds);
                 $connected = $this->getConnectedByWards($corporation->id, $wardIds);
 
@@ -431,7 +434,7 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    private function getBalanceByWards($corporationId, $wardIds)
+    private function getBalanceByWards($corporationId, $wardNos)
     {
         $table = 'mis_' . $corporationId;
         if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
@@ -441,7 +444,7 @@ class CommissionerController extends Controller
         try {
             if (Schema::hasColumn($table, 'balance')) {
                 return DB::table($table)
-                    ->whereIn('ward_no', $wardIds)
+                    ->whereIn('ward_no', $wardNos)
                     ->sum('balance');
             }
         } catch (\Exception $e) {
@@ -454,7 +457,7 @@ class CommissionerController extends Controller
     // ZONE PERFORMANCE METHODS
     // ════════════════════════════════════════════════════════════════
 
-    private function getTotalHalfYearTaxByWards($corporationId, $wardIds)
+    private function getTotalHalfYearTaxByWards($corporationId, $wardNos)
     {
         $table = 'mis_' . $corporationId;
         if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
@@ -464,7 +467,7 @@ class CommissionerController extends Controller
         try {
             if (Schema::hasColumn($table, 'half_year_tax')) {
                 return DB::table($table)
-                    ->whereIn('ward_no', $wardIds)
+                    ->whereIn('ward_no', $wardNos)
                     ->sum('half_year_tax');
             }
         } catch (\Exception $e) {
@@ -490,7 +493,7 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    private function getTotalAssessmentsByWards($corporationId, $wardIds)
+    private function getTotalAssessmentsByWards($corporationId, $wardNos)
     {
         $table = 'mis_' . $corporationId;
         if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
@@ -498,7 +501,7 @@ class CommissionerController extends Controller
         }
 
         try {
-            return DB::table($table)->whereIn('ward_no', $wardIds)->count();
+            return DB::table($table)->whereIn('ward_no', $wardNos)->count();
         } catch (\Exception $e) {
             return 0;
         }
@@ -845,7 +848,7 @@ class CommissionerController extends Controller
     }
 
     // ════════════════════════════════════════════════════════════════
-    // TAX TYPE COUNT METHODS
+    // TAX TYPE COUNT METHODS (Based on ward_no)
     // ════════════════════════════════════════════════════════════════
 
     private function getWaterTaxCount($corporationId)
@@ -887,7 +890,7 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    private function getWaterTaxByWards($corporationId, $wardIds)
+    private function getWaterTaxByWards($corporationId, $wardNos)
     {
         $table = 'water_tax_' . $corporationId;
         if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
@@ -895,13 +898,13 @@ class CommissionerController extends Controller
         }
 
         try {
-            return DB::table($table)->whereIn('ward_no', $wardIds)->count();
+            return DB::table($table)->whereIn('ward_no', $wardNos)->count();
         } catch (\Exception $e) {
             return 0;
         }
     }
 
-    private function getUgdByWards($corporationId, $wardIds)
+    private function getUgdByWards($corporationId, $wardNos)
     {
         $table = 'ugd_tax_' . $corporationId;
         if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
@@ -909,13 +912,13 @@ class CommissionerController extends Controller
         }
 
         try {
-            return DB::table($table)->whereIn('ward_no', $wardIds)->count();
+            return DB::table($table)->whereIn('ward_no', $wardNos)->count();
         } catch (\Exception $e) {
             return 0;
         }
     }
 
-    private function getProfessionalTaxByWards($corporationId, $wardIds)
+    private function getProfessionalTaxByWards($corporationId, $wardNos)
     {
         $table = 'professional_tax_' . $corporationId;
         if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
@@ -923,7 +926,7 @@ class CommissionerController extends Controller
         }
 
         try {
-            return DB::table($table)->whereIn('ward_no', $wardIds)->count();
+            return DB::table($table)->whereIn('ward_no', $wardNos)->count();
         } catch (\Exception $e) {
             return 0;
         }

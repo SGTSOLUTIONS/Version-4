@@ -10,8 +10,8 @@
         rel="stylesheet">
     <style>
         /* ══════════════════════════════════════════════
-               DESIGN TOKENS — Government Revenue Portal
-               ══════════════════════════════════════════════ */
+                       DESIGN TOKENS — Government Revenue Portal
+                       ══════════════════════════════════════════════ */
         :root {
             --font-display: 'Merriweather', Georgia, serif;
             --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -45,8 +45,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               OFFICIAL LETTERHEAD BAR
-               ══════════════════════════════════════════════ */
+                       OFFICIAL LETTERHEAD BAR
+                       ══════════════════════════════════════════════ */
         .gov-letterhead {
             display: flex;
             align-items: center;
@@ -142,8 +142,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               BREADCRUMB + PAGE TITLE
-               ══════════════════════════════════════════════ */
+                       BREADCRUMB + PAGE TITLE
+                       ══════════════════════════════════════════════ */
         .gov-breadcrumb {
             font-family: var(--font-body);
             font-size: 0.72rem;
@@ -201,8 +201,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               SECTION EYEBROWS
-               ══════════════════════════════════════════════ */
+                       SECTION EYEBROWS
+                       ══════════════════════════════════════════════ */
         .gov-section {
             margin-bottom: 1.75rem;
         }
@@ -235,8 +235,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               HIERARCHY LEDGER
-               ══════════════════════════════════════════════ */
+                       HIERARCHY LEDGER
+                       ══════════════════════════════════════════════ */
         .ledger-flow {
             display: flex;
             align-items: stretch;
@@ -285,8 +285,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               KPI CARDS
-               ══════════════════════════════════════════════ */
+                       KPI CARDS
+                       ══════════════════════════════════════════════ */
         .kpi-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -347,8 +347,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               OFFICIAL CARD
-               ══════════════════════════════════════════════ */
+                       OFFICIAL CARD
+                       ══════════════════════════════════════════════ */
         .gov-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -400,8 +400,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               TABLES
-               ══════════════════════════════════════════════ */
+                       TABLES
+                       ══════════════════════════════════════════════ */
         .gov-table {
             width: 100%;
             border-collapse: collapse;
@@ -446,8 +446,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               BADGES
-               ══════════════════════════════════════════════ */
+                       BADGES
+                       ══════════════════════════════════════════════ */
         .gov-badge {
             padding: 0.2rem 0.6rem;
             border-radius: 4px;
@@ -484,8 +484,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               ZONE REGISTER CARDS
-               ══════════════════════════════════════════════ */
+                       ZONE REGISTER CARDS
+                       ══════════════════════════════════════════════ */
         .zone-register {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -570,8 +570,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               ACTION REGISTRY
-               ══════════════════════════════════════════════ */
+                       ACTION REGISTRY
+                       ══════════════════════════════════════════════ */
         .action-registry {
             display: flex;
             flex-direction: column;
@@ -619,8 +619,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               ACTIVITY LOG
-               ══════════════════════════════════════════════ */
+                       ACTIVITY LOG
+                       ══════════════════════════════════════════════ */
         .log-entry {
             display: flex;
             gap: 0.75rem;
@@ -663,8 +663,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               ERROR STATE
-               ══════════════════════════════════════════════ */
+                       ERROR STATE
+                       ══════════════════════════════════════════════ */
         .gov-error {
             text-align: center;
             padding: 3rem 1rem;
@@ -693,8 +693,8 @@
         }
 
         /* ══════════════════════════════════════════════
-               RESPONSIVE
-               ══════════════════════════════════════════════ */
+                       RESPONSIVE
+                       ══════════════════════════════════════════════ */
         @media (max-width: 768px) {
             .ledger-flow {
                 flex-direction: column;
@@ -743,7 +743,6 @@
             <p>Please contact your administrator to assign a corporation to your account.</p>
         </div>
     @else
-
         {{-- ══════════════════════════ BREADCRUMB + TITLE ══════════════════════════ --}}
         <div class="gov-breadcrumb">
             <a href="#">Home</a><span class="sep">/</span><a href="#">Office</a><span class="sep">/</span>
@@ -779,22 +778,26 @@
                 <div class="ledger-step">
                     <span class="step-no">03 — INVENTORY</span>
                     <span class="step-label">Buildings</span>
-                    <span class="step-value">{{ isset($hierarchyStats['buildings']) ? number_format($hierarchyStats['buildings']) : '0' }}</span>
+                    <span
+                        class="step-value">{{ isset($hierarchyStats['buildings']) ? number_format($hierarchyStats['buildings']) : '0' }}</span>
                 </div>
                 <div class="ledger-step">
                     <span class="step-no">04 — REGISTER</span>
                     <span class="step-label">Assessments</span>
-                    <span class="step-value">{{ isset($hierarchyStats['assessments']) ? number_format($hierarchyStats['assessments']) : '0' }}</span>
+                    <span
+                        class="step-value">{{ isset($hierarchyStats['assessments']) ? number_format($hierarchyStats['assessments']) : '0' }}</span>
                 </div>
                 <div class="ledger-step">
                     <span class="step-no">05 — VERIFICATION</span>
                     <span class="step-label">Surveyed</span>
-                    <span class="step-value">{{ isset($hierarchyStats['surveyed']) ? number_format($hierarchyStats['surveyed']) : '0' }}</span>
+                    <span
+                        class="step-value">{{ isset($hierarchyStats['surveyed']) ? number_format($hierarchyStats['surveyed']) : '0' }}</span>
                 </div>
                 <div class="ledger-step">
                     <span class="step-no">06 — VERIFICATION</span>
                     <span class="step-label">Connected</span>
-                    <span class="step-value">{{ isset($hierarchyStats['connected']) ? number_format($hierarchyStats['connected']) : '0' }}</span>
+                    <span
+                        class="step-value">{{ isset($hierarchyStats['connected']) ? number_format($hierarchyStats['connected']) : '0' }}</span>
                 </div>
             </div>
         </div>
@@ -807,7 +810,8 @@
                     <span class="gov-card-meta">{{ $hierarchyStats['wards'] ?? 0 }} wards mapped</span>
                 </div>
                 <div class="gov-card-body">
-                    <div id="wardMap" style="width:100%; height:460px; border-radius:6px; border:1px solid var(--border);"></div>
+                    <div id="wardMap"
+                        style="width:100%; height:460px; border-radius:6px; border:1px solid var(--border);"></div>
                 </div>
             </div>
         </div>
@@ -830,7 +834,8 @@
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-blue">
-                        <div class="kpi-icon" style="background:#eaf0fd; color:var(--status-blue);"><i class="bi bi-wallet2"></i></div>
+                        <div class="kpi-icon" style="background:#eaf0fd; color:var(--status-blue);"><i
+                                class="bi bi-wallet2"></i></div>
                         <div class="kpi-label">Total Balance</div>
                         <div class="kpi-value">
                             {{ isset($stats['total_balance']) && $stats['total_balance'] ? '₹' . number_format($stats['total_balance']) : '₹0' }}
@@ -839,7 +844,8 @@
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-gold">
-                        <div class="kpi-icon" style="background:var(--gov-gold-tint); color:var(--gov-gold);"><i class="bi bi-graph-up-arrow"></i></div>
+                        <div class="kpi-icon" style="background:var(--gov-gold-tint); color:var(--gov-gold);"><i
+                                class="bi bi-graph-up-arrow"></i></div>
                         <div class="kpi-label">Yearly Tax</div>
                         <div class="kpi-value">
                             {{ isset($stats['year_collection']) && $stats['year_collection'] ? '₹' . number_format($stats['year_collection']) : '₹0' }}
@@ -848,7 +854,8 @@
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-teal">
-                        <div class="kpi-icon" style="background:#e6f5f3; color:var(--status-teal);"><i class="bi bi-check-circle"></i></div>
+                        <div class="kpi-icon" style="background:#e6f5f3; color:var(--status-teal);"><i
+                                class="bi bi-check-circle"></i></div>
                         <div class="kpi-label">Total Paid</div>
                         <div class="kpi-value">
                             {{ isset($stats['total_collection']) && $stats['total_collection'] ? '₹' . number_format($stats['total_collection']) : '₹0' }}
@@ -869,49 +876,63 @@
                     <div class="kpi-card">
                         <div class="kpi-icon"><i class="bi bi-clipboard-data"></i></div>
                         <div class="kpi-label">Total Assessments (MIS)</div>
-                        <div class="kpi-value">{{ isset($stats['mis_count']) ? number_format($stats['mis_count']) : '0' }}</div>
+                        <div class="kpi-value">{{ isset($stats['mis_count']) ? number_format($stats['mis_count']) : '0' }}
+                        </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-blue">
-                        <div class="kpi-icon" style="background:#eaf0fd; color:var(--status-blue);"><i class="bi bi-check-circle"></i></div>
+                        <div class="kpi-icon" style="background:#eaf0fd; color:var(--status-blue);"><i
+                                class="bi bi-check-circle"></i></div>
                         <div class="kpi-label">Active Assessments</div>
-                        <div class="kpi-value">{{ isset($stats['active_assessments']) ? number_format($stats['active_assessments']) : '0' }}</div>
+                        <div class="kpi-value">
+                            {{ isset($stats['active_assessments']) ? number_format($stats['active_assessments']) : '0' }}
+                        </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-gold">
-                        <div class="kpi-icon" style="background:var(--gov-gold-tint); color:var(--gov-gold);"><i class="bi bi-hourglass-split"></i></div>
+                        <div class="kpi-icon" style="background:var(--gov-gold-tint); color:var(--gov-gold);"><i
+                                class="bi bi-hourglass-split"></i></div>
                         <div class="kpi-label">Not in MIS</div>
-                        <div class="kpi-value">{{ isset($stats['notin_mis']) ? number_format($stats['notin_mis']) : '0' }}</div>
+                        <div class="kpi-value">{{ isset($stats['notin_mis']) ? number_format($stats['notin_mis']) : '0' }}
+                        </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-red">
-                        <div class="kpi-icon" style="background:#fdecec; color:var(--status-red);"><i class="bi bi-exclamation-triangle"></i></div>
+                        <div class="kpi-icon" style="background:#fdecec; color:var(--status-red);"><i
+                                class="bi bi-exclamation-triangle"></i></div>
                         <div class="kpi-label">Overdue Assessments</div>
-                        <div class="kpi-value">{{ isset($stats['overdue_assessments']) ? number_format($stats['overdue_assessments']) : '0' }}</div>
+                        <div class="kpi-value">
+                            {{ isset($stats['overdue_assessments']) ? number_format($stats['overdue_assessments']) : '0' }}
+                        </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card">
                         <div class="kpi-icon"><i class="bi bi-check2-all"></i></div>
                         <div class="kpi-label">Paid Assessments</div>
-                        <div class="kpi-value">{{ isset($stats['paid_assessments']) ? number_format($stats['paid_assessments']) : '0' }}</div>
+                        <div class="kpi-value">
+                            {{ isset($stats['paid_assessments']) ? number_format($stats['paid_assessments']) : '0' }}</div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-purple">
-                        <div class="kpi-icon" style="background:#f2ecfb; color:var(--status-purple);"><i class="bi bi-eye"></i></div>
+                        <div class="kpi-icon" style="background:#f2ecfb; color:var(--status-purple);"><i
+                                class="bi bi-eye"></i></div>
                         <div class="kpi-label">Surveyed</div>
-                        <div class="kpi-value">{{ isset($stats['surveyed']) ? number_format($stats['surveyed']) : '0' }}</div>
+                        <div class="kpi-value">{{ isset($stats['surveyed']) ? number_format($stats['surveyed']) : '0' }}
+                        </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-teal">
-                        <div class="kpi-icon" style="background:#e6f5f3; color:var(--status-teal);"><i class="bi bi-link-45deg"></i></div>
+                        <div class="kpi-icon" style="background:#e6f5f3; color:var(--status-teal);"><i
+                                class="bi bi-link-45deg"></i></div>
                         <div class="kpi-label">Connected</div>
-                        <div class="kpi-value">{{ isset($stats['connected']) ? number_format($stats['connected']) : '0' }}</div>
+                        <div class="kpi-value">{{ isset($stats['connected']) ? number_format($stats['connected']) : '0' }}
+                        </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
@@ -933,23 +954,30 @@
             <div class="row g-3">
                 <div class="col-xl-4 col-md-6">
                     <div class="kpi-card accent-blue">
-                        <div class="kpi-icon" style="background:#eaf0fd; color:var(--status-blue);"><i class="bi bi-droplet"></i></div>
+                        <div class="kpi-icon" style="background:#eaf0fd; color:var(--status-blue);"><i
+                                class="bi bi-droplet"></i></div>
                         <div class="kpi-label">Water Tax</div>
-                        <div class="kpi-value">{{ isset($stats['water_tax_count']) ? number_format($stats['water_tax_count']) : '0' }}</div>
+                        <div class="kpi-value">
+                            {{ isset($stats['water_tax_count']) ? number_format($stats['water_tax_count']) : '0' }}</div>
                     </div>
                 </div>
                 <div class="col-xl-4 col-md-6">
                     <div class="kpi-card accent-gold">
-                        <div class="kpi-icon" style="background:var(--gov-gold-tint); color:var(--gov-gold);"><i class="bi bi-pipe"></i></div>
+                        <div class="kpi-icon" style="background:var(--gov-gold-tint); color:var(--gov-gold);"><i
+                                class="bi bi-pipe"></i></div>
                         <div class="kpi-label">UGD Tax</div>
-                        <div class="kpi-value">{{ isset($stats['ugd_count']) ? number_format($stats['ugd_count']) : '0' }}</div>
+                        <div class="kpi-value">{{ isset($stats['ugd_count']) ? number_format($stats['ugd_count']) : '0' }}
+                        </div>
                     </div>
                 </div>
                 <div class="col-xl-4 col-md-6">
                     <div class="kpi-card accent-purple">
-                        <div class="kpi-icon" style="background:#f2ecfb; color:var(--status-purple);"><i class="bi bi-briefcase"></i></div>
+                        <div class="kpi-icon" style="background:#f2ecfb; color:var(--status-purple);"><i
+                                class="bi bi-briefcase"></i></div>
                         <div class="kpi-label">Professional Tax</div>
-                        <div class="kpi-value">{{ isset($stats['professional_tax_count']) ? number_format($stats['professional_tax_count']) : '0' }}</div>
+                        <div class="kpi-value">
+                            {{ isset($stats['professional_tax_count']) ? number_format($stats['professional_tax_count']) : '0' }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -966,19 +994,24 @@
                         <div class="gov-card-body">
                             <div class="action-registry">
                                 <a href="{{ route('commissioner.map') ?? '#' }}" class="action-row">
-                                    <span class="num">01</span><i class="bi bi-map"></i> View Ward Map <span class="arrow">→</span>
+                                    <span class="num">01</span><i class="bi bi-map"></i> View Ward Map <span
+                                        class="arrow">→</span>
                                 </a>
                                 <a href="#" class="action-row">
-                                    <span class="num">02</span><i class="bi bi-file-spreadsheet"></i> Collection Report <span class="arrow">→</span>
+                                    <span class="num">02</span><i class="bi bi-file-spreadsheet"></i> Collection Report
+                                    <span class="arrow">→</span>
                                 </a>
                                 <a href="#" class="action-row">
-                                    <span class="num">03</span><i class="bi bi-exclamation-triangle"></i> Pending Report <span class="arrow">→</span>
+                                    <span class="num">03</span><i class="bi bi-exclamation-triangle"></i> Pending
+                                    Report <span class="arrow">→</span>
                                 </a>
                                 <a href="#" class="action-row">
-                                    <span class="num">04</span><i class="bi bi-file-earmark-excel"></i> Export to Excel <span class="arrow">→</span>
+                                    <span class="num">04</span><i class="bi bi-file-earmark-excel"></i> Export to Excel
+                                    <span class="arrow">→</span>
                                 </a>
                                 <a href="#" class="action-row">
-                                    <span class="num">05</span><i class="bi bi-printer"></i> Print Report <span class="arrow">→</span>
+                                    <span class="num">05</span><i class="bi bi-printer"></i> Print Report <span
+                                        class="arrow">→</span>
                                 </a>
                             </div>
                         </div>
@@ -1025,7 +1058,8 @@
                                         @endphp
                                         <tr>
                                             <td>
-                                                <i class="bi bi-{{ $icons[$key] ?? 'file-text' }} me-2" style="color:var(--gov-green);"></i>
+                                                <i class="bi bi-{{ $icons[$key] ?? 'file-text' }} me-2"
+                                                    style="color:var(--gov-green);"></i>
                                                 {{ $labels[$key] ?? ucfirst($key) }}
                                             </td>
                                             <td class="mono">{{ number_format($tax['count']) }}</td>
@@ -1041,7 +1075,8 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center py-3 text-muted">No tax data available</td>
+                                            <td colspan="5" class="text-center py-3 text-muted">No tax data available
+                                            </td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -1057,10 +1092,14 @@
                                 <tfoot>
                                     <tr style="background: var(--gov-green-tint); font-weight: 700;">
                                         <td><strong>TOTAL</strong></td>
-                                        <td class="mono">{{ number_format(array_sum(array_column($taxBreakdown ?? [], 'count'))) }}</td>
-                                        <td class="mono" style="color:var(--ink-900);">₹{{ number_format($totalHalfYear) }}</td>
-                                        <td class="mono" style="color:var(--status-red);">₹{{ number_format($totalBalance) }}</td>
-                                        <td class="mono" style="color:var(--gov-green);">₹{{ number_format($totalPaid) }}</td>
+                                        <td class="mono">
+                                            {{ number_format(array_sum(array_column($taxBreakdown ?? [], 'count'))) }}</td>
+                                        <td class="mono" style="color:var(--ink-900);">
+                                            ₹{{ number_format($totalHalfYear) }}</td>
+                                        <td class="mono" style="color:var(--status-red);">
+                                            ₹{{ number_format($totalBalance) }}</td>
+                                        <td class="mono" style="color:var(--gov-green);">
+                                            ₹{{ number_format($totalPaid) }}</td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -1093,11 +1132,13 @@
                                     <td style="font-weight:700; color:var(--ink-900);">{{ $zone['name'] }}</td>
                                     <td class="mono">{{ $zone['total_tax'] }}</td>
                                     <td class="mono" style="color:var(--status-red);">{{ $zone['balance'] }}</td>
-                                    <td class="mono" style="color:var(--gov-green); font-weight:700;">{{ $zone['paid'] }}</td>
+                                    <td class="mono" style="color:var(--gov-green); font-weight:700;">
+                                        {{ $zone['paid'] }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-3 text-muted">No zones found for this corporation</td>
+                                    <td colspan="4" class="text-center py-3 text-muted">No zones found for this
+                                        corporation</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -1120,7 +1161,8 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <div class="zone-name">{{ $zone['name'] }}</div>
-                                    <div class="zone-officer"><i class="bi bi-person-badge me-1"></i>{{ $zone['officer'] }}</div>
+                                    <div class="zone-officer"><i
+                                            class="bi bi-person-badge me-1"></i>{{ $zone['officer'] }}</div>
                                 </div>
                                 <i class="bi bi-building" style="color:var(--gov-green); font-size:1.1rem;"></i>
                             </div>
@@ -1131,9 +1173,11 @@
                                 <span>Surveyed: <strong>{{ number_format($zone['surveyed']) }}</strong></span>
                             </div>
                             <div class="tax-tags">
-                                <span class="tax-tag"><i class="bi bi-droplet me-1"></i>{{ $zone['water_tax'] ?? 0 }}</span>
+                                <span class="tax-tag"><i
+                                        class="bi bi-droplet me-1"></i>{{ $zone['water_tax'] ?? 0 }}</span>
                                 <span class="tax-tag"><i class="bi bi-pipe me-1"></i>{{ $zone['ugd'] ?? 0 }}</span>
-                                <span class="tax-tag"><i class="bi bi-briefcase me-1"></i>{{ $zone['professional_tax'] ?? 0 }}</span>
+                                <span class="tax-tag"><i
+                                        class="bi bi-briefcase me-1"></i>{{ $zone['professional_tax'] ?? 0 }}</span>
                             </div>
                             <div class="zone-footer">
                                 <span class="zone-balance">Balance: {{ $zone['balance'] }}</span>
@@ -1179,11 +1223,14 @@
                                         <tr>
                                             <td style="font-weight:600; font-size:0.75rem;">{{ $item['no'] }}</td>
                                             <td class="mono" style="font-size:0.78rem;">{{ $item['amount'] }}</td>
-                                            <td><span class="gov-badge {{ $item['status'] }}">{{ $item['status'] }}</span></td>
+                                            <td><span
+                                                    class="gov-badge {{ $item['status'] }}">{{ $item['status'] }}</span>
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-center py-2 text-muted" style="font-size:0.75rem;">No data</td>
+                                            <td colspan="3" class="text-center py-2 text-muted"
+                                                style="font-size:0.75rem;">No data</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -1213,11 +1260,14 @@
                                         <tr>
                                             <td style="font-weight:600; font-size:0.75rem;">{{ $item['no'] }}</td>
                                             <td class="mono" style="font-size:0.78rem;">{{ $item['amount'] }}</td>
-                                            <td><span class="gov-badge {{ $item['status'] }}">{{ $item['status'] }}</span></td>
+                                            <td><span
+                                                    class="gov-badge {{ $item['status'] }}">{{ $item['status'] }}</span>
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-center py-2 text-muted" style="font-size:0.75rem;">No data</td>
+                                            <td colspan="3" class="text-center py-2 text-muted"
+                                                style="font-size:0.75rem;">No data</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -1247,11 +1297,14 @@
                                         <tr>
                                             <td style="font-weight:600; font-size:0.75rem;">{{ $item['no'] }}</td>
                                             <td class="mono" style="font-size:0.78rem;">{{ $item['amount'] }}</td>
-                                            <td><span class="gov-badge {{ $item['status'] }}">{{ $item['status'] }}</span></td>
+                                            <td><span
+                                                    class="gov-badge {{ $item['status'] }}">{{ $item['status'] }}</span>
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-center py-2 text-muted" style="font-size:0.75rem;">No data</td>
+                                            <td colspan="3" class="text-center py-2 text-muted"
+                                                style="font-size:0.75rem;">No data</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -1267,8 +1320,10 @@
             <div class="gov-card">
                 <div class="gov-card-head">
                     <div class="gov-card-title"><i class="bi bi-journal-text"></i> Recent Activity Log</div>
-                    <span class="gov-status-chip" style="background:var(--gov-green-tint); border-color:#cbe9d8; color:var(--gov-green-dark);">
-                        <span class="dot" style="background:var(--gov-green); box-shadow:0 0 0 3px rgba(15,107,71,0.15);"></span>
+                    <span class="gov-status-chip"
+                        style="background:var(--gov-green-tint); border-color:#cbe9d8; color:var(--gov-green-dark);">
+                        <span class="dot"
+                            style="background:var(--gov-green); box-shadow:0 0 0 3px rgba(15,107,71,0.15);"></span>
                         Live
                     </span>
                 </div>
@@ -1277,7 +1332,8 @@
                         @forelse($activities ?? [] as $activity)
                             <div class="col-md-6">
                                 <div class="log-entry" style="padding-right: 1rem;">
-                                    <div class="log-icon" style="background:{{ $activity['color'] }}18; color:{{ $activity['color'] }};">
+                                    <div class="log-icon"
+                                        style="background:{{ $activity['color'] }}18; color:{{ $activity['color'] }};">
                                         <i class="bi bi-{{ $activity['icon'] }}"></i>
                                     </div>
                                     <div class="log-text">{!! $activity['text'] !!}</div>
