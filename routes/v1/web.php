@@ -127,7 +127,7 @@ Route::middleware(['auth', 'role:commissioner'])->prefix('commissioner')->name('
     Route::put('wards/{ward}', [WardController::class, 'update'])->name('wards.update');
 
 
-    Route::get('/ward/map/{id}', [WardController::class, 'showMap'])->name('ward.showmap');
+    Route::get('/ward/map/{id}', [CorporationController::class, 'showMap'])->name('ward.showmap');
 
     // Add commissioner specific routes here
 });
