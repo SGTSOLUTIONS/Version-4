@@ -562,18 +562,11 @@
             align-items: baseline;
         }
 
-        .zone-register .zone-collection {
+        .zone-register .zone-balance {
             font-family: var(--font-mono);
             font-weight: 700;
-            color: var(--gov-green);
-            font-size: 1rem;
-        }
-
-        .zone-register .zone-pending {
-            font-family: var(--font-mono);
-            font-weight: 600;
             color: var(--status-red);
-            font-size: 0.78rem;
+            font-size: 1rem;
         }
 
         /* ══════════════════════════════════════════════
@@ -623,24 +616,6 @@
         .action-row .arrow {
             margin-left: auto;
             color: var(--ink-300);
-        }
-
-        /* ══════════════════════════════════════════════
-               PERFORMANCE BAR
-               ══════════════════════════════════════════════ */
-        .gov-perf-bar {
-            height: 6px;
-            border-radius: 3px;
-            background: var(--border);
-            overflow: hidden;
-            min-width: 70px;
-            flex: 1;
-        }
-
-        .gov-perf-bar .fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.6s ease;
         }
 
         /* ══════════════════════════════════════════════
@@ -847,9 +822,9 @@
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card">
                         <div class="kpi-icon"><i class="bi bi-calendar-day"></i></div>
-                        <div class="kpi-label">Half Year Demand</div>
+                        <div class="kpi-label">Half Year Tax</div>
                         <div class="kpi-value">
-                            {{ isset($stats['total_credits']) && $stats['total_credits'] ? '₹' . number_format($stats['total_credits']) : '₹0' }}
+                            {{ isset($stats['total_half_year_tax']) && $stats['total_half_year_tax'] ? '₹' . number_format($stats['total_half_year_tax']) : '₹0' }}
                         </div>
                     </div>
                 </div>
@@ -858,14 +833,14 @@
                         <div class="kpi-icon" style="background:#eaf0fd; color:var(--status-blue);"><i class="bi bi-wallet2"></i></div>
                         <div class="kpi-label">Total Balance</div>
                         <div class="kpi-value">
-                            {{ isset($stats['half_year_balance']) && $stats['half_year_balance'] ? '₹' . number_format($stats['half_year_balance']) : '₹0' }}
+                            {{ isset($stats['total_balance']) && $stats['total_balance'] ? '₹' . number_format($stats['total_balance']) : '₹0' }}
                         </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-gold">
                         <div class="kpi-icon" style="background:var(--gov-gold-tint); color:var(--gov-gold);"><i class="bi bi-graph-up-arrow"></i></div>
-                        <div class="kpi-label">Yearly Demand</div>
+                        <div class="kpi-label">Yearly Tax</div>
                         <div class="kpi-value">
                             {{ isset($stats['year_collection']) && $stats['year_collection'] ? '₹' . number_format($stats['year_collection']) : '₹0' }}
                         </div>
@@ -873,10 +848,10 @@
                 </div>
                 <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-teal">
-                        <div class="kpi-icon" style="background:#e6f5f3; color:var(--status-teal);"><i class="bi bi-calculator"></i></div>
-                        <div class="kpi-label">Total Half Year Tax</div>
+                        <div class="kpi-icon" style="background:#e6f5f3; color:var(--status-teal);"><i class="bi bi-check-circle"></i></div>
+                        <div class="kpi-label">Total Paid</div>
                         <div class="kpi-value">
-                            {{ isset($stats['total_half_year_tax']) && $stats['total_half_year_tax'] ? '₹' . number_format($stats['total_half_year_tax']) : '₹0' }}
+                            {{ isset($stats['total_collection']) && $stats['total_collection'] ? '₹' . number_format($stats['total_collection']) : '₹0' }}
                         </div>
                     </div>
                 </div>
@@ -1024,8 +999,8 @@
                                         <th>Tax Category</th>
                                         <th>Count</th>
                                         <th>Half Year Tax (₹)</th>
-                                        <th>Collected (₹)</th>
-                                        <th>Pending (₹)</th>
+                                        <th>Balance (₹)</th>
+                                        <th>Paid (₹)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1045,8 +1020,8 @@
                                             ];
 
                                             $halfYearTax = $tax['half_year_tax'] ?? 0;
-                                            $collected = $tax['collection'] ?? 0;
-                                            $pending = $halfYearTax - $collected;
+                                            $balance = $tax['balance'] ?? 0;
+                                            $paid = $halfYearTax - $balance;
                                         @endphp
                                         <tr>
                                             <td>
@@ -1057,11 +1032,11 @@
                                             <td class="mono" style="font-weight:700; color:var(--ink-900);">
                                                 {{ $halfYearTax ? '₹' . number_format($halfYearTax) : '₹0' }}
                                             </td>
-                                            <td class="mono" style="color:var(--gov-green); font-weight:700;">
-                                                {{ $collected ? '₹' . number_format($collected) : '₹0' }}
-                                            </td>
                                             <td class="mono" style="color:var(--status-red); font-weight:700;">
-                                                {{ $pending > 0 ? '₹' . number_format($pending) : '₹0' }}
+                                                {{ $balance > 0 ? '₹' . number_format($balance) : '₹0' }}
+                                            </td>
+                                            <td class="mono" style="color:var(--gov-green); font-weight:700;">
+                                                {{ $paid > 0 ? '₹' . number_format($paid) : '₹0' }}
                                             </td>
                                         </tr>
                                     @empty
@@ -1072,20 +1047,20 @@
                                 </tbody>
                                 @php
                                     $totalHalfYear = 0;
-                                    $totalCollected = 0;
+                                    $totalBalance = 0;
                                     foreach ($taxBreakdown ?? [] as $tax) {
                                         $totalHalfYear += $tax['half_year_tax'] ?? 0;
-                                        $totalCollected += $tax['collection'] ?? 0;
+                                        $totalBalance += $tax['balance'] ?? 0;
                                     }
-                                    $totalPending = $totalHalfYear - $totalCollected;
+                                    $totalPaid = $totalHalfYear - $totalBalance;
                                 @endphp
                                 <tfoot>
                                     <tr style="background: var(--gov-green-tint); font-weight: 700;">
                                         <td><strong>TOTAL</strong></td>
                                         <td class="mono">{{ number_format(array_sum(array_column($taxBreakdown ?? [], 'count'))) }}</td>
                                         <td class="mono" style="color:var(--ink-900);">₹{{ number_format($totalHalfYear) }}</td>
-                                        <td class="mono" style="color:var(--gov-green);">₹{{ number_format($totalCollected) }}</td>
-                                        <td class="mono" style="color:var(--status-red);">₹{{ number_format($totalPending) }}</td>
+                                        <td class="mono" style="color:var(--status-red);">₹{{ number_format($totalBalance) }}</td>
+                                        <td class="mono" style="color:var(--gov-green);">₹{{ number_format($totalPaid) }}</td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -1095,11 +1070,11 @@
             </div>
         </div>
 
-        {{-- ══════════════════════════ ZONE-WISE COLLECTION PERFORMANCE ══════════════════════════ --}}
+        {{-- ══════════════════════════ ZONE-WISE TAX SUMMARY ══════════════════════════ --}}
         <div class="gov-section">
             <div class="gov-card">
                 <div class="gov-card-head">
-                    <div class="gov-card-title"><i class="bi bi-graph-up"></i> Zone-wise Collection Performance</div>
+                    <div class="gov-card-title"><i class="bi bi-graph-up"></i> Zone-wise Tax Summary</div>
                     <span class="gov-card-meta">{{ now()->format('F Y') }}</span>
                 </div>
                 <div class="gov-card-body" style="overflow-x:auto; padding:0;">
@@ -1107,31 +1082,22 @@
                         <thead>
                             <tr>
                                 <th>Zone</th>
-                                <th>Target</th>
-                                <th>Collected</th>
-                                <th>Pending</th>
-                                <th>Achievement</th>
+                                <th>Total Tax</th>
+                                <th>Balance</th>
+                                <th>Paid</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($performanceZones ?? [] as $zone)
                                 <tr>
                                     <td style="font-weight:700; color:var(--ink-900);">{{ $zone['name'] }}</td>
-                                    <td class="mono">{{ $zone['target'] }}</td>
-                                    <td class="mono" style="color:var(--gov-green); font-weight:700;">{{ $zone['collected'] }}</td>
-                                    <td class="mono" style="color:var(--status-red);">{{ $zone['pending'] }}</td>
-                                    <td>
-                                        <div style="display:flex; align-items:center; gap:8px;">
-                                            <div class="gov-perf-bar">
-                                                <div class="fill" style="width:{{ $zone['achievement'] }}%; background:{{ $zone['achievement'] >= 80 ? '#0f6b47' : ($zone['achievement'] >= 60 ? '#a9741a' : '#b91c1c') }};"></div>
-                                            </div>
-                                            <span class="mono" style="font-size:0.72rem; min-width:34px;">{{ $zone['achievement'] }}%</span>
-                                        </div>
-                                    </td>
+                                    <td class="mono">{{ $zone['total_tax'] }}</td>
+                                    <td class="mono" style="color:var(--status-red);">{{ $zone['balance'] }}</td>
+                                    <td class="mono" style="color:var(--gov-green); font-weight:700;">{{ $zone['paid'] }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-3 text-muted">No zones found for this corporation</td>
+                                    <td colspan="4" class="text-center py-3 text-muted">No zones found for this corporation</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -1170,8 +1136,7 @@
                                 <span class="tax-tag"><i class="bi bi-briefcase me-1"></i>{{ $zone['professional_tax'] ?? 0 }}</span>
                             </div>
                             <div class="zone-footer">
-                                <span class="zone-collection">{{ $zone['collection'] }}</span>
-                                <span class="zone-pending">{{ $zone['pending'] }} pending</span>
+                                <span class="zone-balance">Balance: {{ $zone['balance'] }}</span>
                             </div>
                         </div>
                     </div>

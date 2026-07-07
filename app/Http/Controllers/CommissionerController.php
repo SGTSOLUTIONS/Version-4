@@ -65,11 +65,13 @@ class CommissionerController extends Controller
         $professionalTaxHalfYearTax = $this->getProfessionalTaxHalfYearTax($corporation->id);
         $totalHalfYearTax = $this->getHalfYearTaxTotal($corporation->id);
 
-        // ─── Tax-wise Collection ───
-        $waterTaxCollection = $this->getWaterTaxCollection($corporation->id);
-        $ugdCollection = $this->getUgdCollection($corporation->id);
-        $professionalTaxCollection = $this->getProfessionalTaxCollection($corporation->id);
-        $misCollection = $this->getMisCollection($corporation->id);
+        // ─── Balance Totals ───
+        $misBalance = $this->getMisBalance($corporation->id);
+        $waterTaxBalance = $this->getWaterTaxBalance($corporation->id);
+        $ugdBalance = $this->getUgdBalance($corporation->id);
+        $professionalTaxBalance = $this->getProfessionalTaxBalance($corporation->id);
+        $totalBalance = $misBalance + $waterTaxBalance + $ugdBalance + $professionalTaxBalance;
+
         $getAllwardBoundary = $this->getAllwardBoundary($corporation->id);
 
         // ─── Assessment Status ───
@@ -89,10 +91,10 @@ class CommissionerController extends Controller
             'notin_mis' => $notinmis,
             'overdue_assessments' => $overdueAssessments,
             'paid_assessments' => $paidAssessments,
-            'total_credits' => $this->getTotalCredits($corporation->id),
-            'half_year_balance' => $this->getHalfYearBalance($corporation->id),
-            'year_collection' => $this->getYearCollection($corporation->id),
-            'total_collection' => $this->getTotalCollection($corporation->id),
+            'total_credits' => $totalHalfYearTax,
+            'half_year_balance' => $totalBalance,
+            'year_collection' => $totalHalfYearTax * 2,
+            'total_collection' => $totalHalfYearTax - $totalBalance,
             'surveyed' => $surveyedAssessments,
             'connected' => $connectedAssessments,
             'mis_count' => $misCount,
@@ -100,32 +102,33 @@ class CommissionerController extends Controller
             'ugd_count' => $ugdCount,
             'professional_tax_count' => $professionalTaxCount,
             'total_half_year_tax' => $totalHalfYearTax,
+            'total_balance' => $totalBalance,
         ];
 
         // ─── Tax Breakdown ───
         $taxBreakdown = [
             'mis' => [
                 'count' => $misCount,
-                'collection' => $misCollection,
                 'half_year_tax' => $misHalfYearTax,
+                'balance' => $misBalance,
                 'table' => 'mis_' . $corporation->id,
             ],
             'water_tax' => [
                 'count' => $waterTaxCount,
-                'collection' => $waterTaxCollection,
                 'half_year_tax' => $waterTaxHalfYearTax,
+                'balance' => $waterTaxBalance,
                 'table' => 'water_tax_' . $corporation->id,
             ],
             'ugd' => [
                 'count' => $ugdCount,
-                'collection' => $ugdCollection,
                 'half_year_tax' => $ugdHalfYearTax,
+                'balance' => $ugdBalance,
                 'table' => 'ugd_tax_' . $corporation->id,
             ],
             'professional_tax' => [
                 'count' => $professionalTaxCount,
-                'collection' => $professionalTaxCollection,
                 'half_year_tax' => $professionalTaxHalfYearTax,
+                'balance' => $professionalTaxBalance,
                 'table' => 'professional_tax_' . $corporation->id,
             ],
         ];
@@ -137,8 +140,7 @@ class CommissionerController extends Controller
 
             $buildingsCount = $this->getBuildingsByWards($wardIds);
             $assessmentsCount = $this->getTotalAssessmentsByWards($corporation->id, $wardIds);
-            $collection = $this->getCollectionByWards($corporation->id, $wardIds);
-            $pending = $this->getPendingByWards($corporation->id, $wardIds);
+            $balance = $this->getBalanceByWards($corporation->id, $wardIds);
             $surveyed = $this->getSurveyedByWards($wardIds);
             $connected = $this->getConnectedByWards($corporation->id, $wardIds);
 
@@ -159,8 +161,7 @@ class CommissionerController extends Controller
                 'assessments' => $assessmentsCount,
                 'surveyed' => $surveyed,
                 'connected' => $connected,
-                'collection' => $this->formatCurrency($collection),
-                'pending' => $pending,
+                'balance' => $this->formatCurrency($balance),
                 'water_tax' => $zoneWaterTax,
                 'ugd' => $zoneUgd,
                 'professional_tax' => $zoneProfessionalTax,
@@ -168,23 +169,19 @@ class CommissionerController extends Controller
             ];
         });
 
-        // ─── Zone-wise Collection Performance ───
+        // ─── Zone-wise Performance ───
         $performanceZones = $zones->map(function ($zone) use ($corporation) {
             $wardIds = $zone->wards->pluck('id')->toArray();
 
             $totalHalfYearTax = $this->getTotalHalfYearTaxByWards($corporation->id, $wardIds);
-            $collected = $this->getCollectedByWards($corporation->id, $wardIds);
-            $pending = $totalHalfYearTax - $collected;
-
-            $target = $zone->target ?? $totalHalfYearTax;
-            $achievement = $target > 0 ? round(($collected / $target) * 100) : 0;
+            $balance = $this->getBalanceByWards($corporation->id, $wardIds);
+            $paid = $totalHalfYearTax - $balance;
 
             return [
                 'name' => $zone->zone_name,
-                'target' => $this->formatCurrency($target),
-                'collected' => $this->formatCurrency($collected),
-                'pending' => $this->formatCurrency(max(0, $pending)),
-                'achievement' => min(100, $achievement),
+                'total_tax' => $this->formatCurrency($totalHalfYearTax),
+                'balance' => $this->formatCurrency($balance),
+                'paid' => $this->formatCurrency($paid),
             ];
         });
 
@@ -197,8 +194,7 @@ class CommissionerController extends Controller
                 $wardIds = [$ward->id];
                 $buildingsCount = $this->getBuildingsByWards($wardIds);
                 $assessmentsCount = $this->getTotalAssessmentsByWards($corporation->id, $wardIds);
-                $collection = $this->getCollectionByWards($corporation->id, $wardIds);
-                $pending = $this->getPendingByWards($corporation->id, $wardIds);
+                $balance = $this->getBalanceByWards($corporation->id, $wardIds);
                 $surveyed = $this->getSurveyedByWards($wardIds);
                 $connected = $this->getConnectedByWards($corporation->id, $wardIds);
 
@@ -214,8 +210,7 @@ class CommissionerController extends Controller
                     'assessments' => $assessmentsCount,
                     'surveyed' => $surveyed,
                     'connected' => $connected,
-                    'collection' => $this->formatCurrency($collection),
-                    'pending' => $pending,
+                    'balance' => $this->formatCurrency($balance),
                 ];
             });
 
@@ -365,10 +360,10 @@ class CommissionerController extends Controller
     }
 
     // ════════════════════════════════════════════════════════════════
-    // COLLECTION METHODS
+    // BALANCE METHODS
     // ════════════════════════════════════════════════════════════════
 
-    private function getMisCollection($corporationId)
+    private function getMisBalance($corporationId)
     {
         $table = 'mis_' . $corporationId;
         if (!Schema::hasTable($table)) {
@@ -376,10 +371,8 @@ class CommissionerController extends Controller
         }
 
         try {
-            if (Schema::hasColumn($table, 'half_year_tax') && Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->where('balance', '=', 0)
-                    ->sum('half_year_tax');
+            if (Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)->sum('balance');
             }
         } catch (\Exception $e) {
             return 0;
@@ -387,7 +380,7 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    private function getWaterTaxCollection($corporationId)
+    private function getWaterTaxBalance($corporationId)
     {
         $table = 'water_tax_' . $corporationId;
         if (!Schema::hasTable($table)) {
@@ -395,10 +388,8 @@ class CommissionerController extends Controller
         }
 
         try {
-            if (Schema::hasColumn($table, 'slab_rate') && Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->where('balance', '=', 0)
-                    ->sum('slab_rate');
+            if (Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)->sum('balance');
             }
         } catch (\Exception $e) {
             return 0;
@@ -406,7 +397,7 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    private function getUgdCollection($corporationId)
+    private function getUgdBalance($corporationId)
     {
         $table = 'ugd_tax_' . $corporationId;
         if (!Schema::hasTable($table)) {
@@ -414,10 +405,8 @@ class CommissionerController extends Controller
         }
 
         try {
-            if (Schema::hasColumn($table, 'ugd_tax_amount') && Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->where('balance', '=', 0)
-                    ->sum('ugd_tax_amount');
+            if (Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)->sum('balance');
             }
         } catch (\Exception $e) {
             return 0;
@@ -425,7 +414,7 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    private function getProfessionalTaxCollection($corporationId)
+    private function getProfessionalTaxBalance($corporationId)
     {
         $table = 'professional_tax_' . $corporationId;
         if (!Schema::hasTable($table)) {
@@ -433,10 +422,27 @@ class CommissionerController extends Controller
         }
 
         try {
-            if (Schema::hasColumn($table, 'half_year_tax') && Schema::hasColumn($table, 'balance')) {
+            if (Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)->sum('balance');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getBalanceByWards($corporationId, $wardIds)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'balance')) {
                 return DB::table($table)
-                    ->where('balance', '=', 0)
-                    ->sum('half_year_tax');
+                    ->whereIn('ward_no', $wardIds)
+                    ->sum('balance');
             }
         } catch (\Exception $e) {
             return 0;
@@ -459,26 +465,6 @@ class CommissionerController extends Controller
             if (Schema::hasColumn($table, 'half_year_tax')) {
                 return DB::table($table)
                     ->whereIn('ward_no', $wardIds)
-                    ->sum('half_year_tax');
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getCollectedByWards($corporationId, $wardIds)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'half_year_tax') && Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->whereIn('ward_no', $wardIds)
-                    ->where('balance', '=', 0)
                     ->sum('half_year_tax');
             }
         } catch (\Exception $e) {
@@ -944,121 +930,6 @@ class CommissionerController extends Controller
     }
 
     // ════════════════════════════════════════════════════════════════
-    // COLLECTION STATS METHODS
-    // ════════════════════════════════════════════════════════════════
-
-    private function getTotalCredits($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'half_year_tax')) {
-                return DB::table($table)->sum('half_year_tax');
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getHalfYearBalance($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)->sum('balance');
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getYearCollection($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'half_year_tax')) {
-                $halfYearTotal = DB::table($table)->sum('half_year_tax');
-                return $halfYearTotal * 2;
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getTotalCollection($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'half_year_tax') && Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->where('balance', '=', 0)
-                    ->sum('half_year_tax');
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getCollectionByWards($corporationId, $wardIds)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'half_year_tax') && Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->whereIn('ward_no', $wardIds)
-                    ->where('balance', '=', 0)
-                    ->sum('half_year_tax');
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getPendingByWards($corporationId, $wardIds)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->whereIn('ward_no', $wardIds)
-                    ->where('balance', '>', 0)
-                    ->count();
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    // ════════════════════════════════════════════════════════════════
     // OWNER METHODS
     // ════════════════════════════════════════════════════════════════
 
@@ -1397,6 +1268,7 @@ class CommissionerController extends Controller
             'ugd_count' => 0,
             'professional_tax_count' => 0,
             'total_half_year_tax' => 0,
+            'total_balance' => 0,
         ];
     }
 
@@ -1415,10 +1287,10 @@ class CommissionerController extends Controller
     private function getEmptyTaxBreakdown()
     {
         return [
-            'mis' => ['count' => 0, 'collection' => 0, 'half_year_tax' => 0, 'table' => ''],
-            'water_tax' => ['count' => 0, 'collection' => 0, 'half_year_tax' => 0, 'table' => ''],
-            'ugd' => ['count' => 0, 'collection' => 0, 'half_year_tax' => 0, 'table' => ''],
-            'professional_tax' => ['count' => 0, 'collection' => 0, 'half_year_tax' => 0, 'table' => ''],
+            'mis' => ['count' => 0, 'half_year_tax' => 0, 'balance' => 0, 'table' => ''],
+            'water_tax' => ['count' => 0, 'half_year_tax' => 0, 'balance' => 0, 'table' => ''],
+            'ugd' => ['count' => 0, 'half_year_tax' => 0, 'balance' => 0, 'table' => ''],
+            'professional_tax' => ['count' => 0, 'half_year_tax' => 0, 'balance' => 0, 'table' => ''],
         ];
     }
 
