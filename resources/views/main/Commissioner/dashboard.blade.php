@@ -1337,11 +1337,18 @@
     @endif
 
 @endsection
-
 @push('scripts')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
     <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
     <script>
+        // This function must be GLOBAL for onclick to work
+        window.openWard = function(wardId) {
+            // Use the correct route name
+            let url = "{{ route('commissioner.ward.showmap', ':id') }}";
+            url = url.replace(':id', wardId);
+            window.location.href = url;
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             const bars = document.querySelectorAll('.gov-perf-bar .fill');
             bars.forEach(bar => {
@@ -1351,19 +1358,9 @@
                     bar.style.width = w;
                 }, 200);
             });
-        });
- // Redirect function
-window.openWard = function (wardId) {
-    let url = "{{ route('commissioner.ward.showmap', ':id') }}";
-    url = url.replace(':id', wardId);
-    window.location.href = url;
-};
 
-        const allwardBoundary = @json($getAllwardBoundary ?? []);
-        const waterTaxData = @json($waterTaxData ?? []);
-        console.log(waterTaxData);
+            const allwardBoundary = @json($getAllwardBoundary ?? []);
 
-        document.addEventListener('DOMContentLoaded', function() {
             const mapEl = document.getElementById('wardMap');
             if (!mapEl || !allwardBoundary || allwardBoundary.length === 0) return;
 
@@ -1447,29 +1444,25 @@ window.openWard = function (wardId) {
                 const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
 
                 if (feature) {
-
                     const wardNo = feature.get('ward_no');
                     const wardId = feature.get('ward_id');
 
                     popupEl.innerHTML = `
-                            <div>
-                                <p><strong>Ward No:</strong> ${wardNo}</p>
-
-                                <button
-                                    class="btn btn-primary btn-sm"
-                                    onclick="openWard(${wardId})">
-                                    View Ward
-                                </button>
-                            </div>
-                        `;
+                        <div>
+                            <p><strong>Ward No:</strong> ${wardNo}</p>
+                            <button
+                                class="btn btn-primary btn-sm"
+                                onclick="openWard(${wardId})">
+                                View Ward
+                            </button>
+                        </div>
+                    `;
 
                     popup.setPosition(evt.coordinate);
-
                 } else {
                     popup.setPosition(undefined);
                 }
             });
-
 
             map.on('pointermove', function(evt) {
                 map.getTargetElement().style.cursor = map.hasFeatureAtPixel(evt.pixel) ? 'pointer' : '';
