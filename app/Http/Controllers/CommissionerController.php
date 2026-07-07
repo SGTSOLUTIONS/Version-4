@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class CommissionerController extends Controller
@@ -65,6 +64,13 @@ class CommissionerController extends Controller
         $yearCollection = $this->getYearCollection($corporation->id);
         $totalCollection = $this->getTotalCollection($corporation->id);
 
+        // ─── Half Year Tax Totals ───
+        $misHalfYearTax = $this->getMisHalfYearTax($corporation->id);
+        $waterTaxHalfYearTax = $this->getWaterTaxHalfYearTax($corporation->id);
+        $ugdHalfYearTax = $this->getUgdHalfYearTax($corporation->id);
+        $professionalTaxHalfYearTax = $this->getProfessionalTaxHalfYearTax($corporation->id);
+        $totalHalfYearTax = $this->getHalfYearTaxTotal($corporation->id);
+
         // ─── Tax-wise Collection ───
         $waterTaxCollection = $this->getWaterTaxCollection($corporation->id);
         $ugdCollection = $this->getUgdCollection($corporation->id);
@@ -99,6 +105,7 @@ class CommissionerController extends Controller
             'water_tax_count' => $waterTaxCount,
             'ugd_count' => $ugdCount,
             'professional_tax_count' => $professionalTaxCount,
+            'total_half_year_tax' => $totalHalfYearTax,
         ];
 
         // ─── Tax Breakdown ───
@@ -106,21 +113,25 @@ class CommissionerController extends Controller
             'mis' => [
                 'count' => $misCount,
                 'collection' => $misCollection,
+                'half_year_tax' => $misHalfYearTax,
                 'table' => 'mis_' . $corporation->id,
             ],
             'water_tax' => [
                 'count' => $waterTaxCount,
                 'collection' => $waterTaxCollection,
+                'half_year_tax' => $waterTaxHalfYearTax,
                 'table' => 'water_tax_' . $corporation->id,
             ],
             'ugd' => [
                 'count' => $ugdCount,
                 'collection' => $ugdCollection,
+                'half_year_tax' => $ugdHalfYearTax,
                 'table' => 'ugd_tax_' . $corporation->id,
             ],
             'professional_tax' => [
                 'count' => $professionalTaxCount,
                 'collection' => $professionalTaxCollection,
+                'half_year_tax' => $professionalTaxHalfYearTax,
                 'table' => 'professional_tax_' . $corporation->id,
             ],
         ];
@@ -218,12 +229,12 @@ class CommissionerController extends Controller
         $buildingData = $this->getBuildingData($allWardIds, 10);
         $assessmentData = $this->getAssessmentData($corporation->id, 10);
 
-        // ─── Tax Data Tables (FIXED) ───
+        // ─── Tax Data Tables ───
         $waterTaxData = $this->getWaterTaxData($corporation->id, 5);
         $ugdData = $this->getUgdData($corporation->id, 5);
         $professionalTaxData = $this->getProfessionalTaxData($corporation->id, 5);
 
-        // ─── Activities (FIXED) ───
+        // ─── Activities ───
         $activities = $this->getRecentActivities($corporation->id);
 
         // ─── Hierarchy Stats ───
@@ -255,7 +266,108 @@ class CommissionerController extends Controller
         ));
     }
 
-    // ─── NEW: Get total half year tax by wards ───
+    // ─── Half Year Tax Methods ───
+
+    private function getHalfYearTaxTotal($corporationId)
+    {
+        $tables = [
+            'mis_' . $corporationId,
+            'water_tax_' . $corporationId,
+            'ugd_tax_' . $corporationId,
+            'professional_tax_' . $corporationId,
+        ];
+
+        $total = 0;
+
+        foreach ($tables as $table) {
+            if (!Schema::hasTable($table)) {
+                continue;
+            }
+
+            try {
+                if (Schema::hasColumn($table, 'half_year_tax')) {
+                    $total += DB::table($table)->sum('half_year_tax');
+                } elseif (Schema::hasColumn($table, 'amount')) {
+                    $total += DB::table($table)->sum('amount');
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
+        return $total;
+    }
+
+    private function getMisHalfYearTax($corporationId)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'half_year_tax')) {
+                return DB::table($table)->sum('half_year_tax');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getWaterTaxHalfYearTax($corporationId)
+    {
+        $table = 'water_tax_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'half_year_tax')) {
+                return DB::table($table)->sum('half_year_tax');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getUgdHalfYearTax($corporationId)
+    {
+        $table = 'ugd_tax_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'half_year_tax')) {
+                return DB::table($table)->sum('half_year_tax');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getProfessionalTaxHalfYearTax($corporationId)
+    {
+        $table = 'professional_tax_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+
+        try {
+            if (Schema::hasColumn($table, 'half_year_tax')) {
+                return DB::table($table)->sum('half_year_tax');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    // ─── Zone Performance Methods ───
+
     private function getTotalHalfYearTaxByWards($corporationId, $wardIds)
     {
         $table = 'mis_' . $corporationId;
@@ -275,7 +387,6 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    // ─── NEW: Get collected by wards (paid status) ───
     private function getCollectedByWards($corporationId, $wardIds)
     {
         $table = 'mis_' . $corporationId;
@@ -296,254 +407,8 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    // ─── FIXED: Get Water Tax data with status based on gis_id ───
-    private function getWaterTaxData($corporationId, $limit = 5)
-    {
-        $data = [];
-        $table = 'water_tax_' . $corporationId;
-
-        if (!Schema::hasTable($table)) {
-            return $data;
-        }
-
-        try {
-            $results = DB::table($table)
-                ->orderBy('created_at', 'desc')
-                ->limit($limit)
-                ->get();
-
-            foreach ($results as $item) {
-                $status = (!empty($item->gis_id)) ? 'paid' : 'pending';
-
-                $data[] = [
-                    'no' => $item->assessment_no ?? 'WT' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
-                    'amount' => $this->formatCurrency($item->half_year_tax ?? 0),
-                    'status' => $status,
-                    'gis_id' => $item->gis_id ?? null,
-                ];
-            }
-        } catch (\Exception $e) {
-            // Skip if error
-        }
-
-        return $data;
-    }
-
-    // ─── FIXED: Get UGD Tax data with status based on gis_id ───
-    private function getUgdData($corporationId, $limit = 5)
-    {
-        $data = [];
-        $table = 'ugd_tax_' . $corporationId;
-
-        if (!Schema::hasTable($table)) {
-            return $data;
-        }
-
-        try {
-            $results = DB::table($table)
-                ->orderBy('created_at', 'desc')
-                ->limit($limit)
-                ->get();
-
-            foreach ($results as $item) {
-                $status = (!empty($item->gis_id)) ? 'paid' : 'pending';
-
-                $data[] = [
-                    'no' => $item->assessment_no ?? 'UGD' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
-                    'amount' => $this->formatCurrency($item->half_year_tax ?? 0),
-                    'status' => $status,
-                    'gis_id' => $item->gis_id ?? null,
-                ];
-            }
-        } catch (\Exception $e) {
-            // Skip if error
-        }
-
-        return $data;
-    }
-
-    // ─── FIXED: Get Professional Tax data with status based on gis_id ───
-    private function getProfessionalTaxData($corporationId, $limit = 5)
-    {
-        $data = [];
-        $table = 'professional_tax_' . $corporationId;
-
-        if (!Schema::hasTable($table)) {
-            return $data;
-        }
-
-        try {
-            $results = DB::table($table)
-                ->orderBy('created_at', 'desc')
-                ->limit($limit)
-                ->get();
-
-            foreach ($results as $item) {
-                $status = (!empty($item->gis_id)) ? 'paid' : 'pending';
-
-                $data[] = [
-                    'no' => $item->assessment_no ?? 'PT' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
-                    'amount' => $this->formatCurrency($item->half_year_tax ?? 0),
-                    'status' => $status,
-                    'gis_id' => $item->gis_id ?? null,
-                ];
-            }
-        } catch (\Exception $e) {
-            // Skip if error
-        }
-
-        return $data;
-    }
-
-    // ─── FIXED: Get Recent Activities from all tables ───
-    private function getRecentActivities($corporationId)
-    {
-        $activities = [];
-        $tables = [
-            'mis_' . $corporationId,
-            'water_tax_' . $corporationId,
-            'ugd_tax_' . $corporationId,
-            'professional_tax_' . $corporationId,
-        ];
-
-        $typeLabels = [
-            'mis' => 'Assessment',
-            'water_tax' => 'Water Tax',
-            'ugd_tax' => 'UGD Tax',
-            'professional_tax' => 'Professional Tax',
-        ];
-
-        $typeColors = [
-            'mis' => '#0f6b47',
-            'water_tax' => '#1d4ed8',
-            'ugd_tax' => '#a9741a',
-            'professional_tax' => '#5b21b6',
-        ];
-
-        $typeIcons = [
-            'mis' => 'clipboard-data',
-            'water_tax' => 'droplet',
-            'ugd_tax' => 'pipe',
-            'professional_tax' => 'briefcase',
-        ];
-
-        foreach ($tables as $table) {
-            if (!Schema::hasTable($table)) {
-                continue;
-            }
-
-            try {
-                $tableType = str_replace('_' . $corporationId, '', $table);
-                $typeLabel = $typeLabels[$tableType] ?? ucfirst($tableType);
-                $color = $typeColors[$tableType] ?? '#0f6b47';
-                $icon = $typeIcons[$tableType] ?? 'file-text';
-
-                $recentItems = DB::table($table)
-                    ->orderBy('created_at', 'desc')
-                    ->limit(3)
-                    ->get();
-
-                foreach ($recentItems as $item) {
-                    $itemNo = $item->assessment_no ?? $typeLabel . str_pad($item->id, 6, '0', STR_PAD_LEFT);
-                    $ownerName = $item->owner_name ?? 'N/A';
-
-                    $statusText = '';
-                    if (!empty($item->gis_id)) {
-                        $statusText = '✓ Completed';
-                    } else {
-                        $statusText = '⏳ Pending';
-                    }
-
-                    $activities[] = [
-                        'icon' => $icon,
-                        'color' => $color,
-                        'text' => '<strong>' . $typeLabel . '</strong> ' . $itemNo . ' - ' . $ownerName . ' (' . $statusText . ')',
-                        'time' => $this->getTimeAgo($item->created_at ?? $item->updated_at ?? now()),
-                    ];
-                }
-
-                $recentUpdates = DB::table($table)
-                    ->whereNotNull('updated_at')
-                    ->orderBy('updated_at', 'desc')
-                    ->limit(2)
-                    ->get();
-
-                foreach ($recentUpdates as $item) {
-                    $itemNo = $item->assessment_no ?? $typeLabel . str_pad($item->id, 6, '0', STR_PAD_LEFT);
-
-                    $exists = false;
-                    foreach ($activities as $activity) {
-                        if (strpos($activity['text'], $itemNo) !== false && strpos($activity['text'], 'updated') !== false) {
-                            $exists = true;
-                            break;
-                        }
-                    }
-
-                    if (!$exists && isset($item->updated_at)) {
-                        $activities[] = [
-                            'icon' => 'arrow-repeat',
-                            'color' => '#8b5cf6',
-                            'text' => '<strong>' . $typeLabel . '</strong> ' . $itemNo . ' was updated',
-                            'time' => $this->getTimeAgo($item->updated_at),
-                        ];
-                    }
-                }
-
-            } catch (\Exception $e) {
-                // Skip if error
-            }
-        }
-
-        // Get entries from point_data tables (survey activities)
-        try {
-            $wardIds = $this->getWardIds($corporationId);
-            foreach ($wardIds as $wardId) {
-                $table = 'point_data_' . $wardId;
-                if (Schema::hasTable($table)) {
-                    $recentPoints = DB::table($table)
-                        ->orderBy('created_at', 'desc')
-                        ->limit(2)
-                        ->get();
-
-                    foreach ($recentPoints as $point) {
-                        $activities[] = [
-                            'icon' => 'pin-map',
-                            'color' => '#e11d48',
-                            'text' => '<strong>Survey Entry</strong> - Building ' . ($point->building_no ?? 'N/A') . ' surveyed in Ward ' . $wardId,
-                            'time' => $this->getTimeAgo($point->created_at ?? now()),
-                        ];
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-            // Skip
-        }
-
-        // Sort by time and take latest 10
-        usort($activities, function ($a, $b) {
-            $timeA = $this->parseTimeAgo($a['time']);
-            $timeB = $this->parseTimeAgo($b['time']);
-            return $timeB - $timeA;
-        });
-
-        return array_slice($activities, 0, 10);
-    }
-
-    // ─── Helper: Get ward IDs for a corporation ───
-    private function getWardIds($corporationId)
-    {
-        $zones = Zone::where('corp_id', $corporationId)->get();
-        $wardIds = [];
-        foreach ($zones as $zone) {
-            $wards = Ward::where('zone_id', $zone->id)->get();
-            foreach ($wards as $ward) {
-                $wardIds[] = $ward->id;
-            }
-        }
-        return $wardIds;
-    }
-
     // ─── Building Methods ───
+
     private function getTotalBuildings($wardIds)
     {
         $total = 0;
@@ -636,6 +501,7 @@ class CommissionerController extends Controller
     }
 
     // ─── Assessment Methods ───
+
     private function getTotalAssessments($corporationId)
     {
         $table = 'mis_' . $corporationId;
@@ -796,6 +662,7 @@ class CommissionerController extends Controller
     }
 
     // ─── Survey Methods ───
+
     private function getSurveyedAssessments($wardIds)
     {
         $total = 0;
@@ -899,6 +766,7 @@ class CommissionerController extends Controller
     }
 
     // ─── Tax Type Count Methods ───
+
     private function getWaterTaxCount($corporationId)
     {
         $table = 'water_tax_' . $corporationId;
@@ -981,6 +849,7 @@ class CommissionerController extends Controller
     }
 
     // ─── Collection Methods ───
+
     private function getTotalCredits($corporationId)
     {
         $table = 'mis_' . $corporationId;
@@ -1169,6 +1038,7 @@ class CommissionerController extends Controller
     }
 
     // ─── Owner Methods ───
+
     private function getTotalOwners($corporationId)
     {
         $table = 'mis_' . $corporationId;
@@ -1187,7 +1057,254 @@ class CommissionerController extends Controller
         return 0;
     }
 
+    // ─── Tax Data Methods ───
+
+    private function getWaterTaxData($corporationId, $limit = 5)
+    {
+        $data = [];
+        $table = 'water_tax_' . $corporationId;
+
+        if (!Schema::hasTable($table)) {
+            return $data;
+        }
+
+        try {
+            $results = DB::table($table)
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
+
+            foreach ($results as $item) {
+                $status = (!empty($item->gis_id)) ? 'paid' : 'pending';
+
+                $data[] = [
+                    'no' => $item->assessment_no ?? 'WT' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
+                    'amount' => $this->formatCurrency($item->half_year_tax ?? 0),
+                    'status' => $status,
+                    'gis_id' => $item->gis_id ?? null,
+                ];
+            }
+        } catch (\Exception $e) {
+            // Skip if error
+        }
+
+        return $data;
+    }
+
+    private function getUgdData($corporationId, $limit = 5)
+    {
+        $data = [];
+        $table = 'ugd_tax_' . $corporationId;
+
+        if (!Schema::hasTable($table)) {
+            return $data;
+        }
+
+        try {
+            $results = DB::table($table)
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
+
+            foreach ($results as $item) {
+                $status = (!empty($item->gis_id)) ? 'paid' : 'pending';
+
+                $data[] = [
+                    'no' => $item->assessment_no ?? 'UGD' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
+                    'amount' => $this->formatCurrency($item->half_year_tax ?? 0),
+                    'status' => $status,
+                    'gis_id' => $item->gis_id ?? null,
+                ];
+            }
+        } catch (\Exception $e) {
+            // Skip if error
+        }
+
+        return $data;
+    }
+
+    private function getProfessionalTaxData($corporationId, $limit = 5)
+    {
+        $data = [];
+        $table = 'professional_tax_' . $corporationId;
+
+        if (!Schema::hasTable($table)) {
+            return $data;
+        }
+
+        try {
+            $results = DB::table($table)
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
+
+            foreach ($results as $item) {
+                $status = (!empty($item->gis_id)) ? 'paid' : 'pending';
+
+                $data[] = [
+                    'no' => $item->assessment_no ?? 'PT' . str_pad($item->id, 6, '0', STR_PAD_LEFT),
+                    'amount' => $this->formatCurrency($item->half_year_tax ?? 0),
+                    'status' => $status,
+                    'gis_id' => $item->gis_id ?? null,
+                ];
+            }
+        } catch (\Exception $e) {
+            // Skip if error
+        }
+
+        return $data;
+    }
+
+    // ─── Activity Methods ───
+
+    private function getRecentActivities($corporationId)
+    {
+        $activities = [];
+        $tables = [
+            'mis_' . $corporationId,
+            'water_tax_' . $corporationId,
+            'ugd_tax_' . $corporationId,
+            'professional_tax_' . $corporationId,
+        ];
+
+        $typeLabels = [
+            'mis' => 'Assessment',
+            'water_tax' => 'Water Tax',
+            'ugd_tax' => 'UGD Tax',
+            'professional_tax' => 'Professional Tax',
+        ];
+
+        $typeColors = [
+            'mis' => '#0f6b47',
+            'water_tax' => '#1d4ed8',
+            'ugd_tax' => '#a9741a',
+            'professional_tax' => '#5b21b6',
+        ];
+
+        $typeIcons = [
+            'mis' => 'clipboard-data',
+            'water_tax' => 'droplet',
+            'ugd_tax' => 'pipe',
+            'professional_tax' => 'briefcase',
+        ];
+
+        foreach ($tables as $table) {
+            if (!Schema::hasTable($table)) {
+                continue;
+            }
+
+            try {
+                $tableType = str_replace('_' . $corporationId, '', $table);
+                $typeLabel = $typeLabels[$tableType] ?? ucfirst($tableType);
+                $color = $typeColors[$tableType] ?? '#0f6b47';
+                $icon = $typeIcons[$tableType] ?? 'file-text';
+
+                $recentItems = DB::table($table)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(3)
+                    ->get();
+
+                foreach ($recentItems as $item) {
+                    $itemNo = $item->assessment_no ?? $typeLabel . str_pad($item->id, 6, '0', STR_PAD_LEFT);
+                    $ownerName = $item->owner_name ?? 'N/A';
+
+                    $statusText = '';
+                    if (!empty($item->gis_id)) {
+                        $statusText = '✓ Completed';
+                    } else {
+                        $statusText = '⏳ Pending';
+                    }
+
+                    $activities[] = [
+                        'icon' => $icon,
+                        'color' => $color,
+                        'text' => '<strong>' . $typeLabel . '</strong> ' . $itemNo . ' - ' . $ownerName . ' (' . $statusText . ')',
+                        'time' => $this->getTimeAgo($item->created_at ?? $item->updated_at ?? now()),
+                    ];
+                }
+
+                $recentUpdates = DB::table($table)
+                    ->whereNotNull('updated_at')
+                    ->orderBy('updated_at', 'desc')
+                    ->limit(2)
+                    ->get();
+
+                foreach ($recentUpdates as $item) {
+                    $itemNo = $item->assessment_no ?? $typeLabel . str_pad($item->id, 6, '0', STR_PAD_LEFT);
+
+                    $exists = false;
+                    foreach ($activities as $activity) {
+                        if (strpos($activity['text'], $itemNo) !== false && strpos($activity['text'], 'updated') !== false) {
+                            $exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!$exists && isset($item->updated_at)) {
+                        $activities[] = [
+                            'icon' => 'arrow-repeat',
+                            'color' => '#8b5cf6',
+                            'text' => '<strong>' . $typeLabel . '</strong> ' . $itemNo . ' was updated',
+                            'time' => $this->getTimeAgo($item->updated_at),
+                        ];
+                    }
+                }
+
+            } catch (\Exception $e) {
+                // Skip if error
+            }
+        }
+
+        // Get entries from point_data tables
+        try {
+            $wardIds = $this->getWardIds($corporationId);
+            foreach ($wardIds as $wardId) {
+                $table = 'point_data_' . $wardId;
+                if (Schema::hasTable($table)) {
+                    $recentPoints = DB::table($table)
+                        ->orderBy('created_at', 'desc')
+                        ->limit(2)
+                        ->get();
+
+                    foreach ($recentPoints as $point) {
+                        $activities[] = [
+                            'icon' => 'pin-map',
+                            'color' => '#e11d48',
+                            'text' => '<strong>Survey Entry</strong> - Building ' . ($point->building_no ?? 'N/A') . ' surveyed in Ward ' . $wardId,
+                            'time' => $this->getTimeAgo($point->created_at ?? now()),
+                        ];
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Skip
+        }
+
+        // Sort by time and take latest 10
+        usort($activities, function ($a, $b) {
+            $timeA = $this->parseTimeAgo($a['time']);
+            $timeB = $this->parseTimeAgo($b['time']);
+            return $timeB - $timeA;
+        });
+
+        return array_slice($activities, 0, 10);
+    }
+
+    private function getWardIds($corporationId)
+    {
+        $zones = Zone::where('corp_id', $corporationId)->get();
+        $wardIds = [];
+        foreach ($zones as $zone) {
+            $wards = Ward::where('zone_id', $zone->id)->get();
+            foreach ($wards as $ward) {
+                $wardIds[] = $ward->id;
+            }
+        }
+        return $wardIds;
+    }
+
     // ─── Helper Methods ───
+
     private function formatCurrency($amount)
     {
         if (!$amount) return '₹0';
@@ -1267,7 +1384,7 @@ class CommissionerController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
+            \Log::error($e->getMessage());
             return [];
         }
         return $boundaries;
@@ -1295,6 +1412,7 @@ class CommissionerController extends Controller
             'water_tax_count' => 0,
             'ugd_count' => 0,
             'professional_tax_count' => 0,
+            'total_half_year_tax' => 0,
         ];
     }
 
@@ -1313,14 +1431,15 @@ class CommissionerController extends Controller
     private function getEmptyTaxBreakdown()
     {
         return [
-            'mis' => ['count' => 0, 'collection' => 0, 'table' => ''],
-            'water_tax' => ['count' => 0, 'collection' => 0, 'table' => ''],
-            'ugd' => ['count' => 0, 'collection' => 0, 'table' => ''],
-            'professional_tax' => ['count' => 0, 'collection' => 0, 'table' => ''],
+            'mis' => ['count' => 0, 'collection' => 0, 'half_year_tax' => 0, 'table' => ''],
+            'water_tax' => ['count' => 0, 'collection' => 0, 'half_year_tax' => 0, 'table' => ''],
+            'ugd' => ['count' => 0, 'collection' => 0, 'half_year_tax' => 0, 'table' => ''],
+            'professional_tax' => ['count' => 0, 'collection' => 0, 'half_year_tax' => 0, 'table' => ''],
         ];
     }
 
     // ─── Show Map Method ───
+
     public function showMap($id)
     {
         $user = Auth::user();
