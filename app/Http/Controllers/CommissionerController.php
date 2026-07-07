@@ -65,7 +65,7 @@ class CommissionerController extends Controller
         $professionalTaxHalfYearTax = $this->getProfessionalTaxHalfYearTax($corporation->id);
         $totalHalfYearTax = $this->getHalfYearTaxTotal($corporation->id);
 
-        // ─── Tax-wise Collection (Paid Amounts) ───
+        // ─── Tax-wise Collection ───
         $waterTaxCollection = $this->getWaterTaxCollection($corporation->id);
         $ugdCollection = $this->getUgdCollection($corporation->id);
         $professionalTaxCollection = $this->getProfessionalTaxCollection($corporation->id);
@@ -73,7 +73,7 @@ class CommissionerController extends Controller
         $getAllwardBoundary = $this->getAllwardBoundary($corporation->id);
 
         // ─── Assessment Status ───
-        $activeAssessments = $this->getActiveAssessments($corporation->id, $allWardIds);
+        $activeAssessments = $this->getActiveAssessments($corporation->id);
         $notinmis = $this->getNotInMis($corporation->id, $allWardIds);
         $overdueAssessments = $this->getOverdueAssessments($corporation->id);
         $paidAssessments = $this->getPaidAssessments($corporation->id);
@@ -223,7 +223,7 @@ class CommissionerController extends Controller
         $buildingData = $this->getBuildingData($allWardIds, 10);
         $assessmentData = $this->getAssessmentData($corporation->id, 10);
 
-        // ─── Tax Data Tables (Based on actual fields) ───
+        // ─── Tax Data Tables ───
         $waterTaxData = $this->getWaterTaxData($corporation->id, 5);
         $ugdData = $this->getUgdData($corporation->id, 5);
         $professionalTaxData = $this->getProfessionalTaxData($corporation->id, 5);
@@ -283,6 +283,8 @@ class CommissionerController extends Controller
             try {
                 if (Schema::hasColumn($table, 'half_year_tax')) {
                     $total += DB::table($table)->sum('half_year_tax');
+                } elseif (Schema::hasColumn($table, 'slab_rate')) {
+                    $total += DB::table($table)->sum('slab_rate');
                 } elseif (Schema::hasColumn($table, 'ugd_tax_amount')) {
                     $total += DB::table($table)->sum('ugd_tax_amount');
                 }
@@ -363,7 +365,7 @@ class CommissionerController extends Controller
     }
 
     // ════════════════════════════════════════════════════════════════
-    // COLLECTION METHODS (Paid Amounts)
+    // COLLECTION METHODS
     // ════════════════════════════════════════════════════════════════
 
     private function getMisCollection($corporationId)
@@ -514,6 +516,62 @@ class CommissionerController extends Controller
         } catch (\Exception $e) {
             return 0;
         }
+    }
+
+    private function getAssessmentData($corporationId, $limit = 10)
+    {
+        $assessments = [];
+        $table = 'mis_' . $corporationId;
+
+        if (!Schema::hasTable($table)) {
+            return $assessments;
+        }
+
+        try {
+            $columns = Schema::getColumnListing($table);
+            $select = ['id'];
+
+            if (in_array('assessment', $columns)) $select[] = 'assessment';
+            if (in_array('owner_name', $columns)) $select[] = 'owner_name';
+            if (in_array('new_door_no', $columns)) $select[] = 'new_door_no';
+            if (in_array('old_door_no', $columns)) $select[] = 'old_door_no';
+            if (in_array('type', $columns)) $select[] = 'type';
+            if (in_array('half_year_tax', $columns)) $select[] = 'half_year_tax';
+            if (in_array('balance', $columns)) $select[] = 'balance';
+            if (in_array('gisid', $columns)) $select[] = 'gisid';
+            if (in_array('ward_no', $columns)) $select[] = 'ward_no';
+            if (in_array('road_name', $columns)) $select[] = 'road_name';
+
+            $results = DB::table($table)
+                ->select($select)
+                ->orderBy('id', 'desc')
+                ->limit($limit)
+                ->get();
+
+            foreach ($results as $assessment) {
+                $status = 'pending';
+                if (isset($assessment->balance) && $assessment->balance == 0) {
+                    $status = 'paid';
+                } elseif (isset($assessment->balance) && $assessment->balance > 0) {
+                    $status = 'overdue';
+                }
+
+                $assessments[] = [
+                    'no' => $assessment->assessment ?? 'AST' . str_pad($assessment->id, 6, '0', STR_PAD_LEFT),
+                    'owner' => $assessment->owner_name ?? 'N/A',
+                    'building' => $assessment->new_door_no ?? $assessment->old_door_no ?? 'N/A',
+                    'type' => $assessment->type ?? 'N/A',
+                    'tax' => $this->formatCurrency($assessment->half_year_tax ?? 0),
+                    'status' => $status,
+                    'gis_id' => $assessment->gisid ?? null,
+                    'ward' => $assessment->ward_no ?? 'N/A',
+                ];
+            }
+        } catch (\Exception $e) {
+            // Skip if error
+        }
+
+        return $assessments;
     }
 
     private function getActiveAssessments($corporationId)
@@ -1177,8 +1235,7 @@ class CommissionerController extends Controller
                     ->get();
 
                 foreach ($recentItems as $item) {
-                    // Get the appropriate number field
-                    $numberField = 'assessment_no';
+                    $numberField = 'assessment';
                     if ($tableType == 'water_tax') $numberField = 'watertax_no';
                     elseif ($tableType == 'ugd_tax') $numberField = 'ugd_no';
                     elseif ($tableType == 'professional_tax') $numberField = 'pt_number';
@@ -1205,7 +1262,7 @@ class CommissionerController extends Controller
             }
         }
 
-        // Get entries from point_data tables (survey activities)
+        // Get entries from point_data tables
         try {
             $wardIds = $this->getWardIds($corporationId);
             foreach ($wardIds as $wardId) {
@@ -1230,7 +1287,6 @@ class CommissionerController extends Controller
             // Skip
         }
 
-        // Sort and take latest 10
         return array_slice($activities, 0, 10);
     }
 
@@ -1366,7 +1422,9 @@ class CommissionerController extends Controller
         ];
     }
 
-    // ─── Show Map Method ───
+    // ════════════════════════════════════════════════════════════════
+    // SHOW MAP METHOD
+    // ════════════════════════════════════════════════════════════════
 
     public function showMap($id)
     {
