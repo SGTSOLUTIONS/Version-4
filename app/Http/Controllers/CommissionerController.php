@@ -1363,5 +1363,20 @@ class CommissionerController extends Controller
             'uniqueRoadNames'
         ));
     }
+    public function getPointDetails(Request $request)
+    {
+        $gisid = $request->gisid;
+        $wardId = $request->ward_id;
 
+        $table = "point_data_{$wardId}";
+
+        $points = DB::table($table)
+            ->where('point_gisid', $gisid)
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $points
+        ]);
+    }
 }

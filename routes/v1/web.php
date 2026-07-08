@@ -128,6 +128,8 @@ Route::middleware(['auth', 'role:commissioner'])->prefix('commissioner')->name('
 
     Route::get('map/{id}', [CommissionerController::class, 'showMap'])
         ->name('ward.showmap');
+    Route::get('/get-point-details', [CommissionerController::class, 'getPointDetails'])
+    ->name('getPointDetails');
 
     // Add commissioner specific routes here
 });
@@ -185,8 +187,3 @@ Route::middleware(['auth', 'role:surveyor,teamleader'])->group(function () {
 });
 
 Route::get('/survey/map', [MapController::class, 'map'])->name('teamleader.map');
-// QC Update
-Route::post('/point-data/{id}/qc', [PointdataController::class, 'qcUpdate'])->name('point-data.qc');
-
-// Get point data with water, ugd, professional for a GIS ID
-Route::get('/point-data/by-gisid/{gisid}', [PointdataController::class, 'getByGisId']);
