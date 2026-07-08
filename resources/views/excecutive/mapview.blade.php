@@ -889,61 +889,130 @@
                 justify-content: flex-start;
             }
         }
+
+        /* ─── Ward Analytics Strip ─── */
+        .stat-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            transition: box-shadow .2s, transform .2s;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .stat-icon-blue {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .stat-icon-green {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .stat-icon-purple {
+            background: #f5f3ff;
+            color: #7c3aed;
+        }
+
+        .stat-icon-amber {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .stat-icon-red {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .stat-label {
+            font-size: .68rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            line-height: 1;
+        }
+
+        .stat-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 3px;
+        }
+
+        .stat-sub {
+            font-size: .72rem;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 992px) {
+            .stat-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stat-strip {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ─── Per-building variation badge in modal ─── */
+        .bv-variation-strip {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .bv-variation-card {
+            flex: 1 1 150px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px 14px;
+        }
+
+        .bv-variation-card .stat-label {
+            margin-bottom: 4px;
+        }
+
+        .bv-variation-card .bld-status-tag {
+            margin-top: 6px;
+        }
     </style>
 @endpush
 
 @section('content')
     <div class="ol-page-header">
-        <div class="row g-3 mb-3">
-    <div class="col-6 col-md-3">
-        <div class="tax-card text-center">
-            <div class="tax-card-title">Total Buildings</div>
-            <div class="bld-summary-val">{{ $analytics['total_buildings'] }}</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="tax-card text-center">
-            <div class="tax-card-title">Surveyed Buildings</div>
-            <div class="bld-summary-val">{{ $analytics['surveyed_buildings'] }}</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="tax-card text-center">
-            <div class="tax-card-title">Survey %</div>
-            <div class="bld-summary-val">{{ $analytics['survey_percentage'] }}%</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="tax-card text-center">
-            <div class="tax-card-title">Assessments Mapped</div>
-            <div class="bld-summary-val">{{ $analytics['total_surveyed_assessments'] }}</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="tax-card text-center">
-            <div class="tax-card-title">Area Variation</div>
-            <div class="bld-summary-val">{{ $analytics['area_variation_count'] }} ({{ $analytics['area_variation_percentage'] }}%)</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="tax-card text-center">
-            <div class="tax-card-title">Usage Variation</div>
-            <div class="bld-summary-val">{{ $analytics['usage_variation_count'] }} ({{ $analytics['usage_variation_percentage'] }}%)</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="tax-card text-center">
-            <div class="tax-card-title">Total Building Area</div>
-            <div class="bld-summary-val">{{ number_format($analytics['total_building_area'], 2) }} sqft</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="tax-card text-center">
-            <div class="tax-card-title">Total Assessment Area</div>
-            <div class="bld-summary-val">{{ number_format($analytics['total_assessment_area'], 2) }} sqft</div>
-        </div>
-    </div>
-</div>
         <div>
             <h1 class="ol-page-title">
                 Executive GIS Dashboard
@@ -957,6 +1026,72 @@
                 <i class="bi bi-circle-fill" style="font-size:8px;"></i>
                 Live
             </span>
+        </div>
+    </div>
+
+    <!-- ─── WARD ANALYTICS STRIP ─── -->
+    <div class="stat-strip">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue"><i class="bi bi-building"></i></div>
+            <div>
+                <div class="stat-label">Total Buildings</div>
+                <div class="stat-value">{{ $analytics['total_buildings'] }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-green"><i class="bi bi-check2-circle"></i></div>
+            <div>
+                <div class="stat-label">Surveyed Buildings</div>
+                <div class="stat-value">{{ $analytics['surveyed_buildings'] }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-purple"><i class="bi bi-graph-up"></i></div>
+            <div>
+                <div class="stat-label">Survey Progress</div>
+                <div class="stat-value">{{ $analytics['survey_percentage'] }}%</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue"><i class="bi bi-file-earmark-text"></i></div>
+            <div>
+                <div class="stat-label">Assessments Mapped</div>
+                <div class="stat-value">{{ $analytics['total_surveyed_assessments'] }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-amber"><i class="bi bi-rulers"></i></div>
+            <div>
+                <div class="stat-label">Area Variation</div>
+                <div class="stat-value">{{ $analytics['area_variation_count'] }}
+                    <span class="stat-sub">({{ $analytics['area_variation_percentage'] }}%)</span>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-red"><i class="bi bi-tags"></i></div>
+            <div>
+                <div class="stat-label">Usage Variation</div>
+                <div class="stat-value">{{ $analytics['usage_variation_count'] }}
+                    <span class="stat-sub">({{ $analytics['usage_variation_percentage'] }}%)</span>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue"><i class="bi bi-bounding-box"></i></div>
+            <div>
+                <div class="stat-label">Total Building Area</div>
+                <div class="stat-value">{{ number_format($analytics['total_building_area'], 0) }} <span
+                        class="stat-sub">sqft</span></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-green"><i class="bi bi-clipboard-data"></i></div>
+            <div>
+                <div class="stat-label">Total Assessment Area</div>
+                <div class="stat-value">{{ number_format($analytics['total_assessment_area'], 0) }} <span
+                        class="stat-sub">sqft</span></div>
+            </div>
         </div>
     </div>
 
@@ -1033,7 +1168,7 @@
                         </div>
                     </div>
                 </div>
-
+                <div class="p-3 pb-0" id="bv_variation_wrap"></div>
                 <div class="modal-body p-4">
                     <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
                     <div class="row g-3 mb-4">
@@ -1326,6 +1461,8 @@
             let currentPointGisid = null;
             let currentPointRecords = [];
             let analytics = @json($analytics ?? [], JSON_HEX_TAG);
+            let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
+
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
                 {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
             ];
@@ -1888,7 +2025,6 @@
                 tempDrawSource.clear();
             }
 
-            // ─── BUILDING VIEW ───
             function showBuildingView(item) {
                 $('#bv_gisid').text(item.gisid || '-');
                 $('#bv_zone').text(item.zone || item.building_zone || '-');
@@ -1906,6 +2042,37 @@
 
                 const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
                 $('#bv_mapped').text(mappedCount);
+
+                // ─── AREA / USAGE VARIATION FOR THIS BUILDING ───
+                const variation = buildingVariations[item.gisid];
+                if (variation) {
+                    const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
+                    const usageBadgeClass = variation.usage_status === 'MATCH' ? 'complete' : 'empty';
+
+                    $('#bv_variation_wrap').html(`
+            <div class="bv-variation-strip">
+                <div class="bv-variation-card">
+                    <div class="stat-label">Building Area</div>
+                    <div class="stat-value">${variation.building_area} <span class="stat-sub">sqft</span></div>
+                </div>
+                <div class="bv-variation-card">
+                    <div class="stat-label">Assessment Area</div>
+                    <div class="stat-value">${variation.assessment_area} <span class="stat-sub">sqft</span></div>
+                </div>
+                <div class="bv-variation-card">
+                    <div class="stat-label">Area Variation</div>
+                    <div class="stat-value">${variation.area_variation} <span class="stat-sub">(${variation.variation_percentage}%)</span></div>
+                    <span class="bld-status-tag ${areaBadgeClass}">${variation.area_status}</span>
+                </div>
+                <div class="bv-variation-card">
+                    <div class="stat-label">Usage Check</div>
+                    <span class="bld-status-tag ${usageBadgeClass}">${variation.usage_status}</span>
+                </div>
+            </div>
+        `);
+                } else {
+                    $('#bv_variation_wrap').html('');
+                }
 
                 const amenities = [
                     ['Lift Room', item.liftroom],
@@ -2128,20 +2295,20 @@
                                     <div class="tax-card">
                                         <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
                                         ${ptList.length ? ptList.map(pt => `
-                                                    <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
-                                                        <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
-                                                        <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
-                                                        <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
-                                                        <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
-                                                        <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
-                                                        <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
-                                                        <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
-                                                        <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
-                                                        <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
-                                                        <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
-                                                        <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
-                                                    </div>
-                                                `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
+                                                            <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                                                <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                                            </div>
+                                                        `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
                                     </div>
                                 </div>
                             </div>
