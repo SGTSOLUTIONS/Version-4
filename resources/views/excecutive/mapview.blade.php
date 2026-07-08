@@ -835,6 +835,25 @@
             color: #1e293b;
         }
 
+        /* ── Professional Tax Multi-Card ── */
+        .professional-tax-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 14px 16px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 10px;
+        }
+
+        .professional-tax-card .tax-card-row {
+            padding: 3px 0;
+        }
+
+        .professional-tax-card .tax-card-title {
+            margin-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 6px;
+        }
+
         .draw-mode {
             cursor: crosshair !important;
         }
@@ -988,7 +1007,7 @@
                 <form id="buildingForm" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body" style="max-height: 70vh; overflow-y: auto; background: #f8fafc;">
-                        <!-- Image section -->
+                        <!-- Keep your existing building form fields here -->
                         <div class="card mb-4">
                             <div class="card-header" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
                                 <h6 class="mb-0"><i class="fas fa-image me-2"></i>Building Images</h6>
@@ -1550,7 +1569,7 @@
                                 </div>
                             </div>
 
-                            <!-- PROFESSIONAL TAX -->
+                            <!-- PROFESSIONAL TAX (MULTI-CARD SUPPORT) -->
                             <div class="tab-pane fade" id="pt-tab">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="mb-0">Professional Tax</h5>
@@ -1740,7 +1759,7 @@
                 })
             });
 
-            // ─── STYLES ───
+            // ─── STYLES ─── (Keep existing styles)
             function createPolygonStyle(feature) {
                 const gisid = feature.get('gisid');
                 const sqft = feature.get('sqfeet') || '0';
@@ -1964,7 +1983,7 @@
                 title: 'Points'
             });
 
-            // ─── LIVE LOCATION ───
+            // ─── LIVE LOCATION ─── (Keep existing code)
             const liveLocationSource = new ol.source.Vector();
             const liveLocationLayer = new ol.layer.Vector({
                 source: liveLocationSource,
@@ -2423,6 +2442,21 @@
                     const qcClass = qcFilled === 3 ? 'complete' : qcFilled === 0 ? 'empty' : 'partial';
                     const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' : 'QC Partial';
 
+                    // Parse professional tax if it's a JSON string
+                    let professionalTaxes = [];
+                    if (pd.professional_taxes) {
+                        try {
+                            professionalTaxes = typeof pd.professional_taxes === 'string' ?
+                                JSON.parse(pd.professional_taxes) : pd.professional_taxes;
+                        } catch(e) {
+                            professionalTaxes = [];
+                        }
+                    }
+                    // If it's a single object, convert to array
+                    if (!Array.isArray(professionalTaxes) && professionalTaxes && typeof professionalTaxes === 'object') {
+                        professionalTaxes = [professionalTaxes];
+                    }
+
                     html += `
                     <div class="point-data-card" data-id="${pd.id}">
                         <div class="point-data-card-header">
@@ -2485,18 +2519,26 @@
                             <div class="col-md-4">
                                 <div class="tax-card">
                                     <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax</div>
-                                    <div class="tax-card-row">
-                                        <span class="tax-card-label">Number</span>
-                                        <span class="tax-card-value">${pd.pt_number || 'N/A'}</span>
-                                    </div>
-                                    <div class="tax-card-row">
-                                        <span class="tax-card-label">Establishment</span>
-                                        <span class="tax-card-value">${pd.establishment_name || 'N/A'}</span>
-                                    </div>
-                                    <div class="tax-card-row">
-                                        <span class="tax-card-label">Half Year Tax</span>
-                                        <span class="tax-card-value">${pd.half_year_tax || 'N/A'}</span>
-                                    </div>
+                                    ${professionalTaxes.length > 0 ? professionalTaxes.map((pt, idx) => `
+                                        <div class="professional-tax-card">
+                                            <div class="tax-card-row">
+                                                <span class="tax-card-label">#${idx+1} Number</span>
+                                                <span class="tax-card-value">${pt.pt_number || 'N/A'}</span>
+                                            </div>
+                                            <div class="tax-card-row">
+                                                <span class="tax-card-label">Establishment</span>
+                                                <span class="tax-card-value">${pt.establishment_name || 'N/A'}</span>
+                                            </div>
+                                            <div class="tax-card-row">
+                                                <span class="tax-card-label">Half Year Tax</span>
+                                                <span class="tax-card-value">${pt.half_year_tax || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    `).join('') : `
+                                        <div class="tax-card-row">
+                                            <span class="tax-card-value" style="color:#94a3b8;font-style:italic;">No professional tax records</span>
+                                        </div>
+                                    `}
                                 </div>
                             </div>
                         </div>
@@ -2631,7 +2673,7 @@
                 showToast('👁️ Click on features to view details', 2000);
             }
 
-            // ─── EDIT MODE ───
+            // ─── EDIT MODE ─── (Keep existing edit mode functions)
             function setEditPolygonMode() {
                 disableAllInteractions();
                 hideSplitButton();
@@ -3765,11 +3807,13 @@
                             $('#pf_ugd_slab_description').val(ugd.slab_description);
                         }
 
-                        // Professional Tax
+                        // Professional Tax - Multiple cards
                         $('#professionalContainer').empty();
                         $('#removedProfessionalWrap').remove();
                         ptIndex = 0;
-                        (pts || []).forEach(p => addProfessionalCard(p));
+                        if (pts && Array.isArray(pts) && pts.length > 0) {
+                            pts.forEach(p => addProfessionalCard(p));
+                        }
                     },
                     error: function() {
                         showFlashMessage('Failed to load record for editing.', 'error');
@@ -3777,32 +3821,48 @@
                 });
             }
 
-            // ─── PROFESSIONAL TAX ───
+            // ─── PROFESSIONAL TAX - MULTI CARD ───
             function addProfessionalCard(data = {}) {
                 const idx = ptIndex;
                 const html = `
                     <div class="card mb-3 professional-card" data-index="${idx}">
-                        <div class="card-header d-flex justify-content-between">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #f8fafc; border-bottom: 1px solid #e5e7eb;">
                             <strong>Professional Tax #${idx + 1}</strong>
-                            <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
+                            <button type="button" class="btn btn-danger btn-sm removeProfessional">
+                                <i class="bi bi-trash3"></i> Remove
+                            </button>
                         </div>
                         <div class="card-body">
                             <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
                             <div class="row g-3">
-                                <div class="col-md-4"><label>PT Number</label>
-                                    <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}"></div>
-                                <div class="col-md-4"><label>Old PT Number</label>
-                                    <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}"></div>
-                                <div class="col-md-4"><label>Establishment Name</label>
-                                    <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}"></div>
-                                <div class="col-md-4"><label>Profession Type</label>
-                                    <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}"></div>
-                                <div class="col-md-4"><label>Employee Count</label>
-                                    <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}"></div>
-                                <div class="col-md-4"><label>Half Year Tax</label>
-                                    <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}"></div>
-                                <div class="col-md-12"><label>Remarks</label>
-                                    <textarea class="form-control" name="professional[${idx}][pt_remarks]">${data.remarks || ''}</textarea></div>
+                                <div class="col-md-4">
+                                    <label class="form-label">PT Number</label>
+                                    <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}" placeholder="Enter PT Number">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Old PT Number</label>
+                                    <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}" placeholder="Enter Old PT Number">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Establishment Name</label>
+                                    <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}" placeholder="Enter Establishment Name">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Profession Type</label>
+                                    <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}" placeholder="Enter Profession Type">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Employee Count</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}" placeholder="Enter Employee Count" min="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Half Year Tax</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}" placeholder="Enter Half Year Tax" min="0" step="0.01">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Remarks</label>
+                                    <textarea class="form-control" name="professional[${idx}][pt_remarks]" rows="2" placeholder="Enter Remarks">${data.remarks || ''}</textarea>
+                                </div>
                             </div>
                         </div>
                     </div>`;
@@ -3810,10 +3870,12 @@
                 ptIndex++;
             }
 
+            // ─── ADD PROFESSIONAL TAX BUTTON ───
             $('#addProfessionalBtn').off('click').on('click', function() {
                 addProfessionalCard();
             });
 
+            // ─── REMOVE PROFESSIONAL TAX ───
             $(document).on('click', '.removeProfessional', function() {
                 const $card = $(this).closest('.professional-card');
                 const existingId = $card.find('input[name$="[id]"]').val();
@@ -3826,7 +3888,25 @@
                     );
                 }
                 $card.remove();
+                // Re-index remaining cards
+                reindexProfessionalCards();
             });
+
+            function reindexProfessionalCards() {
+                $('#professionalContainer .professional-card').each(function(index) {
+                    const $card = $(this);
+                    $card.data('index', index);
+                    $card.find('.card-header strong').text(`Professional Tax #${index + 1}`);
+                    $card.find('input, textarea').each(function() {
+                        const name = $(this).attr('name');
+                        if (name) {
+                            const newName = name.replace(/professional\[\d+\]/, `professional[${index}]`);
+                            $(this).attr('name', newName);
+                        }
+                    });
+                });
+                ptIndex = $('#professionalContainer .professional-card').length;
+            }
 
             // ─── SAVE POINT DATA ───
             $('#savePointDataForm').on('click', function() {
@@ -4096,7 +4176,7 @@
                 droneLayer.setVisible(false);
             }
 
-            console.log('✅ Executive GIS Dashboard ready');
+            console.log('✅ Executive GIS Dashboard ready with multi-professional tax support');
         });
     </script>
 @endpush
