@@ -1121,7 +1121,7 @@
     <!-- POINT LIST MODAL (ALL ASSESSMENTS)                            -->
     <!-- ============================================================ -->
     <div class="modal fade" id="pointListModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
                 <div class="modal-header bld-modal-header">
                     <div class="bld-header-inner">
@@ -2193,36 +2193,47 @@
                 });
             });
 
+            // ─── GET POINT DATA WITH WATER, UGD, PROFESSIONAL ───
+            function getPointDataWithDetails(gisid, callback) {
+                $.ajax({
+                    url: '/point-data/by-gisid/' + gisid,
+                    method: 'GET',
+                    success: function(res) {
+                        if (res.success) {
+                            callback(res.data);
+                        } else {
+                            showFlashMessage('Failed to load assessment data', 'error');
+                            callback([]);
+                        }
+                    },
+                    error: function() {
+                        showFlashMessage('Failed to load assessment data', 'error');
+                        callback([]);
+                    }
+                });
+            }
+
             // ─── POINT LIST MODAL ───
             function openPointList(gisid) {
                 currentPointListGisid = gisid;
                 $('#pointListSearch').val('');
                 $('#plGisid').text(gisid);
-                renderPointList(gisid, '');
 
-                const building = polygonDatas.find(p => p.gisid == gisid);
-                const billCount = building ? (building.number_bill || 0) : 0;
-                const mappedCount = pointDatas.filter(pd => pd.point_gisid == gisid).length;
-                $('#plBillSummary').text(`${mappedCount} of ${billCount} bills mapped`);
-                $('#plAddBtn').prop('disabled', billCount > 0 && mappedCount >= billCount);
+                getPointDataWithDetails(gisid, function(data) {
+                    renderPointList(data);
+                    const building = polygonDatas.find(p => p.gisid == gisid);
+                    const billCount = building ? (building.number_bill || 0) : 0;
+                    const mappedCount = data.length;
+                    $('#plBillSummary').text(`${mappedCount} of ${billCount} bills mapped`);
+                    $('#plAddBtn').prop('disabled', billCount > 0 && mappedCount >= billCount);
+                });
 
                 const modal = new bootstrap.Modal(document.getElementById('pointListModal'));
                 modal.show();
             }
 
-            function renderPointList(gisid, filterText) {
-                let records = pointDatas.filter(pd => pd.point_gisid == gisid);
-
-                if (filterText) {
-                    const f = filterText.toLowerCase();
-                    records = records.filter(pd =>
-                        (pd.assessment || '').toString().toLowerCase().includes(f) ||
-                        (pd.owner_name || '').toLowerCase().includes(f) ||
-                        (pd.phone_number || '').toString().toLowerCase().includes(f)
-                    );
-                }
-
-                if (!records.length) {
+            function renderPointList(records) {
+                if (!records || !records.length) {
                     $('#pointListContainer').html(
                         '<div class="bld-empty-state text-muted"><i class="bi bi-inbox fs-2"></i><p class="mt-2 mb-0">No assessment records found</p></div>'
                     );
@@ -2255,294 +2266,54 @@
                             <div class="pdc-field"><div class="pdc-field-label">Usage</div><div class="pdc-field-val">${pd.bill_usage || '-'}</div></div>
                             <div class="pdc-field"><div class="pdc-field-label">QC Usage</div><div class="pdc-field-val ${!pd.qcusage ? 'empty' : ''}">${pd.qcusage || 'Not set'}</div></div>
                             <div class="pdc-field"><div class="pdc-field-label">QC Sq.Feet</div><div class="pdc-field-val ${!pd.qcsqfeet ? 'empty' : ''}">${pd.qcsqfeet || 'Not set'}</div></div>
+                            <div class="pdc-field"><div class="pdc-field-label">Water Tax</div><div class="pdc-field-val">${pd.watertax_no || 'N/A'}</div></div>
+                            <div class="pdc-field"><div class="pdc-field-label">UGD</div><div class="pdc-field-val">${pd.ugd_no || 'N/A'}</div></div>
+                            <div class="pdc-field"><div class="pdc-field-label">Professional Tax</div><div class="pdc-field-val">${pd.pt_number || 'N/A'}</div></div>
                         </div>
                     </div>`;
                 });
 
                 $('#pointListContainer').html(html);
-            }
 
-            $(document).on('input', '#pointListSearch', function() {
-                renderPointList(currentPointListGisid, $(this).val());
-            });
-
-            $(document).on('click', '#plAddBtn', function() {
-                bootstrap.Modal.getInstance(document.getElementById('pointListModal')).hide();
-                populatePointForm(currentPointListGisid);
-                const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
-                modal.show();
-            });
-
-            $(document).on('click', '.pdc-edit-btn', function() {
-                const id = $(this).data('id');
-                bootstrap.Modal.getInstance(document.getElementById('pointListModal')).hide();
-                loadPointDataForEdit(id);
-            });
-
-            $(document).on('click', '[data-qc-btn]', function() {
-                openQcModal($(this).data('id'));
-            });
-
-            // ─── QC MODAL ───
-            function openQcModal(id) {
-                const pd = pointDatas.find(p => p.id == id);
-                if (!pd) return;
-
-                $('#qc_point_data_id').val(id);
-                $('#qc_owner_display').text(pd.owner_name || '');
-                $('#qc_assessment_display').text(pd.assessment || '');
-                $('#qcusage').val(pd.qcusage || '');
-                $('#qcsqfeet').val(pd.qcsqfeet || '');
-                $('#qc_remarks').val(pd.qc_remarks || '');
-
-                const modal = new bootstrap.Modal(document.getElementById('qcModal'));
-                modal.show();
-            }
-
-            $(document).on('click', '#saveQcBtn', function() {
-                const id = $('#qc_point_data_id').val();
-                const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
-
-                $.ajax({
-                    url: `/point-data/${id}/qc`,
-                    method: 'POST',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content'),
-                        qcusage: $('#qcusage').val(),
-                        qcsqfeet: $('#qcsqfeet').val(),
-                        qc_remarks: $('#qc_remarks').val(),
-                    },
-                    success: function(res) {
-                        const idx = pointDatas.findIndex(p => p.id == id);
-                        if (idx > -1) pointDatas[idx] = res.point_data;
-                        $('#qcModal').modal('hide');
-                        showFlashMessage('QC data saved successfully!', 'success');
-                        if (currentPointListGisid) {
-                            renderPointList(currentPointListGisid, $('#pointListSearch').val());
-                        }
-                    },
-                    error: function(xhr) {
-                        showFlashMessage(xhr.responseJSON?.message || 'Failed to save QC data.', 'error');
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save QC');
+                // Re-bind search
+                $('#pointListSearch').off('input').on('input', function() {
+                    const searchVal = $(this).val().toLowerCase();
+                    if (!searchVal) {
+                        renderPointList(records);
+                        return;
                     }
-                });
-            });
-
-            // ─── POPULATE POINT FORM ───
-            function populatePointForm(gisid) {
-                ptIndex = 0;
-                $('#point_gisid').val(gisid || '');
-                $('#building_data_id').val('');
-                $('#assessment_type').val('');
-                $('#assessment').val('');
-                $('#old_assessment').val('');
-                $('#zone').val('');
-                $('#owner_name').val('');
-                $('#present_owner_name').val('');
-                $('#phone_number').val('');
-                $('#old_door_no').val('');
-                $('#new_door_no').val('');
-                $('#aadhar_no').val('');
-                $('#ration_no').val('');
-                $('#floor').val('');
-                $('#number_persons').val('');
-                $('#bill_usage').val('');
-                $('#eb').val('');
-                $('#worker_name').val('');
-                $('#remarks').val('');
-                $('#watertax_no').val('');
-                $('#old_watertax_no').val('');
-                $('#water_usage').val('');
-                $('#water_slab_description').val('');
-                $('#water_DBC_type').val('');
-                $('#ugd_no').val('');
-                $('#old_ugd_no').val('');
-                $('#ugd_usage').val('');
-                $('#ugd_slab_description').val('');
-                $('#ugd_DBC_type').val('');
-                $('#pointDetailsTabs button:first').tab('show');
-                $('#professionalContainer').empty();
-                $('#pointDetailsForm').removeAttr('data-edit-id');
-            }
-
-            // ─── LOAD POINT DATA FOR EDIT ───
-            function loadPointDataForEdit(id) {
-                $.ajax({
-                    url: `/point-data/${id}`,
-                    method: 'GET',
-                    success: function(res) {
-                        if (!res.success) {
-                            showFlashMessage(res.message, 'error');
-                            return;
-                        }
-
-                        const pd = res.point_data,
-                            wt = res.water_tax,
-                            ugd = res.ugd_tax,
-                            pts = res.professional;
-
-                        const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
-                        modal.show();
-                        $('#pointDetailsTabs button:first').tab('show');
-
-                        $('#pointDetailsForm').attr('data-edit-id', pd.id);
-                        $('#point_gisid').val(pd.point_gisid);
-                        $('#building_data_id').val(pd.building_data_id);
-
-                        // Basic
-                        $('#assessment_type').val(pd.assessment_type);
-                        $('#assessment').val(pd.assessment);
-                        $('#old_assessment').val(pd.old_assessment);
-                        $('#zone').val(pd.zone);
-                        $('#owner_name').val(pd.owner_name);
-                        $('#present_owner_name').val(pd.present_owner_name);
-                        $('#phone_number').val(pd.phone_number);
-                        $('#old_door_no').val(pd.old_door_no);
-                        $('#new_door_no').val(pd.new_door_no);
-                        $('#aadhar_no').val(pd.aadhar_no);
-                        $('#ration_no').val(pd.ration_no);
-                        $('#floor').val(pd.floor);
-                        $('#number_persons').val(pd.no_of_persons);
-                        $('#bill_usage').val(pd.bill_usage);
-                        $('#eb').val(pd.eb);
-                        $('#remarks').val(pd.remarks);
-
-                        // Water
-                        if (wt) {
-                            $('#watertax_no').val(wt.watertax_no);
-                            $('#old_watertax_no').val(wt.old_watertax_no);
-                            $('#water_usage').val(wt.usage);
-                            $('#water_DBC_type').val(wt.DBC_type);
-                            $('#water_slab_description').val(wt.slab_description);
-                        }
-
-                        // UGD
-                        if (ugd) {
-                            $('#ugd_no').val(ugd.ugd_no);
-                            $('#old_ugd_no').val(ugd.old_ugd_no);
-                            $('#ugd_usage').val(ugd.usage);
-                            $('#ugd_DBC_type').val(ugd.DBC_type);
-                            $('#ugd_slab_description').val(ugd.slab_description);
-                        }
-
-                        // Professional Tax
-                        $('#professionalContainer').empty();
-                        $('#removedProfessionalWrap').remove();
-                        ptIndex = 0;
-                        (pts || []).forEach(p => addProfessionalCard(p));
-                    },
-                    error: function() {
-                        showFlashMessage('Failed to load record for editing.', 'error');
-                    }
-                });
-            }
-
-            // ─── SAVE POINT DATA ───
-            $('#savePointDetails').on('click', function() {
-                const $form = $('#pointDetailsForm');
-                const editId = $form.attr('data-edit-id');
-                const formData = new FormData(document.getElementById('pointDetailsForm'));
-                formData.append('_token', $('input[name="_token"]').val());
-
-                const $btn = $(this).html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
-
-                if (editId) {
-                    formData.append('_method', 'PUT');
-                    $.ajax({
-                        url: `/point-data/${editId}`,
-                        method: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function() {
-                            showFlashMessage('Assessment updated successfully!', 'success');
-                            $('#pointDetailsModal').modal('hide');
-                            $form.removeAttr('data-edit-id');
-                            reloadAllSources();
-                            if (currentPointListGisid) {
-                                renderPointList(currentPointListGisid, $('#pointListSearch').val());
-                            }
-                        },
-                        error: function(xhr) {
-                            showFlashMessage(xhr.responseJSON?.message || 'Update failed.', 'error');
-                        },
-                        complete: () => $btn.html('<i class="bi bi-save me-1"></i>Update Assessment').prop('disabled', false)
-                    });
-                } else {
-                    $.ajax({
-                        url: '/point-data',
-                        method: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function() {
-                            showFlashMessage('Assessment saved successfully!', 'success');
-                            $('#pointDetailsModal').modal('hide');
-                            reloadAllSources();
-                            if (currentPointListGisid) {
-                                renderPointList(currentPointListGisid, $('#pointListSearch').val());
-                            }
-                        },
-                        error: function() {
-                            showFlashMessage('Failed to save assessment.', 'error');
-                        },
-                        complete: () => $btn.html('<i class="bi bi-save me-1"></i>Update Assessment').prop('disabled', false)
-                    });
-                }
-            });
-
-            // ─── PROFESSIONAL TAX ───
-            function addProfessionalCard(data = {}) {
-                const idx = ptIndex;
-                const html = `
-                    <div class="card mb-3 professional-card" data-index="${idx}">
-                        <div class="card-header d-flex justify-content-between">
-                            <strong>Professional Tax #${idx + 1}</strong>
-                            <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
-                        </div>
-                        <div class="card-body">
-                            <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
-                            <div class="row g-3">
-                                <div class="col-md-4"><label>PT Number</label>
-                                    <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}"></div>
-                                <div class="col-md-4"><label>Old PT Number</label>
-                                    <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}"></div>
-                                <div class="col-md-4"><label>Establishment Name</label>
-                                    <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}"></div>
-                                <div class="col-md-4"><label>Profession Type</label>
-                                    <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}"></div>
-                                <div class="col-md-4"><label>Employee Count</label>
-                                    <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}"></div>
-                                <div class="col-md-4"><label>Half Year Tax</label>
-                                    <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}"></div>
-                                <div class="col-md-12"><label>Remarks</label>
-                                    <textarea class="form-control" name="professional[${idx}][pt_remarks]">${data.remarks || ''}</textarea></div>
-                            </div>
-                        </div>
-                    </div>`;
-                $('#professionalContainer').append(html);
-                ptIndex++;
-            }
-
-            $('#addProfessionalBtn').off('click').on('click', function() {
-                addProfessionalCard();
-            });
-
-            $(document).on('click', '.removeProfessional', function() {
-                const $card = $(this).closest('.professional-card');
-                const existingId = $card.find('input[name$="[id]"]').val();
-                if (existingId) {
-                    if (!$('#removedProfessionalWrap').length) {
-                        $('#pointDetailsForm').append('<div id="removedProfessionalWrap"></div>');
-                    }
-                    $('#removedProfessionalWrap').append(
-                        `<input type="hidden" name="removed_professional_ids[]" value="${existingId}">`
+                    const filtered = records.filter(pd =>
+                        (pd.assessment || '').toString().toLowerCase().includes(searchVal) ||
+                        (pd.owner_name || '').toLowerCase().includes(searchVal) ||
+                        (pd.phone_number || '').toString().toLowerCase().includes(searchVal)
                     );
+                    renderPointList(filtered);
+                });
+            }
+
+            // ─── POINT CLICK ───
+            function pointClick(feature) {
+                const gisid = feature.get('gisid');
+                let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
+
+                if (building) {
+                    openPointList(gisid);
+                } else {
+                    showFlashMessage('No building data found for this point', 'warning');
                 }
-                $card.remove();
-            });
+            }
+
+            // ─── POLYGON CLICK ───
+            function polygonClick(feature) {
+                const gisid = feature.get('gisid');
+                let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
+
+                if (building) {
+                    showBuildingView(building);
+                } else {
+                    showFlashMessage('No building data found for this GIS ID', 'warning');
+                }
+            }
 
             // ─── LINE CLICK ───
             function lineClick(feature) {
@@ -2580,30 +2351,6 @@
                     }
                 });
             });
-
-            // ─── POLYGON CLICK ───
-            function polygonClick(feature) {
-                const gisid = feature.get('gisid');
-                let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
-
-                if (building) {
-                    showBuildingView(building);
-                } else {
-                    showFlashMessage('No building data found for this GIS ID', 'warning');
-                }
-            }
-
-            // ─── POINT CLICK ───
-            function pointClick(feature) {
-                const gisid = feature.get('gisid');
-                let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
-
-                if (building) {
-                    openPointList(gisid);
-                } else {
-                    showFlashMessage('No building data found for this point', 'warning');
-                }
-            }
 
             // ─── FEATURE DETAILS ───
             function showFeatureDetails(feature) {
@@ -3727,7 +3474,285 @@
                 $('#searchToggleBtn').removeClass('active-search');
             });
 
-            // Close dropdowns
+            // ─── LOAD POINT DATA FOR EDIT ───
+            function loadPointDataForEdit(id) {
+                $.ajax({
+                    url: `/point-data/${id}`,
+                    method: 'GET',
+                    success: function(res) {
+                        if (!res.success) {
+                            showFlashMessage(res.message, 'error');
+                            return;
+                        }
+
+                        const pd = res.point_data,
+                            wt = res.water_tax,
+                            ugd = res.ugd_tax,
+                            pts = res.professional;
+
+                        const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
+                        modal.show();
+                        $('#pointDetailsTabs button:first').tab('show');
+
+                        $('#pointDetailsForm').attr('data-edit-id', pd.id);
+                        $('#point_gisid').val(pd.point_gisid);
+                        $('#building_data_id').val(pd.building_data_id);
+
+                        // Basic
+                        $('#assessment_type').val(pd.assessment_type);
+                        $('#assessment').val(pd.assessment);
+                        $('#old_assessment').val(pd.old_assessment);
+                        $('#zone').val(pd.zone);
+                        $('#owner_name').val(pd.owner_name);
+                        $('#present_owner_name').val(pd.present_owner_name);
+                        $('#phone_number').val(pd.phone_number);
+                        $('#old_door_no').val(pd.old_door_no);
+                        $('#new_door_no').val(pd.new_door_no);
+                        $('#aadhar_no').val(pd.aadhar_no);
+                        $('#ration_no').val(pd.ration_no);
+                        $('#floor').val(pd.floor);
+                        $('#number_persons').val(pd.no_of_persons);
+                        $('#bill_usage').val(pd.bill_usage);
+                        $('#eb').val(pd.eb);
+                        $('#remarks').val(pd.remarks);
+
+                        // Water
+                        if (wt) {
+                            $('#watertax_no').val(wt.watertax_no);
+                            $('#old_watertax_no').val(wt.old_watertax_no);
+                            $('#water_usage').val(wt.usage);
+                            $('#water_DBC_type').val(wt.DBC_type);
+                            $('#water_slab_description').val(wt.slab_description);
+                        }
+
+                        // UGD
+                        if (ugd) {
+                            $('#ugd_no').val(ugd.ugd_no);
+                            $('#old_ugd_no').val(ugd.old_ugd_no);
+                            $('#ugd_usage').val(ugd.usage);
+                            $('#ugd_DBC_type').val(ugd.DBC_type);
+                            $('#ugd_slab_description').val(ugd.slab_description);
+                        }
+
+                        // Professional Tax
+                        $('#professionalContainer').empty();
+                        $('#removedProfessionalWrap').remove();
+                        ptIndex = 0;
+                        (pts || []).forEach(p => addProfessionalCard(p));
+                    },
+                    error: function() {
+                        showFlashMessage('Failed to load record for editing.', 'error');
+                    }
+                });
+            }
+
+            // ─── PROFESSIONAL TAX ───
+            function addProfessionalCard(data = {}) {
+                const idx = ptIndex;
+                const html = `
+                    <div class="card mb-3 professional-card" data-index="${idx}">
+                        <div class="card-header d-flex justify-content-between">
+                            <strong>Professional Tax #${idx + 1}</strong>
+                            <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
+                        </div>
+                        <div class="card-body">
+                            <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
+                            <div class="row g-3">
+                                <div class="col-md-4"><label>PT Number</label>
+                                    <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}"></div>
+                                <div class="col-md-4"><label>Old PT Number</label>
+                                    <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}"></div>
+                                <div class="col-md-4"><label>Establishment Name</label>
+                                    <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}"></div>
+                                <div class="col-md-4"><label>Profession Type</label>
+                                    <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}"></div>
+                                <div class="col-md-4"><label>Employee Count</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}"></div>
+                                <div class="col-md-4"><label>Half Year Tax</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}"></div>
+                                <div class="col-md-12"><label>Remarks</label>
+                                    <textarea class="form-control" name="professional[${idx}][pt_remarks]">${data.remarks || ''}</textarea></div>
+                            </div>
+                        </div>
+                    </div>`;
+                $('#professionalContainer').append(html);
+                ptIndex++;
+            }
+
+            $('#addProfessionalBtn').off('click').on('click', function() {
+                addProfessionalCard();
+            });
+
+            $(document).on('click', '.removeProfessional', function() {
+                const $card = $(this).closest('.professional-card');
+                const existingId = $card.find('input[name$="[id]"]').val();
+                if (existingId) {
+                    if (!$('#removedProfessionalWrap').length) {
+                        $('#pointDetailsForm').append('<div id="removedProfessionalWrap"></div>');
+                    }
+                    $('#removedProfessionalWrap').append(
+                        `<input type="hidden" name="removed_professional_ids[]" value="${existingId}">`
+                    );
+                }
+                $card.remove();
+            });
+
+            // ─── SAVE POINT DATA ───
+            $('#savePointDetails').on('click', function() {
+                const $form = $('#pointDetailsForm');
+                const editId = $form.attr('data-edit-id');
+                const formData = new FormData(document.getElementById('pointDetailsForm'));
+                formData.append('_token', $('input[name="_token"]').val());
+
+                const $btn = $(this).html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+
+                if (editId) {
+                    formData.append('_method', 'PUT');
+                    $.ajax({
+                        url: `/point-data/${editId}`,
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function() {
+                            showFlashMessage('Assessment updated successfully!', 'success');
+                            $('#pointDetailsModal').modal('hide');
+                            $form.removeAttr('data-edit-id');
+                            reloadAllSources();
+                            if (currentPointListGisid) {
+                                getPointDataWithDetails(currentPointListGisid, function(data) {
+                                    renderPointList(data);
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            showFlashMessage(xhr.responseJSON?.message || 'Update failed.', 'error');
+                        },
+                        complete: () => $btn.html('<i class="bi bi-save me-1"></i>Update Assessment').prop('disabled', false)
+                    });
+                } else {
+                    $.ajax({
+                        url: '/point-data',
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function() {
+                            showFlashMessage('Assessment saved successfully!', 'success');
+                            $('#pointDetailsModal').modal('hide');
+                            reloadAllSources();
+                            if (currentPointListGisid) {
+                                getPointDataWithDetails(currentPointListGisid, function(data) {
+                                    renderPointList(data);
+                                });
+                            }
+                        },
+                        error: function() {
+                            showFlashMessage('Failed to save assessment.', 'error');
+                        },
+                        complete: () => $btn.html('<i class="bi bi-save me-1"></i>Update Assessment').prop('disabled', false)
+                    });
+                }
+            });
+
+            // ─── QC MODAL ───
+            function openQcModal(id) {
+                const pd = pointDatas.find(p => p.id == id);
+                if (!pd) return;
+
+                $('#qc_point_data_id').val(id);
+                $('#qc_owner_display').text(pd.owner_name || '');
+                $('#qc_assessment_display').text(pd.assessment || '');
+                $('#qcusage').val(pd.qcusage || '');
+                $('#qcsqfeet').val(pd.qcsqfeet || '');
+                $('#qc_remarks').val(pd.qc_remarks || '');
+
+                const modal = new bootstrap.Modal(document.getElementById('qcModal'));
+                modal.show();
+            }
+
+            $(document).on('click', '#saveQcBtn', function() {
+                const id = $('#qc_point_data_id').val();
+                const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
+
+                $.ajax({
+                    url: `/point-data/${id}/qc`,
+                    method: 'POST',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                        qcusage: $('#qcusage').val(),
+                        qcsqfeet: $('#qcsqfeet').val(),
+                        qc_remarks: $('#qc_remarks').val(),
+                    },
+                    success: function(res) {
+                        const idx = pointDatas.findIndex(p => p.id == id);
+                        if (idx > -1) pointDatas[idx] = res.point_data;
+                        $('#qcModal').modal('hide');
+                        showFlashMessage('QC data saved successfully!', 'success');
+                        if (currentPointListGisid) {
+                            getPointDataWithDetails(currentPointListGisid, function(data) {
+                                renderPointList(data);
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        showFlashMessage(xhr.responseJSON?.message || 'Failed to save QC data.', 'error');
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save QC');
+                    }
+                });
+            });
+
+            $(document).on('click', '.pdc-qc-btn', function() {
+                openQcModal($(this).data('id'));
+            });
+
+            // ─── POPULATE POINT FORM ───
+            function populatePointForm(gisid) {
+                ptIndex = 0;
+                $('#point_gisid').val(gisid || '');
+                $('#building_data_id').val('');
+                $('#assessment_type').val('');
+                $('#assessment').val('');
+                $('#old_assessment').val('');
+                $('#zone').val('');
+                $('#owner_name').val('');
+                $('#present_owner_name').val('');
+                $('#phone_number').val('');
+                $('#old_door_no').val('');
+                $('#new_door_no').val('');
+                $('#aadhar_no').val('');
+                $('#ration_no').val('');
+                $('#floor').val('');
+                $('#number_persons').val('');
+                $('#bill_usage').val('');
+                $('#eb').val('');
+                $('#worker_name').val('');
+                $('#remarks').val('');
+                $('#watertax_no').val('');
+                $('#old_watertax_no').val('');
+                $('#water_usage').val('');
+                $('#water_slab_description').val('');
+                $('#water_DBC_type').val('');
+                $('#ugd_no').val('');
+                $('#old_ugd_no').val('');
+                $('#ugd_usage').val('');
+                $('#ugd_slab_description').val('');
+                $('#ugd_DBC_type').val('');
+                $('#pointDetailsTabs button:first').tab('show');
+                $('#professionalContainer').empty();
+                $('#pointDetailsForm').removeAttr('data-edit-id');
+            }
+
+            $(document).on('click', '#plAddBtn', function() {
+                bootstrap.Modal.getInstance(document.getElementById('pointListModal')).hide();
+                populatePointForm(currentPointListGisid);
+                const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
+                modal.show();
+            });
+
+            // ─── CLOSE DROPDOWNS ───
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass('show');
                 if (!$(e.target).closest('.custom-location-switcher').length) $('#locationDropdown').removeClass('show');
@@ -3741,7 +3766,7 @@
                 }
             });
 
-            // Fullscreen
+            // ─── FULLSCREEN ───
             let isFullscreen = false;
             $(document).on('click', '#fullscreenBtn', function() {
                 const $icon = $(this).find('i');
