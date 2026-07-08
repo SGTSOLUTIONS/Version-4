@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
     <style>
+        /* ─── General ─── */
         .dropdown-header {
             padding: 8px 18px;
             font-size: 0.75rem;
@@ -83,6 +84,7 @@
             height: calc(100vh - 5px);
         }
 
+        /* ─── Layer Controls ─── */
         .custom-layer-switcher,
         .custom-location-switcher,
         .custom-search-switcher,
@@ -253,6 +255,7 @@
             transform: translateX(-50%) translateY(0);
         }
 
+        /* ─── Search ─── */
         .search-result-item {
             padding: 10px 16px;
             cursor: pointer;
@@ -284,6 +287,129 @@
             bottom: 20px;
             right: 20px;
             z-index: 1000;
+        }
+
+        /* ── Edit Controls ── */
+        .edit-controls {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #e5e7eb;
+            animation: slideUp 0.3s ease;
+        }
+
+        .edit-controls.show {
+            display: flex;
+        }
+
+        .edit-controls .btn {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .edit-controls .btn-save {
+            background: #22c55e;
+            color: white;
+            border: none;
+        }
+
+        .edit-controls .btn-save:hover {
+            background: #16a34a;
+        }
+
+        .edit-controls .btn-cancel {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+        }
+
+        .edit-controls .btn-cancel:hover {
+            background: #d1d5db;
+        }
+
+        .split-action-btn {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        .split-action-btn.show {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .split-action-btn .close-btn {
+            font-size: 1.2rem;
+            opacity: 0.7;
+            cursor: pointer;
+            padding: 0 5px;
+            transition: opacity 0.2s;
+        }
+
+        .split-action-btn .close-btn:hover {
+            opacity: 1;
+        }
+
+        .delete-type-btn {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            background: #f8fafc;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .delete-type-btn:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .delete-type-btn.active {
+            border-color: #3b82f6 !important;
+            background: #eff6ff !important;
+            color: #2563eb !important;
         }
 
         /* ── Modal Styles ── */
@@ -562,7 +688,7 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, .12) !important;
         }
 
-        /* Point Data Cards */
+        /* ── Point Data Cards ── */
         .point-data-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -669,6 +795,56 @@
         .pdc-field-val.empty {
             color: #cbd5e1;
             font-style: italic;
+        }
+
+        /* ── Tax Cards ── */
+        .tax-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px 14px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 8px;
+            height: 100%;
+        }
+
+        .tax-card-title {
+            font-size: .7rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 4px;
+        }
+
+        .tax-card-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .tax-card-label {
+            font-size: .7rem;
+            color: #94a3b8;
+        }
+
+        .tax-card-value {
+            font-size: .78rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .draw-mode {
+            cursor: crosshair !important;
+        }
+
+        .split-mode {
+            cursor: crosshair !important;
+        }
+
+        .edit-mode {
+            cursor: pointer !important;
         }
 
         @media (max-width: 768px) {
@@ -1118,9 +1294,9 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- POINT LIST MODAL (ALL ASSESSMENTS)                            -->
+    <!-- POINT DETAILS MODAL (SHOW ALL DATA)                           -->
     <!-- ============================================================ -->
-    <div class="modal fade" id="pointListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="pointDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
                 <div class="modal-header bld-modal-header">
@@ -1128,21 +1304,21 @@
                         <div class="bld-header-icon"><i class="bi bi-people"></i></div>
                         <div>
                             <h5 class="bld-modal-title">Assessment Records</h5>
-                            <span class="bld-gisid-badge">GIS ID: <span id="plGisid"></span></span>
+                            <span class="bld-gisid-badge">GIS ID: <span id="pdGisid"></span></span>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-muted small" id="plBillSummary"></span>
-                        <button class="btn bld-btn-save btn-sm" id="plAddBtn">
+                        <span class="text-muted small" id="pdBillSummary"></span>
+                        <button class="btn bld-btn-save btn-sm" id="pdAddBtn">
                             <i class="bi bi-plus-circle me-1"></i>Add New Assessment
                         </button>
                     </div>
-                    <input type="text" class="form-control bld-input mb-3" id="pointListSearch"
+                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch"
                         placeholder="Search by assessment, owner name, or phone number...">
-                    <div id="pointListContainer"></div>
+                    <div id="pointDetailsContainer"></div>
                 </div>
             </div>
         </div>
@@ -1197,9 +1373,9 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- POINT DATA EDIT MODAL                                        -->
+    <!-- POINT DATA EDIT FORM MODAL                                   -->
     <!-- ============================================================ -->
-    <div class="modal fade" id="pointDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="pointDataFormModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
                 <div class="modal-header bld-modal-header" style="background: linear-gradient(135deg,#2563eb,#1d4ed8);">
@@ -1212,9 +1388,9 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <form id="pointDetailsForm" class="needs-validation" novalidate>
+                    <form id="pointDataForm" class="needs-validation" novalidate>
                         @csrf
-                        <ul class="nav nav-tabs mb-3" id="pointDetailsTabs" role="tablist">
+                        <ul class="nav nav-tabs mb-3" id="pointDataTabs" role="tablist">
                             <li class="nav-item">
                                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#basic-tab" type="button">Basic Info</button>
                             </li>
@@ -1232,12 +1408,12 @@
                         <div class="tab-content">
                             <!-- BASIC INFO -->
                             <div class="tab-pane fade show active" id="basic-tab">
-                                <input type="text" class="form-control" id="point_gisid" name="point_gisid" hidden>
-                                <input type="text" class="form-control" id="building_data_id" name="building_data_id" hidden>
+                                <input type="text" class="form-control" id="pf_point_gisid" name="point_gisid" hidden>
+                                <input type="text" class="form-control" id="pf_building_data_id" name="building_data_id" hidden>
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label class="form-label">Assessment Type <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="assessment_type" name="assessment_type" required>
+                                        <select class="form-control" id="pf_assessment_type" name="assessment_type" required>
                                             <option value="">-- Select --</option>
                                             <option value="OLD">OLD</option>
                                             <option value="NEW">NEW</option>
@@ -1247,55 +1423,55 @@
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Assessment <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="assessment" name="assessment" required>
+                                        <input type="text" class="form-control" id="pf_assessment" name="assessment" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Old Assessment</label>
-                                        <input type="text" class="form-control" id="old_assessment" name="old_assessment">
+                                        <input type="text" class="form-control" id="pf_old_assessment" name="old_assessment">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Zone <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="zone" name="zone" required>
+                                        <input type="text" class="form-control" id="pf_zone" name="zone" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Owner Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="owner_name" name="owner_name" required>
+                                        <input type="text" class="form-control" id="pf_owner_name" name="owner_name" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Present Owner Name</label>
-                                        <input type="text" class="form-control" id="present_owner_name" name="present_owner_name">
+                                        <input type="text" class="form-control" id="pf_present_owner_name" name="present_owner_name">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Phone Number <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="phone_number" name="phone_number" pattern="[0-9]{10}" required>
+                                        <input type="text" class="form-control" id="pf_phone_number" name="phone_number" pattern="[0-9]{10}" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Old Door No</label>
-                                        <input type="text" class="form-control" id="old_door_no" name="old_door_no">
+                                        <input type="text" class="form-control" id="pf_old_door_no" name="old_door_no">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">New Door No <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="new_door_no" name="new_door_no" required>
+                                        <input type="text" class="form-control" id="pf_new_door_no" name="new_door_no" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Aadhar No</label>
-                                        <input type="text" class="form-control" id="aadhar_no" name="aadhar_no" pattern="[0-9]{12}">
+                                        <input type="text" class="form-control" id="pf_aadhar_no" name="aadhar_no" pattern="[0-9]{12}">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Ration No</label>
-                                        <input type="text" class="form-control" id="ration_no" name="ration_no">
+                                        <input type="text" class="form-control" id="pf_ration_no" name="ration_no">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Floor <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="floor" name="floor" required>
+                                        <input type="text" class="form-control" id="pf_floor" name="floor" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Number Persons</label>
-                                        <input type="number" class="form-control" id="number_persons" name="number_persons" min="1">
+                                        <input type="number" class="form-control" id="pf_number_persons" name="number_persons" min="1">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Bill Usage <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="bill_usage" name="bill_usage" required>
+                                        <select class="form-select" id="pf_bill_usage" name="bill_usage" required>
                                             <option value="">Select</option>
                                             <option value="Residential">Residential</option>
                                             <option value="Commercial">Commercial</option>
@@ -1303,15 +1479,15 @@
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">EB</label>
-                                        <input type="text" class="form-control" id="eb" name="eb">
+                                        <input type="text" class="form-control" id="pf_eb" name="eb">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Worker Name</label>
-                                        <input type="text" class="form-control" id="worker_name" name="worker_name">
+                                        <input type="text" class="form-control" id="pf_worker_name" name="worker_name">
                                     </div>
                                     <div class="col-md-12">
                                         <label class="form-label">Remarks</label>
-                                        <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
+                                        <textarea class="form-control" id="pf_remarks" name="remarks" rows="2"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -1321,15 +1497,15 @@
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label class="form-label">Water Tax No <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="watertax_no" name="watertax_no" required>
+                                        <input type="text" class="form-control" id="pf_watertax_no" name="watertax_no" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Old Water Tax No</label>
-                                        <input type="text" class="form-control" id="old_watertax_no" name="old_watertax_no">
+                                        <input type="text" class="form-control" id="pf_old_watertax_no" name="old_watertax_no">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Water Usage <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="water_usage" name="water_usage" required>
+                                        <select class="form-select" id="pf_water_usage" name="water_usage" required>
                                             <option value="">Select</option>
                                             <option value="Domestic">Domestic</option>
                                             <option value="Commercial">Commercial</option>
@@ -1339,11 +1515,11 @@
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Water DBC Type</label>
-                                        <input type="text" class="form-control" id="water_DBC_type" name="water_DBC_type">
+                                        <input type="text" class="form-control" id="pf_water_DBC_type" name="water_DBC_type">
                                     </div>
                                     <div class="col-md-12">
                                         <label class="form-label">Water Slab Description</label>
-                                        <textarea class="form-control" id="water_slab_description" name="water_slab_description" rows="2"></textarea>
+                                        <textarea class="form-control" id="pf_water_slab_description" name="water_slab_description" rows="2"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -1353,23 +1529,23 @@
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label class="form-label">UGD No <span class="text-danger">*</span></label>
-                                        <input class="form-control" id="ugd_no" name="ugd_no" required>
+                                        <input class="form-control" id="pf_ugd_no" name="ugd_no" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Old UGD No</label>
-                                        <input class="form-control" id="old_ugd_no" name="old_ugd_no">
+                                        <input class="form-control" id="pf_old_ugd_no" name="old_ugd_no">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">UGD Usage <span class="text-danger">*</span></label>
-                                        <input class="form-control" id="ugd_usage" name="ugd_usage" required>
+                                        <input class="form-control" id="pf_ugd_usage" name="ugd_usage" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">UGD DBC Type</label>
-                                        <input class="form-control" id="ugd_DBC_type" name="ugd_DBC_type">
+                                        <input class="form-control" id="pf_ugd_DBC_type" name="ugd_DBC_type">
                                     </div>
                                     <div class="col-md-8">
                                         <label class="form-label">UGD Slab Description</label>
-                                        <textarea class="form-control" id="ugd_slab_description" name="ugd_slab_description" rows="2"></textarea>
+                                        <textarea class="form-control" id="pf_ugd_slab_description" name="ugd_slab_description" rows="2"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -1385,11 +1561,11 @@
                                 <div id="professionalContainer"></div>
                             </div>
                         </div>
-                        <input type="hidden" id="validationTrigger" name="validationTrigger" value="false">
+                        <input type="hidden" id="pf_validationTrigger" name="validationTrigger" value="false">
                     </form>
                 </div>
                 <div class="modal-footer bld-modal-footer">
-                    <button type="button" class="btn bld-btn-save" id="savePointDetails">
+                    <button type="button" class="btn bld-btn-save" id="savePointDataForm">
                         <i class="bi bi-save me-1"></i>Update Assessment
                     </button>
                 </div>
@@ -1505,7 +1681,7 @@
             const misData = @json($misData);
             let ptIndex = 0;
             let searchIndex = [];
-            let currentPointListGisid = null;
+            let currentPointGisid = null;
 
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
                 {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
@@ -2076,7 +2252,7 @@
 
                 $('#buildingViewPointsBtn').off('click').on('click', function() {
                     bootstrap.Modal.getInstance(document.getElementById('buildingViewModal')).hide();
-                    openPointList(item.gisid);
+                    openPointDetails(currentPointGisid || item.gisid);
                 });
 
                 const modal = new bootstrap.Modal(document.getElementById('buildingViewModal'));
@@ -2213,28 +2389,28 @@
                 });
             }
 
-            // ─── POINT LIST MODAL ───
-            function openPointList(gisid) {
-                currentPointListGisid = gisid;
-                $('#pointListSearch').val('');
-                $('#plGisid').text(gisid);
+            // ─── POINT DETAILS MODAL (SHOW ALL DATA) ───
+            function openPointDetails(gisid) {
+                currentPointGisid = gisid;
+                $('#pointDetailsSearch').val('');
+                $('#pdGisid').text(gisid);
 
                 getPointDataWithDetails(gisid, function(data) {
-                    renderPointList(data);
+                    renderPointDetails(data);
                     const building = polygonDatas.find(p => p.gisid == gisid);
                     const billCount = building ? (building.number_bill || 0) : 0;
                     const mappedCount = data.length;
-                    $('#plBillSummary').text(`${mappedCount} of ${billCount} bills mapped`);
-                    $('#plAddBtn').prop('disabled', billCount > 0 && mappedCount >= billCount);
+                    $('#pdBillSummary').text(`${mappedCount} of ${billCount} bills mapped`);
+                    $('#pdAddBtn').prop('disabled', billCount > 0 && mappedCount >= billCount);
                 });
 
-                const modal = new bootstrap.Modal(document.getElementById('pointListModal'));
+                const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
                 modal.show();
             }
 
-            function renderPointList(records) {
+            function renderPointDetails(records) {
                 if (!records || !records.length) {
-                    $('#pointListContainer').html(
+                    $('#pointDetailsContainer').html(
                         '<div class="bld-empty-state text-muted"><i class="bi bi-inbox fs-2"></i><p class="mt-2 mb-0">No assessment records found</p></div>'
                     );
                     return;
@@ -2248,7 +2424,7 @@
                     const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' : 'QC Partial';
 
                     html += `
-                    <div class="point-data-card">
+                    <div class="point-data-card" data-id="${pd.id}">
                         <div class="point-data-card-header">
                             <div>
                                 <div class="point-data-card-title">${pd.owner_name || 'Unnamed Owner'}</div>
@@ -2260,26 +2436,80 @@
                                 <button class="pdc-action-btn pdc-qc-btn" title="Quality Check" data-id="${pd.id}" data-qc-btn><i class="bi bi-clipboard-check"></i></button>
                             </div>
                         </div>
+
+                        <!-- Main Data Grid -->
                         <div class="point-data-card-grid">
                             <div class="pdc-field"><div class="pdc-field-label">Phone</div><div class="pdc-field-val">${pd.phone_number || '-'}</div></div>
                             <div class="pdc-field"><div class="pdc-field-label">Floor</div><div class="pdc-field-val">${pd.floor ?? '-'}</div></div>
                             <div class="pdc-field"><div class="pdc-field-label">Usage</div><div class="pdc-field-val">${pd.bill_usage || '-'}</div></div>
                             <div class="pdc-field"><div class="pdc-field-label">QC Usage</div><div class="pdc-field-val ${!pd.qcusage ? 'empty' : ''}">${pd.qcusage || 'Not set'}</div></div>
                             <div class="pdc-field"><div class="pdc-field-label">QC Sq.Feet</div><div class="pdc-field-val ${!pd.qcsqfeet ? 'empty' : ''}">${pd.qcsqfeet || 'Not set'}</div></div>
-                            <div class="pdc-field"><div class="pdc-field-label">Water Tax</div><div class="pdc-field-val">${pd.watertax_no || 'N/A'}</div></div>
-                            <div class="pdc-field"><div class="pdc-field-label">UGD</div><div class="pdc-field-val">${pd.ugd_no || 'N/A'}</div></div>
-                            <div class="pdc-field"><div class="pdc-field-label">Professional Tax</div><div class="pdc-field-val">${pd.pt_number || 'N/A'}</div></div>
+                        </div>
+
+                        <!-- Tax Details Section -->
+                        <div class="row mt-3 g-2">
+                            <div class="col-md-4">
+                                <div class="tax-card">
+                                    <div class="tax-card-title"><i class="bi bi-droplet me-1"></i>Water Tax</div>
+                                    <div class="tax-card-row">
+                                        <span class="tax-card-label">Number</span>
+                                        <span class="tax-card-value">${pd.watertax_no || 'N/A'}</span>
+                                    </div>
+                                    <div class="tax-card-row">
+                                        <span class="tax-card-label">Usage</span>
+                                        <span class="tax-card-value">${pd.water_usage || 'N/A'}</span>
+                                    </div>
+                                    <div class="tax-card-row">
+                                        <span class="tax-card-label">DBC Type</span>
+                                        <span class="tax-card-value">${pd.water_DBC_type || 'N/A'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tax-card">
+                                    <div class="tax-card-title"><i class="bi bi-pipe me-1"></i>UGD Tax</div>
+                                    <div class="tax-card-row">
+                                        <span class="tax-card-label">Number</span>
+                                        <span class="tax-card-value">${pd.ugd_no || 'N/A'}</span>
+                                    </div>
+                                    <div class="tax-card-row">
+                                        <span class="tax-card-label">Usage</span>
+                                        <span class="tax-card-value">${pd.ugd_usage || 'N/A'}</span>
+                                    </div>
+                                    <div class="tax-card-row">
+                                        <span class="tax-card-label">DBC Type</span>
+                                        <span class="tax-card-value">${pd.ugd_DBC_type || 'N/A'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tax-card">
+                                    <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax</div>
+                                    <div class="tax-card-row">
+                                        <span class="tax-card-label">Number</span>
+                                        <span class="tax-card-value">${pd.pt_number || 'N/A'}</span>
+                                    </div>
+                                    <div class="tax-card-row">
+                                        <span class="tax-card-label">Establishment</span>
+                                        <span class="tax-card-value">${pd.establishment_name || 'N/A'}</span>
+                                    </div>
+                                    <div class="tax-card-row">
+                                        <span class="tax-card-label">Half Year Tax</span>
+                                        <span class="tax-card-value">${pd.half_year_tax || 'N/A'}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>`;
                 });
 
-                $('#pointListContainer').html(html);
+                $('#pointDetailsContainer').html(html);
 
                 // Re-bind search
-                $('#pointListSearch').off('input').on('input', function() {
+                $('#pointDetailsSearch').off('input').on('input', function() {
                     const searchVal = $(this).val().toLowerCase();
                     if (!searchVal) {
-                        renderPointList(records);
+                        renderPointDetails(records);
                         return;
                     }
                     const filtered = records.filter(pd =>
@@ -2287,7 +2517,7 @@
                         (pd.owner_name || '').toLowerCase().includes(searchVal) ||
                         (pd.phone_number || '').toString().toLowerCase().includes(searchVal)
                     );
-                    renderPointList(filtered);
+                    renderPointDetails(filtered);
                 });
             }
 
@@ -2297,7 +2527,7 @@
                 let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
 
                 if (building) {
-                    openPointList(gisid);
+                    openPointDetails(gisid);
                 } else {
                     showFlashMessage('No building data found for this point', 'warning');
                 }
@@ -2309,6 +2539,7 @@
                 let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
 
                 if (building) {
+                    currentPointGisid = gisid;
                     showBuildingView(building);
                 } else {
                     showFlashMessage('No building data found for this GIS ID', 'warning');
@@ -3490,48 +3721,48 @@
                             ugd = res.ugd_tax,
                             pts = res.professional;
 
-                        const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
+                        const modal = new bootstrap.Modal(document.getElementById('pointDataFormModal'));
                         modal.show();
-                        $('#pointDetailsTabs button:first').tab('show');
+                        $('#pointDataTabs button:first').tab('show');
 
-                        $('#pointDetailsForm').attr('data-edit-id', pd.id);
-                        $('#point_gisid').val(pd.point_gisid);
-                        $('#building_data_id').val(pd.building_data_id);
+                        $('#pointDataForm').attr('data-edit-id', pd.id);
+                        $('#pf_point_gisid').val(pd.point_gisid);
+                        $('#pf_building_data_id').val(pd.building_data_id);
 
                         // Basic
-                        $('#assessment_type').val(pd.assessment_type);
-                        $('#assessment').val(pd.assessment);
-                        $('#old_assessment').val(pd.old_assessment);
-                        $('#zone').val(pd.zone);
-                        $('#owner_name').val(pd.owner_name);
-                        $('#present_owner_name').val(pd.present_owner_name);
-                        $('#phone_number').val(pd.phone_number);
-                        $('#old_door_no').val(pd.old_door_no);
-                        $('#new_door_no').val(pd.new_door_no);
-                        $('#aadhar_no').val(pd.aadhar_no);
-                        $('#ration_no').val(pd.ration_no);
-                        $('#floor').val(pd.floor);
-                        $('#number_persons').val(pd.no_of_persons);
-                        $('#bill_usage').val(pd.bill_usage);
-                        $('#eb').val(pd.eb);
-                        $('#remarks').val(pd.remarks);
+                        $('#pf_assessment_type').val(pd.assessment_type);
+                        $('#pf_assessment').val(pd.assessment);
+                        $('#pf_old_assessment').val(pd.old_assessment);
+                        $('#pf_zone').val(pd.zone);
+                        $('#pf_owner_name').val(pd.owner_name);
+                        $('#pf_present_owner_name').val(pd.present_owner_name);
+                        $('#pf_phone_number').val(pd.phone_number);
+                        $('#pf_old_door_no').val(pd.old_door_no);
+                        $('#pf_new_door_no').val(pd.new_door_no);
+                        $('#pf_aadhar_no').val(pd.aadhar_no);
+                        $('#pf_ration_no').val(pd.ration_no);
+                        $('#pf_floor').val(pd.floor);
+                        $('#pf_number_persons').val(pd.no_of_persons);
+                        $('#pf_bill_usage').val(pd.bill_usage);
+                        $('#pf_eb').val(pd.eb);
+                        $('#pf_remarks').val(pd.remarks);
 
                         // Water
                         if (wt) {
-                            $('#watertax_no').val(wt.watertax_no);
-                            $('#old_watertax_no').val(wt.old_watertax_no);
-                            $('#water_usage').val(wt.usage);
-                            $('#water_DBC_type').val(wt.DBC_type);
-                            $('#water_slab_description').val(wt.slab_description);
+                            $('#pf_watertax_no').val(wt.watertax_no);
+                            $('#pf_old_watertax_no').val(wt.old_watertax_no);
+                            $('#pf_water_usage').val(wt.usage);
+                            $('#pf_water_DBC_type').val(wt.DBC_type);
+                            $('#pf_water_slab_description').val(wt.slab_description);
                         }
 
                         // UGD
                         if (ugd) {
-                            $('#ugd_no').val(ugd.ugd_no);
-                            $('#old_ugd_no').val(ugd.old_ugd_no);
-                            $('#ugd_usage').val(ugd.usage);
-                            $('#ugd_DBC_type').val(ugd.DBC_type);
-                            $('#ugd_slab_description').val(ugd.slab_description);
+                            $('#pf_ugd_no').val(ugd.ugd_no);
+                            $('#pf_old_ugd_no').val(ugd.old_ugd_no);
+                            $('#pf_ugd_usage').val(ugd.usage);
+                            $('#pf_ugd_DBC_type').val(ugd.DBC_type);
+                            $('#pf_ugd_slab_description').val(ugd.slab_description);
                         }
 
                         // Professional Tax
@@ -3588,7 +3819,7 @@
                 const existingId = $card.find('input[name$="[id]"]').val();
                 if (existingId) {
                     if (!$('#removedProfessionalWrap').length) {
-                        $('#pointDetailsForm').append('<div id="removedProfessionalWrap"></div>');
+                        $('#pointDataForm').append('<div id="removedProfessionalWrap"></div>');
                     }
                     $('#removedProfessionalWrap').append(
                         `<input type="hidden" name="removed_professional_ids[]" value="${existingId}">`
@@ -3598,10 +3829,10 @@
             });
 
             // ─── SAVE POINT DATA ───
-            $('#savePointDetails').on('click', function() {
-                const $form = $('#pointDetailsForm');
+            $('#savePointDataForm').on('click', function() {
+                const $form = $('#pointDataForm');
                 const editId = $form.attr('data-edit-id');
-                const formData = new FormData(document.getElementById('pointDetailsForm'));
+                const formData = new FormData(document.getElementById('pointDataForm'));
                 formData.append('_token', $('input[name="_token"]').val());
 
                 const $btn = $(this).html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
@@ -3616,12 +3847,12 @@
                         contentType: false,
                         success: function() {
                             showFlashMessage('Assessment updated successfully!', 'success');
-                            $('#pointDetailsModal').modal('hide');
+                            $('#pointDataFormModal').modal('hide');
                             $form.removeAttr('data-edit-id');
                             reloadAllSources();
-                            if (currentPointListGisid) {
-                                getPointDataWithDetails(currentPointListGisid, function(data) {
-                                    renderPointList(data);
+                            if (currentPointGisid) {
+                                getPointDataWithDetails(currentPointGisid, function(data) {
+                                    renderPointDetails(data);
                                 });
                             }
                         },
@@ -3639,11 +3870,11 @@
                         contentType: false,
                         success: function() {
                             showFlashMessage('Assessment saved successfully!', 'success');
-                            $('#pointDetailsModal').modal('hide');
+                            $('#pointDataFormModal').modal('hide');
                             reloadAllSources();
-                            if (currentPointListGisid) {
-                                getPointDataWithDetails(currentPointListGisid, function(data) {
-                                    renderPointList(data);
+                            if (currentPointGisid) {
+                                getPointDataWithDetails(currentPointGisid, function(data) {
+                                    renderPointDetails(data);
                                 });
                             }
                         },
@@ -3689,9 +3920,9 @@
                         if (idx > -1) pointDatas[idx] = res.point_data;
                         $('#qcModal').modal('hide');
                         showFlashMessage('QC data saved successfully!', 'success');
-                        if (currentPointListGisid) {
-                            getPointDataWithDetails(currentPointListGisid, function(data) {
-                                renderPointList(data);
+                        if (currentPointGisid) {
+                            getPointDataWithDetails(currentPointGisid, function(data) {
+                                renderPointDetails(data);
                             });
                         }
                     },
@@ -3711,45 +3942,51 @@
             // ─── POPULATE POINT FORM ───
             function populatePointForm(gisid) {
                 ptIndex = 0;
-                $('#point_gisid').val(gisid || '');
-                $('#building_data_id').val('');
-                $('#assessment_type').val('');
-                $('#assessment').val('');
-                $('#old_assessment').val('');
-                $('#zone').val('');
-                $('#owner_name').val('');
-                $('#present_owner_name').val('');
-                $('#phone_number').val('');
-                $('#old_door_no').val('');
-                $('#new_door_no').val('');
-                $('#aadhar_no').val('');
-                $('#ration_no').val('');
-                $('#floor').val('');
-                $('#number_persons').val('');
-                $('#bill_usage').val('');
-                $('#eb').val('');
-                $('#worker_name').val('');
-                $('#remarks').val('');
-                $('#watertax_no').val('');
-                $('#old_watertax_no').val('');
-                $('#water_usage').val('');
-                $('#water_slab_description').val('');
-                $('#water_DBC_type').val('');
-                $('#ugd_no').val('');
-                $('#old_ugd_no').val('');
-                $('#ugd_usage').val('');
-                $('#ugd_slab_description').val('');
-                $('#ugd_DBC_type').val('');
-                $('#pointDetailsTabs button:first').tab('show');
+                $('#pf_point_gisid').val(gisid || '');
+                $('#pf_building_data_id').val('');
+                $('#pf_assessment_type').val('');
+                $('#pf_assessment').val('');
+                $('#pf_old_assessment').val('');
+                $('#pf_zone').val('');
+                $('#pf_owner_name').val('');
+                $('#pf_present_owner_name').val('');
+                $('#pf_phone_number').val('');
+                $('#pf_old_door_no').val('');
+                $('#pf_new_door_no').val('');
+                $('#pf_aadhar_no').val('');
+                $('#pf_ration_no').val('');
+                $('#pf_floor').val('');
+                $('#pf_number_persons').val('');
+                $('#pf_bill_usage').val('');
+                $('#pf_eb').val('');
+                $('#pf_worker_name').val('');
+                $('#pf_remarks').val('');
+                $('#pf_watertax_no').val('');
+                $('#pf_old_watertax_no').val('');
+                $('#pf_water_usage').val('');
+                $('#pf_water_slab_description').val('');
+                $('#pf_water_DBC_type').val('');
+                $('#pf_ugd_no').val('');
+                $('#pf_old_ugd_no').val('');
+                $('#pf_ugd_usage').val('');
+                $('#pf_ugd_slab_description').val('');
+                $('#pf_ugd_DBC_type').val('');
+                $('#pointDataTabs button:first').tab('show');
                 $('#professionalContainer').empty();
-                $('#pointDetailsForm').removeAttr('data-edit-id');
+                $('#pointDataForm').removeAttr('data-edit-id');
             }
 
-            $(document).on('click', '#plAddBtn', function() {
-                bootstrap.Modal.getInstance(document.getElementById('pointListModal')).hide();
-                populatePointForm(currentPointListGisid);
-                const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
+            $(document).on('click', '#pdAddBtn', function() {
+                bootstrap.Modal.getInstance(document.getElementById('pointDetailsModal')).hide();
+                populatePointForm(currentPointGisid);
+                const modal = new bootstrap.Modal(document.getElementById('pointDataFormModal'));
                 modal.show();
+            });
+
+            $(document).on('click', '.pdc-edit-btn', function() {
+                const id = $(this).data('id');
+                bootstrap.Modal.getInstance(document.getElementById('pointDetailsModal')).hide();
+                loadPointDataForEdit(id);
             });
 
             // ─── CLOSE DROPDOWNS ───
