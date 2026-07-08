@@ -1940,12 +1940,11 @@
                 $('#pdGisid').text(gisid);
 
                 getPointDataWithDetails(gisid, function(data) {
-                    currentPointRecords = data; // keep nested records in sync
+                    currentPointRecords = data;
                     renderPointDetails(data);
                     const building = polygonDatas.find(p => p.gisid == gisid);
                     const billCount = building ? (building.number_bill || 0) : 0;
-                    const mappedCount = data.length;
-                    $('#pdBillSummary').text(`${mappedCount} of ${billCount} bills mapped`);
+                    $('#pdBillSummary').text(`${data.length} of ${billCount} bills mapped`);
                 });
 
                 const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
@@ -1960,40 +1959,30 @@
                     return;
                 }
 
+                // helper to safely print a value
+                const v = (val) => (val === null || val === undefined || val === '') ?
+                    '<span class="text-muted">-</span>' : val;
+
                 let html = '';
                 records.forEach(record => {
                     const pd = record.point || {};
-                    const waterTax = record.water_tax || {};
-                    const ugdTax = record.ugd_tax || {};
-                    const professionalTaxList = record.professional_tax || [];
+                    const mis = record.mis || {};
+                    const wt = record.water_tax || {};
+                    const ugd = record.ugd_tax || {};
+                    const ptList = record.professional_tax || [];
 
                     const qcFilled = [pd.qcusage, pd.qcsqfeet, pd.qc_remarks]
-                        .filter(v => v !== null && v !== '' && v !== undefined).length;
+                        .filter(val => val !== null && val !== '' && val !== undefined).length;
                     const qcClass = qcFilled === 3 ? 'complete' : qcFilled === 0 ? 'empty' : 'partial';
                     const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' :
                         'QC Partial';
-
-                    // Professional tax can have multiple entries per assessment
-                    let ptHtml = '';
-                    if (professionalTaxList.length) {
-                        professionalTaxList.forEach(pt => {
-                            ptHtml += `
-                    <div class="tax-card-row">
-                        <span class="tax-card-label">${pt.pt_number || 'N/A'}</span>
-                        <span class="tax-card-value">${pt.establishment_name || 'N/A'} (${pt.half_year_tax || '0'})</span>
-                    </div>`;
-                        });
-                    } else {
-                        ptHtml =
-                            `<div class="tax-card-row"><span class="tax-card-label">No records</span></div>`;
-                    }
 
                     html += `
         <div class="point-data-card" data-id="${pd.id}">
             <div class="point-data-card-header">
                 <div>
-                    <div class="point-data-card-title">${pd.owner_name || pd.present_owner_name || 'Unnamed Owner'}</div>
-                    <div class="point-data-card-subtitle">Assessment: ${pd.assessment || 'N/A'} • ${pd.new_door_no || pd.old_door_no || 'No door no'}</div>
+                    <div class="point-data-card-title">${v(pd.owner_name)}</div>
+                    <div class="point-data-card-subtitle">Assessment: ${v(pd.assessment)} • Door: ${v(pd.new_door_no || pd.old_door_no)}</div>
                 </div>
                 <div class="point-data-card-actions">
                     <span class="bld-status-tag ${qcClass}" style="margin-right:6px;">${qcLabel}</span>
@@ -2001,33 +1990,108 @@
                 </div>
             </div>
 
-            <div class="point-data-card-grid">
-                <div class="pdc-field"><div class="pdc-field-label">Phone</div><div class="pdc-field-val">${pd.phone_number || '-'}</div></div>
-                <div class="pdc-field"><div class="pdc-field-label">Floor</div><div class="pdc-field-val">${pd.floor ?? '-'}</div></div>
-                <div class="pdc-field"><div class="pdc-field-label">Usage</div><div class="pdc-field-val">${pd.bill_usage || '-'}</div></div>
-                <div class="pdc-field"><div class="pdc-field-label">QC Usage</div><div class="pdc-field-val ${!pd.qcusage ? 'empty' : ''}">${pd.qcusage || 'Not set'}</div></div>
-                <div class="pdc-field"><div class="pdc-field-label">QC Sq.Feet</div><div class="pdc-field-val ${!pd.qcsqfeet ? 'empty' : ''}">${pd.qcsqfeet || 'Not set'}</div></div>
+            <!-- ── POINT / ASSESSMENT DETAILS ── -->
+            <div class="tax-card-title mt-2"><i class="bi bi-person-badge me-1"></i>Point / Assessment Details</div>
+            <div class="point-data-card-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px;">
+                <div class="pdc-field"><div class="pdc-field-label">Assessment Type</div><div class="pdc-field-val">${v(pd.assessment_type)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Old Assessment</div><div class="pdc-field-val">${v(pd.old_assessment)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Worker Name</div><div class="pdc-field-val">${v(pd.worker_name)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Present Owner</div><div class="pdc-field-val">${v(pd.present_owner_name)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">EB Number</div><div class="pdc-field-val">${v(pd.eb)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Floor</div><div class="pdc-field-val">${v(pd.floor)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Bill Usage</div><div class="pdc-field-val">${v(pd.bill_usage)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Aadhar No</div><div class="pdc-field-val">${v(pd.aadhar_no)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Ration No</div><div class="pdc-field-val">${v(pd.ration_no)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Phone</div><div class="pdc-field-val">${v(pd.phone_number)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Old Door No</div><div class="pdc-field-val">${v(pd.old_door_no)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">New Door No</div><div class="pdc-field-val">${v(pd.new_door_no)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Plot Area</div><div class="pdc-field-val">${v(pd.plot_area)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Water Tax No</div><div class="pdc-field-val">${v(pd.water_tax)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Half Year Tax</div><div class="pdc-field-val">${v(pd.halfyeartax)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Balance</div><div class="pdc-field-val">${v(pd.balance)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">No. of Persons</div><div class="pdc-field-val">${v(pd.no_of_persons)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Zone</div><div class="pdc-field-val">${v(pd.zone)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">Remarks</div><div class="pdc-field-val">${v(pd.remarks)}</div></div>
             </div>
 
-            <div class="row mt-3 g-2">
-                <div class="col-md-4">
+            <!-- ── QC DETAILS ── -->
+            <div class="tax-card-title mt-2"><i class="bi bi-clipboard-check me-1"></i>QC Details</div>
+            <div class="point-data-card-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px;">
+                <div class="pdc-field"><div class="pdc-field-label">QC Usage</div><div class="pdc-field-val ${!pd.qcusage ? 'empty' : ''}">${v(pd.qcusage)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">QC Sq.Feet</div><div class="pdc-field-val ${!pd.qcsqfeet ? 'empty' : ''}">${v(pd.qcsqfeet)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">QC By</div><div class="pdc-field-val">${v(pd.qc_name)}</div></div>
+                <div class="pdc-field"><div class="pdc-field-label">QC Remarks</div><div class="pdc-field-val">${v(pd.qc_remarks)}</div></div>
+            </div>
+
+            <!-- ── MIS / TAX SUMMARY ── -->
+            <div class="row mt-2 g-2">
+                <div class="col-md-3">
+                    <div class="tax-card">
+                        <div class="tax-card-title"><i class="bi bi-database me-1"></i>MIS Record</div>
+                        <div class="tax-card-row"><span class="tax-card-label">Road</span><span class="tax-card-value">${v(mis.road_name)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Ward No</span><span class="tax-card-value">${v(mis.ward_no)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Plot Area</span><span class="tax-card-value">${v(mis.plot_area)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(mis.half_year_tax)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(mis.balance)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Usage</span><span class="tax-card-value">${v(mis.usage)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Type</span><span class="tax-card-value">${v(mis.type)}</span></div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
                     <div class="tax-card">
                         <div class="tax-card-title"><i class="bi bi-droplet me-1"></i>Water Tax</div>
-                        <div class="tax-card-row"><span class="tax-card-label">Number</span><span class="tax-card-value">${waterTax.watertax_no || 'N/A'}</span></div>
-                        <div class="tax-card-row"><span class="tax-card-label">Usage</span><span class="tax-card-value">${waterTax.usage || 'N/A'}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Number</span><span class="tax-card-value">${v(wt.watertax_no)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Old Number</span><span class="tax-card-value">${v(wt.old_watertax_no)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Road</span><span class="tax-card-value">${v(wt.road_name)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Slab Rate</span><span class="tax-card-value">${v(wt.slab_rate)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(wt.balance)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Usage</span><span class="tax-card-value">${v(wt.usage)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Slab Desc</span><span class="tax-card-value">${v(wt.slab_description)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">DBC Type</span><span class="tax-card-value">${v(wt.DBC_type)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Phone</span><span class="tax-card-value">${v(wt.phone_number)}</span></div>
                     </div>
                 </div>
-                <div class="col-md-4">
+
+                <div class="col-md-3">
                     <div class="tax-card">
                         <div class="tax-card-title"><i class="bi bi-pipe me-1"></i>UGD Tax</div>
-                        <div class="tax-card-row"><span class="tax-card-label">Number</span><span class="tax-card-value">${ugdTax.ugd_no || 'N/A'}</span></div>
-                        <div class="tax-card-row"><span class="tax-card-label">Usage</span><span class="tax-card-value">${ugdTax.usage || 'N/A'}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Number</span><span class="tax-card-value">${v(ugd.ugd_no)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Old Number</span><span class="tax-card-value">${v(ugd.old_ugd_no)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Owner</span><span class="tax-card-value">${v(ugd.owner_name)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Slab Rate</span><span class="tax-card-value">${v(ugd.slab_rate)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(ugd.balance)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Tax Year</span><span class="tax-card-value">${v(ugd.tax_year)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Tax Amount</span><span class="tax-card-value">${v(ugd.ugd_tax_amount)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Tax Due</span><span class="tax-card-value">${v(ugd.ugd_tax_due)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Tax Paid</span><span class="tax-card-value">${v(ugd.ugd_tax_paid)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Paid Date</span><span class="tax-card-value">${v(ugd.ugd_tax_paid_date)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Payment Mode</span><span class="tax-card-value">${v(ugd.payment_mode)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Receipt No</span><span class="tax-card-value">${v(ugd.receipt_number)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Due Date</span><span class="tax-card-value">${v(ugd.due_date)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(ugd.status)}</span></div>
+                        <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(ugd.remarks)}</span></div>
                     </div>
                 </div>
-                <div class="col-md-4">
+
+                <div class="col-md-3">
                     <div class="tax-card">
-                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax</div>
-                        ${ptHtml}
+                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                        ${ptList.length ? ptList.map(pt => `
+                                <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                    <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                    <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                    <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                    <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                    <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                    <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                    <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                    <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                    <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                    <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                    <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                </div>
+                            `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
                     </div>
                 </div>
             </div>
@@ -2052,22 +2116,19 @@
                 });
             }
 
-            // ─── QC MODAL ───
             function openQcModal(id) {
                 const record = currentPointRecords.find(r => r.point && r.point.id == id);
-                const pd = record ? record.point : pointDatas.find(p => p.id == id);
+                const pd = record ? record.point : null;
                 if (!pd) {
                     showFlashMessage('Could not find this assessment record.', 'error');
                     return;
                 }
-
                 $('#qc_point_data_id').val(id);
                 $('#qc_owner_display').text(pd.owner_name || '');
                 $('#qc_assessment_display').text(pd.assessment || '');
                 $('#qcusage').val(pd.qcusage || '');
                 $('#qcsqfeet').val(pd.qcsqfeet || '');
                 $('#qc_remarks').val(pd.qc_remarks || '');
-
                 const modal = new bootstrap.Modal(document.getElementById('qcModal'));
                 modal.show();
             }
