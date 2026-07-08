@@ -1352,7 +1352,7 @@ class CommissionerController extends Controller
             ->orderBy('road_name')
             ->pluck('road_name');
 
-        return view('map.mapview', compact(
+        return view('excecutive.mapview', compact(
             'ward',
             'polygons',
             'points',
