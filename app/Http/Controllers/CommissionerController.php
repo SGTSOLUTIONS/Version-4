@@ -1423,7 +1423,7 @@ class CommissionerController extends Controller
             ? DB::table($professionalTaxTable)
                 ->where('gisid', $point->point_gisid)
                 ->where('assessment', $point->assessment)
-                ->first()
+                ->get()
             : null;
 
         // Merge all data into the point object
