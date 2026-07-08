@@ -95,10 +95,21 @@
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
 
-        .custom-layer-switcher { top: 20px; }
-        .custom-location-switcher { top: 74px; }
-        .custom-search-switcher { top: 130px; }
-        .custom-edit-toggle { top: 190px; }
+        .custom-layer-switcher {
+            top: 20px;
+        }
+
+        .custom-location-switcher {
+            top: 74px;
+        }
+
+        .custom-search-switcher {
+            top: 130px;
+        }
+
+        .custom-edit-toggle {
+            top: 190px;
+        }
 
         .layer-toggle-btn,
         .location-toggle-btn,
@@ -170,9 +181,17 @@
         }
 
         .layer-dropdown,
-        .location-dropdown { min-width: 200px; }
-        .search-dropdown { width: 320px; }
-        .edit-dropdown { min-width: 250px; }
+        .location-dropdown {
+            min-width: 200px;
+        }
+
+        .search-dropdown {
+            width: 320px;
+        }
+
+        .edit-dropdown {
+            min-width: 250px;
+        }
 
         .layer-dropdown-item,
         .location-dropdown-item,
@@ -227,9 +246,17 @@
         }
 
         @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
-            70% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+            }
+
+            70% {
+                box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
         }
 
         .location-toast {
@@ -263,7 +290,9 @@
             transition: background 0.15s;
         }
 
-        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
 
         .search-result-title {
             font-size: 0.85rem;
@@ -367,6 +396,7 @@
                 opacity: 0;
                 transform: translateX(-50%) translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(-50%) translateY(0);
@@ -491,7 +521,9 @@
             overflow: hidden;
         }
 
-        .bld-img-wrap + .bld-img-wrap { border-left: 3px solid #fff; }
+        .bld-img-wrap+.bld-img-wrap {
+            border-left: 3px solid #fff;
+        }
 
         .bld-img-wrap img {
             width: 100%;
@@ -500,7 +532,9 @@
             transition: transform .4s ease;
         }
 
-        .bld-img-wrap:hover img { transform: scale(1.04); }
+        .bld-img-wrap:hover img {
+            transform: scale(1.04);
+        }
 
         .bld-img-label {
             position: absolute;
@@ -532,7 +566,9 @@
             border-right: 1px solid #e5e7eb;
         }
 
-        .bld-summary-card:last-child { border-right: none; }
+        .bld-summary-card:last-child {
+            border-right: none;
+        }
 
         .bld-summary-icon {
             font-size: 1.3rem;
@@ -823,13 +859,35 @@
         }
 
         @media (max-width: 768px) {
-            #map { height: 600px; }
-            .bld-image-strip { height: 150px; }
-            .bld-summary-card { flex: 1 1 45%; }
-            .point-data-card-grid { grid-template-columns: 1fr 1fr; }
-            .bld-modal-footer { flex-direction: column; gap: 10px; }
-            .point-data-card-header { flex-direction: column; gap: 8px; }
-            .point-data-card-actions { justify-content: flex-start; }
+            #map {
+                height: 600px;
+            }
+
+            .bld-image-strip {
+                height: 150px;
+            }
+
+            .bld-summary-card {
+                flex: 1 1 45%;
+            }
+
+            .point-data-card-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .bld-modal-footer {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .point-data-card-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .point-data-card-actions {
+                justify-content: flex-start;
+            }
         }
     </style>
 @endpush
@@ -883,12 +941,14 @@
                 <div class="bld-image-strip">
                     <div class="bld-img-wrap">
                         <img id="bv_img1" src="" style="display:none;">
-                        <div id="bv_img1_empty" class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
+                        <div id="bv_img1_empty"
+                            class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
                     <div class="bld-img-wrap">
                         <img id="bv_img2" src="" style="display:none;">
-                        <div id="bv_img2_empty" class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
+                        <div id="bv_img2_empty"
+                            class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
@@ -896,33 +956,101 @@
                 <div class="bld-summary-strip">
                     <div class="bld-summary-card">
                         <div class="bld-summary-icon">🧾</div>
-                        <div><div class="bld-summary-label">Bills</div><div class="bld-summary-val" id="bv_bills">0</div></div>
+                        <div>
+                            <div class="bld-summary-label">Bills</div>
+                            <div class="bld-summary-val" id="bv_bills">0</div>
+                        </div>
                     </div>
                     <div class="bld-summary-card">
                         <div class="bld-summary-icon">🏬</div>
-                        <div><div class="bld-summary-label">Shops</div><div class="bld-summary-val" id="bv_shops">0</div></div>
+                        <div>
+                            <div class="bld-summary-label">Shops</div>
+                            <div class="bld-summary-val" id="bv_shops">0</div>
+                        </div>
                     </div>
                     <div class="bld-summary-card">
                         <div class="bld-summary-icon">🏢</div>
-                        <div><div class="bld-summary-label">Floors</div><div class="bld-summary-val" id="bv_floors">0</div></div>
+                        <div>
+                            <div class="bld-summary-label">Floors</div>
+                            <div class="bld-summary-val" id="bv_floors">0</div>
+                        </div>
                     </div>
                     <div class="bld-summary-card">
                         <div class="bld-summary-icon">✅</div>
-                        <div><div class="bld-summary-label">Mapped</div><div class="bld-summary-val" id="bv_mapped">0</div></div>
+                        <div>
+                            <div class="bld-summary-label">Mapped</div>
+                            <div class="bld-summary-val" id="bv_mapped">0</div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="modal-body p-4">
                     <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-geo-alt bld-info-icon"></i><div><div class="bld-info-label">Zone</div><div class="bld-info-val" id="bv_zone"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-building bld-info-icon"></i><div><div class="bld-info-label">Building Name</div><div class="bld-info-val" id="bv_building_name"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-signpost bld-info-icon"></i><div><div class="bld-info-label">Road</div><div class="bld-info-val" id="bv_road_name"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-telephone bld-info-icon"></i><div><div class="bld-info-label">Phone</div><div class="bld-info-val" id="bv_phone"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-tag bld-info-icon"></i><div><div class="bld-info-label">Usage</div><div class="bld-info-val" id="bv_usage"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-tools bld-info-icon"></i><div><div class="bld-info-label">Construction</div><div class="bld-info-val" id="bv_construction_type"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-house bld-info-icon"></i><div><div class="bld-info-label">Building Type</div><div class="bld-info-val" id="bv_building_type"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-droplet bld-info-icon"></i><div><div class="bld-info-label">UGD Status</div><div class="bld-info-val" id="bv_ugd"></div></div></div></div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-geo-alt bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Zone</div>
+                                    <div class="bld-info-val" id="bv_zone"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-building bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Building Name</div>
+                                    <div class="bld-info-val" id="bv_building_name"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-signpost bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Road</div>
+                                    <div class="bld-info-val" id="bv_road_name"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-telephone bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Phone</div>
+                                    <div class="bld-info-val" id="bv_phone"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-tag bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Usage</div>
+                                    <div class="bld-info-val" id="bv_usage"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-tools bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Construction</div>
+                                    <div class="bld-info-val" id="bv_construction_type"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-house bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Building Type</div>
+                                    <div class="bld-info-val" id="bv_building_type"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-droplet bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">UGD Status</div>
+                                    <div class="bld-info-val" id="bv_ugd"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="bld-section-divider mb-3"><i class="bi bi-check2-square me-2"></i>Amenities</div>
@@ -930,8 +1058,22 @@
 
                     <div class="bld-section-divider mb-3"><i class="bi bi-chat-text me-2"></i>Remarks</div>
                     <div class="row g-3">
-                        <div class="col-md-6"><div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i><div><div class="bld-info-label">General Remarks</div><div class="bld-info-val" id="bv_remarks"></div></div></div></div>
-                        <div class="col-md-6"><div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i><div><div class="bld-info-label">Corporation Remarks</div><div class="bld-info-val" id="bv_corp_remarks"></div></div></div></div>
+                        <div class="col-md-6">
+                            <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">General Remarks</div>
+                                    <div class="bld-info-val" id="bv_remarks"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Corporation Remarks</div>
+                                    <div class="bld-info-val" id="bv_corp_remarks"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1060,7 +1202,8 @@
     <div class="modal fade" id="deleteFeatureModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius:16px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.15);">
-                <div class="modal-header" style="background:#fff3f3; border-bottom:1px solid #fecdd3; border-radius:16px 16px 0 0; padding:16px 24px;">
+                <div class="modal-header"
+                    style="background:#fff3f3; border-bottom:1px solid #fecdd3; border-radius:16px 16px 0 0; padding:16px 24px;">
                     <h5 class="modal-title" style="color:#dc2626; font-weight:700; margin:0;">
                         <i class="bi bi-trash3-fill me-2"></i>Delete Feature
                     </h5>
@@ -1091,16 +1234,20 @@
                             style="border-radius:10px; border:1.5px solid #e5e7eb; padding:10px 14px; font-size:0.9rem;">
                         <div id="deleteGisError" class="text-danger mt-1" style="font-size:0.8rem; display:none;"></div>
                     </div>
-                    <div id="deleteConfirmBox" style="display:none; background:#fff3f3; border:1px solid #fecdd3; border-radius:10px; padding:12px 14px;">
+                    <div id="deleteConfirmBox"
+                        style="display:none; background:#fff3f3; border:1px solid #fecdd3; border-radius:10px; padding:12px 14px;">
                         <p class="mb-0" style="font-size:0.82rem; color:#dc2626;">
                             <i class="bi bi-exclamation-triangle-fill me-1"></i>
                             This will <strong>permanently delete</strong> this feature and cannot be undone.
                         </p>
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:10px; font-weight:600; padding:8px 20px;">Cancel</button>
-                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger" style="border-radius:10px; font-weight:600; padding:8px 24px; min-width:120px;">
+                <div class="modal-footer"
+                    style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                        style="border-radius:10px; font-weight:600; padding:8px 20px;">Cancel</button>
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger"
+                        style="border-radius:10px; font-weight:600; padding:8px 24px; min-width:120px;">
                         <i class="bi bi-trash3 me-1"></i>Delete
                     </button>
                 </div>
@@ -1127,6 +1274,7 @@
             let ward = @json($ward ?? [], JSON_HEX_TAG);
             let searchIndex = [];
             let currentPointGisid = null;
+            let currentPointRecords = [];
 
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
                 {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
@@ -1328,8 +1476,8 @@
                         let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l
                             .coordinates;
                         while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][
-                            0
-                        ])) {
+                                0
+                            ])) {
                             coords = coords[0];
                         }
                         const isValid = coords.length >= 2 && coords.every(c =>
@@ -1427,7 +1575,10 @@
 
             function updateLiveMarker(lon, lat, accuracy) {
                 const coords = ol.proj.fromLonLat([lon, lat]);
-                currentLocation = { lon, lat };
+                currentLocation = {
+                    lon,
+                    lat
+                };
                 if (!locationFeature) {
                     locationFeature = new ol.Feature({
                         geometry: new ol.geom.Point(coords)
@@ -1435,16 +1586,26 @@
                     locationFeature.setStyle(new ol.style.Style({
                         image: new ol.style.Circle({
                             radius: 10,
-                            fill: new ol.style.Fill({ color: '#3b82f6' }),
-                            stroke: new ol.style.Stroke({ color: '#fff', width: 3 })
+                            fill: new ol.style.Fill({
+                                color: '#3b82f6'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 3
+                            })
                         })
                     }));
                     accuracyFeature = new ol.Feature({
                         geometry: new ol.geom.Circle(coords, accuracy || 10)
                     });
                     accuracyFeature.setStyle(new ol.style.Style({
-                        fill: new ol.style.Fill({ color: 'rgba(59,130,246,0.10)' }),
-                        stroke: new ol.style.Stroke({ color: 'rgba(59,130,246,0.35)', width: 1.5 })
+                        fill: new ol.style.Fill({
+                            color: 'rgba(59,130,246,0.10)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: 'rgba(59,130,246,0.35)',
+                            width: 1.5
+                        })
                     }));
                     liveLocationSource.addFeature(accuracyFeature);
                     liveLocationSource.addFeature(locationFeature);
@@ -1463,7 +1624,11 @@
             }
 
             function onPosition(position) {
-                const { longitude, latitude, accuracy } = position.coords;
+                const {
+                    longitude,
+                    latitude,
+                    accuracy
+                } = position.coords;
                 updateLiveMarker(longitude, latitude, accuracy);
                 if (trackActive) {
                     map.getView().animate({
@@ -1481,17 +1646,29 @@
                 if (watchId !== null) return true;
 
                 navigator.geolocation.getCurrentPosition(
-                    function(pos) { onPosition(pos); showToast('📍 Location acquired', 2000); },
+                    function(pos) {
+                        onPosition(pos);
+                        showToast('📍 Location acquired', 2000);
+                    },
                     function(error) {
                         let msg = 'Could not get location: ';
                         switch (error.code) {
-                            case error.PERMISSION_DENIED: msg += 'Please allow location access'; break;
-                            case error.POSITION_UNAVAILABLE: msg += 'GPS signal weak'; break;
-                            case error.TIMEOUT: msg += 'Request timed out'; break;
+                            case error.PERMISSION_DENIED:
+                                msg += 'Please allow location access';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                msg += 'GPS signal weak';
+                                break;
+                            case error.TIMEOUT:
+                                msg += 'Request timed out';
+                                break;
                         }
                         showToast(msg, 3000);
-                    },
-                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
+                    }
                 );
 
                 watchId = navigator.geolocation.watchPosition(
@@ -1499,14 +1676,24 @@
                     function(error) {
                         let msg = 'Location error: ';
                         switch (error.code) {
-                            case error.PERMISSION_DENIED: msg += 'Please enable permissions.'; break;
-                            case error.POSITION_UNAVAILABLE: msg += 'Location unavailable.'; break;
-                            case error.TIMEOUT: msg += 'Request timed out.'; break;
-                            default: msg += 'Unknown error.';
+                            case error.PERMISSION_DENIED:
+                                msg += 'Please enable permissions.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                msg += 'Location unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                msg += 'Request timed out.';
+                                break;
+                            default:
+                                msg += 'Unknown error.';
                         }
                         showToast(msg, 3000);
-                    },
-                    { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+                    }, {
+                        enableHighAccuracy: true,
+                        maximumAge: 10000,
+                        timeout: 15000
+                    }
                 );
                 return true;
             }
@@ -1537,13 +1724,16 @@
                 }
                 const anyActive = liveActive || trackActive;
                 $('#locationToggleBtn').toggleClass('active-location', anyActive);
-                $('#locationToggleBtn i').toggleClass('bi-geo-alt-fill', anyActive).toggleClass('bi-geo-alt', !anyActive);
+                $('#locationToggleBtn i').toggleClass('bi-geo-alt-fill', anyActive).toggleClass('bi-geo-alt', !
+                    anyActive);
             }
 
             // ─── MAP ───
             const map = new ol.Map({
                 target: 'map',
-                layers: [osmLayer, satelliteLayer, streetLayer, droneLayer, polygonLayer, pointLayer, lineLayer, liveLocationLayer],
+                layers: [osmLayer, satelliteLayer, streetLayer, droneLayer, polygonLayer, pointLayer,
+                    lineLayer, liveLocationLayer
+                ],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
                     zoom: 18
@@ -1564,9 +1754,19 @@
             const tempDrawLayer = new ol.layer.Vector({
                 source: tempDrawSource,
                 style: new ol.style.Style({
-                    fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.2)' }),
-                    stroke: new ol.style.Stroke({ color: '#ff0000', width: 3 }),
-                    image: new ol.style.Circle({ radius: 7, fill: new ol.style.Fill({ color: '#ff0000' }) })
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255,0,0,0.2)'
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: '#ff0000',
+                        width: 3
+                    }),
+                    image: new ol.style.Circle({
+                        radius: 7,
+                        fill: new ol.style.Fill({
+                            color: '#ff0000'
+                        })
+                    })
                 })
             });
             map.addLayer(tempDrawLayer);
@@ -1591,7 +1791,10 @@
                 if (type === 'success') icon = 'success';
                 else if (type === 'error') icon = 'error';
                 else if (type === 'warning') icon = 'warning';
-                Toast.fire({ icon, title: message });
+                Toast.fire({
+                    icon,
+                    title: message
+                });
             }
 
             // ─── Disable interactions ───
@@ -1655,16 +1858,23 @@
                 $('#bv_mapped').text(mappedCount);
 
                 const amenities = [
-                    ['Lift Room', item.liftroom], ['Head Room', item.headroom],
-                    ['Overhead Tank', item.overhead_tank], ['Rainwater Harvesting', item.rainwater_harvesting],
-                    ['Parking', item.parking], ['Ramp', item.ramp], ['Hoarding', item.hoarding],
-                    ['CCTV', item.cctv], ['Cell Tower', item.cell_tower], ['Solar Panel', item.solar_panel],
+                    ['Lift Room', item.liftroom],
+                    ['Head Room', item.headroom],
+                    ['Overhead Tank', item.overhead_tank],
+                    ['Rainwater Harvesting', item.rainwater_harvesting],
+                    ['Parking', item.parking],
+                    ['Ramp', item.ramp],
+                    ['Hoarding', item.hoarding],
+                    ['CCTV', item.cctv],
+                    ['Cell Tower', item.cell_tower],
+                    ['Solar Panel', item.solar_panel],
                     ['Water Connection', item.water_connection]
                 ];
                 let amenHtml = '';
                 amenities.forEach(([label, val]) => {
                     if (val === 'Yes') {
-                        amenHtml += `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                        amenHtml +=
+                            `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
                     }
                 });
                 $('#bv_amenities').html(amenHtml || '<span class="text-muted small">No amenities recorded</span>');
@@ -1674,14 +1884,16 @@
 
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
                 if (item.image) {
-                    $('#bv_img1').attr('src', item.image.startsWith('http') ? item.image : assetUrl + item.image).show();
+                    $('#bv_img1').attr('src', item.image.startsWith('http') ? item.image : assetUrl + item.image)
+                        .show();
                     $('#bv_img1_empty').hide();
                 } else {
                     $('#bv_img1').hide();
                     $('#bv_img1_empty').show();
                 }
                 if (item.image2) {
-                    $('#bv_img2').attr('src', item.image2.startsWith('http') ? item.image2 : assetUrl + item.image2).show();
+                    $('#bv_img2').attr('src', item.image2.startsWith('http') ? item.image2 : assetUrl + item.image2)
+                        .show();
                     $('#bv_img2_empty').hide();
                 } else {
                     $('#bv_img2').hide();
@@ -1752,7 +1964,8 @@
                     const qcFilled = [pd.qcusage, pd.qcsqfeet, pd.qc_remarks]
                         .filter(v => v !== null && v !== '' && v !== undefined).length;
                     const qcClass = qcFilled === 3 ? 'complete' : qcFilled === 0 ? 'empty' : 'partial';
-                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' : 'QC Partial';
+                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' :
+                        'QC Partial';
 
                     html += `
                     <div class="point-data-card" data-id="${pd.id}">
@@ -1844,8 +2057,11 @@
 
             // ─── QC MODAL ───
             function openQcModal(id) {
-                const pd = pointDatas.find(p => p.id == id);
-                if (!pd) return;
+                const pd = currentPointRecords.find(p => p.id == id) || pointDatas.find(p => p.id == id);
+                if (!pd) {
+                    showFlashMessage('Could not find this assessment record.', 'error');
+                    return;
+                }
 
                 $('#qc_point_data_id').val(id);
                 $('#qc_owner_display').text(pd.owner_name || '');
@@ -1858,9 +2074,11 @@
                 modal.show();
             }
 
+            // update the save handler so the in-memory records refresh too
             $(document).on('click', '#saveQcBtn', function() {
                 const id = $('#qc_point_data_id').val();
-                const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
+                const $btn = $(this).prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm"></span> Saving...');
 
                 $.ajax({
                     url: `/point-data/${id}/qc`,
@@ -1874,19 +2092,25 @@
                     success: function(res) {
                         const idx = pointDatas.findIndex(p => p.id == id);
                         if (idx > -1) pointDatas[idx] = res.point_data;
+
                         $('#qcModal').modal('hide');
                         showFlashMessage('QC data saved successfully!', 'success');
+
                         if (currentPointGisid) {
                             getPointDataWithDetails(currentPointGisid, function(data) {
+                                currentPointRecords =
+                                data; // <-- NEW, keeps modal list in sync
                                 renderPointDetails(data);
                             });
                         }
                     },
                     error: function(xhr) {
-                        showFlashMessage(xhr.responseJSON?.message || 'Failed to save QC data.', 'error');
+                        showFlashMessage(xhr.responseJSON?.message || 'Failed to save QC data.',
+                            'error');
                     },
                     complete: function() {
-                        $btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save QC');
+                        $btn.prop('disabled', false).html(
+                            '<i class="bi bi-save me-1"></i>Save QC');
                     }
                 });
             });
@@ -1931,9 +2155,15 @@
                 if (!feature) return;
                 const type = feature.get('type');
                 switch (type) {
-                    case 'Point': pointClick(feature); break;
-                    case 'Polygon': polygonClick(feature); break;
-                    case 'LineString': lineClick(feature); break;
+                    case 'Point':
+                        pointClick(feature);
+                        break;
+                    case 'Polygon':
+                        polygonClick(feature);
+                        break;
+                    case 'LineString':
+                        lineClick(feature);
+                        break;
                 }
             }
 
@@ -1956,8 +2186,13 @@
                         }),
                         image: new ol.style.Circle({
                             radius: 6,
-                            fill: new ol.style.Fill({ color: '#0066cc' }),
-                            stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+                            fill: new ol.style.Fill({
+                                color: '#0066cc'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 2
+                            })
                         })
                     })
                 });
@@ -1988,11 +2223,14 @@
                             geometryType: 'polygon',
                             searchText: `${poly.gisid} ${poly.sqfeet} building`
                         });
-                    } catch (e) { console.error('Error parsing polygon:', e); }
+                    } catch (e) {
+                        console.error('Error parsing polygon:', e);
+                    }
                 });
                 lines.forEach(line => {
                     try {
-                        const coords = typeof line.coordinates === 'string' ? JSON.parse(line.coordinates) : line.coordinates;
+                        const coords = typeof line.coordinates === 'string' ? JSON.parse(line.coordinates) :
+                            line.coordinates;
                         searchIndex.push({
                             id: line.gisid,
                             type: 'line',
@@ -2002,7 +2240,9 @@
                             geometryType: 'line',
                             searchText: `${line.gisid} ${line.road_name || ''} road`
                         });
-                    } catch (e) { console.error('Error parsing line:', e); }
+                    } catch (e) {
+                        console.error('Error parsing line:', e);
+                    }
                 });
                 points.forEach(point => {
                     try {
@@ -2015,7 +2255,9 @@
                             geometryType: 'point',
                             searchText: `${point.gisid} point`
                         });
-                    } catch (e) { console.error('Error parsing point:', e); }
+                    } catch (e) {
+                        console.error('Error parsing point:', e);
+                    }
                 });
                 pointDatas.forEach(pd => {
                     try {
@@ -2030,7 +2272,9 @@
                             assessment: pd.assessment,
                             searchText: `${pd.gisid} ${pd.assessment} ${pd.owner_name} ${pd.phone_number}`
                         });
-                    } catch (e) { console.error('Error parsing pointData:', e); }
+                    } catch (e) {
+                        console.error('Error parsing pointData:', e);
+                    }
                 });
             }
 
@@ -2052,7 +2296,11 @@
                     showToast(`⚠️ No point found for GIS ID: ${gisid}`, 3000);
                     return;
                 }
-                map.getView().animate({ center: coords, zoom: 22, duration: 1000 });
+                map.getView().animate({
+                    center: coords,
+                    zoom: 22,
+                    duration: 1000
+                });
             }
 
             function getCoordsByGisId(gisid) {
@@ -2084,20 +2332,27 @@
 
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
-                        currentLocation = { lon: pos.coords.longitude, lat: pos.coords.latitude };
+                        currentLocation = {
+                            lon: pos.coords.longitude,
+                            lat: pos.coords.latitude
+                        };
                         callback(currentLocation);
                     },
                     function(error) {
                         Swal.fire('Location Error', 'Could not get your location', 'error');
                         callback(null);
-                    },
-                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
+                    }
                 );
                 return true;
             }
 
             function getRoute(startLon, startLat, endLon, endLat) {
-                const url = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
+                const url =
+                    `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
                 showToast('🗺️ Calculating route...', 2000);
                 fetch(url).then(r => r.json()).then(data => {
                     if (!data.routes || !data.routes.length) {
@@ -2110,14 +2365,23 @@
                     });
                     if (routeLayer) map.removeLayer(routeLayer);
                     routeLayer = new ol.layer.Vector({
-                        source: new ol.source.Vector({ features: [routeFeature] }),
+                        source: new ol.source.Vector({
+                            features: [routeFeature]
+                        }),
                         style: new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color: '#0066ff', width: 5, lineDash: [10, 5] })
+                            stroke: new ol.style.Stroke({
+                                color: '#0066ff',
+                                width: 5,
+                                lineDash: [10, 5]
+                            })
                         })
                     });
                     map.addLayer(routeLayer);
                     const ext = routeFeature.getGeometry().getExtent();
-                    if (ext && ext[0] !== ext[2]) map.getView().fit(ext, { padding: [50, 50, 50, 50], duration: 1000 });
+                    if (ext && ext[0] !== ext[2]) map.getView().fit(ext, {
+                        padding: [50, 50, 50, 50],
+                        duration: 1000
+                    });
                     const dist = (data.routes[0].distance / 1000).toFixed(2);
                     const dur = Math.round(data.routes[0].duration / 60);
                     showToast(`✅ Route found! Distance: ${dist}km, Time: ${dur}min`, 4000);
@@ -2153,7 +2417,8 @@
             const $activeLayerBadge = $('#activeLayerBadge');
 
             function getActiveBaseLayerTitle() {
-                return [osmLayer, satelliteLayer, streetLayer].find(l => l.getVisible())?.get('title') || 'OpenStreetMap';
+                return [osmLayer, satelliteLayer, streetLayer].find(l => l.getVisible())?.get('title') ||
+                    'OpenStreetMap';
             }
 
             function updateLayerUI() {
@@ -2315,7 +2580,8 @@
                 </div>
             `);
 
-            $mapContainer.append(`<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`);
+            $mapContainer.append(
+                `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`);
 
             // ─── EVENT HANDLERS ───
 
@@ -2352,13 +2618,27 @@
                 $(this).addClass('active');
 
                 switch (tool) {
-                    case 'none': setNoneMode(); break;
-                    case 'editPolygon': setEditPolygonMode(); break;
-                    case 'movePolygon': setMovePolygonMode(); break;
-                    case 'split': setSplitMode(); break;
-                    case 'drawPolygon': startDrawing('Polygon'); break;
-                    case 'drawLine': startDrawing('LineString'); break;
-                    case 'drawPoint': startDrawing('Point'); break;
+                    case 'none':
+                        setNoneMode();
+                        break;
+                    case 'editPolygon':
+                        setEditPolygonMode();
+                        break;
+                    case 'movePolygon':
+                        setMovePolygonMode();
+                        break;
+                    case 'split':
+                        setSplitMode();
+                        break;
+                    case 'drawPolygon':
+                        startDrawing('Polygon');
+                        break;
+                    case 'drawLine':
+                        startDrawing('LineString');
+                        break;
+                    case 'drawPoint':
+                        startDrawing('Point');
+                        break;
                 }
 
                 $('#editDropdown').removeClass('show');
@@ -2378,8 +2658,13 @@
                 const editSelect = new ol.interaction.Select({
                     layers: [polygonLayer],
                     style: new ol.style.Style({
-                        stroke: new ol.style.Stroke({ color: '#2563eb', width: 4 }),
-                        fill: new ol.style.Fill({ color: 'rgba(37,99,235,0.2)' })
+                        stroke: new ol.style.Stroke({
+                            color: '#2563eb',
+                            width: 4
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(37,99,235,0.2)'
+                        })
                     })
                 });
 
@@ -2402,8 +2687,13 @@
                         originalGeometry = feature.getGeometry().clone();
 
                         feature.setStyle(new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color: '#2563eb', width: 5 }),
-                            fill: new ol.style.Fill({ color: 'rgba(37,99,235,0.3)' })
+                            stroke: new ol.style.Stroke({
+                                color: '#2563eb',
+                                width: 5
+                            }),
+                            fill: new ol.style.Fill({
+                                color: 'rgba(37,99,235,0.3)'
+                            })
                         }));
 
                         showEditControls(feature);
@@ -2486,7 +2776,9 @@
                 $.ajax({
                     url: '/update-polygon',
                     type: 'POST',
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     data: {
                         gisid: gisid,
                         coordinates: JSON.stringify(coordinates),
@@ -2526,8 +2818,13 @@
                 const moveSelect = new ol.interaction.Select({
                     layers: [polygonLayer],
                     style: new ol.style.Style({
-                        stroke: new ol.style.Stroke({ color: '#f59e0b', width: 4 }),
-                        fill: new ol.style.Fill({ color: 'rgba(245,158,11,0.2)' })
+                        stroke: new ol.style.Stroke({
+                            color: '#f59e0b',
+                            width: 4
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(245,158,11,0.2)'
+                        })
                     })
                 });
 
@@ -2549,8 +2846,13 @@
                         originalGeometry = feature.getGeometry().clone();
 
                         feature.setStyle(new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color: '#f59e0b', width: 5 }),
-                            fill: new ol.style.Fill({ color: 'rgba(245,158,11,0.3)' })
+                            stroke: new ol.style.Stroke({
+                                color: '#f59e0b',
+                                width: 5
+                            }),
+                            fill: new ol.style.Fill({
+                                color: 'rgba(245,158,11,0.3)'
+                            })
                         }));
 
                         translateInteraction = new ol.interaction.Translate({
@@ -2631,7 +2933,9 @@
                 $.ajax({
                     url: '/update-polygon',
                     type: 'POST',
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     data: {
                         gisid: gisid,
                         coordinates: JSON.stringify(coordinates),
@@ -2683,8 +2987,13 @@
                     if (e.selected.length > 0) {
                         const feature = e.selected[0];
                         feature.setStyle(new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color: '#dc3545', width: 5 }),
-                            fill: new ol.style.Fill({ color: 'rgba(220,53,69,0.3)' })
+                            stroke: new ol.style.Stroke({
+                                color: '#dc3545',
+                                width: 5
+                            }),
+                            fill: new ol.style.Fill({
+                                color: 'rgba(220,53,69,0.3)'
+                            })
                         }));
                         selectedFeatureForSplit = feature;
                         showToast(`✂️ Polygon selected (ID: ${feature.get('gisid')})`, 3000);
@@ -2800,7 +3109,7 @@
                     'Polygon': 'Polygon',
                     'LineString': 'LineString',
                     'Point': 'Point'
-                }[type];
+                } [type];
                 if (!geometryType) return;
 
                 map.getTargetElement().classList.add('draw-mode');
@@ -2809,11 +3118,18 @@
                     source: tempDrawSource,
                     type: geometryType,
                     style: new ol.style.Style({
-                        fill: new ol.style.Fill({ color: 'rgba(0,255,0,0.2)' }),
-                        stroke: new ol.style.Stroke({ color: '#00ff00', width: 3 }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0,255,0,0.2)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#00ff00',
+                            width: 3
+                        }),
                         image: new ol.style.Circle({
                             radius: 7,
-                            fill: new ol.style.Fill({ color: '#00ff00' })
+                            fill: new ol.style.Fill({
+                                color: '#00ff00'
+                            })
                         })
                     })
                 });
@@ -2829,7 +3145,9 @@
                 $.ajax({
                     url: '/save-feature',
                     type: 'POST',
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     data: {
                         layer_type: type,
                         feature: JSON.stringify(feature.getGeometry().getCoordinates())
@@ -2939,7 +3257,8 @@
                 $('.layer-dropdown').removeClass('show');
                 $('#editDropdown').removeClass('show');
                 $('#editToggleBtn').removeClass('active-edit');
-                if ($('#searchDropdown').hasClass('show')) setTimeout(() => $('#gisSearchInput').focus(), 100);
+                if ($('#searchDropdown').hasClass('show')) setTimeout(() => $('#gisSearchInput').focus(),
+                    100);
             });
 
             $(document).on('click', '.search-tab-btn', function() {
@@ -2963,7 +3282,8 @@
                 } else {
                     results.slice(0, 10).forEach(item => {
                         const displayTitle = item.type === 'pointdata' ?
-                            `${item.title} | Owner: ${item.subtitle.split('|')[1] || ''}` : item.title;
+                            `${item.title} | Owner: ${item.subtitle.split('|')[1] || ''}` : item
+                            .title;
                         const displaySubtitle = item.type === 'pointdata' ?
                             `GIS ID: ${item.point_gisid || 'N/A'}` : item.subtitle;
                         const icon = item.geometryType === 'point' ? 'geo-alt' :
@@ -2999,7 +3319,8 @@
                                 <div class="search-result-subtitle">GIS ID: ${pd.point_gisid || 'N/A'} | Phone: ${pd.phone_number || 'N/A'}</div>
                             </div>`;
                     });
-                    $('#filterResults').html(html || '<div class="p-2 text-muted">No matches</div>');
+                    $('#filterResults').html(html ||
+                    '<div class="p-2 text-muted">No matches</div>');
                 });
             });
 
@@ -3078,17 +3399,25 @@
                 }
 
                 const $btn = $(this);
-                $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting…').prop('disabled', true);
+                $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting…').prop(
+                    'disabled', true);
 
                 $.ajax({
                     url: '/delete-feature',
                     type: 'POST',
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                    data: { type, gisid },
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: {
+                        type,
+                        gisid
+                    },
                     success: function(response) {
-                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteFeatureModal'));
+                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                            'deleteFeatureModal'));
                         if (deleteModal) deleteModal.hide();
-                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled', false);
+                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
+                            false);
 
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
@@ -3107,8 +3436,10 @@
                         });
                     },
                     error: function(xhr) {
-                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled', false);
-                        const msg = xhr.responseJSON?.message || `No ${type} found with GIS ID: ${gisid}`;
+                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
+                            false);
+                        const msg = xhr.responseJSON?.message ||
+                            `No ${type} found with GIS ID: ${gisid}`;
                         $('#deleteGisError').text(msg).show();
                     }
                 });
@@ -3116,8 +3447,10 @@
 
             // ─── CLOSE DROPDOWNS ───
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass('show');
-                if (!$(e.target).closest('.custom-location-switcher').length) $('#locationDropdown').removeClass('show');
+                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass(
+                    'show');
+                if (!$(e.target).closest('.custom-location-switcher').length) $('#locationDropdown')
+                    .removeClass('show');
                 if (!$(e.target).closest('.custom-search-switcher').length) {
                     $('#searchDropdown').removeClass('show');
                     $('#searchToggleBtn').removeClass('active-search');

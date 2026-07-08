@@ -1365,17 +1365,86 @@ class CommissionerController extends Controller
     }
     public function getPointDetails(Request $request)
     {
+        $request->validate([
+            'gisid' => 'required',
+            'ward_id' => 'required|integer',
+        ]);
+
         $gisid = $request->gisid;
         $wardId = $request->ward_id;
 
-        $table = "point_data_{$wardId}";
+        $ward = Ward::findOrFail($wardId);
+        $zone = Zone::findOrFail($ward->zone_id);
+        $corpId = $zone->corp_id;
 
-        $points = DB::table($table)
-            ->where('point_gisid', $gisid)
-            ->get();
+        $pointTable = "point_data_{$wardId}";
+        $misTable = "mis_{$corpId}";
+        $waterTaxTable = "water_tax_{$corpId}";
+        $ugdTaxTable = "ugd_tax_{$corpId}";
+        $professionalTaxTable = "professional_tax_{$corpId}";
+
+        if (!Schema::hasTable($pointTable)) {
+            return response()->json(['status' => false, 'message' => 'Point table not found.'], 404);
+        }
+
+        $points = DB::table($pointTable)->where('point_gisid', $gisid)->get();
+
+        if ($points->isEmpty()) {
+            return response()->json(['status' => false, 'message' => 'No points found.'], 404);
+        }
+
+        foreach ($points as $point) {
+
+            $mis = Schema::hasTable($misTable)
+                ? DB::table($misTable)->where('point_id', $point->id)->first()
+                : null;
+
+            $waterTax = Schema::hasTable($waterTaxTable)
+                ? DB::table($waterTaxTable)->where('point_id', $point->id)->first()
+                : null;
+
+            $ugdTax = Schema::hasTable($ugdTaxTable)
+                ? DB::table($ugdTaxTable)->where('point_id', $point->id)->first()
+                : null;
+
+            // Professional tax can have multiple rows; keep the full list AND
+            // flatten the first one for the summary card the UI already shows.
+            $professionalTaxList = Schema::hasTable($professionalTaxTable)
+                ? DB::table($professionalTaxTable)->where('point_id', $point->id)->get()
+                : collect();
+            $firstProfTax = $professionalTaxList->first();
+
+            // ── Flatten cross-table fields onto the point so the front-end
+            //    can read pd.assessment, pd.owner_name, pd.watertax_no, etc. ──
+            $point->assessment   = $mis->assessment ?? null;
+            $point->owner_name   = $mis->owner_name ?? null;
+            $point->phone_number = $mis->phone_number ?? null;
+
+            $point->watertax_no     = $waterTax->watertax_no ?? null;
+            $point->old_watertax_no = $waterTax->old_watertax_no ?? null;
+            $point->water_usage     = $waterTax->water_usage ?? null;
+
+            $point->ugd_no     = $ugdTax->ugd_no ?? null;
+            $point->old_ugd_no = $ugdTax->old_ugd_no ?? null;
+            $point->ugd_usage  = $ugdTax->ugd_usage ?? null;
+
+            $point->pt_number          = $firstProfTax->pt_number ?? null;
+            $point->old_pt_number      = $firstProfTax->old_pt_number ?? null;
+            $point->establishment_name = $firstProfTax->establishment_name ?? null;
+            $point->half_year_tax      = $firstProfTax->half_year_tax ?? null;
+
+            // Keep raw nested data too in case anything else needs it
+            $point->mis = $mis;
+            $point->water_tax = $waterTax;
+            $point->ugd_tax = $ugdTax;
+            $point->professional_tax = $professionalTaxList;
+        }
 
         return response()->json([
             'status' => true,
+            'gisid' => $gisid,
+            'ward_id' => $wardId,
+            'total_points' => $points->count(),
             'data' => $points
         ]);
     }
