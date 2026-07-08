@@ -1364,88 +1364,119 @@ class CommissionerController extends Controller
         ));
     }
     public function getPointDetails(Request $request)
-    {
-        $request->validate([
-            'gisid' => 'required',
-            'ward_id' => 'required|integer',
-        ]);
+{
+    $request->validate([
+        'gisid' => 'required',
+        'ward_id' => 'required|integer',
+    ]);
 
-        $gisid = $request->gisid;
-        $wardId = $request->ward_id;
+    $gisid = $request->gisid;
+    $wardId = $request->ward_id;
 
-        $ward = Ward::findOrFail($wardId);
-        $zone = Zone::findOrFail($ward->zone_id);
-        $corpId = $zone->corp_id;
+    $ward = Ward::findOrFail($wardId);
+    $zone = Zone::findOrFail($ward->zone_id);
+    $corpId = $zone->corp_id;
 
-        $pointTable = "point_data_{$wardId}";
-        $misTable = "mis_{$corpId}";
-        $waterTaxTable = "water_tax_{$corpId}";
-        $ugdTaxTable = "ugd_tax_{$corpId}";
-        $professionalTaxTable = "professional_tax_{$corpId}";
+    $pointTable = "point_data_{$wardId}";
+    $misTable = "mis_{$corpId}";
+    $waterTaxTable = "water_tax_{$corpId}";
+    $ugdTaxTable = "ugd_tax_{$corpId}";
+    $professionalTaxTable = "professional_tax_{$corpId}";
 
-        if (!Schema::hasTable($pointTable)) {
-            return response()->json(['status' => false, 'message' => 'Point table not found.'], 404);
-        }
-
-        $points = DB::table($pointTable)->where('point_gisid', $gisid)->get();
-
-        if ($points->isEmpty()) {
-            return response()->json(['status' => false, 'message' => 'No points found.'], 404);
-        }
-
-        foreach ($points as $point) {
-
-            $mis = Schema::hasTable($misTable)
-                ? DB::table($misTable)->where('point_id', $point->id)->first()
-                : null;
-
-            $waterTax = Schema::hasTable($waterTaxTable)
-                ? DB::table($waterTaxTable)->where('point_id', $point->id)->first()
-                : null;
-
-            $ugdTax = Schema::hasTable($ugdTaxTable)
-                ? DB::table($ugdTaxTable)->where('point_id', $point->id)->first()
-                : null;
-
-            // Professional tax can have multiple rows; keep the full list AND
-            // flatten the first one for the summary card the UI already shows.
-            $professionalTaxList = Schema::hasTable($professionalTaxTable)
-                ? DB::table($professionalTaxTable)->where('point_id', $point->id)->get()
-                : collect();
-            $firstProfTax = $professionalTaxList->first();
-
-            // ── Flatten cross-table fields onto the point so the front-end
-            //    can read pd.assessment, pd.owner_name, pd.watertax_no, etc. ──
-            $point->assessment   = $mis->assessment ?? null;
-            $point->owner_name   = $mis->owner_name ?? null;
-            $point->phone_number = $mis->phone_number ?? null;
-
-            $point->watertax_no     = $waterTax->watertax_no ?? null;
-            $point->old_watertax_no = $waterTax->old_watertax_no ?? null;
-            $point->water_usage     = $waterTax->water_usage ?? null;
-
-            $point->ugd_no     = $ugdTax->ugd_no ?? null;
-            $point->old_ugd_no = $ugdTax->old_ugd_no ?? null;
-            $point->ugd_usage  = $ugdTax->ugd_usage ?? null;
-
-            $point->pt_number          = $firstProfTax->pt_number ?? null;
-            $point->old_pt_number      = $firstProfTax->old_pt_number ?? null;
-            $point->establishment_name = $firstProfTax->establishment_name ?? null;
-            $point->half_year_tax      = $firstProfTax->half_year_tax ?? null;
-
-            // Keep raw nested data too in case anything else needs it
-            $point->mis = $mis;
-            $point->water_tax = $waterTax;
-            $point->ugd_tax = $ugdTax;
-            $point->professional_tax = $professionalTaxList;
-        }
-
-        return response()->json([
-            'status' => true,
-            'gisid' => $gisid,
-            'ward_id' => $wardId,
-            'total_points' => $points->count(),
-            'data' => $points
-        ]);
+    if (!Schema::hasTable($pointTable)) {
+        return response()->json(['status' => false, 'message' => 'Point table not found.'], 404);
     }
+
+    // Get all point data for this GIS ID
+    $points = DB::table($pointTable)->where('point_gisid', $gisid)->get();
+
+    if ($points->isEmpty()) {
+        return response()->json(['status' => false, 'message' => 'No points found.'], 404);
+    }
+
+    $results = [];
+
+    foreach ($points as $point) {
+        // Get MIS data by assessment (if point has assessment)
+        $mis = null;
+        if ($point->assessment) {
+            $mis = Schema::hasTable($misTable)
+                ? DB::table($misTable)->where('assessment', $point->assessment)->first()
+                : null;
+        }
+
+        // Get Water Tax data by assessment (if point has assessment)
+        $waterTax = null;
+        if ($point->assessment) {
+            $waterTax = Schema::hasTable($waterTaxTable)
+                ? DB::table($waterTaxTable)->where('assessment', $point->assessment)->first()
+                : null;
+        }
+
+        // Get UGD Tax data by gisid
+        $ugdTax = Schema::hasTable($ugdTaxTable)
+            ? DB::table($ugdTaxTable)->where('gisid', $point->point_gisid)->first()
+            : null;
+
+        // Get Professional Tax data by gisid AND assessment
+        $professionalTax = Schema::hasTable($professionalTaxTable)
+            ? DB::table($professionalTaxTable)
+                ->where('gisid', $point->point_gisid)
+                ->where('assessment', $point->assessment)
+                ->first()
+            : null;
+
+        // Merge all data into the point object
+        $merged = (array) $point;
+
+        // MIS data
+        $merged['assessment'] = $mis ? $mis->assessment : ($point->assessment ?? null);
+        $merged['owner_name'] = $mis ? $mis->owner_name : ($point->owner_name ?? null);
+        $merged['phone_number'] = $mis ? $mis->phone_number : ($point->phone_number ?? null);
+        $merged['old_assessment'] = $mis ? $mis->old_assessment : null;
+        $merged['old_door_no'] = $mis ? $mis->old_door_no : null;
+        $merged['new_door_no'] = $mis ? $mis->new_door_no : ($point->new_door_no ?? null);
+        $merged['zone'] = $mis ? $mis->zone : null;
+        $merged['road_name'] = $mis ? $mis->road_name : null;
+
+        // Water Tax data
+        $merged['watertax_no'] = $waterTax ? $waterTax->watertax_no : null;
+        $merged['old_watertax_no'] = $waterTax ? $waterTax->old_watertax_no : null;
+        $merged['water_usage'] = $waterTax ? $waterTax->usage : null;
+        $merged['water_DBC_type'] = $waterTax ? $waterTax->DBC_type : null;
+        $merged['water_slab_description'] = $waterTax ? $waterTax->slab_description : null;
+
+        // UGD Tax data
+        $merged['ugd_no'] = $ugdTax ? $ugdTax->ugd_no : null;
+        $merged['old_ugd_no'] = $ugdTax ? $ugdTax->old_ugd_no : null;
+        $merged['ugd_usage'] = $ugdTax ? $ugdTax->usage : null;
+        $merged['ugd_DBC_type'] = $ugdTax ? $ugdTax->DBC_type : null;
+        $merged['ugd_slab_description'] = $ugdTax ? $ugdTax->slab_description : null;
+
+        // Professional Tax data
+        $merged['pt_number'] = $professionalTax ? $professionalTax->pt_number : null;
+        $merged['old_pt_number'] = $professionalTax ? $professionalTax->old_pt_number : null;
+        $merged['establishment_name'] = $professionalTax ? $professionalTax->establishment_name : null;
+        $merged['half_year_tax'] = $professionalTax ? $professionalTax->half_year_tax : null;
+        $merged['profession_type'] = $professionalTax ? $professionalTax->profession_type : null;
+        $merged['employee_count'] = $professionalTax ? $professionalTax->employee_count : null;
+        $merged['pt_remarks'] = $professionalTax ? $professionalTax->remarks : null;
+
+        // Keep raw nested data too
+        $merged['mis'] = $mis;
+        $merged['water_tax'] = $waterTax;
+        $merged['ugd_tax'] = $ugdTax;
+        $merged['professional_tax'] = $professionalTax;
+
+        $results[] = (object) $merged;
+    }
+
+    return response()->json([
+        'status' => true,
+        'gisid' => $gisid,
+        'ward_id' => $wardId,
+        'total_points' => count($results),
+        'data' => $results
+    ]);
+}
 }
