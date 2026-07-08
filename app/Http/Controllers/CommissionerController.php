@@ -1352,6 +1352,11 @@ class CommissionerController extends Controller
             ->orderBy('road_name')
             ->pluck('road_name');
 
+        // ─────────────────────────────────────────────────────────
+        // ANALYTICS
+        // ─────────────────────────────────────────────────────────
+        $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
+
         return view('excecutive.mapview', compact(
             'ward',
             'polygons',
@@ -1360,8 +1365,119 @@ class CommissionerController extends Controller
             'polygonDatas',
             'pointDatas',
             'misData',
-            'uniqueRoadNames'
+            'uniqueRoadNames',
+            'analytics'
         ));
+    }
+
+    /**
+     * Build ward-level analytics: building/survey counts, survey %,
+     * and area/usage variation against MIS records, matched by assessment.
+     */
+    private function buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData)
+    {
+        $totalBuildings = count($polygons);
+
+        // Unique surveyed buildings = distinct gisid present in polygon_data
+        $surveyedBuildings = collect($polygonDatas)->pluck('gisid')->unique()->count();
+
+        // Total surveyed assessments = count of point_data rows
+        $totalSurveyedAssessments = count($pointDatas);
+
+        $surveyPercentage = $totalBuildings > 0
+            ? round(($surveyedBuildings / $totalBuildings) * 100, 1)
+            : 0;
+
+        // Index polygonData by gisid for quick building lookups
+        $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
+
+        // Index mis by assessment for area/usage comparison
+        $misByAssessment = collect($misData)->keyBy('assessment');
+
+        // Group pointData by point_gisid (a building can have multiple assessments)
+        $pointDataByGisid = [];
+        foreach ($pointDatas as $pd) {
+            $pointDataByGisid[$pd->point_gisid][] = $pd;
+        }
+
+        $areaVariationCount = 0;
+        $usageVariationCount = 0;
+        $validBuildingsCount = 0;
+        $totalBuildingArea = 0;
+        $totalAssessmentArea = 0;
+
+        foreach ($polygons as $polygon) {
+            $gisid = $polygon->gisid;
+            $polygonSqfeet = floatval($polygon->sqfeet ?? 0);
+
+            $polyData = $polygonDataByGisid->get($gisid);
+            if ($polyData) {
+                $numberFloor = floatval($polyData->number_floor ?? 0);
+                $basement = floatval($polyData->basement ?? 0);
+                $buildingArea = ($numberFloor > 0 ? $numberFloor : 1) * $polygonSqfeet;
+                if ($basement > 0) {
+                    $buildingArea += ($polygonSqfeet * $basement);
+                }
+                $buildingUsage = $polyData->building_usage ?? null;
+            } else {
+                $buildingArea = $polygonSqfeet;
+                $buildingUsage = null;
+            }
+
+            $assessmentArea = 0;
+            $hasUsageMismatch = false;
+
+            if (isset($pointDataByGisid[$gisid])) {
+                foreach ($pointDataByGisid[$gisid] as $pd) {
+                    $mis = $misByAssessment->get($pd->assessment);
+
+                    $pointArea = 0;
+                    if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
+                        $pointArea = floatval($pd->qcsqfeet);
+                    } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
+                        $pointArea = floatval($mis->plot_area);
+                    }
+                    $assessmentArea += $pointArea;
+
+                    $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
+                    if (
+                        $buildingUsage && $pointUsage
+                        && strtoupper(trim($buildingUsage)) != strtoupper(trim($pointUsage))
+                    ) {
+                        $hasUsageMismatch = true;
+                    }
+                }
+            }
+
+            $totalBuildingArea += $buildingArea;
+            $totalAssessmentArea += $assessmentArea;
+
+            if ($buildingArea > 0 && $assessmentArea > 0) {
+                $validBuildingsCount++;
+
+                if (abs($buildingArea - $assessmentArea) > 1) {
+                    $areaVariationCount++;
+                }
+                if ($hasUsageMismatch) {
+                    $usageVariationCount++;
+                }
+            }
+        }
+
+        return [
+            'total_buildings' => $totalBuildings,
+            'surveyed_buildings' => $surveyedBuildings,
+            'total_surveyed_assessments' => $totalSurveyedAssessments,
+            'survey_percentage' => $surveyPercentage,
+            'area_variation_count' => $areaVariationCount,
+            'usage_variation_count' => $usageVariationCount,
+            'area_variation_percentage' => $validBuildingsCount > 0
+                ? round(($areaVariationCount / $validBuildingsCount) * 100, 1) : 0,
+            'usage_variation_percentage' => $validBuildingsCount > 0
+                ? round(($usageVariationCount / $validBuildingsCount) * 100, 1) : 0,
+            'total_building_area' => round($totalBuildingArea, 2),
+            'total_assessment_area' => round($totalAssessmentArea, 2),
+        ];
     }
     public function getPointDetails(Request $request)
     {
