@@ -121,11 +121,19 @@
             z-index: 1000;
         }
 
+        .custom-legend-toggle {
+            position: absolute;
+            right: 30px;
+            top: 302px;
+            z-index: 1000;
+        }
+
         .layer-toggle-btn,
         .location-toggle-btn,
         .search-toggle-btn,
         .edit-toggle-btn,
         .label-toggle-btn,
+        .legend-toggle-btn,
         .fullscreen-btn {
             width: 44px;
             height: 44px;
@@ -147,6 +155,7 @@
         .search-toggle-btn:hover,
         .edit-toggle-btn:hover,
         .label-toggle-btn:hover,
+        .legend-toggle-btn:hover,
         .fullscreen-btn:hover {
             background: #f8fafc;
             transform: scale(1.02);
@@ -154,6 +163,12 @@
         }
 
         .label-toggle-btn.active-label {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+
+        .legend-toggle-btn.active-legend {
             background: #eff6ff;
             border-color: #3b82f6;
             color: #2563eb;
@@ -900,6 +915,62 @@
             .point-data-card-actions {
                 justify-content: flex-start;
             }
+
+            /* ── Right-side icon stack becomes tighter on mobile ── */
+            .custom-layer-switcher,
+            .custom-location-switcher,
+            .custom-search-switcher,
+            .custom-edit-toggle,
+            .custom-label-toggle,
+            .custom-legend-toggle {
+                right: 10px;
+            }
+
+            .custom-layer-switcher   { top: 10px; }
+            .custom-location-switcher{ top: 58px; }
+            .custom-search-switcher  { top: 106px; }
+            .custom-edit-toggle      { top: 154px; }
+            .custom-label-toggle     { top: 202px; }
+            .custom-legend-toggle    { top: 250px; }
+
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .edit-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .fullscreen-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+                border-radius: 10px;
+            }
+
+            .search-dropdown {
+                width: min(320px, calc(100vw - 40px));
+            }
+
+            /* ── Legend becomes a bottom sheet on mobile ── */
+            .infrastructure-legend {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                width: auto;
+                max-width: none;
+                min-width: 0;
+                max-height: 45vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .infrastructure-legend {
+                max-height: 40vh;
+                font-size: 11px;
+            }
+
+            .infrastructure-legend .legend-title {
+                font-size: 13px;
+            }
         }
 
         /* ─── Ward Analytics Strip ─── */
@@ -1034,8 +1105,21 @@
             max-height: 400px;
             overflow-y: auto;
             min-width: 180px;
+            max-width: 240px;
             font-size: 12px;
             border: 1px solid #e5e7eb;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+            pointer-events: none;
+        }
+
+        .infrastructure-legend.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
         }
 
         .infrastructure-legend .legend-title {
@@ -2104,6 +2188,7 @@
             let translateInteraction = null;
             let selectedFeatureForEdit = null;
             let originalGeometry = null;
+            let legendVisible = false;
 
             const tempDrawSource = new ol.source.Vector();
             const tempDrawLayer = new ol.layer.Vector({
@@ -2873,6 +2958,19 @@
                 showToast(showLabels ? '🏷️ Labels ON' : '🏷️ Labels OFF', 1500);
             }
 
+            // ─── LEGEND TOGGLE ───
+            function toggleLegend() {
+                const $legend = $('.infrastructure-legend');
+                if (!$legend.length) {
+                    showToast('⚠️ Infrastructure data not loaded yet', 2000);
+                    return;
+                }
+                legendVisible = !legendVisible;
+                $legend.toggleClass('show', legendVisible);
+                $('#legendToggleBtn').toggleClass('active-legend', legendVisible);
+                showToast(legendVisible ? '🏗️ Legend shown' : '🏗️ Legend hidden', 1500);
+            }
+
             // ─── INFRASTRUCTURE LAYERS ───
             let infraLayers = {};
             let infraGrouped = {};
@@ -3059,7 +3157,7 @@
                 $('.infrastructure-legend').remove();
 
                 const legend = document.createElement('div');
-                legend.className = 'infrastructure-legend';
+                legend.className = 'infrastructure-legend' + (legendVisible ? ' show' : '');
                 legend.innerHTML = `
                     <div class="legend-title">
                         <span>🏗️ Infrastructure</span>
@@ -3092,6 +3190,7 @@
                 });
 
                 document.getElementById('map').appendChild(legend);
+                $('#legendToggleBtn').toggleClass('active-legend', legendVisible);
 
                 $('#toggleAllInfra').on('click', function(e) {
                     e.stopPropagation();
@@ -3155,6 +3254,15 @@
                 <div class="custom-label-toggle">
                     <div class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
                         <i class="bi bi-fonts"></i>
+                    </div>
+                </div>
+            `);
+
+            // ─── LEGEND TOGGLE BUTTON ───
+            $mapContainer.append(`
+                <div class="custom-legend-toggle">
+                    <div class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
+                        <i class="bi bi-list-ul"></i>
                     </div>
                 </div>
             `);
@@ -3274,6 +3382,12 @@
             $(document).on('click', '#labelToggleBtn', function(e) {
                 e.stopPropagation();
                 toggleLabels();
+            });
+
+            // ─── LEGEND TOGGLE EVENT ───
+            $(document).on('click', '#legendToggleBtn', function(e) {
+                e.stopPropagation();
+                toggleLegend();
             });
 
             // ─── LAYER DROPDOWN EVENTS ───
