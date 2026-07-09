@@ -49,11 +49,11 @@ public function fetchInfrastructure($wardId)
     {
         // Get boundary from ward data
         if ($ward->boundary_coordinates) {
-            return [
-                'type' => 'Polygon',
-                'coordinates' => json_decode($ward->boundary_coordinates, true)
-            ];
-        }
+    return [
+        'type' => 'Polygon',
+        'coordinates' => json_decode($ward->boundary_coordinates, true)
+    ];
+}
 
         // If no boundary stored, create a default boundary around ward center
         $centerLat = $ward->center_lat ?? 19.0760;
