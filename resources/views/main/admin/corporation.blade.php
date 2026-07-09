@@ -73,20 +73,25 @@
                     <input type="hidden" id="corpId">
                     <input type="hidden" name="_method" id="formMethod" value="POST">
                     <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+                        <!-- Validation Error Summary -->
+                        <div id="validationErrorSummary" class="alert alert-danger" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <span id="validationErrorText">Please fix the following errors:</span>
+                            <ul id="validationErrorList" class="mb-0 mt-2"></ul>
+                        </div>
+
                         <div class="card mb-3">
                             <div class="card-header">Basic Information</div>
                             <div class="card-body">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">Corporation Name <span
-                                                class="text-danger">*</span></label>
+                                        <label class="form-label">Corporation Name <span class="text-danger">*</span></label>
                                         <input type="text" name="name" id="f_name" class="form-control">
                                         <div class="invalid-feedback" id="error-name"></div>
                                     </div>
                                     @if (auth()->user()->role == 'admin')
                                         <div class="col-md-6">
-                                            <label class="form-label">Corporation Code <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Corporation Code <span class="text-danger">*</span></label>
                                             <input type="text" name="code" id="f_code" class="form-control">
                                             <div class="invalid-feedback" id="error-code"></div>
                                         </div>
@@ -148,8 +153,7 @@
                                     </div>
                                     @if (auth()->user()->role == 'admin')
                                         <div class="col-md-6">
-                                            <label class="form-label">Boundary File <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Boundary File <span class="text-danger">*</span></label>
                                             <input type="file" name="boundary_file" id="f_boundary"
                                                 class="form-control" accept=".json,.geojson">
                                             <div class="invalid-feedback" id="error-boundary_file"></div>
@@ -348,7 +352,6 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            /* Make card fill the column */
         }
 
         .acard:hover {
@@ -356,7 +359,6 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
         }
 
-        /* Card Image Styles - Show full logo, no cropping */
         .acard-img-wrap {
             position: relative;
             width: 100%;
@@ -372,12 +374,9 @@
         }
 
         .acard-img-wrap img {
-            position: relative;
-            /* not absolute — let flex centering do the work */
             width: 100%;
             height: 100%;
             object-fit: contain;
-            /* shows the WHOLE logo, no cropping, adds letterbox space instead */
             display: block;
         }
 
@@ -484,7 +483,6 @@
             border-radius: 20px;
         }
 
-        /* Toolbar Styles */
         .data-toolbar {
             margin: 20px 0 10px;
         }
@@ -518,7 +516,6 @@
             background: #125a82;
         }
 
-        /* Invalid feedback */
         .invalid-feedback {
             font-size: 12px;
             margin-top: 4px;
@@ -528,7 +525,6 @@
             border-color: #ef4444 !important;
         }
 
-        /* Pagination */
         .pagination .page-item.active .page-link {
             background-color: #1679AB;
             border-color: #1679AB;
@@ -545,7 +541,6 @@
             color: #9ca3af;
         }
 
-        /* Import Stats Card */
         .import-stat-card {
             background: #f8fafc;
             border-radius: 10px;
@@ -595,7 +590,6 @@
             font-weight: 600;
         }
 
-        /* Responsive Adjustments */
         @media (max-width: 768px) {
             .data-toolbar {
                 flex-direction: column;
@@ -614,7 +608,6 @@
 
             .acard-img-wrap {
                 height: 180px;
-                /* Smaller height on mobile */
             }
         }
 
@@ -657,22 +650,20 @@
                     info: 'bi-info-circle-fill'
                 };
 
-                // Remove existing flash messages
                 $('.flash-message-container').remove();
 
                 const container = `
-            <div class="flash-message-container">
-                <div class="flash-message" style="background: ${colors[type] || colors.info}; color: white;">
-                    <i class="bi ${icons[type] || icons.info}"></i>
-                    <span class="flash-content">${message}</span>
-                    <button class="flash-close" onclick="$(this).closest('.flash-message-container').remove()">&times;</button>
-                </div>
-            </div>
-        `;
+                    <div class="flash-message-container">
+                        <div class="flash-message" style="background: ${colors[type] || colors.info}; color: white;">
+                            <i class="bi ${icons[type] || icons.info}"></i>
+                            <span class="flash-content">${message}</span>
+                            <button class="flash-close" onclick="$(this).closest('.flash-message-container').remove()">&times;</button>
+                        </div>
+                    </div>
+                `;
 
                 $('body').append(container);
 
-                // Auto dismiss
                 if (duration > 0) {
                     setTimeout(() => {
                         const container = $('.flash-message-container');
@@ -691,6 +682,8 @@
                 $('#imagePreview').hide();
                 $('#imagePreview img').attr('src', '');
                 $('#f_image').val('');
+                $('#f_image').removeClass('is-invalid');
+                $('#error-image').text('');
             };
 
             $('#f_image').on('change', function() {
@@ -700,6 +693,8 @@
                     reader.onload = function(e) {
                         $('#imagePreview img').attr('src', e.target.result);
                         $('#imagePreview').show();
+                        $('#f_image').removeClass('is-invalid');
+                        $('#error-image').text('');
                     };
                     reader.readAsDataURL(file);
                 } else {
@@ -764,7 +759,7 @@
             }
 
             // =============================================
-            // RENDER CARDS - UPDATED WITH BOOTSTRAP GRID
+            // RENDER CARDS
             // =============================================
             function renderCards(corporations) {
                 if (!corporations || corporations.length === 0) {
@@ -822,12 +817,12 @@
                                             <i class="bi bi-pencil"></i> Edit
                                         </button>
                                         ${userRole === 'admin' ? `
-                                                        <button class="btn btn-danger btn-sm flex-fill delete-btn"
-                                                                data-id="${corp.id}"
-                                                                data-name="${escapeHtml(corp.name)}">
-                                                            <i class="bi bi-trash"></i> Delete
-                                                        </button>
-                                                    ` : ''}
+                                        <button class="btn btn-danger btn-sm flex-fill delete-btn"
+                                                data-id="${corp.id}"
+                                                data-name="${escapeHtml(corp.name)}">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                        ` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -928,9 +923,89 @@
                 $('#formMethod').val('POST');
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
+                $('#validationErrorSummary').hide();
+                $('#validationErrorList').empty();
                 $('#imagePreview').hide();
                 $('#imagePreview img').attr('src', '');
                 $('#f_code').prop('disabled', false);
+                $('#f_image').removeAttr('required');
+                $('.modal-body .text-danger').remove();
+            }
+
+            function showValidationErrors(errors) {
+                // Clear previous errors
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').text('');
+                $('#validationErrorSummary').hide();
+                $('#validationErrorList').empty();
+
+                let errorList = [];
+                let fieldMap = {
+                    'name': 'f_name',
+                    'code': 'f_code',
+                    'state': 'f_state',
+                    'district': 'f_district',
+                    'pincode': 'f_pincode',
+                    'status': 'f_status',
+                    'description': 'f_description',
+                    'image': 'f_image',
+                    'boundary_file': 'f_boundary',
+                    'mis_file': 'f_mis',
+                    'water_tax_file': 'f_water',
+                    'ugd_tax_file': 'f_ugd',
+                    'professional_tax_file': 'f_pt'
+                };
+
+                $.each(errors, function(field, messages) {
+                    let fieldId = fieldMap[field] || field;
+                    let input = $('#' + fieldId);
+
+                    if (input.length) {
+                        input.addClass('is-invalid');
+                        let errorContainer = $('#error-' + field);
+                        if (errorContainer.length) {
+                            errorContainer.text(messages[0]);
+                        } else {
+                            // Find error container by searching in parent
+                            let parent = input.closest('.col-md-6, .col-md-4, .col-12');
+                            let errorDiv = parent.find('.invalid-feedback');
+                            if (errorDiv.length) {
+                                errorDiv.text(messages[0]);
+                            }
+                        }
+                        errorList.push(messages[0]);
+                    } else {
+                        errorList.push(`${field}: ${messages[0]}`);
+                    }
+                });
+
+                // Show error summary
+                if (errorList.length > 0) {
+                    $('#validationErrorSummary').show();
+                    let listHtml = '';
+                    $.each(errorList, function(index, msg) {
+                        listHtml += `<li>${msg}</li>`;
+                    });
+                    $('#validationErrorList').html(listHtml);
+
+                    // Scroll to first error
+                    let firstError = $('.is-invalid').first();
+                    if (firstError.length) {
+                        let modalBody = $('#corpModal .modal-body');
+                        let errorPosition = firstError.position().top;
+                        if (modalBody.length) {
+                            modalBody.animate({
+                                scrollTop: errorPosition - 50
+                            }, 300);
+                        }
+                        firstError.focus();
+                    }
+                }
+
+                // Show first error as flash message
+                if (errorList.length > 0) {
+                    showFlashMessage(errorList[0], 'error', 8000);
+                }
             }
 
             // =============================================
@@ -995,16 +1070,16 @@
                                         ${value.skipped > 0 ? `<span class="num-skipped">⚠${value.skipped}</span>` : ''}
                                     </div>
                                     ${value.skipped > 0 && value.skipped_details && value.skipped_details.length > 0 ? `
-                                                    <div class="mt-2 text-start" style="font-size: 12px;">
-                                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
-                                                            View skipped details (${value.skipped})
-                                                        </button>
-                                                        <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
-                                                            ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
-                                                            ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
-                                                        </div>
-                                                    </div>
-                                                ` : ''}
+                                    <div class="mt-2 text-start" style="font-size: 12px;">
+                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
+                                            View skipped details (${value.skipped})
+                                        </button>
+                                        <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
+                                            ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
+                                            ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
+                                        </div>
+                                    </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         `;
@@ -1046,7 +1121,6 @@
                 $('#importStatsModal').modal('show');
             }
 
-            // Toggle skipped details
             window.toggleSkippedDetails = function(btn) {
                 const details = $(btn).next('.skipped-details');
                 details.slideToggle();
@@ -1094,8 +1168,12 @@
             // =============================================
             $('#corpForm').on('submit', function(e) {
                 e.preventDefault();
+
+                // Clear previous errors
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
+                $('#validationErrorSummary').hide();
+                $('#validationErrorList').empty();
 
                 let formData = new FormData(this);
                 let corpId = $('#corpId').val();
@@ -1117,24 +1195,58 @@
                     }
                 }
 
-                // Validate required fields before sending
+                // Client-side validation for required fields
                 let hasError = false;
-                let requiredFields = ['name', 'state', 'district', 'pincode', 'status', 'description'];
+                let requiredFields = {
+                    'f_name': 'Corporation Name',
+                    'f_state': 'State',
+                    'f_district': 'District',
+                    'f_pincode': 'Pincode',
+                    'f_status': 'Status',
+                    'f_description': 'Description'
+                };
+
                 if (userRole === 'admin' && method !== 'PUT') {
-                    requiredFields.push('code');
+                    requiredFields['f_code'] = 'Corporation Code';
                 }
+
+                // Check required fields
+                $.each(requiredFields, function(fieldId, fieldName) {
+                    let input = $('#' + fieldId);
+                    if (input.length && !input.val().trim()) {
+                        input.addClass('is-invalid');
+                        let errorContainer = $('#error-' + fieldId.replace('f_', ''));
+                        if (errorContainer.length) {
+                            errorContainer.text(fieldName + ' is required');
+                        }
+                        hasError = true;
+                    }
+                });
+
                 if (method !== 'PUT') {
-                    // Image is required for new corporations
                     let imageFile = $('#f_image')[0].files[0];
                     if (!imageFile) {
-                        showFlashMessage('Please upload a corporation logo', 'error');
                         $('#f_image').addClass('is-invalid');
                         $('#error-image').text('Logo is required');
                         hasError = true;
                     }
                 }
 
-                if (hasError) return;
+                if (hasError) {
+                    let firstError = $('.is-invalid').first();
+                    if (firstError.length) {
+                        let modalBody = $('#corpModal .modal-body');
+                        let errorPosition = firstError.position().top;
+                        if (modalBody.length) {
+                            modalBody.animate({
+                                scrollTop: errorPosition - 50
+                            }, 300);
+                        }
+                        firstError.focus();
+                    }
+                    showFlashMessage('Please fill in all required fields', 'error');
+                    return;
+                }
 
                 $('#corpSaveBtn').prop('disabled', true).html(
                     '<span class="spinner-border spinner-border-sm me-1"></span> Saving...'
@@ -1157,7 +1269,6 @@
                         showFlashMessage(response.message || 'Corporation saved successfully',
                             'success');
 
-                        // Show import stats if available
                         if (response.import_stats && Object.keys(response.import_stats).length >
                             0) {
                             showImportStats(response.import_stats);
@@ -1175,50 +1286,19 @@
 
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
-                            let errorMessages = [];
-
-                            $.each(errors, function(field, messages) {
-                                let input = $('[name="' + field + '"]');
-                                if (input.length) {
-                                    input.addClass('is-invalid');
-                                    let errorContainer = $('#error-' + field);
-                                    if (errorContainer.length) {
-                                        errorContainer.text(messages[0]);
-                                    } else {
-                                        // Fallback: find closest error container
-                                        let closestError = input.closest(
-                                                '.col-md-6, .col-md-4, .col-12')
-                                            .find('.invalid-feedback');
-                                        if (closestError.length) {
-                                            closestError.text(messages[0]);
-                                        }
-                                    }
-                                }
-                                errorMessages.push(messages[0]);
-                            });
-
-                            if (errorMessages.length) {
-                                showFlashMessage(errorMessages[0], 'error');
+                            if (errors) {
+                                showValidationErrors(errors);
+                            } else {
+                                showFlashMessage('Validation error occurred', 'error');
                             }
                         } else if (xhr.status === 403) {
                             showFlashMessage(xhr.responseJSON?.message || 'Permission denied',
                                 'error');
                         } else {
                             let errorMessage = xhr.responseJSON?.message ||
-                                'Something went wrong';
+                                'Something went wrong. Please try again.';
                             showFlashMessage(errorMessage, 'error');
                             console.error('Server error:', xhr.responseJSON);
-
-                            // Show detailed error in modal
-                            if (xhr.responseJSON?.errors) {
-                                let detailHtml = '<div class="text-danger mt-2"><small>';
-                                $.each(xhr.responseJSON.errors, function(field, msgs) {
-                                    detailHtml +=
-                                        `<div>${field}: ${msgs.join(', ')}</div>`;
-                                });
-                                detailHtml += '</small></div>';
-                                $('.modal-body').append(detailHtml);
-                            }
                         }
                     }
                 });
@@ -1275,8 +1355,7 @@
                             $('#f_code').prop('disabled', false);
                         }
 
-                        // Remove required attribute from image for edit
-                        $('#f_image').prop('required', false);
+                        $('#f_image').removeAttr('required');
 
                         $('#corpModal').modal('show');
                     },
@@ -1392,8 +1471,8 @@
                                     <p><strong>Description:</strong></p>
                                     <p class="text-muted">${escapeHtml(corp.description || 'No description')}</p>
                                     ${corp.boundary_file ? `
-                                                    <p><strong>Boundary:</strong> <span class="text-success">✓ Uploaded</span></p>
-                                                ` : ''}
+                                    <p><strong>Boundary:</strong> <span class="text-success">✓ Uploaded</span></p>
+                                    ` : ''}
                                 </div>
                             </div>
                         `;
@@ -1414,7 +1493,6 @@
             // MODAL CLEANUP
             // =============================================
             $('#corpModal').on('hidden.bs.modal', function() {
-                // Reset form when modal is closed
                 resetForm();
                 $('#corpSaveBtn').prop('disabled', false).html('Save Corporation');
             });
