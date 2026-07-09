@@ -8,54 +8,65 @@ use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
- use App\Services\InfrastructureFetcher;
+use App\Services\InfrastructureFetcher;
 
 class InfrastructureController extends Controller
 {
 
-public function fetchInfrastructure($wardId)
-{
-    try {
-        $ward = \App\Models\Ward::findOrFail($wardId);
-        $boundary = $this->getWardBoundary($ward);
+    public function fetchInfrastructure($wardId)
+    {
+        try {
+            $ward = \App\Models\Ward::findOrFail($wardId);
+            $boundary = $this->getWardBoundary($ward);
 
-        $outputDir = public_path('data/infrastructure/ward_' . $wardId);
+            $outputDir = public_path('data/infrastructure/ward_' . $wardId);
 
-        $fetcher = new InfrastructureFetcher($outputDir);
-        $results = $fetcher->fetchAllInfrastructure($boundary);
+            $fetcher = new InfrastructureFetcher($outputDir);
+            $results = $fetcher->fetchAllInfrastructure($boundary);
 
-        $fetcher->saveToGeojson($results);
-        $fetcher->saveByType($results);
-        $summary = $fetcher->createSummary($results);
+            $fetcher->saveToGeojson($results);
+            $fetcher->saveByType($results);
+            $summary = $fetcher->createSummary($results);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Infrastructure data fetched successfully',
-            'summary' => $summary,
-            'data_path' => $outputDir
-        ]);
-
-    } catch (\Exception $e) {
-        Log::error("Infrastructure fetch error: " . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to fetch infrastructure data',
-            'error' => $e->getMessage()
-        ], 500);
+            return response()->json([
+                'success' => true,
+                'message' => 'Infrastructure data fetched successfully',
+                'summary' => $summary,
+                'data_path' => $outputDir
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Infrastructure fetch error: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch infrastructure data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
-}
 
     private function getWardBoundary($ward)
     {
-        // Get boundary from ward data
-        if ($ward->boundary_coordinates) {
-    return [
-        'type' => 'Polygon',
-        'coordinates' => json_decode($ward->boundary_coordinates, true)
-    ];
-}
+        // Use the correct column: 'boundary' (matches CommissionerController)
+        if (!empty($ward->boundary)) {
+            $boundary = is_array($ward->boundary)
+                ? $ward->boundary
+                : json_decode($ward->boundary, true);
 
-        // If no boundary stored, create a default boundary around ward center
+            // If it's already a full GeoJSON geometry object (type + coordinates), return as-is
+            if (isset($boundary['type']) && isset($boundary['coordinates'])) {
+                return $boundary;
+            }
+
+            // If it's just a raw coordinates array, wrap it as Polygon
+            if (is_array($boundary)) {
+                return [
+                    'type' => 'Polygon',
+                    'coordinates' => $boundary
+                ];
+            }
+        }
+
+        // Fallback — only used if boundary is genuinely missing
         $centerLat = $ward->center_lat ?? 19.0760;
         $centerLon = $ward->center_lon ?? 72.8777;
 
@@ -70,7 +81,6 @@ public function fetchInfrastructure($wardId)
             ]]
         ];
     }
-
     public function getInfrastructureData($wardId)
     {
         $dataPath = public_path("data/infrastructure/ward_{$wardId}/infrastructure.geojson");
