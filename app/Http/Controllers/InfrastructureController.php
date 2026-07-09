@@ -8,115 +8,42 @@ use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+ use App\Services\InfrastructureFetcher;
 
 class InfrastructureController extends Controller
 {
-    public function fetchInfrastructure($wardId)
-    {
-        try {
-            $ward = \App\Models\Ward::findOrFail($wardId);
 
-            // Get ward boundary from ward data
-            $boundary = $this->getWardBoundary($ward);
+public function fetchInfrastructure($wardId)
+{
+    try {
+        $ward = \App\Models\Ward::findOrFail($wardId);
+        $boundary = $this->getWardBoundary($ward);
 
-            // Prepare the Python script execution
-            $pythonScript = public_path('scripts/fetch_infrastructure_qgis.py');
-            $outputDir = public_path('data/infrastructure/ward_' . $wardId);
+        $outputDir = public_path('data/infrastructure/ward_' . $wardId);
 
-            // Check if Python script exists
-            if (!File::exists($pythonScript)) {
-                Log::error("Python script not found at: " . $pythonScript);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Python script not found',
-                    'error' => "Script not found at: {$pythonScript}"
-                ], 500);
-            }
+        $fetcher = new InfrastructureFetcher($outputDir);
+        $results = $fetcher->fetchAllInfrastructure($boundary);
 
-            // Ensure output directory exists
-            if (!File::exists($outputDir)) {
-                File::makeDirectory($outputDir, 0755, true);
-            }
+        $fetcher->saveToGeojson($results);
+        $fetcher->saveByType($results);
+        $summary = $fetcher->createSummary($results);
 
-            // Create temporary boundary file
-            $boundaryFile = storage_path("app/temp/boundary_{$wardId}.geojson");
-            File::ensureDirectoryExists(dirname($boundaryFile));
-            file_put_contents($boundaryFile, json_encode($boundary));
+        return response()->json([
+            'success' => true,
+            'message' => 'Infrastructure data fetched successfully',
+            'summary' => $summary,
+            'data_path' => $outputDir
+        ]);
 
-            // Check if Python3 is available
-            $pythonCheck = Process::command(['which', 'python3'])->run();
-            if (!$pythonCheck->successful()) {
-                File::delete($boundaryFile);
-                Log::error("Python3 not found in system PATH");
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Python3 is not available on the server',
-                    'error' => 'Please install Python3 or check your PATH configuration'
-                ], 500);
-            }
-
-            $pythonPath = trim($pythonCheck->output());
-
-            // Execute Python script using simple command
-            $command = escapeshellarg($pythonPath) . " " . escapeshellarg($pythonScript) .
-                       " --boundary " . escapeshellarg($boundaryFile) .
-                       " --output " . escapeshellarg($outputDir) .
-                       " 2>&1";
-
-            Log::info("Executing command: " . $command);
-
-            $process = Process::timeout(180)->command($command);
-            $result = $process->run();
-
-            // Clean up temp file
-            File::delete($boundaryFile);
-
-            if ($result->successful()) {
-                // Check if summary file was created
-                $summaryPath = $outputDir . '/summary.json';
-                if (File::exists($summaryPath)) {
-                    $summary = json_decode(File::get($summaryPath), true);
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Infrastructure data fetched successfully',
-                        'summary' => $summary,
-                        'data_path' => $outputDir
-                    ]);
-                } else {
-                    Log::warning("Summary file not found at: " . $summaryPath);
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Infrastructure data fetched but summary not generated',
-                        'output' => $result->output(),
-                        'data_path' => $outputDir
-                    ]);
-                }
-            } else {
-                Log::error('Infrastructure fetch failed', [
-                    'ward_id' => $wardId,
-                    'error_output' => $result->errorOutput(),
-                    'exit_code' => $result->exitCode(),
-                    'command' => $command
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to fetch infrastructure data',
-                    'error' => $result->errorOutput(),
-                    'output' => $result->output(),
-                    'command' => $command
-                ], 500);
-            }
-
-        } catch (\Exception $e) {
-            Log::error("Infrastructure fetch error: " . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch infrastructure data',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        Log::error("Infrastructure fetch error: " . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch infrastructure data',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     private function getWardBoundary($ward)
     {
