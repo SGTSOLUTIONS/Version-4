@@ -45,68 +45,86 @@ class InfrastructureController extends Controller
     }
 
     private function getWardBoundary($ward)
-{
-    // Prefer image extent — this is already accurate (used for drone overlay on the map)
-    if (
-        !empty($ward->extent_left) && !empty($ward->extent_right) &&
-        !empty($ward->extent_bottom) && !empty($ward->extent_top)
-    ) {
-        $left   = (float) $ward->extent_left;
-        $right  = (float) $ward->extent_right;
-        $bottom = (float) $ward->extent_bottom;
-        $top    = (float) $ward->extent_top;
+    {
+        if (
+            !empty($ward->extent_left) && !empty($ward->extent_right) &&
+            !empty($ward->extent_bottom) && !empty($ward->extent_top)
+        ) {
+            $left   = (float) $ward->extent_left;
+            $right  = (float) $ward->extent_right;
+            $bottom = (float) $ward->extent_bottom;
+            $top    = (float) $ward->extent_top;
+
+            // Detect if these are already lat/lon (EPSG:4326) or Web Mercator (EPSG:3857)
+            $isLatLon = $left > -180 && $left < 180 && $bottom > -90 && $bottom < 90;
+
+            if (!$isLatLon) {
+                [$left, $bottom]  = $this->mercatorToLatLon($left, $bottom);
+                [$right, $top]    = $this->mercatorToLatLon($right, $top);
+            }
+
+            return [
+                'type' => 'Polygon',
+                'coordinates' => [[
+                    [$left, $bottom],
+                    [$right, $bottom],
+                    [$right, $top],
+                    [$left, $top],
+                    [$left, $bottom],
+                ]]
+            ];
+        }
+
+        // Fallback 1: stored boundary column
+        if (!empty($ward->boundary)) {
+            $boundary = is_array($ward->boundary)
+                ? $ward->boundary
+                : json_decode($ward->boundary, true);
+
+            if (isset($boundary['type']) && isset($boundary['coordinates'])) {
+                return $boundary;
+            }
+            if (is_array($boundary)) {
+                return [
+                    'type' => 'Polygon',
+                    'coordinates' => $boundary
+                ];
+            }
+        }
+
+        // Fallback 2: dummy box around center point
+        $centerLat = $ward->center_lat ?? 19.0760;
+        $centerLon = $ward->center_lon ?? 72.8777;
 
         return [
             'type' => 'Polygon',
             'coordinates' => [[
-                [$left, $bottom],
-                [$right, $bottom],
-                [$right, $top],
-                [$left, $top],
-                [$left, $bottom],
+                [$centerLon - 0.01, $centerLat - 0.01],
+                [$centerLon + 0.01, $centerLat - 0.01],
+                [$centerLon + 0.01, $centerLat + 0.01],
+                [$centerLon - 0.01, $centerLat + 0.01],
+                [$centerLon - 0.01, $centerLat - 0.01]
             ]]
         ];
     }
 
-    // Fallback 1: stored boundary column, if extent isn't available
-    if (!empty($ward->boundary)) {
-        $boundary = is_array($ward->boundary)
-            ? $ward->boundary
-            : json_decode($ward->boundary, true);
+    /**
+     * Convert EPSG:3857 (Web Mercator) x/y to EPSG:4326 (lon/lat)
+     */
+    private function mercatorToLatLon($x, $y)
+    {
+        $lon = ($x / 20037508.34) * 180;
+        $lat = (M_PI / 2) - (2 * atan(exp(-$y / 6378137.0)));
+        $lat = $lat * 180 / M_PI;
 
-        if (isset($boundary['type']) && isset($boundary['coordinates'])) {
-            return $boundary;
-        }
-        if (is_array($boundary)) {
-            return [
-                'type' => 'Polygon',
-                'coordinates' => $boundary
-            ];
-        }
+        return [$lon, $lat];
     }
-
-    // Fallback 2: last resort — dummy box around center point
-    $centerLat = $ward->center_lat ?? 19.0760;
-    $centerLon = $ward->center_lon ?? 72.8777;
-
-    return [
-        'type' => 'Polygon',
-        'coordinates' => [[
-            [$centerLon - 0.01, $centerLat - 0.01],
-            [$centerLon + 0.01, $centerLat - 0.01],
-            [$centerLon + 0.01, $centerLat + 0.01],
-            [$centerLon - 0.01, $centerLat + 0.01],
-            [$centerLon - 0.01, $centerLat - 0.01]
-        ]]
-    ];
-}
     public function getInfrastructureData($wardId)
     {
         $dataPath = public_path("data/infrastructure/ward_{$wardId}/infrastructure.geojson");
 
         if (!File::exists($dataPath)) {
-            // If data doesn't exist, try to fetch it
-            return $this->fetchInfrastructure($wardId);
+            return $this->fetchInfrastructure($wardId);   // fresh fetch — only if file missing
         }
 
         $data = json_decode(File::get($dataPath), true);
