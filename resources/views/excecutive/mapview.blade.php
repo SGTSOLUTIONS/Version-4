@@ -139,6 +139,7 @@
             transition: all 0.2s ease;
             border: 1px solid #e5e7eb;
             color: #1e293b;
+            font-size: 1.2rem;
         }
 
         .layer-toggle-btn:hover,
@@ -3019,7 +3020,6 @@
                         <tr><td class="label-cell">OSM ID</td><td class="value-cell">${feature.get('osm_id') || props.osm_id || '-'}</td></tr>
                 `;
 
-                // Add all other properties
                 Object.keys(props).forEach(key => {
                     if (key !== 'type' && key !== 'name' && key !== 'osm_id') {
                         const val = props[key];
@@ -3031,7 +3031,6 @@
 
                 html += `</table>`;
 
-                // Add geometry info
                 const geom = feature.getGeometry();
                 if (geom) {
                     const geomType = geom.getType();
