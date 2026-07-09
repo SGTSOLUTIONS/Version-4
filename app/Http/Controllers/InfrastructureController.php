@@ -45,42 +45,61 @@ class InfrastructureController extends Controller
     }
 
     private function getWardBoundary($ward)
-    {
-        // Use the correct column: 'boundary' (matches CommissionerController)
-        if (!empty($ward->boundary)) {
-            $boundary = is_array($ward->boundary)
-                ? $ward->boundary
-                : json_decode($ward->boundary, true);
-
-            // If it's already a full GeoJSON geometry object (type + coordinates), return as-is
-            if (isset($boundary['type']) && isset($boundary['coordinates'])) {
-                return $boundary;
-            }
-
-            // If it's just a raw coordinates array, wrap it as Polygon
-            if (is_array($boundary)) {
-                return [
-                    'type' => 'Polygon',
-                    'coordinates' => $boundary
-                ];
-            }
-        }
-
-        // Fallback — only used if boundary is genuinely missing
-        $centerLat = $ward->center_lat ?? 19.0760;
-        $centerLon = $ward->center_lon ?? 72.8777;
+{
+    // Prefer image extent — this is already accurate (used for drone overlay on the map)
+    if (
+        !empty($ward->extent_left) && !empty($ward->extent_right) &&
+        !empty($ward->extent_bottom) && !empty($ward->extent_top)
+    ) {
+        $left   = (float) $ward->extent_left;
+        $right  = (float) $ward->extent_right;
+        $bottom = (float) $ward->extent_bottom;
+        $top    = (float) $ward->extent_top;
 
         return [
             'type' => 'Polygon',
             'coordinates' => [[
-                [$centerLon - 0.01, $centerLat - 0.01],
-                [$centerLon + 0.01, $centerLat - 0.01],
-                [$centerLon + 0.01, $centerLat + 0.01],
-                [$centerLon - 0.01, $centerLat + 0.01],
-                [$centerLon - 0.01, $centerLat - 0.01]
+                [$left, $bottom],
+                [$right, $bottom],
+                [$right, $top],
+                [$left, $top],
+                [$left, $bottom],
             ]]
         ];
     }
+
+    // Fallback 1: stored boundary column, if extent isn't available
+    if (!empty($ward->boundary)) {
+        $boundary = is_array($ward->boundary)
+            ? $ward->boundary
+            : json_decode($ward->boundary, true);
+
+        if (isset($boundary['type']) && isset($boundary['coordinates'])) {
+            return $boundary;
+        }
+        if (is_array($boundary)) {
+            return [
+                'type' => 'Polygon',
+                'coordinates' => $boundary
+            ];
+        }
+    }
+
+    // Fallback 2: last resort — dummy box around center point
+    $centerLat = $ward->center_lat ?? 19.0760;
+    $centerLon = $ward->center_lon ?? 72.8777;
+
+    return [
+        'type' => 'Polygon',
+        'coordinates' => [[
+            [$centerLon - 0.01, $centerLat - 0.01],
+            [$centerLon + 0.01, $centerLat - 0.01],
+            [$centerLon + 0.01, $centerLat + 0.01],
+            [$centerLon - 0.01, $centerLat + 0.01],
+            [$centerLon - 0.01, $centerLat - 0.01]
+        ]]
+    ];
+}
     public function getInfrastructureData($wardId)
     {
         $dataPath = public_path("data/infrastructure/ward_{$wardId}/infrastructure.geojson");
@@ -148,11 +167,6 @@ class InfrastructureController extends Controller
 
         return $this->fetchInfrastructure($wardId);
     }
-
-    /**
-     * Diagnostic route: confirms which python3 PHP sees,
-     * its version, and whether `requests` is importable.
-     */
     public function testPython()
     {
         try {
