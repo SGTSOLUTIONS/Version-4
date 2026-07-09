@@ -149,6 +149,7 @@ class CommissionerController extends Controller
             $zoneWaterTax = $this->getWaterTaxByWards($corporation->id, $wardNos);
             $zoneUgd = $this->getUgdByWards($corporation->id, $wardNos);
             $zoneProfessionalTax = $this->getProfessionalTaxByWards($corporation->id, $wardNos);
+            $wardVariationStats = $this->getWardVariationStats($corporation->id, $zones);
 
             $officer = User::where('role', 'teamleader')
                 ->where('zone_id', $zone->id)
@@ -254,10 +255,69 @@ class CommissionerController extends Controller
             'waterTaxData',
             'ugdData',
             'professionalTaxData',
-            'getAllwardBoundary'
+            'getAllwardBoundary',
+            'wardVariationStats'
         ));
     }
+    private function getWardVariationStats($corporationId, $zones)
+    {
+        $wardStats = [];
+        $misTable = 'mis_' . $corporationId;
 
+        foreach ($zones as $zone) {
+            foreach ($zone->wards as $ward) {
+                $wardId = $ward->id;
+                $wardNo = $ward->ward_no;
+
+                $polygonsTable = 'polygons_' . $wardId;
+                $polygonDataTable = 'polygon_data_' . $wardId;
+                $pointDataTable = 'point_data_' . $wardId;
+
+                if (!Schema::hasTable($polygonsTable)) {
+                    continue;
+                }
+
+                try {
+                    $polygons = DB::table($polygonsTable)->get();
+                    $polygonDatas = Schema::hasTable($polygonDataTable)
+                        ? DB::table($polygonDataTable)->get() : collect();
+                    $pointDatas = Schema::hasTable($pointDataTable)
+                        ? DB::table($pointDataTable)->get() : collect();
+
+                    $misData = collect();
+                    if (Schema::hasTable($misTable)) {
+                        $misData = DB::table($misTable)->where('ward_no', $wardNo)->get();
+                    }
+
+                    $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
+
+                    $wardStats[] = [
+                        'ward_id' => $wardId,
+                        'ward_no' => $wardNo,
+                        'zone_name' => $zone->zone_name,
+                        'total_buildings' => $analytics['total_buildings'],
+                        'surveyed_buildings' => $analytics['surveyed_buildings'],
+                        'survey_percentage' => $analytics['survey_percentage'],
+                        'area_variation_count' => $analytics['area_variation_count'],
+                        'area_variation_percentage' => $analytics['area_variation_percentage'],
+                        'usage_variation_count' => $analytics['usage_variation_count'],
+                        'usage_variation_percentage' => $analytics['usage_variation_percentage'],
+                    ];
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+
+        // Rank worst-offending wards first (combined variation score)
+        usort($wardStats, function ($a, $b) {
+            $scoreA = $a['area_variation_percentage'] + $a['usage_variation_percentage'];
+            $scoreB = $b['area_variation_percentage'] + $b['usage_variation_percentage'];
+            return $scoreB <=> $scoreA;
+        });
+
+        return $wardStats;
+    }
     // ════════════════════════════════════════════════════════════════
     // HALF YEAR TAX METHODS
     // ════════════════════════════════════════════════════════════════
@@ -1654,6 +1714,47 @@ class CommissionerController extends Controller
             'ward_id' => $wardId,
             'total_points' => count($results),
             'data' => $results
+        ]);
+    }
+
+
+    public function qcUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'ward_id'     => 'required|integer',
+            'qcusage'     => 'nullable|string|max:255',
+            'qcsqfeet'    => 'nullable|numeric',
+            'qc_remarks'  => 'nullable|string|max:1000',
+        ]);
+
+        $wardId = $request->ward_id;
+        $pointTable = "point_data_{$wardId}";
+
+        $point = DB::table($pointTable)->where('id', $id)->first();
+
+        if (!$point) {
+            return response()->json([
+                'message' => 'Point data not found.'
+            ], 404);
+        }
+
+        DB::table($pointTable)
+            ->where('id', $id)
+            ->update([
+                'qcusage'    => $request->qcusage,
+                'qcsqfeet'   => $request->qcsqfeet,
+                'qc_remarks' => $request->qc_remarks,
+                'updated_at' => now(),
+            ]);
+
+        $updatedPoint = DB::table($pointTable)
+            ->where('id', $id)
+            ->first();
+
+        return response()->json([
+            'success'    => true,
+            'message'    => 'QC data updated successfully.',
+            'point_data' => $updatedPoint,
         ]);
     }
 }

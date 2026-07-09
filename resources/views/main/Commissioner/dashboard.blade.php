@@ -10,8 +10,8 @@
         rel="stylesheet">
     <style>
         /* ══════════════════════════════════════════════
-                       DESIGN TOKENS — Government Revenue Portal
-                       ══════════════════════════════════════════════ */
+                           DESIGN TOKENS — Government Revenue Portal
+                           ══════════════════════════════════════════════ */
         :root {
             --font-display: 'Merriweather', Georgia, serif;
             --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -45,8 +45,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       OFFICIAL LETTERHEAD BAR
-                       ══════════════════════════════════════════════ */
+                           OFFICIAL LETTERHEAD BAR
+                           ══════════════════════════════════════════════ */
         .gov-letterhead {
             display: flex;
             align-items: center;
@@ -142,8 +142,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       BREADCRUMB + PAGE TITLE
-                       ══════════════════════════════════════════════ */
+                           BREADCRUMB + PAGE TITLE
+                           ══════════════════════════════════════════════ */
         .gov-breadcrumb {
             font-family: var(--font-body);
             font-size: 0.72rem;
@@ -201,8 +201,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       SECTION EYEBROWS
-                       ══════════════════════════════════════════════ */
+                           SECTION EYEBROWS
+                           ══════════════════════════════════════════════ */
         .gov-section {
             margin-bottom: 1.75rem;
         }
@@ -235,8 +235,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       HIERARCHY LEDGER
-                       ══════════════════════════════════════════════ */
+                           HIERARCHY LEDGER
+                           ══════════════════════════════════════════════ */
         .ledger-flow {
             display: flex;
             align-items: stretch;
@@ -285,8 +285,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       KPI CARDS
-                       ══════════════════════════════════════════════ */
+                           KPI CARDS
+                           ══════════════════════════════════════════════ */
         .kpi-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -347,8 +347,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       OFFICIAL CARD
-                       ══════════════════════════════════════════════ */
+                           OFFICIAL CARD
+                           ══════════════════════════════════════════════ */
         .gov-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -400,8 +400,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       TABLES
-                       ══════════════════════════════════════════════ */
+                           TABLES
+                           ══════════════════════════════════════════════ */
         .gov-table {
             width: 100%;
             border-collapse: collapse;
@@ -446,8 +446,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       BADGES
-                       ══════════════════════════════════════════════ */
+                           BADGES
+                           ══════════════════════════════════════════════ */
         .gov-badge {
             padding: 0.2rem 0.6rem;
             border-radius: 4px;
@@ -484,8 +484,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       ZONE REGISTER CARDS
-                       ══════════════════════════════════════════════ */
+                           ZONE REGISTER CARDS
+                           ══════════════════════════════════════════════ */
         .zone-register {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -570,8 +570,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       ACTION REGISTRY
-                       ══════════════════════════════════════════════ */
+                           ACTION REGISTRY
+                           ══════════════════════════════════════════════ */
         .action-registry {
             display: flex;
             flex-direction: column;
@@ -619,8 +619,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       ACTIVITY LOG
-                       ══════════════════════════════════════════════ */
+                           ACTIVITY LOG
+                           ══════════════════════════════════════════════ */
         .log-entry {
             display: flex;
             gap: 0.75rem;
@@ -663,8 +663,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       ERROR STATE
-                       ══════════════════════════════════════════════ */
+                           ERROR STATE
+                           ══════════════════════════════════════════════ */
         .gov-error {
             text-align: center;
             padding: 3rem 1rem;
@@ -693,8 +693,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                       RESPONSIVE
-                       ══════════════════════════════════════════════ */
+                           RESPONSIVE
+                           ══════════════════════════════════════════════ */
         @media (max-width: 768px) {
             .ledger-flow {
                 flex-direction: column;
@@ -1194,7 +1194,74 @@
                 @endforelse
             </div>
         </div>
-
+        {{-- ══════════════════════════ WARD VARIATION ANALYSIS ══════════════════════════ --}}
+        <div class="gov-section">
+            <div class="gov-card">
+                <div class="gov-card-head">
+                    <div class="gov-card-title"><i class="bi bi-exclamation-diamond"></i> Ward Variation Analysis</div>
+                    <span class="gov-card-meta">Area &amp; usage mismatch vs. building survey, ranked highest first</span>
+                </div>
+                <div class="gov-card-body" style="overflow-x:auto; padding:0;">
+                    <table class="gov-table">
+                        <thead>
+                            <tr>
+                                <th>Ward</th>
+                                <th>Zone</th>
+                                <th>Buildings</th>
+                                <th>Surveyed</th>
+                                <th>Survey %</th>
+                                <th>Area Variation</th>
+                                <th>Usage Variation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($wardVariationStats ?? [] as $w)
+                                @php
+                                    $areaBadge =
+                                        $w['area_variation_percentage'] >= 20
+                                            ? 'overdue'
+                                            : ($w['area_variation_percentage'] >= 10
+                                                ? 'pending'
+                                                : 'paid');
+                                    $usageBadge =
+                                        $w['usage_variation_percentage'] >= 20
+                                            ? 'overdue'
+                                            : ($w['usage_variation_percentage'] >= 10
+                                                ? 'pending'
+                                                : 'paid');
+                                @endphp
+                                <tr>
+                                    <td style="font-weight:700; color:var(--ink-900);">
+                                        <a href="{{ route('commissioner.ward.showmap', $w['ward_id']) }}">
+                                            Ward {{ $w['ward_no'] }}
+                                        </a>
+                                    </td>
+                                    <td>{{ $w['zone_name'] }}</td>
+                                    <td class="mono">{{ number_format($w['total_buildings']) }}</td>
+                                    <td class="mono">{{ number_format($w['surveyed_buildings']) }}</td>
+                                    <td class="mono">{{ $w['survey_percentage'] }}%</td>
+                                    <td>
+                                        <span class="gov-badge {{ $areaBadge }}">
+                                            {{ $w['area_variation_count'] }} ({{ $w['area_variation_percentage'] }}%)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="gov-badge {{ $usageBadge }}">
+                                            {{ $w['usage_variation_count'] }} ({{ $w['usage_variation_percentage'] }}%)
+                                        </span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center py-3 text-muted">No ward variation data
+                                        available</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
         {{-- ══════════════════════════ TAX REGISTERS ══════════════════════════ --}}
         <div class="gov-section">
             <div class="gov-eyebrow">

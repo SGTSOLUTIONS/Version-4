@@ -45,6 +45,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/polygon-split', [FeatureController::class, 'polygonSplit']);
     Route::post('/update-polygon', [FeatureController::class, 'polygonUpdate']);
     Route::post('/delete-feature', [FeatureController::class, 'polygonDelete']);
+     Route::post('/point-data/${id}/qc', [CommissionerController::class, 'qcUpdate']);
+
 });
 
 
@@ -187,3 +189,4 @@ Route::middleware(['auth', 'role:surveyor,teamleader'])->group(function () {
 });
 
 Route::get('/survey/map', [MapController::class, 'map'])->name('teamleader.map');
+
