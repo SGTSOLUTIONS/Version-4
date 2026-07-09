@@ -2295,20 +2295,20 @@
                                     <div class="tax-card">
                                         <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
                                         ${ptList.length ? ptList.map(pt => `
-                                                                    <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
-                                                                        <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
-                                                                        <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
-                                                                        <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
-                                                                        <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
-                                                                        <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
-                                                                        <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
-                                                                        <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
-                                                                        <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
-                                                                        <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
-                                                                        <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
-                                                                        <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
-                                                                    </div>
-                                                                `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
+                                                                        <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                                                            <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                                                            <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                                                            <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                                                            <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                                                            <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                                                            <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                                                            <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                                                            <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                                                            <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                                                            <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                                                            <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                                                        </div>
+                                                                    `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
                                     </div>
                                 </div>
                             </div>
@@ -3747,14 +3747,10 @@
                 droneLayer.setVisible(false);
             }
 
-            // Add to your existing JavaScript
-
             class InfrastructureManager {
                 constructor(map) {
                     this.map = map;
                     this.layers = {};
-                    this.infrastructureData = null;
-                    this.wardId = null;
                     this.colors = {
                         'Road': '#FF6B6B',
                         'Road Junction': '#FFB74D',
@@ -3784,30 +3780,22 @@
                 }
 
                 async loadInfrastructure(wardId) {
-                    this.wardId = wardId;
-
                     try {
-                        // Fetch summary first
-                        const summaryResponse = await fetch(`/infrastructure/summary/${wardId}`);
-                        const summaryData = await summaryResponse.json();
+                        const [summaryRes, dataRes] = await Promise.all([
+                            fetch(`/infrastructure/summary/${wardId}`).then(r => r.json()),
+                            fetch(`/infrastructure/data/${wardId}`).then(r => r.json())
+                        ]);
 
-                        if (summaryData.success) {
-                            console.log('📊 Infrastructure Summary:', summaryData.summary);
-                            this.updateDashboard(summaryData.summary);
+                        if (summaryRes.success) {
+                            this.updateDashboard(summaryRes.summary);
                         }
 
-                        // Fetch full data
-                        const dataResponse = await fetch(`/infrastructure/data/${wardId}`);
-                        const data = await dataResponse.json();
-
-                        if (data.success) {
-                            this.infrastructureData = data.data;
-                            this.displayInfrastructure(data.data);
+                        if (dataRes.success) {
+                            this.displayInfrastructure(dataRes.data);
                             return true;
                         }
 
                         return false;
-
                     } catch (error) {
                         console.error('Failed to load infrastructure:', error);
                         return false;
@@ -3815,29 +3803,19 @@
                 }
 
                 displayInfrastructure(geojson) {
-                    if (!geojson || !geojson.features) {
+                    if (!geojson?.features?.length) {
                         console.warn('No infrastructure data to display');
                         return;
                     }
 
-                    // Group features by type
                     const grouped = {};
                     geojson.features.forEach(feature => {
                         const type = feature.properties.type || 'Unknown';
-                        if (!grouped[type]) grouped[type] = [];
-                        grouped[type].push(feature);
+                        (grouped[type] ??= []).push(feature);
                     });
 
-                    // Create layers for each type
-                    Object.keys(grouped).forEach(type => {
-                        this.createLayer(type, grouped[type]);
-                    });
-
-                    // Add legend
+                    Object.entries(grouped).forEach(([type, features]) => this.createLayer(type, features));
                     this.addLegend(grouped);
-
-                    // Fit map to features
-
                 }
 
                 createLayer(type, features) {
@@ -3846,52 +3824,49 @@
 
                     features.forEach(feature => {
                         const geometry = this.createGeometry(feature.geometry);
-                        if (geometry) {
-                            const olFeature = new ol.Feature({
-                                geometry: geometry,
-                                type: type,
-                                name: feature.properties.name || '',
-                                osm_id: feature.properties.osm_id || '',
-                                properties: feature.properties
-                            });
+                        if (!geometry) return;
 
-                            // Add popup content
-                            olFeature.set('popupContent', this.createPopupContent(feature));
-                            source.addFeature(olFeature);
-                        }
+                        const olFeature = new ol.Feature({
+                            geometry,
+                            type,
+                            name: feature.properties.name || '',
+                            osm_id: feature.properties.osm_id || '',
+                            properties: feature.properties
+                        });
+                        source.addFeature(olFeature);
                     });
 
                     const layer = new ol.layer.Vector({
-                        source: source,
-                        style: this.createStyle(type, color),
+                        source,
+                        style: this.createStyle(color),
                         title: type,
                         visible: true
                     });
 
                     this.map.addLayer(layer);
                     this.layers[type] = layer;
-
-                    // Update feature count in legend
-                    this.updateLegendCount(type, features.length);
                 }
 
                 createGeometry(geometry) {
                     if (!geometry) return null;
 
                     try {
-                        if (geometry.type === 'Point') {
-                            return new ol.geom.Point(ol.proj.fromLonLat(geometry.coordinates));
-                        } else if (geometry.type === 'LineString') {
-                            const coords = geometry.coordinates.map(c => ol.proj.fromLonLat(c));
-                            return new ol.geom.LineString(coords);
-                        } else if (geometry.type === 'Polygon') {
-                            const coords = geometry.coordinates[0].map(c => ol.proj.fromLonLat(c));
-                            return new ol.geom.Polygon([coords]);
-                        } else if (geometry.type === 'MultiPolygon') {
-                            const polygons = geometry.coordinates.map(poly => {
-                                return poly[0].map(c => ol.proj.fromLonLat(c));
-                            });
-                            return new ol.geom.MultiPolygon(polygons);
+                        switch (geometry.type) {
+                            case 'Point':
+                                return new ol.geom.Point(ol.proj.fromLonLat(geometry.coordinates));
+                            case 'LineString':
+                                return new ol.geom.LineString(geometry.coordinates.map(c => ol.proj.fromLonLat(
+                                    c)));
+                            case 'Polygon':
+                                return new ol.geom.Polygon([geometry.coordinates[0].map(c => ol.proj.fromLonLat(
+                                    c))]);
+                            case 'MultiPolygon':
+                                return new ol.geom.MultiPolygon(
+                                    geometry.coordinates.map(poly => poly[0].map(c => ol.proj.fromLonLat(
+                                        c)))
+                                );
+                            default:
+                                return null;
                         }
                     } catch (e) {
                         console.error('Error creating geometry:', e);
@@ -3899,17 +3874,16 @@
                     }
                 }
 
-                createStyle(type, color) {
-                    return function(feature) {
-                        const geometry = feature.getGeometry();
-                        const geometryType = geometry.getType();
+                createStyle(color) {
+                    return (feature) => {
+                        const geometryType = feature.getGeometry().getType();
 
                         if (geometryType === 'Point') {
                             return new ol.style.Style({
                                 image: new ol.style.Circle({
                                     radius: 8,
                                     fill: new ol.style.Fill({
-                                        color: color
+                                        color
                                     }),
                                     stroke: new ol.style.Stroke({
                                         color: '#ffffff',
@@ -3929,20 +3903,24 @@
                                     })
                                 })
                             });
-                        } else if (geometryType === 'LineString') {
+                        }
+
+                        if (geometryType === 'LineString') {
                             return new ol.style.Style({
                                 stroke: new ol.style.Stroke({
-                                    color: color,
+                                    color,
                                     width: 4
                                 })
                             });
-                        } else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
+                        }
+
+                        if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
                             return new ol.style.Style({
                                 fill: new ol.style.Fill({
                                     color: color + '33'
                                 }),
                                 stroke: new ol.style.Stroke({
-                                    color: color,
+                                    color,
                                     width: 2
                                 })
                             });
@@ -3950,117 +3928,38 @@
                     };
                 }
 
-                createPopupContent(feature) {
-                    const props = feature.properties;
-                    let content = `
-            <div style="min-width:200px; max-width:300px;">
-                <strong style="font-size:16px;">${props.type || 'Feature'}</strong>
-        `;
-
-                    if (props.name) {
-                        content += `<br><strong>Name:</strong> ${props.name}`;
-                    }
-
-                    if (props.osm_id) {
-                        content += `<br><small style="color:#999;">OSM ID: ${props.osm_id}</small>`;
-                    }
-
-                    // Add type-specific properties
-                    if (props.type === 'Building') {
-                        if (props.building_type) content += `<br><strong>Type:</strong> ${props.building_type}`;
-                        if (props.levels) content += `<br><strong>Levels:</strong> ${props.levels}`;
-                        if (props.height) content += `<br><strong>Height:</strong> ${props.height}m`;
-                    } else if (props.type === 'Road') {
-                        if (props.road_type) content += `<br><strong>Road Type:</strong> ${props.road_type}`;
-                        if (props.speed_limit) content +=
-                            `<br><strong>Speed Limit:</strong> ${props.speed_limit}`;
-                    } else if (props.type === 'Waterbody') {
-                        if (props.water_type) content += `<br><strong>Type:</strong> ${props.water_type}`;
-                    }
-
-                    content += `</div>`;
-                    return content;
-                }
-
                 addLegend(grouped) {
-                    // Remove existing legend
-                    const existing = document.querySelector('.infrastructure-legend');
-                    if (existing) existing.remove();
+                    document.querySelector('.infrastructure-legend')?.remove();
 
                     const legend = document.createElement('div');
                     legend.className = 'infrastructure-legend';
                     legend.style.cssText = `
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            z-index: 1000;
-            background: rgba(255,255,255,0.95);
-            padding: 12px 16px;
-            border-radius: 12px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.15);
-            max-height: 400px;
-            overflow-y: auto;
-            min-width: 180px;
-            font-size: 12px;
+            position: absolute; bottom: 30px; right: 30px; z-index: 1000;
+            background: rgba(255,255,255,0.95); padding: 12px 16px; border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.15); max-height: 400px; overflow-y: auto;
+            min-width: 180px; font-size: 12px;
         `;
 
-                    const title = document.createElement('div');
-                    title.style.cssText =
-                        'font-weight:700; margin-bottom:10px; font-size:14px; border-bottom:1px solid #e5e7eb; padding-bottom:6px;';
-                    title.textContent = '🏗️ Infrastructure';
-                    legend.appendChild(title);
+                    legend.innerHTML =
+                        `<div style="font-weight:700; margin-bottom:10px; font-size:14px; border-bottom:1px solid #e5e7eb; padding-bottom:6px;">🏗️ Infrastructure</div>`;
 
                     Object.keys(grouped).sort().forEach(type => {
-                        const count = grouped[type].length;
                         const color = this.colors[type] || '#999999';
-
                         const item = document.createElement('div');
-                        item.style.cssText = `
-                display: flex;
-                align-items: center;
-                padding: 4px 0;
-                cursor: pointer;
-                transition: opacity 0.2s;
+                        item.style.cssText =
+                            'display:flex; align-items:center; padding:4px 0; cursor:pointer; transition:opacity 0.2s;';
+                        item.innerHTML = `
+                <span style="display:inline-block; width:14px; height:14px; background:${color}; border-radius:3px; margin-right:10px; flex-shrink:0;"></span>
+                <span style="flex:1; font-size:12px;">${type}</span>
+                <span style="background:#f3f4f6; padding:1px 8px; border-radius:12px; font-size:11px; color:#6b7280;">${grouped[type].length}</span>
             `;
 
-                        const colorBox = document.createElement('span');
-                        colorBox.style.cssText = `
-                display: inline-block;
-                width: 14px;
-                height: 14px;
-                background: ${color};
-                border-radius: 3px;
-                margin-right: 10px;
-                flex-shrink: 0;
-            `;
-
-                        const label = document.createElement('span');
-                        label.textContent = type;
-                        label.style.cssText = 'flex:1; font-size:12px;';
-
-                        const countBadge = document.createElement('span');
-                        countBadge.className = 'legend-count';
-                        countBadge.textContent = count;
-                        countBadge.style.cssText = `
-                background: #f3f4f6;
-                padding: 1px 8px;
-                border-radius: 12px;
-                font-size: 11px;
-                color: #6b7280;
-            `;
-
-                        item.appendChild(colorBox);
-                        item.appendChild(label);
-                        item.appendChild(countBadge);
-
-                        // Toggle layer visibility on click
                         item.addEventListener('click', () => {
                             const layer = this.layers[type];
-                            if (layer) {
-                                const visible = layer.getVisible();
-                                layer.setVisible(!visible);
-                                item.style.opacity = !visible ? '1' : '0.5';
-                            }
+                            if (!layer) return;
+                            const visible = !layer.getVisible();
+                            layer.setVisible(visible);
+                            item.style.opacity = visible ? '1' : '0.5';
                         });
 
                         legend.appendChild(item);
@@ -4069,32 +3968,18 @@
                     document.getElementById('map').appendChild(legend);
                 }
 
-                updateLegendCount(type, count) {
-                    const items = document.querySelectorAll('.infrastructure-legend div');
-                    items.forEach(item => {
-                        const label = item.querySelector('span:nth-child(2)');
-                        const badge = item.querySelector('.legend-count');
-                        if (label && badge && label.textContent === type) {
-                            badge.textContent = count;
-                        }
-                    });
-                }
-
                 updateDashboard(summary) {
-                    // Update stats dashboard
                     const statsContainer = document.querySelector('.stat-strip');
                     if (!statsContainer) return;
 
-                    // Add infrastructure stats
                     const totalFeatures = summary.total_features || 0;
                     const featureTypes = Object.keys(summary.feature_counts || {}).length;
 
-                    // Find or create stat card for infrastructure
                     let infraCard = statsContainer.querySelector('.stat-card[data-type="infrastructure"]');
                     if (!infraCard) {
                         infraCard = document.createElement('div');
                         infraCard.className = 'stat-card';
-                        infraCard.setAttribute('data-type', 'infrastructure');
+                        infraCard.dataset.type = 'infrastructure';
                         statsContainer.appendChild(infraCard);
                     }
 
@@ -4107,15 +3992,12 @@
             </div>
         `;
                 }
-
-
             }
 
             // Initialize infrastructure manager
             $(document).ready(function() {
-                const wardId = {{ $ward->id }};
                 const infraManager = new InfrastructureManager(map);
-                infraManager.loadInfrastructure(wardId);
+                infraManager.loadInfrastructure({{ $ward->id }});
             });
             console.log('✅ Executive GIS Dashboard ready');
         });
