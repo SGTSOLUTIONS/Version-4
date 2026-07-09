@@ -13,7 +13,7 @@ class InfrastructureController extends Controller
     public function fetchInfrastructure($wardId)
     {
         $ward = \App\Models\Ward::findOrFail($wardId);
-
+return response()->json("dsta");
         // Get ward boundary from ward data
         $boundary = $this->getWardBoundary($ward);
 
