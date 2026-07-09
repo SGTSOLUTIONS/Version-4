@@ -36,6 +36,7 @@ class CommissionerController extends Controller
                 'waterTaxData' => [],
                 'ugdData' => [],
                 'professionalTaxData' => [],
+                'wardVariationStats' => collect(),
             ]);
         }
 
@@ -74,6 +75,9 @@ class CommissionerController extends Controller
         $totalBalance = $misBalance + $waterTaxBalance + $ugdBalance + $professionalTaxBalance;
 
         $getAllwardBoundary = $this->getAllwardBoundary($corporation->id);
+
+        // ─── Ward Variation Stats (Area & Usage) — computed once for all wards ───
+        $wardVariationStats = $this->getWardVariationStats($corporation->id, $zones);
 
         // ─── Assessment Status ───
         $activeAssessments = $this->getActiveAssessments($corporation->id);
@@ -149,7 +153,6 @@ class CommissionerController extends Controller
             $zoneWaterTax = $this->getWaterTaxByWards($corporation->id, $wardNos);
             $zoneUgd = $this->getUgdByWards($corporation->id, $wardNos);
             $zoneProfessionalTax = $this->getProfessionalTaxByWards($corporation->id, $wardNos);
-            $wardVariationStats = $this->getWardVariationStats($corporation->id, $zones);
 
             $officer = User::where('role', 'teamleader')
                 ->where('zone_id', $zone->id)
