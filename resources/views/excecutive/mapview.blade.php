@@ -85,30 +85,33 @@
         }
 
         /* ─── Controls ─── */
-        .custom-layer-switcher,
-        .custom-location-switcher,
-        .custom-search-switcher,
-        .custom-edit-toggle {
+        .custom-layer-switcher {
             position: absolute;
             right: 30px;
+            top: 20px;
             z-index: 1000;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
 
-        .custom-layer-switcher {
-            top: 20px;
-        }
-
         .custom-location-switcher {
+            position: absolute;
+            right: 30px;
             top: 74px;
+            z-index: 1000;
         }
 
         .custom-search-switcher {
+            position: absolute;
+            right: 30px;
             top: 130px;
+            z-index: 1000;
         }
 
         .custom-edit-toggle {
+            position: absolute;
+            right: 30px;
             top: 190px;
+            z-index: 1000;
         }
 
         .layer-toggle-btn,
@@ -175,7 +178,7 @@
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto !important;
             overflow-x: hidden;
         }
@@ -220,6 +223,15 @@
             border-left-color: #3b82f6;
         }
 
+        .layer-check {
+            margin-left: auto;
+            color: #3b82f6;
+            opacity: 0;
+        }
+        .layer-dropdown-item.active .layer-check {
+            opacity: 1;
+        }
+
         .location-item-badge {
             font-size: 0.65rem;
             padding: 2px 7px;
@@ -246,17 +258,9 @@
         }
 
         @keyframes pulse-ring {
-            0% {
-                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
-            }
-
-            70% {
-                box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-            }
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+            70% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
 
         .location-toast {
@@ -392,15 +396,8 @@
         }
 
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
         .split-action-btn .close-btn {
@@ -507,7 +504,6 @@
             letter-spacing: .4px;
         }
 
-        /* ── Building View ── */
         .bld-image-strip {
             display: flex;
             gap: 0;
@@ -1008,6 +1004,80 @@
         .bv-variation-card .bld-status-tag {
             margin-top: 6px;
         }
+
+        /* ─── Infrastructure Legend ─── */
+        .infrastructure-legend {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.15);
+            max-height: 400px;
+            overflow-y: auto;
+            min-width: 180px;
+            font-size: 12px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .infrastructure-legend .legend-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .infrastructure-legend .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 4px 0;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .infrastructure-legend .legend-item .color-dot {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .infrastructure-legend .legend-item .count-badge {
+            background: #f3f4f6;
+            padding: 1px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #6b7280;
+            margin-left: auto;
+        }
+
+        .infrastructure-legend .legend-item.inactive {
+            opacity: 0.4;
+        }
+
+        .infrastructure-legend .toggle-all-btn {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 6px;
+            padding: 2px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .infrastructure-legend .toggle-all-btn:hover {
+            background: #e2e8f0;
+        }
     </style>
 @endpush
 
@@ -1035,36 +1105,36 @@
             <div class="stat-icon stat-icon-blue"><i class="bi bi-building"></i></div>
             <div>
                 <div class="stat-label">Total Buildings</div>
-                <div class="stat-value">{{ $analytics['total_buildings'] }}</div>
+                <div class="stat-value">{{ $analytics['total_buildings'] ?? 0 }}</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-icon-green"><i class="bi bi-check2-circle"></i></div>
             <div>
                 <div class="stat-label">Surveyed Buildings</div>
-                <div class="stat-value">{{ $analytics['surveyed_buildings'] }}</div>
+                <div class="stat-value">{{ $analytics['surveyed_buildings'] ?? 0 }}</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-icon-purple"><i class="bi bi-graph-up"></i></div>
             <div>
                 <div class="stat-label">Survey Progress</div>
-                <div class="stat-value">{{ $analytics['survey_percentage'] }}%</div>
+                <div class="stat-value">{{ $analytics['survey_percentage'] ?? 0 }}%</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-icon-blue"><i class="bi bi-file-earmark-text"></i></div>
             <div>
                 <div class="stat-label">Assessments Mapped</div>
-                <div class="stat-value">{{ $analytics['total_surveyed_assessments'] }}</div>
+                <div class="stat-value">{{ $analytics['total_surveyed_assessments'] ?? 0 }}</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-icon-amber"><i class="bi bi-rulers"></i></div>
             <div>
                 <div class="stat-label">Area Variation</div>
-                <div class="stat-value">{{ $analytics['area_variation_count'] }}
-                    <span class="stat-sub">({{ $analytics['area_variation_percentage'] }}%)</span>
+                <div class="stat-value">{{ $analytics['area_variation_count'] ?? 0 }}
+                    <span class="stat-sub">({{ $analytics['area_variation_percentage'] ?? 0 }}%)</span>
                 </div>
             </div>
         </div>
@@ -1072,8 +1142,8 @@
             <div class="stat-icon stat-icon-red"><i class="bi bi-tags"></i></div>
             <div>
                 <div class="stat-label">Usage Variation</div>
-                <div class="stat-value">{{ $analytics['usage_variation_count'] }}
-                    <span class="stat-sub">({{ $analytics['usage_variation_percentage'] }}%)</span>
+                <div class="stat-value">{{ $analytics['usage_variation_count'] ?? 0 }}
+                    <span class="stat-sub">({{ $analytics['usage_variation_percentage'] ?? 0 }}%)</span>
                 </div>
             </div>
         </div>
@@ -1081,16 +1151,14 @@
             <div class="stat-icon stat-icon-blue"><i class="bi bi-bounding-box"></i></div>
             <div>
                 <div class="stat-label">Total Building Area</div>
-                <div class="stat-value">{{ number_format($analytics['total_building_area'], 0) }} <span
-                        class="stat-sub">sqft</span></div>
+                <div class="stat-value">{{ number_format($analytics['total_building_area'] ?? 0, 0) }} <span class="stat-sub">sqft</span></div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-icon-green"><i class="bi bi-clipboard-data"></i></div>
             <div>
                 <div class="stat-label">Total Assessment Area</div>
-                <div class="stat-value">{{ number_format($analytics['total_assessment_area'], 0) }} <span
-                        class="stat-sub">sqft</span></div>
+                <div class="stat-value">{{ number_format($analytics['total_assessment_area'] ?? 0, 0) }} <span class="stat-sub">sqft</span></div>
             </div>
         </div>
     </div>
@@ -1126,14 +1194,12 @@
                 <div class="bld-image-strip">
                     <div class="bld-img-wrap">
                         <img id="bv_img1" src="" style="display:none;">
-                        <div id="bv_img1_empty"
-                            class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
+                        <div id="bv_img1_empty" class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
                     <div class="bld-img-wrap">
                         <img id="bv_img2" src="" style="display:none;">
-                        <div id="bv_img2_empty"
-                            class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
+                        <div id="bv_img2_empty" class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
@@ -1387,8 +1453,7 @@
     <div class="modal fade" id="deleteFeatureModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius:16px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.15);">
-                <div class="modal-header"
-                    style="background:#fff3f3; border-bottom:1px solid #fecdd3; border-radius:16px 16px 0 0; padding:16px 24px;">
+                <div class="modal-header" style="background:#fff3f3; border-bottom:1px solid #fecdd3; border-radius:16px 16px 0 0; padding:16px 24px;">
                     <h5 class="modal-title" style="color:#dc2626; font-weight:700; margin:0;">
                         <i class="bi bi-trash3-fill me-2"></i>Delete Feature
                     </h5>
@@ -1419,20 +1484,16 @@
                             style="border-radius:10px; border:1.5px solid #e5e7eb; padding:10px 14px; font-size:0.9rem;">
                         <div id="deleteGisError" class="text-danger mt-1" style="font-size:0.8rem; display:none;"></div>
                     </div>
-                    <div id="deleteConfirmBox"
-                        style="display:none; background:#fff3f3; border:1px solid #fecdd3; border-radius:10px; padding:12px 14px;">
+                    <div id="deleteConfirmBox" style="display:none; background:#fff3f3; border:1px solid #fecdd3; border-radius:10px; padding:12px 14px;">
                         <p class="mb-0" style="font-size:0.82rem; color:#dc2626;">
                             <i class="bi bi-exclamation-triangle-fill me-1"></i>
                             This will <strong>permanently delete</strong> this feature and cannot be undone.
                         </p>
                     </div>
                 </div>
-                <div class="modal-footer"
-                    style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                        style="border-radius:10px; font-weight:600; padding:8px 20px;">Cancel</button>
-                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger"
-                        style="border-radius:10px; font-weight:600; padding:8px 24px; min-width:120px;">
+                <div class="modal-footer" style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:10px; font-weight:600; padding:8px 20px;">Cancel</button>
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger" style="border-radius:10px; font-weight:600; padding:8px 24px; min-width:120px;">
                         <i class="bi bi-trash3 me-1"></i>Delete
                     </button>
                 </div>
@@ -1660,11 +1721,8 @@
                 lineSource.clear();
                 lines.forEach(l => {
                     try {
-                        let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l
-                            .coordinates;
-                        while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][
-                                0
-                            ])) {
+                        let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l.coordinates;
+                        while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
                             coords = coords[0];
                         }
                         const isValid = coords.length >= 2 && coords.every(c =>
@@ -1753,19 +1811,13 @@
                 zIndex: 999
             });
 
-            let watchId = null,
-                locationFeature = null,
-                accuracyFeature = null;
-            let liveActive = false,
-                trackActive = false;
+            let watchId = null, locationFeature = null, accuracyFeature = null;
+            let liveActive = false, trackActive = false;
             let currentLocation = null;
 
             function updateLiveMarker(lon, lat, accuracy) {
                 const coords = ol.proj.fromLonLat([lon, lat]);
-                currentLocation = {
-                    lon,
-                    lat
-                };
+                currentLocation = { lon, lat };
                 if (!locationFeature) {
                     locationFeature = new ol.Feature({
                         geometry: new ol.geom.Point(coords)
@@ -1811,11 +1863,7 @@
             }
 
             function onPosition(position) {
-                const {
-                    longitude,
-                    latitude,
-                    accuracy
-                } = position.coords;
+                const { longitude, latitude, accuracy } = position.coords;
                 updateLiveMarker(longitude, latitude, accuracy);
                 if (trackActive) {
                     map.getView().animate({
@@ -1911,8 +1959,7 @@
                 }
                 const anyActive = liveActive || trackActive;
                 $('#locationToggleBtn').toggleClass('active-location', anyActive);
-                $('#locationToggleBtn i').toggleClass('bi-geo-alt-fill', anyActive).toggleClass('bi-geo-alt', !
-                    anyActive);
+                $('#locationToggleBtn i').toggleClass('bi-geo-alt-fill', anyActive).toggleClass('bi-geo-alt', !anyActive);
             }
 
             // ─── MAP ───
@@ -1928,8 +1975,7 @@
             });
 
             // ─── INTERACTIONS ───
-            let drawInteraction = null,
-                selectInteraction = null;
+            let drawInteraction = null, selectInteraction = null;
             let routeLayer = null;
             let selectedFeatureForSplit = null;
             let modifyInteraction = null;
@@ -1978,10 +2024,7 @@
                 if (type === 'success') icon = 'success';
                 else if (type === 'error') icon = 'error';
                 else if (type === 'warning') icon = 'warning';
-                Toast.fire({
-                    icon,
-                    title: message
-                });
+                Toast.fire({ icon, title: message });
             }
 
             // ─── Disable interactions ───
@@ -2025,6 +2068,7 @@
                 tempDrawSource.clear();
             }
 
+            // ─── BUILDING VIEW ───
             function showBuildingView(item) {
                 $('#bv_gisid').text(item.gisid || '-');
                 $('#bv_zone').text(item.zone || item.building_zone || '-');
@@ -2043,33 +2087,32 @@
                 const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
                 $('#bv_mapped').text(mappedCount);
 
-                // ─── AREA / USAGE VARIATION FOR THIS BUILDING ───
                 const variation = buildingVariations[item.gisid];
                 if (variation) {
                     const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
                     const usageBadgeClass = variation.usage_status === 'MATCH' ? 'complete' : 'empty';
 
                     $('#bv_variation_wrap').html(`
-            <div class="bv-variation-strip">
-                <div class="bv-variation-card">
-                    <div class="stat-label">Building Area</div>
-                    <div class="stat-value">${variation.building_area} <span class="stat-sub">sqft</span></div>
-                </div>
-                <div class="bv-variation-card">
-                    <div class="stat-label">Assessment Area</div>
-                    <div class="stat-value">${variation.assessment_area} <span class="stat-sub">sqft</span></div>
-                </div>
-                <div class="bv-variation-card">
-                    <div class="stat-label">Area Variation</div>
-                    <div class="stat-value">${variation.area_variation} <span class="stat-sub">(${variation.variation_percentage}%)</span></div>
-                    <span class="bld-status-tag ${areaBadgeClass}">${variation.area_status}</span>
-                </div>
-                <div class="bv-variation-card">
-                    <div class="stat-label">Usage Check</div>
-                    <span class="bld-status-tag ${usageBadgeClass}">${variation.usage_status}</span>
-                </div>
-            </div>
-        `);
+                        <div class="bv-variation-strip">
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Building Area</div>
+                                <div class="stat-value">${variation.building_area} <span class="stat-sub">sqft</span></div>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Assessment Area</div>
+                                <div class="stat-value">${variation.assessment_area} <span class="stat-sub">sqft</span></div>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Area Variation</div>
+                                <div class="stat-value">${variation.area_variation} <span class="stat-sub">(${variation.variation_percentage}%)</span></div>
+                                <span class="bld-status-tag ${areaBadgeClass}">${variation.area_status}</span>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Usage Check</div>
+                                <span class="bld-status-tag ${usageBadgeClass}">${variation.usage_status}</span>
+                            </div>
+                        </div>
+                    `);
                 } else {
                     $('#bv_variation_wrap').html('');
                 }
@@ -2090,8 +2133,7 @@
                 let amenHtml = '';
                 amenities.forEach(([label, val]) => {
                     if (val === 'Yes') {
-                        amenHtml +=
-                            `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                        amenHtml += `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
                     }
                 });
                 $('#bv_amenities').html(amenHtml || '<span class="text-muted small">No amenities recorded</span>');
@@ -2101,16 +2143,14 @@
 
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
                 if (item.image) {
-                    $('#bv_img1').attr('src', item.image.startsWith('http') ? item.image : assetUrl + item.image)
-                        .show();
+                    $('#bv_img1').attr('src', item.image.startsWith('http') ? item.image : assetUrl + item.image).show();
                     $('#bv_img1_empty').hide();
                 } else {
                     $('#bv_img1').hide();
                     $('#bv_img1_empty').show();
                 }
                 if (item.image2) {
-                    $('#bv_img2').attr('src', item.image2.startsWith('http') ? item.image2 : assetUrl + item.image2)
-                        .show();
+                    $('#bv_img2').attr('src', item.image2.startsWith('http') ? item.image2 : assetUrl + item.image2).show();
                     $('#bv_img2_empty').hide();
                 } else {
                     $('#bv_img2').hide();
@@ -2131,10 +2171,7 @@
                 $.ajax({
                     url: '/commissioner/get-point-details',
                     method: 'GET',
-                    data: {
-                        gisid: gisid,
-                        ward_id: {{ $ward->id }}
-                    },
+                    data: { gisid: gisid, ward_id: {{ $ward->id }} },
                     success: function(res) {
                         if (res.status) {
                             callback(res.data);
@@ -2176,7 +2213,6 @@
                     return;
                 }
 
-                // helper to safely print a value
                 const v = (val) => (val === null || val === undefined || val === '') ?
                     '<span class="text-muted">-</span>' : val;
 
@@ -2191,8 +2227,7 @@
                     const qcFilled = [pd.qcusage, pd.qcsqfeet, pd.qc_remarks]
                         .filter(val => val !== null && val !== '' && val !== undefined).length;
                     const qcClass = qcFilled === 3 ? 'complete' : qcFilled === 0 ? 'empty' : 'partial';
-                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' :
-                        'QC Partial';
+                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' : 'QC Partial';
 
                     html += `
                         <div class="point-data-card" data-id="${pd.id}">
@@ -2207,7 +2242,6 @@
                                 </div>
                             </div>
 
-                            <!-- ── POINT / ASSESSMENT DETAILS ── -->
                             <div class="tax-card-title mt-2"><i class="bi bi-person-badge me-1"></i>Point / Assessment Details</div>
                             <div class="point-data-card-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px;">
                                 <div class="pdc-field"><div class="pdc-field-label">Assessment Type</div><div class="pdc-field-val">${v(pd.assessment_type)}</div></div>
@@ -2231,7 +2265,6 @@
                                 <div class="pdc-field"><div class="pdc-field-label">Remarks</div><div class="pdc-field-val">${v(pd.remarks)}</div></div>
                             </div>
 
-                            <!-- ── QC DETAILS ── -->
                             <div class="tax-card-title mt-2"><i class="bi bi-clipboard-check me-1"></i>QC Details</div>
                             <div class="point-data-card-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px;">
                                 <div class="pdc-field"><div class="pdc-field-label">QC Usage</div><div class="pdc-field-val ${!pd.qcusage ? 'empty' : ''}">${v(pd.qcusage)}</div></div>
@@ -2240,7 +2273,6 @@
                                 <div class="pdc-field"><div class="pdc-field-label">QC Remarks</div><div class="pdc-field-val">${v(pd.qc_remarks)}</div></div>
                             </div>
 
-                            <!-- ── MIS / TAX SUMMARY ── -->
                             <div class="row mt-2 g-2">
                                 <div class="col-md-3">
                                     <div class="tax-card">
@@ -2295,20 +2327,20 @@
                                     <div class="tax-card">
                                         <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
                                         ${ptList.length ? ptList.map(pt => `
-                                                                        <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
-                                                                            <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
-                                                                            <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
-                                                                            <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
-                                                                            <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
-                                                                            <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
-                                                                            <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
-                                                                            <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
-                                                                            <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
-                                                                            <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
-                                                                            <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
-                                                                            <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
-                                                                        </div>
-                                                                    `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
+                                            <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                                <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                            </div>
+                                        `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
                                     </div>
                                 </div>
                             </div>
@@ -2333,6 +2365,7 @@
                 });
             }
 
+            // ─── QC ───
             function openQcModal(id) {
                 const record = currentPointRecords.find(r => r.point && r.point.id == id);
                 const pd = record ? record.point : null;
@@ -2349,11 +2382,10 @@
                 const modal = new bootstrap.Modal(document.getElementById('qcModal'));
                 modal.show();
             }
-            // update the save handler so the in-memory records refresh too
+
             $(document).on('click', '#saveQcBtn', function() {
                 const id = $('#qc_point_data_id').val();
-                const $btn = $(this).prop('disabled', true).html(
-                    '<span class="spinner-border spinner-border-sm"></span> Saving...');
+                const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
 
                 $.ajax({
                     url: `/point-data/${id}/qc`,
@@ -2374,19 +2406,16 @@
 
                         if (currentPointGisid) {
                             getPointDataWithDetails(currentPointGisid, function(data) {
-                                currentPointRecords =
-                                    data; // <-- NEW, keeps modal list in sync
+                                currentPointRecords = data;
                                 renderPointDetails(data);
                             });
                         }
                     },
                     error: function(xhr) {
-                        showFlashMessage(xhr.responseJSON?.message || 'Failed to save QC data.',
-                            'error');
+                        showFlashMessage(xhr.responseJSON?.message || 'Failed to save QC data.', 'error');
                     },
                     complete: function() {
-                        $btn.prop('disabled', false).html(
-                            '<i class="bi bi-save me-1"></i>Save QC');
+                        $btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save QC');
                     }
                 });
             });
@@ -2499,14 +2528,11 @@
                             geometryType: 'polygon',
                             searchText: `${poly.gisid} ${poly.sqfeet} building`
                         });
-                    } catch (e) {
-                        console.error('Error parsing polygon:', e);
-                    }
+                    } catch (e) { console.error('Error parsing polygon:', e); }
                 });
                 lines.forEach(line => {
                     try {
-                        const coords = typeof line.coordinates === 'string' ? JSON.parse(line.coordinates) :
-                            line.coordinates;
+                        const coords = typeof line.coordinates === 'string' ? JSON.parse(line.coordinates) : line.coordinates;
                         searchIndex.push({
                             id: line.gisid,
                             type: 'line',
@@ -2516,9 +2542,7 @@
                             geometryType: 'line',
                             searchText: `${line.gisid} ${line.road_name || ''} road`
                         });
-                    } catch (e) {
-                        console.error('Error parsing line:', e);
-                    }
+                    } catch (e) { console.error('Error parsing line:', e); }
                 });
                 points.forEach(point => {
                     try {
@@ -2531,9 +2555,7 @@
                             geometryType: 'point',
                             searchText: `${point.gisid} point`
                         });
-                    } catch (e) {
-                        console.error('Error parsing point:', e);
-                    }
+                    } catch (e) { console.error('Error parsing point:', e); }
                 });
                 pointDatas.forEach(pd => {
                     try {
@@ -2548,9 +2570,7 @@
                             assessment: pd.assessment,
                             searchText: `${pd.gisid} ${pd.assessment} ${pd.owner_name} ${pd.phone_number}`
                         });
-                    } catch (e) {
-                        console.error('Error parsing pointData:', e);
-                    }
+                    } catch (e) { console.error('Error parsing pointData:', e); }
                 });
             }
 
@@ -2608,10 +2628,7 @@
 
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
-                        currentLocation = {
-                            lon: pos.coords.longitude,
-                            lat: pos.coords.latitude
-                        };
+                        currentLocation = { lon: pos.coords.longitude, lat: pos.coords.latitude };
                         callback(currentLocation);
                     },
                     function(error) {
@@ -2627,8 +2644,7 @@
             }
 
             function getRoute(startLon, startLat, endLon, endLat) {
-                const url =
-                    `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
+                const url = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
                 showToast('🗺️ Calculating route...', 2000);
                 fetch(url).then(r => r.json()).then(data => {
                     if (!data.routes || !data.routes.length) {
@@ -2705,6 +2721,15 @@
                 $(`.layer-dropdown-item[data-layer="${activeTitle}"]`).addClass('active');
                 const droneItem = $('.layer-dropdown-item[data-layer="Drone View"]');
                 droneVisible ? droneItem.addClass('active') : droneItem.removeClass('active');
+
+                // Update infrastructure legend item visibility
+                $('.infrastructure-legend .legend-item').each(function() {
+                    const type = $(this).data('type');
+                    if (type && infraLayers[type]) {
+                        const visible = infraLayers[type].getVisible();
+                        $(this).toggleClass('inactive', !visible);
+                    }
+                });
             }
 
             function switchBaseLayer(selectedLayer) {
@@ -2715,6 +2740,198 @@
             function toggleDroneLayer() {
                 droneLayer.setVisible(!droneLayer.getVisible());
                 updateLayerUI();
+            }
+
+            // ─── INFRASTRUCTURE LAYERS ───
+            let infraLayers = {};
+            let infraGrouped = {};
+
+            // Colors for infrastructure types
+            const infraColors = {
+                'Road': '#FF6B6B',
+                'Road Junction': '#FFB74D',
+                'Bus Stop': '#FFA726',
+                'Traffic Signal': '#F44336',
+                'Bridge': '#8D6E63',
+                'Drainage Line': '#4FC3F7',
+                'Storm Water Line': '#4DD0E1',
+                'Sewer Line': '#9575CD',
+                'Water Supply Line': '#4DB6AC',
+                'Waterbody': '#29B6F6',
+                'Canal': '#0288D1',
+                'Culvert': '#00897B',
+                'Fire Hydrant': '#EF5350',
+                'Water Valve': '#81C784',
+                'Street Light': '#FFD54F',
+                'Electric Pole': '#FF8A65',
+                'Street Manhole': '#A1887F',
+                'Transformer': '#AB47BC',
+                'Building': '#78909C',
+                'Boundary Wall': '#795548',
+                'Park': '#66BB6A',
+                'Playground': '#AED581',
+                'Cemetery': '#A1887F',
+                'Tree': '#388E3C'
+            };
+
+            function createInfraStyle(color) {
+                return (feature) => {
+                    const geometryType = feature.getGeometry().getType();
+
+                    if (geometryType === 'Point') {
+                        return new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: 8,
+                                fill: new ol.style.Fill({ color }),
+                                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+                            }),
+                            text: new ol.style.Text({
+                                text: feature.get('name') || '',
+                                font: '12px Arial',
+                                offsetY: -15,
+                                fill: new ol.style.Fill({ color: '#000000' }),
+                                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+                            })
+                        });
+                    }
+
+                    if (geometryType === 'LineString') {
+                        return new ol.style.Style({
+                            stroke: new ol.style.Stroke({ color, width: 4 })
+                        });
+                    }
+
+                    if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
+                        return new ol.style.Style({
+                            fill: new ol.style.Fill({ color: color + '33' }),
+                            stroke: new ol.style.Stroke({ color, width: 2 })
+                        });
+                    }
+                };
+            }
+
+            function loadInfrastructure(wardId) {
+                $.ajax({
+                    url: `/infrastructure/data/${wardId}`,
+                    method: 'GET',
+                    success: function(res) {
+                        if (res.success && res.data?.features?.length) {
+                            displayInfrastructure(res.data);
+                        }
+                    },
+                    error: function() {
+                        console.warn('Infrastructure data not available');
+                    }
+                });
+            }
+
+            function displayInfrastructure(geojson) {
+                if (!geojson?.features?.length) return;
+
+                const grouped = {};
+                geojson.features.forEach(feature => {
+                    const type = feature.properties.type || 'Unknown';
+                    if (!grouped[type]) grouped[type] = [];
+                    grouped[type].push(feature);
+                });
+                infraGrouped = grouped;
+
+                Object.entries(grouped).forEach(([type, features]) => {
+                    const color = infraColors[type] || '#999999';
+                    const source = new ol.source.Vector();
+
+                    features.forEach(feature => {
+                        let geometry = null;
+                        try {
+                            switch (feature.geometry.type) {
+                                case 'Point':
+                                    geometry = new ol.geom.Point(ol.proj.fromLonLat(feature.geometry.coordinates));
+                                    break;
+                                case 'LineString':
+                                    geometry = new ol.geom.LineString(feature.geometry.coordinates.map(c => ol.proj.fromLonLat(c)));
+                                    break;
+                                case 'Polygon':
+                                    geometry = new ol.geom.Polygon([feature.geometry.coordinates[0].map(c => ol.proj.fromLonLat(c))]);
+                                    break;
+                                case 'MultiPolygon':
+                                    geometry = new ol.geom.MultiPolygon(
+                                        feature.geometry.coordinates.map(poly => poly[0].map(c => ol.proj.fromLonLat(c)))
+                                    );
+                                    break;
+                            }
+                        } catch (e) { return; }
+
+                        if (!geometry) return;
+                        const olFeature = new ol.Feature({
+                            geometry,
+                            type,
+                            name: feature.properties.name || '',
+                            osm_id: feature.properties.osm_id || '',
+                            properties: feature.properties
+                        });
+                        source.addFeature(olFeature);
+                    });
+
+                    const layer = new ol.layer.Vector({
+                        source,
+                        style: createInfraStyle(color),
+                        title: type,
+                        visible: true
+                    });
+
+                    map.addLayer(layer);
+                    infraLayers[type] = layer;
+                });
+
+                createInfraLegend(grouped);
+            }
+
+            function createInfraLegend(grouped) {
+                // Remove existing legend
+                $('.infrastructure-legend').remove();
+
+                const legend = document.createElement('div');
+                legend.className = 'infrastructure-legend';
+                legend.innerHTML = `
+                    <div class="legend-title">
+                        <span>🏗️ Infrastructure</span>
+                        <button class="toggle-all-btn" id="toggleAllInfra">Toggle All</button>
+                    </div>
+                `;
+
+                const types = Object.keys(grouped).sort();
+                types.forEach(type => {
+                    const color = infraColors[type] || '#999999';
+                    const count = grouped[type].length;
+                    const item = document.createElement('div');
+                    item.className = 'legend-item';
+                    item.dataset.type = type;
+                    item.innerHTML = `
+                        <span class="color-dot" style="background:${color};"></span>
+                        <span style="flex:1; font-size:12px;">${type}</span>
+                        <span class="count-badge">${count}</span>
+                    `;
+
+                    item.addEventListener('click', () => {
+                        const layer = infraLayers[type];
+                        if (!layer) return;
+                        const visible = !layer.getVisible();
+                        layer.setVisible(visible);
+                        item.classList.toggle('inactive', !visible);
+                    });
+
+                    legend.appendChild(item);
+                });
+
+                document.getElementById('map').appendChild(legend);
+
+                // Toggle All button
+                $('#toggleAllInfra').on('click', function(e) {
+                    e.stopPropagation();
+                    const allVisible = Object.values(infraLayers).every(l => l.getVisible());
+                    Object.values(infraLayers).forEach(l => l.setVisible(!allVisible));
+                    $('.infrastructure-legend .legend-item').toggleClass('inactive', allVisible);
+                });
             }
 
             // ─── UI INJECTION ───
@@ -2743,6 +2960,23 @@
                         <div class="layer-dropdown-item" data-layer-type="overlay" data-layer="Drone View">
                             <div class="layer-icon"><i class="bi bi-camera-drone"></i></div>
                             <div class="layer-name">Drone View</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">Vector Layers</div>
+                        <div class="layer-dropdown-item" data-layer-type="vector" data-layer="Polygons">
+                            <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
+                            <div class="layer-name">Polygons</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item" data-layer-type="vector" data-layer="Lines">
+                            <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
+                            <div class="layer-name">Lines</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item" data-layer-type="vector" data-layer="Points">
+                            <div class="layer-icon"><i class="bi bi-geo-alt"></i></div>
+                            <div class="layer-name">Points</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
                     </div>
@@ -2857,11 +3091,219 @@
             `);
 
             $mapContainer.append(
-                `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`);
+                `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`
+            );
 
-            // ─── EVENT HANDLERS ───
+            // ─── LAYER DROPDOWN EVENTS ───
+            $(document).on('click', '.layer-toggle-btn', function(e) {
+                e.stopPropagation();
+                $('.layer-dropdown').toggleClass('show');
+                $('#locationDropdown').removeClass('show');
+                $('#searchDropdown').removeClass('show');
+                $('#editDropdown').removeClass('show');
+                $('#searchToggleBtn').removeClass('active-search');
+                $('#editToggleBtn').removeClass('active-edit');
+            });
 
-            // Edit toggle
+            $(document).on('click', '.layer-dropdown-item', function(e) {
+                e.stopPropagation();
+                const layerType = $(this).data('layer-type');
+                const layerTitle = $(this).data('layer');
+
+                if (layerType === 'base') {
+                    switchBaseLayer(
+                        layerTitle === 'Satellite' ? satelliteLayer :
+                        layerTitle === 'Street View' ? streetLayer : osmLayer
+                    );
+                    $('.layer-dropdown').removeClass('show');
+                } else if (layerTitle === 'Drone View') {
+                    toggleDroneLayer();
+                } else if (layerType === 'vector') {
+                    let layer;
+                    if (layerTitle === 'Polygons') layer = polygonLayer;
+                    else if (layerTitle === 'Lines') layer = lineLayer;
+                    else if (layerTitle === 'Points') layer = pointLayer;
+                    if (layer) {
+                        const visible = !layer.getVisible();
+                        layer.setVisible(visible);
+                        $(this).toggleClass('active', visible);
+                    }
+                }
+            });
+
+            // ─── LOCATION EVENTS ───
+            $(document).on('click', '#locationToggleBtn', function(e) {
+                e.stopPropagation();
+                $('#locationDropdown').toggleClass('show');
+                $('.layer-dropdown').removeClass('show');
+                $('#searchDropdown').removeClass('show');
+                $('#editDropdown').removeClass('show');
+                $('#searchToggleBtn').removeClass('active-search');
+                $('#editToggleBtn').removeClass('active-edit');
+            });
+
+            $(document).on('click', '#liveLocationItem', function(e) {
+                e.stopPropagation();
+                if (!liveActive) {
+                    liveActive = true;
+                    startWatching();
+                    showToast('📍 Live location enabled', 2000);
+                } else {
+                    liveActive = false;
+                    trackActive = false;
+                    stopWatching();
+                    clearLiveMarker();
+                    showToast('📍 Live location disabled', 2000);
+                }
+                syncLocationUI();
+                $('#locationDropdown').removeClass('show');
+            });
+
+            $(document).on('click', '#trackMeItem', function(e) {
+                e.stopPropagation();
+                if (!trackActive) {
+                    trackActive = true;
+                    liveActive = true;
+                    startWatching();
+                    showToast('📍 Tracking enabled', 2000);
+                } else {
+                    trackActive = false;
+                    if (!liveActive) {
+                        stopWatching();
+                        clearLiveMarker();
+                    }
+                    showToast('📍 Tracking disabled', 2000);
+                }
+                syncLocationUI();
+                $('#locationDropdown').removeClass('show');
+            });
+
+            $(document).on('click', '#clearRouteItem', function(e) {
+                e.stopPropagation();
+                clearRoute();
+                $('#locationDropdown').removeClass('show');
+            });
+
+            // ─── SEARCH EVENTS ───
+            $(document).on('click', '#searchToggleBtn', function(e) {
+                e.stopPropagation();
+                $('#searchDropdown').toggleClass('show');
+                $(this).toggleClass('active-search');
+                $('#locationDropdown').removeClass('show');
+                $('.layer-dropdown').removeClass('show');
+                $('#editDropdown').removeClass('show');
+                $('#editToggleBtn').removeClass('active-edit');
+                if ($('#searchDropdown').hasClass('show')) setTimeout(() => $('#gisSearchInput').focus(), 100);
+            });
+
+            $(document).on('click', '.search-tab-btn', function() {
+                $('.search-tab-btn').removeClass('active');
+                $(this).addClass('active');
+                const tab = $(this).data('tab');
+                $('#quickSearchTab').toggle(tab === 'quick');
+                $('#filterTab').toggle(tab === 'filter');
+            });
+
+            $(document).on('keyup', '#gisSearchInput', function() {
+                const value = $(this).val();
+                if (!value || value.length < 1) {
+                    $('#searchResults').html('');
+                    return;
+                }
+                const results = searchGIS(value);
+                let html = '';
+                if (!results.length) {
+                    html = '<div class="p-3 text-center text-muted">No results found</div>';
+                } else {
+                    results.slice(0, 10).forEach(item => {
+                        const displayTitle = item.type === 'pointdata' ?
+                            `${item.title} | Owner: ${item.subtitle.split('|')[1] || ''}` : item.title;
+                        const displaySubtitle = item.type === 'pointdata' ?
+                            `GIS ID: ${item.point_gisid || 'N/A'}` : item.subtitle;
+                        const icon = item.geometryType === 'point' ? 'geo-alt' :
+                            item.geometryType === 'polygon' ? 'pentagon' : 'vector-pen';
+
+                        html += `
+                            <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
+                                <div class="search-result-title"><i class="bi bi-${icon} me-2"></i>${displayTitle}</div>
+                                <div class="search-result-subtitle">${displaySubtitle}</div>
+                                <div class="mt-2 d-flex gap-2">
+                                    <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
+                                    <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
+                                </div>
+                            </div>`;
+                    });
+                }
+                $('#searchResults').html(html);
+            });
+
+            $(document).on('click', '.zoom-btn', function(e) {
+                e.stopPropagation();
+                const id = $(this).data('id');
+                const type = $(this).data('type');
+                const item = searchIndex.find(f => f.id == id && f.type === type);
+                if (item) {
+                    zoomToFeature(item.id);
+                    $('#searchDropdown').removeClass('show');
+                    $('#searchToggleBtn').removeClass('active-search');
+                    $('#gisSearchInput').val('');
+                    $('#searchResults').html('');
+                }
+            });
+
+            $(document).on('click', '.direction-btn', function(e) {
+                e.stopPropagation();
+                const id = $(this).data('id');
+                const type = $(this).data('type');
+                const item = searchIndex.find(f => f.id == id && f.type === type);
+                if (item) {
+                    getDirectionToFeature(item);
+                    $('#searchDropdown').removeClass('show');
+                    $('#searchToggleBtn').removeClass('active-search');
+                    $('#gisSearchInput').val('');
+                    $('#searchResults').html('');
+                }
+            });
+
+            // ─── FILTER SEARCH ───
+            $('#applyFilterBtn').on('click', function() {
+                $.get('/point-data/filter', {
+                    assessment: $('#filterAssessment').val(),
+                    old_assessment: $('#filterOldAssessment').val(),
+                    owner_name: $('#filterOwnerName').val(),
+                    phone_number: $('#filterPhoneNumber').val()
+                }, function(res) {
+                    let html = '';
+                    (res.data || []).forEach(pd => {
+                        html += `
+                            <div class="search-result-item">
+                                <div class="search-result-title">${pd.owner_name || 'N/A'} — ${pd.assessment || 'N/A'}</div>
+                                <div class="search-result-subtitle">GIS ID: ${pd.point_gisid || 'N/A'} | Phone: ${pd.phone_number || 'N/A'}</div>
+                            </div>`;
+                    });
+                    $('#filterResults').html(html || '<div class="p-2 text-muted">No matches</div>');
+                });
+            });
+
+            // ─── FULLSCREEN ───
+            let isFullscreen = false;
+            $(document).on('click', '#fullscreenBtn', function() {
+                const $icon = $(this).find('i');
+                if (!isFullscreen) {
+                    $mapCard.addClass('fullscreen-mode');
+                    $mapContainer.addClass('fullscreen');
+                    $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
+                    isFullscreen = true;
+                } else {
+                    $mapCard.removeClass('fullscreen-mode');
+                    $mapContainer.removeClass('fullscreen');
+                    $icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
+                    isFullscreen = false;
+                }
+                setTimeout(() => map.updateSize(), 100);
+            });
+
+            // ─── EDIT TOGGLE EVENTS ───
             $(document).on('click', '#editToggleBtn', function(e) {
                 e.stopPropagation();
                 $('#editDropdown').toggleClass('show');
@@ -3445,207 +3887,6 @@
                 });
             }
 
-            // ─── LAYER EVENTS ───
-            $(document).on('click', '.layer-toggle-btn', function(e) {
-                e.stopPropagation();
-                $('.layer-dropdown').toggleClass('show');
-                $('#locationDropdown').removeClass('show');
-                $('#searchDropdown').removeClass('show');
-                $('#editDropdown').removeClass('show');
-                $('#searchToggleBtn').removeClass('active-search');
-                $('#editToggleBtn').removeClass('active-edit');
-            });
-
-            $(document).on('click', '.layer-dropdown-item', function(e) {
-                e.stopPropagation();
-                const layerType = $(this).data('layer-type');
-                const layerTitle = $(this).data('layer');
-                if (layerType === 'base') {
-                    switchBaseLayer(
-                        layerTitle === 'Satellite' ? satelliteLayer :
-                        layerTitle === 'Street View' ? streetLayer : osmLayer
-                    );
-                    $('.layer-dropdown').removeClass('show');
-                } else if (layerTitle === 'Drone View') {
-                    toggleDroneLayer();
-                }
-            });
-
-            // ─── LOCATION EVENTS ───
-            $(document).on('click', '#locationToggleBtn', function(e) {
-                e.stopPropagation();
-                $('#locationDropdown').toggleClass('show');
-                $('.layer-dropdown').removeClass('show');
-                $('#searchDropdown').removeClass('show');
-                $('#editDropdown').removeClass('show');
-                $('#searchToggleBtn').removeClass('active-search');
-                $('#editToggleBtn').removeClass('active-edit');
-            });
-
-            $(document).on('click', '#liveLocationItem', function(e) {
-                e.stopPropagation();
-                if (!liveActive) {
-                    liveActive = true;
-                    startWatching();
-                    showToast('📍 Live location enabled', 2000);
-                } else {
-                    liveActive = false;
-                    trackActive = false;
-                    stopWatching();
-                    clearLiveMarker();
-                    showToast('📍 Live location disabled', 2000);
-                }
-                syncLocationUI();
-                $('#locationDropdown').removeClass('show');
-            });
-
-            $(document).on('click', '#trackMeItem', function(e) {
-                e.stopPropagation();
-                if (!trackActive) {
-                    trackActive = true;
-                    liveActive = true;
-                    startWatching();
-                    showToast('📍 Tracking enabled', 2000);
-                } else {
-                    trackActive = false;
-                    if (!liveActive) {
-                        stopWatching();
-                        clearLiveMarker();
-                    }
-                    showToast('📍 Tracking disabled', 2000);
-                }
-                syncLocationUI();
-                $('#locationDropdown').removeClass('show');
-            });
-
-            $(document).on('click', '#clearRouteItem', function(e) {
-                e.stopPropagation();
-                clearRoute();
-                $('#locationDropdown').removeClass('show');
-            });
-
-            // ─── SEARCH EVENTS ───
-            $(document).on('click', '#searchToggleBtn', function(e) {
-                e.stopPropagation();
-                $('#searchDropdown').toggleClass('show');
-                $(this).toggleClass('active-search');
-                $('#locationDropdown').removeClass('show');
-                $('.layer-dropdown').removeClass('show');
-                $('#editDropdown').removeClass('show');
-                $('#editToggleBtn').removeClass('active-edit');
-                if ($('#searchDropdown').hasClass('show')) setTimeout(() => $('#gisSearchInput').focus(),
-                    100);
-            });
-
-            $(document).on('click', '.search-tab-btn', function() {
-                $('.search-tab-btn').removeClass('active');
-                $(this).addClass('active');
-                const tab = $(this).data('tab');
-                $('#quickSearchTab').toggle(tab === 'quick');
-                $('#filterTab').toggle(tab === 'filter');
-            });
-
-            $(document).on('keyup', '#gisSearchInput', function() {
-                const value = $(this).val();
-                if (!value || value.length < 1) {
-                    $('#searchResults').html('');
-                    return;
-                }
-                const results = searchGIS(value);
-                let html = '';
-                if (!results.length) {
-                    html = '<div class="p-3 text-center text-muted">No results found</div>';
-                } else {
-                    results.slice(0, 10).forEach(item => {
-                        const displayTitle = item.type === 'pointdata' ?
-                            `${item.title} | Owner: ${item.subtitle.split('|')[1] || ''}` : item
-                            .title;
-                        const displaySubtitle = item.type === 'pointdata' ?
-                            `GIS ID: ${item.point_gisid || 'N/A'}` : item.subtitle;
-                        const icon = item.geometryType === 'point' ? 'geo-alt' :
-                            item.geometryType === 'polygon' ? 'pentagon' : 'vector-pen';
-
-                        html += `
-                            <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-                                <div class="search-result-title"><i class="bi bi-${icon} me-2"></i>${displayTitle}</div>
-                                <div class="search-result-subtitle">${displaySubtitle}</div>
-                                <div class="mt-2 d-flex gap-2">
-                                    <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                    <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
-                                </div>
-                            </div>`;
-                    });
-                }
-                $('#searchResults').html(html);
-            });
-
-            // ─── FILTER SEARCH ───
-            $('#applyFilterBtn').on('click', function() {
-                $.get('/point-data/filter', {
-                    assessment: $('#filterAssessment').val(),
-                    old_assessment: $('#filterOldAssessment').val(),
-                    owner_name: $('#filterOwnerName').val(),
-                    phone_number: $('#filterPhoneNumber').val()
-                }, function(res) {
-                    let html = '';
-                    (res.data || []).forEach(pd => {
-                        html += `
-                            <div class="search-result-item">
-                                <div class="search-result-title">${pd.owner_name || 'N/A'} — ${pd.assessment || 'N/A'}</div>
-                                <div class="search-result-subtitle">GIS ID: ${pd.point_gisid || 'N/A'} | Phone: ${pd.phone_number || 'N/A'}</div>
-                            </div>`;
-                    });
-                    $('#filterResults').html(html ||
-                        '<div class="p-2 text-muted">No matches</div>');
-                });
-            });
-
-            $(document).on('click', '.zoom-btn', function(e) {
-                e.stopPropagation();
-                const id = $(this).data('id');
-                const type = $(this).data('type');
-                const item = searchIndex.find(f => f.id == id && f.type === type);
-                if (item) {
-                    zoomToFeature(item.id);
-                    $('#searchDropdown').removeClass('show');
-                    $('#searchToggleBtn').removeClass('active-search');
-                    $('#gisSearchInput').val('');
-                    $('#searchResults').html('');
-                }
-            });
-
-            $(document).on('click', '.direction-btn', function(e) {
-                e.stopPropagation();
-                const id = $(this).data('id');
-                const type = $(this).data('type');
-                const item = searchIndex.find(f => f.id == id && f.type === type);
-                if (item) {
-                    getDirectionToFeature(item);
-                    $('#searchDropdown').removeClass('show');
-                    $('#searchToggleBtn').removeClass('active-search');
-                    $('#gisSearchInput').val('');
-                    $('#searchResults').html('');
-                }
-            });
-
-            // ─── FULLSCREEN ───
-            let isFullscreen = false;
-            $(document).on('click', '#fullscreenBtn', function() {
-                const $icon = $(this).find('i');
-                if (!isFullscreen) {
-                    $mapCard.addClass('fullscreen-mode');
-                    $mapContainer.addClass('fullscreen');
-                    $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
-                    isFullscreen = true;
-                } else {
-                    $mapCard.removeClass('fullscreen-mode');
-                    $mapContainer.removeClass('fullscreen');
-                    $icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
-                    isFullscreen = false;
-                }
-                setTimeout(() => map.updateSize(), 100);
-            });
-
             // ─── DELETE MODAL ───
             $(document).on('click', '.delete-type-btn', function() {
                 $('.delete-type-btn').removeClass('active');
@@ -3675,8 +3916,7 @@
                 }
 
                 const $btn = $(this);
-                $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting…').prop(
-                    'disabled', true);
+                $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting…').prop('disabled', true);
 
                 $.ajax({
                     url: '/delete-feature',
@@ -3684,16 +3924,11 @@
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    data: {
-                        type,
-                        gisid
-                    },
+                    data: { type, gisid },
                     success: function(response) {
-                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
-                            'deleteFeatureModal'));
+                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteFeatureModal'));
                         if (deleteModal) deleteModal.hide();
-                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
-                            false);
+                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled', false);
 
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
@@ -3712,10 +3947,8 @@
                         });
                     },
                     error: function(xhr) {
-                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
-                            false);
-                        const msg = xhr.responseJSON?.message ||
-                            `No ${type} found with GIS ID: ${gisid}`;
+                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled', false);
+                        const msg = xhr.responseJSON?.message || `No ${type} found with GIS ID: ${gisid}`;
                         $('#deleteGisError').text(msg).show();
                     }
                 });
@@ -3723,10 +3956,8 @@
 
             // ─── CLOSE DROPDOWNS ───
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass(
-                    'show');
-                if (!$(e.target).closest('.custom-location-switcher').length) $('#locationDropdown')
-                    .removeClass('show');
+                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass('show');
+                if (!$(e.target).closest('.custom-location-switcher').length) $('#locationDropdown').removeClass('show');
                 if (!$(e.target).closest('.custom-search-switcher').length) {
                     $('#searchDropdown').removeClass('show');
                     $('#searchToggleBtn').removeClass('active-search');
@@ -3747,258 +3978,9 @@
                 droneLayer.setVisible(false);
             }
 
-            class InfrastructureManager {
-                constructor(map) {
-                    this.map = map;
-                    this.layers = {};
-                    this.colors = {
-                        'Road': '#FF6B6B',
-                        'Road Junction': '#FFB74D',
-                        'Bus Stop': '#FFA726',
-                        'Traffic Signal': '#F44336',
-                        'Bridge': '#8D6E63',
-                        'Drainage Line': '#4FC3F7',
-                        'Storm Water Line': '#4DD0E1',
-                        'Sewer Line': '#9575CD',
-                        'Water Supply Line': '#4DB6AC',
-                        'Waterbody': '#29B6F6',
-                        'Canal': '#0288D1',
-                        'Culvert': '#00897B',
-                        'Fire Hydrant': '#EF5350',
-                        'Water Valve': '#81C784',
-                        'Street Light': '#FFD54F',
-                        'Electric Pole': '#FF8A65',
-                        'Street Manhole': '#A1887F',
-                        'Transformer': '#AB47BC',
-                        'Building': '#78909C',
-                        'Boundary Wall': '#795548',
-                        'Park': '#66BB6A',
-                        'Playground': '#AED581',
-                        'Cemetery': '#A1887F',
-                        'Tree': '#388E3C'
-                    };
-                }
+            // Load infrastructure
+            loadInfrastructure({{ $ward->id }});
 
-                async loadInfrastructure(wardId) {
-                    try {
-                        const [summaryRes, dataRes] = await Promise.all([
-                            fetch(`/infrastructure/summary/${wardId}`).then(r => r.json()),
-                            fetch(`/infrastructure/data/${wardId}`).then(r => r.json())
-                        ]);
-
-                        if (summaryRes.success) {
-                            this.updateDashboard(summaryRes.summary);
-                        }
-
-                        if (dataRes.success) {
-                            this.displayInfrastructure(dataRes.data);
-                            return true;
-                        }
-
-                        return false;
-                    } catch (error) {
-                        console.error('Failed to load infrastructure:', error);
-                        return false;
-                    }
-                }
-
-                displayInfrastructure(geojson) {
-                    if (!geojson?.features?.length) {
-                        console.warn('No infrastructure data to display');
-                        return;
-                    }
-
-                    const grouped = {};
-                    geojson.features.forEach(feature => {
-                        const type = feature.properties.type || 'Unknown';
-                        (grouped[type] ??= []).push(feature);
-                    });
-
-                    Object.entries(grouped).forEach(([type, features]) => this.createLayer(type, features));
-                    this.addLegend(grouped);
-                }
-
-                createLayer(type, features) {
-                    const color = this.colors[type] || '#999999';
-                    const source = new ol.source.Vector();
-
-                    features.forEach(feature => {
-                        const geometry = this.createGeometry(feature.geometry);
-                        if (!geometry) return;
-
-                        const olFeature = new ol.Feature({
-                            geometry,
-                            type,
-                            name: feature.properties.name || '',
-                            osm_id: feature.properties.osm_id || '',
-                            properties: feature.properties
-                        });
-                        source.addFeature(olFeature);
-                    });
-
-                    const layer = new ol.layer.Vector({
-                        source,
-                        style: this.createStyle(color),
-                        title: type,
-                        visible: true
-                    });
-
-                    this.map.addLayer(layer);
-                    this.layers[type] = layer;
-                }
-
-                createGeometry(geometry) {
-                    if (!geometry) return null;
-
-                    try {
-                        switch (geometry.type) {
-                            case 'Point':
-                                return new ol.geom.Point(ol.proj.fromLonLat(geometry.coordinates));
-                            case 'LineString':
-                                return new ol.geom.LineString(geometry.coordinates.map(c => ol.proj.fromLonLat(
-                                    c)));
-                            case 'Polygon':
-                                return new ol.geom.Polygon([geometry.coordinates[0].map(c => ol.proj.fromLonLat(
-                                    c))]);
-                            case 'MultiPolygon':
-                                return new ol.geom.MultiPolygon(
-                                    geometry.coordinates.map(poly => poly[0].map(c => ol.proj.fromLonLat(
-                                        c)))
-                                );
-                            default:
-                                return null;
-                        }
-                    } catch (e) {
-                        console.error('Error creating geometry:', e);
-                        return null;
-                    }
-                }
-
-                createStyle(color) {
-                    return (feature) => {
-                        const geometryType = feature.getGeometry().getType();
-
-                        if (geometryType === 'Point') {
-                            return new ol.style.Style({
-                                image: new ol.style.Circle({
-                                    radius: 8,
-                                    fill: new ol.style.Fill({
-                                        color
-                                    }),
-                                    stroke: new ol.style.Stroke({
-                                        color: '#ffffff',
-                                        width: 2
-                                    })
-                                }),
-                                text: new ol.style.Text({
-                                    text: feature.get('name') || '',
-                                    font: '12px Arial',
-                                    offsetY: -15,
-                                    fill: new ol.style.Fill({
-                                        color: '#000000'
-                                    }),
-                                    stroke: new ol.style.Stroke({
-                                        color: '#ffffff',
-                                        width: 2
-                                    })
-                                })
-                            });
-                        }
-
-                        if (geometryType === 'LineString') {
-                            return new ol.style.Style({
-                                stroke: new ol.style.Stroke({
-                                    color,
-                                    width: 4
-                                })
-                            });
-                        }
-
-                        if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
-                            return new ol.style.Style({
-                                fill: new ol.style.Fill({
-                                    color: color + '33'
-                                }),
-                                stroke: new ol.style.Stroke({
-                                    color,
-                                    width: 2
-                                })
-                            });
-                        }
-                    };
-                }
-
-                addLegend(grouped) {
-                    document.querySelector('.infrastructure-legend')?.remove();
-
-                    const legend = document.createElement('div');
-                    legend.className = 'infrastructure-legend';
-                    legend.style.cssText = `
-            position: absolute; bottom: 30px; right: 30px; z-index: 1000;
-            background: rgba(255,255,255,0.95); padding: 12px 16px; border-radius: 12px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.15); max-height: 400px; overflow-y: auto;
-            min-width: 180px; font-size: 12px;
-        `;
-
-                    legend.innerHTML =
-                        `<div style="font-weight:700; margin-bottom:10px; font-size:14px; border-bottom:1px solid #e5e7eb; padding-bottom:6px;">🏗️ Infrastructure</div>`;
-
-                    Object.keys(grouped).sort().forEach(type => {
-                        const color = this.colors[type] || '#999999';
-                        const item = document.createElement('div');
-                        item.style.cssText =
-                            'display:flex; align-items:center; padding:4px 0; cursor:pointer; transition:opacity 0.2s;';
-                        item.innerHTML = `
-                <span style="display:inline-block; width:14px; height:14px; background:${color}; border-radius:3px; margin-right:10px; flex-shrink:0;"></span>
-                <span style="flex:1; font-size:12px;">${type}</span>
-                <span style="background:#f3f4f6; padding:1px 8px; border-radius:12px; font-size:11px; color:#6b7280;">${grouped[type].length}</span>
-            `;
-
-                        item.addEventListener('click', () => {
-                            const layer = this.layers[type];
-                            if (!layer) return;
-                            const visible = !layer.getVisible();
-                            layer.setVisible(visible);
-                            item.style.opacity = visible ? '1' : '0.5';
-                        });
-
-                        legend.appendChild(item);
-                    });
-
-                    document.getElementById('map').appendChild(legend);
-                }
-
-                updateDashboard(summary) {
-                    const statsContainer = document.querySelector('.stat-strip');
-                    if (!statsContainer) return;
-
-                    const totalFeatures = summary.total_features || 0;
-                    const featureTypes = Object.keys(summary.feature_counts || {}).length;
-
-                    let infraCard = statsContainer.querySelector('.stat-card[data-type="infrastructure"]');
-                    if (!infraCard) {
-                        infraCard = document.createElement('div');
-                        infraCard.className = 'stat-card';
-                        infraCard.dataset.type = 'infrastructure';
-                        statsContainer.appendChild(infraCard);
-                    }
-
-                    infraCard.innerHTML = `
-            <div class="stat-icon stat-icon-purple"><i class="bi bi-map"></i></div>
-            <div>
-                <div class="stat-label">Infrastructure Features</div>
-                <div class="stat-value">${totalFeatures}</div>
-                <div class="stat-sub">${featureTypes} types</div>
-            </div>
-        `;
-                }
-            }
-
-            // Initialize infrastructure manager
-            $(document).ready(function() {
-                const infraManager = new InfrastructureManager(map);
-                infraManager.loadInfrastructure({{ $ward->id }});
-            });
             console.log('✅ Executive GIS Dashboard ready');
         });
     </script>
