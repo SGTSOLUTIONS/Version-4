@@ -13,12 +13,11 @@ class InfrastructureController extends Controller
     public function fetchInfrastructure($wardId)
     {
         $ward = \App\Models\Ward::findOrFail($wardId);
-return response()->json("dsta");
         // Get ward boundary from ward data
         $boundary = $this->getWardBoundary($ward);
 
         // Prepare the Python script execution
-        $pythonScript = base_path('scripts/fetch_infrastructure_qgis.py');
+        $pythonScript = public_path('scripts/fetch_infrastructure_qgis.py');
         $outputDir = public_path('data/infrastructure/ward_' . $wardId);
 
         // Create temporary boundary file
