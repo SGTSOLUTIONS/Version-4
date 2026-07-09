@@ -135,7 +135,7 @@
                                         <label class="form-label">Drone Image</label>
                                         <input type="file" name="drone_image" id="f_drone_image" class="form-control"
                                             accept="image/*">
-                                        <small class="text-muted">Upload drone image of the ward (optional, max 100MB). Large images may take a while &mdash; a progress bar will show while it uploads.</small>
+                                        <small class="text-muted">Upload drone image of the ward (optional)</small>
                                         <div id="currentImage" style="display:none; margin-top:10px;">
                                             <img id="currentDroneImage" src="" alt="Current Image"
                                                 style="max-width:100px; max-height:100px;">
@@ -259,21 +259,6 @@
                             </div>
                         </div>
 
-                        <!-- Upload progress (shown only while an upload is in flight) -->
-                        <div id="uploadProgressWrap" class="mt-3" style="display:none;">
-                            <div class="d-flex justify-content-between mb-1">
-                                <small id="uploadProgressLabel" class="text-muted">Uploading...</small>
-                                <small id="uploadProgressPercent" class="text-muted fw-bold">0%</small>
-                            </div>
-                            <div class="progress" style="height: 10px;">
-                                <div id="uploadProgressBar" class="progress-bar bg-success" role="progressbar"
-                                    style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                            <small id="uploadProgressNote" class="text-muted d-block mt-1">
-                                Large files (up to 100MB) can take a while depending on your connection. Please keep this window open.
-                            </small>
-                        </div>
-
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -337,16 +322,6 @@
             let totalPages = 1;
             let isLoading = false;
             let userRole = '{{ auth()->user()->role }}';
-
-            // Max upload size for the drone image (bytes). Keep this in sync with
-            // your server-side validation (upload_max_filesize / post_max_size / Laravel rule).
-            const MAX_IMAGE_MB = 100;
-            const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024;
-
-            function formatBytes(bytes) {
-                if (!bytes) return '0 MB';
-                return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-            }
 
             // Load zones based on corporation selection in filter (admin only)
             $('#corporationFilter').on('change', function() {
@@ -424,22 +399,6 @@
                             zoneSelect.prop('disabled', true);
                         }
                     });
-                }
-            });
-
-            // Client-side size check for the drone image as soon as it's picked,
-            // so the user finds out immediately instead of after a long upload.
-            $('#f_drone_image').on('change', function() {
-                let file = this.files && this.files[0];
-                $(this).removeClass('is-invalid');
-                $('#error-drone_image').text('');
-
-                if (file && file.size > MAX_IMAGE_BYTES) {
-                    $(this).addClass('is-invalid');
-                    $('#error-drone_image').text(
-                        `Image is ${formatBytes(file.size)}, which is over the ${MAX_IMAGE_MB}MB limit.`
-                    );
-                    $(this).val('');
                 }
             });
 
@@ -543,14 +502,14 @@
 
                     html += `
                         <div class="acard">
-                            <div class="acard-img-wrap">
-                                <img src="${imageUrl}"
-                                     onerror="this.src='${assetBase}images/default-ward.png'">
-                                <div class="acard-overlay"></div>
-                                <span class="acard-tag">
-                                    Ward
-                                </span>
-                            </div>
+                            // <div class="acard-img-wrap">
+                            //     <img src="${imageUrl}"
+                            //          onerror="this.src='${assetBase}images/default-ward.png'">
+                            //     <div class="acard-overlay"></div>
+                            //     <span class="acard-tag">
+                            //         Ward
+                            //     </span>
+                            // </div>
                             <div class="acard-body">
                                 <div class="acard-meta">
                                     <i class="bi bi-building"></i>
@@ -714,7 +673,6 @@
                 $('#wardSaveBtn').html('Save Ward');
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
-                resetUploadProgress();
 
                 // Reset form fields for proper state
                 @if (auth()->user()->role == 'commissioner')
@@ -755,28 +713,11 @@
                 $('#wardModal').modal('show');
             });
 
-            function resetUploadProgress() {
-                $('#uploadProgressWrap').hide();
-                $('#uploadProgressBar').css('width', '0%').attr('aria-valuenow', 0);
-                $('#uploadProgressPercent').text('0%');
-                $('#uploadProgressLabel').text('Uploading...');
-            }
-
             // Submit form with role-based URL
             $('#wardForm').on('submit', function(e) {
                 e.preventDefault();
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
-
-                // Guard against an oversized image slipping through
-                let droneFile = $('#f_drone_image')[0].files[0];
-                if (droneFile && droneFile.size > MAX_IMAGE_BYTES) {
-                    $('#f_drone_image').addClass('is-invalid');
-                    $('#error-drone_image').text(
-                        `Image is ${formatBytes(droneFile.size)}, which is over the ${MAX_IMAGE_MB}MB limit.`
-                    );
-                    return false;
-                }
 
                 let formData = new FormData(this);
                 let wardId = $('#wardId').val();
@@ -810,14 +751,6 @@
                 $('#wardSaveBtn').prop('disabled', true).html(
                     '<span class="spinner-border spinner-border-sm me-1"></span> Saving...');
 
-                // Show the progress bar only when there's a sizeable file to upload,
-                // so small edits don't get a progress bar flash for no reason.
-                let hasLargeUpload = droneFile && droneFile.size > 2 * 1024 * 1024; // > 2MB
-                if (hasLargeUpload) {
-                    $('#uploadProgressWrap').show();
-                    $('#uploadProgressLabel').text(`Uploading ${formatBytes(droneFile.size)}...`);
-                }
-
                 $.ajax({
                     url: url,
                     type: "POST",
@@ -827,27 +760,8 @@
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    xhr: function() {
-                        let xhr = $.ajaxSettings.xhr();
-                        if (xhr.upload && hasLargeUpload) {
-                            xhr.upload.addEventListener('progress', function(evt) {
-                                if (evt.lengthComputable) {
-                                    let percent = Math.round((evt.loaded / evt.total) * 100);
-                                    $('#uploadProgressBar').css('width', percent + '%').attr(
-                                        'aria-valuenow', percent);
-                                    $('#uploadProgressPercent').text(percent + '%');
-                                    if (percent >= 100) {
-                                        $('#uploadProgressLabel').text(
-                                            'Processing on server, please wait...');
-                                    }
-                                }
-                            }, false);
-                        }
-                        return xhr;
-                    },
                     success: function(response) {
                         $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
-                        resetUploadProgress();
                         $('#wardForm')[0].reset();
                         $('#wardModal').modal('hide');
                         showFlashMessage(response.message || 'Ward saved successfully', 'success');
@@ -855,7 +769,6 @@
                     },
                     error: function(xhr) {
                         $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
-                        resetUploadProgress();
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
                             $.each(errors, function(field, messages) {
@@ -873,10 +786,6 @@
                                 $(errorId).text(messages[0]);
                             });
                             showFlashMessage('Please fix validation errors', 'error');
-                        } else if (xhr.status === 413) {
-                            showFlashMessage(
-                                'The file is too large for the server to accept. Ask your admin to raise the upload limit.',
-                                'error');
                         } else {
                             let errorMessage = xhr.responseJSON?.message || 'Something went wrong';
                             showFlashMessage(errorMessage, 'error');
@@ -904,7 +813,6 @@
                         let ward = response.data;
                         $('#modalTitle').html('<i class="bi bi-pencil-square me-2"></i> Edit Ward');
                         $('#wardId').val(ward.id);
-                        resetUploadProgress();
 
                         let corpId = null;
                         if (ward.zone && typeof ward.zone === 'object') {
