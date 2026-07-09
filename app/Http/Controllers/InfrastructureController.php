@@ -11,78 +11,106 @@ use Illuminate\Support\Facades\Log;
 
 class InfrastructureController extends Controller
 {
-    /**
-     * Absolute path to the Python interpreter to use.
-     * Uses a dedicated virtualenv so this doesn't depend on
-     * whatever python3 the web server user's $PATH resolves to.
-     */
-    private function pythonBinary(): string
-    {
-        return base_path('venv/bin/python3');
-    }
-
     public function fetchInfrastructure($wardId)
     {
-        $ward = \App\Models\Ward::findOrFail($wardId);
-        // Get ward boundary from ward data
-        $boundary = $this->getWardBoundary($ward);
+        try {
+            $ward = \App\Models\Ward::findOrFail($wardId);
 
-        // Prepare the Python script execution
-        $pythonScript = public_path('scripts/fetch_infrastructure_qgis.py');
-        $outputDir = public_path('data/infrastructure/ward_' . $wardId);
+            // Get ward boundary from ward data
+            $boundary = $this->getWardBoundary($ward);
 
-        // Create temporary boundary file
-        $boundaryFile = storage_path("app/temp/boundary_{$wardId}.geojson");
-        File::ensureDirectoryExists(dirname($boundaryFile));
-        file_put_contents($boundaryFile, json_encode($boundary));
+            // Prepare the Python script execution
+            $pythonScript = public_path('scripts/fetch_infrastructure_qgis.py');
+            $outputDir = public_path('data/infrastructure/ward_' . $wardId);
 
-        $pythonBin = $this->pythonBinary();
+            // Check if Python script exists
+            if (!File::exists($pythonScript)) {
+                Log::error("Python script not found at: " . $pythonScript);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Python script not found',
+                    'error' => "Script not found at: {$pythonScript}"
+                ], 500);
+            }
 
-        if (!file_exists($pythonBin)) {
+            // Ensure output directory exists
+            if (!File::exists($outputDir)) {
+                File::makeDirectory($outputDir, 0755, true);
+            }
+
+            // Create temporary boundary file
+            $boundaryFile = storage_path("app/temp/boundary_{$wardId}.geojson");
+            File::ensureDirectoryExists(dirname($boundaryFile));
+            file_put_contents($boundaryFile, json_encode($boundary));
+
+            // Check if Python3 is available
+            $pythonCheck = Process::command(['which', 'python3'])->run();
+            if (!$pythonCheck->successful()) {
+                File::delete($boundaryFile);
+                Log::error("Python3 not found in system PATH");
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Python3 is not available on the server',
+                    'error' => 'Please install Python3 or check your PATH configuration'
+                ], 500);
+            }
+
+            // Execute Python script using simple command
+            $command = "python3 " . escapeshellarg($pythonScript) .
+                       " --boundary " . escapeshellarg($boundaryFile) .
+                       " --output " . escapeshellarg($outputDir) .
+                       " 2>&1";
+
+            Log::info("Executing command: " . $command);
+
+            $process = Process::timeout(180)->command($command);
+            $result = $process->run();
+
+            // Clean up temp file
             File::delete($boundaryFile);
-            Log::error("Python venv interpreter not found at: {$pythonBin}");
-            return response()->json([
-                'success' => false,
-                'message' => 'Server misconfiguration: Python environment not found.',
-                'error' => "Expected interpreter at {$pythonBin} but it does not exist. " .
-                           "Run: python3 -m venv venv && venv/bin/pip install requests",
-            ], 500);
-        }
 
-        // Execute Python script using the explicit venv interpreter
-        $command = [
-            $pythonBin,
-            $pythonScript,
-            '--boundary',
-            $boundaryFile,
-            '--output',
-            $outputDir
-        ];
+            if ($result->successful()) {
+                // Check if summary file was created
+                $summaryPath = $outputDir . '/summary.json';
+                if (File::exists($summaryPath)) {
+                    $summary = json_decode(File::get($summaryPath), true);
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Infrastructure data fetched successfully',
+                        'summary' => $summary,
+                        'data_path' => $outputDir
+                    ]);
+                } else {
+                    Log::warning("Summary file not found at: " . $summaryPath);
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Infrastructure data fetched but summary not generated',
+                        'output' => $result->output(),
+                        'data_path' => $outputDir
+                    ]);
+                }
+            } else {
+                Log::error('Infrastructure fetch failed', [
+                    'ward_id' => $wardId,
+                    'error_output' => $result->errorOutput(),
+                    'exit_code' => $result->exitCode(),
+                    'command' => $command
+                ]);
 
-        $process = Process::timeout(180)->command($command);
-        $result = $process->run();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to fetch infrastructure data',
+                    'error' => $result->errorOutput(),
+                    'command' => $command
+                ], 500);
+            }
 
-        // Clean up temp file
-        File::delete($boundaryFile);
-
-        if ($result->successful()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Infrastructure data fetched successfully',
-                'output' => $result->output(),
-                'data_path' => $outputDir
-            ]);
-        } else {
-            Log::error('Infrastructure fetch failed', [
-                'ward_id' => $wardId,
-                'error_output' => $result->errorOutput(),
-                'exit_code' => $result->exitCode(),
-            ]);
-
+        } catch (\Exception $e) {
+            Log::error("Infrastructure fetch error: " . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch infrastructure data',
-                'error' => $result->errorOutput()
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -92,22 +120,43 @@ class InfrastructureController extends Controller
         // Get boundary from ward data
         if ($ward->boundary_coordinates) {
             return [
-                'type' => 'Polygon',
-                'coordinates' => json_decode($ward->boundary_coordinates, true)
+                'type' => 'FeatureCollection',
+                'features' => [
+                    [
+                        'type' => 'Feature',
+                        'properties' => ['ward_id' => $ward->id],
+                        'geometry' => [
+                            'type' => 'Polygon',
+                            'coordinates' => json_decode($ward->boundary_coordinates, true)
+                        ]
+                    ]
+                ]
             ];
         }
 
         // If no boundary stored, create a default boundary around ward center
+        $centerLat = $ward->center_lat ?? 19.0760;
+        $centerLon = $ward->center_lon ?? 72.8777;
+
         return [
-            'type' => 'Polygon',
-            'coordinates' => [[
-                [$ward->center_lon - 0.01, $ward->center_lat - 0.01],
-                [$ward->center_lon + 0.01, $ward->center_lat - 0.01],
-                [$ward->center_lon + 0.01, $ward->center_lat + 0.01],
-                [$ward->center_lon - 0.01, $ward->center_lat + 0.01],
-                [$ward->center_lon - 0.01, $ward->center_lat - 0.01]
-            ]]
-        ];
+            'type' => 'FeatureCollection',
+            'features' => [
+                [
+                    'type' => 'Feature',
+                    'properties' => ['ward_id' => $ward->id],
+                    'geometry' => [
+                        'type' => 'Polygon',
+                        'coordinates' => [[
+                            [$centerLon - 0.01, $centerLat - 0.01],
+                            [$centerLon + 0.01, $centerLat - 0.01],
+                            [$centerLon + 0.01, $centerLat + 0.01],
+                            [$centerLon - 0.01, $centerLat + 0.01],
+                            [$centerLon - 0.01, $centerLat - 0.01]
+                        ]]
+                    ]
+                ]
+            ]
+        };
     }
 
     public function getInfrastructureData($wardId)
@@ -166,5 +215,44 @@ class InfrastructureController extends Controller
             'count' => count($data['features'] ?? []),
             'data' => $data
         ]);
+    }
+
+    public function refreshInfrastructure($wardId)
+    {
+        $outputDir = public_path("data/infrastructure/ward_{$wardId}");
+        if (File::exists($outputDir)) {
+            File::deleteDirectory($outputDir);
+        }
+
+        return $this->fetchInfrastructure($wardId);
+    }
+
+    public function testPython()
+    {
+        try {
+            // Test if Python3 is available
+            $testCommand = "python3 -c 'import sys; print(sys.version)' 2>&1";
+            $process = Process::command($testCommand)->run();
+
+            if ($process->successful()) {
+                return response()->json([
+                    'success' => true,
+                    'python_version' => trim($process->output()),
+                    'message' => 'Python3 is available'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Python3 is not available',
+                    'error' => $process->errorOutput()
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to test Python',
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }
