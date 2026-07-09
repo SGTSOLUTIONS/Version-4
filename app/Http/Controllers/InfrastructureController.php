@@ -55,8 +55,10 @@ class InfrastructureController extends Controller
                 ], 500);
             }
 
+            $pythonPath = trim($pythonCheck->output());
+
             // Execute Python script using simple command
-            $command = "python3 " . escapeshellarg($pythonScript) .
+            $command = escapeshellarg($pythonPath) . " " . escapeshellarg($pythonScript) .
                        " --boundary " . escapeshellarg($boundaryFile) .
                        " --output " . escapeshellarg($outputDir) .
                        " 2>&1";
@@ -101,6 +103,7 @@ class InfrastructureController extends Controller
                     'success' => false,
                     'message' => 'Failed to fetch infrastructure data',
                     'error' => $result->errorOutput(),
+                    'output' => $result->output(),
                     'command' => $command
                 ], 500);
             }
@@ -120,17 +123,8 @@ class InfrastructureController extends Controller
         // Get boundary from ward data
         if ($ward->boundary_coordinates) {
             return [
-                'type' => 'FeatureCollection',
-                'features' => [
-                    [
-                        'type' => 'Feature',
-                        'properties' => ['ward_id' => $ward->id],
-                        'geometry' => [
-                            'type' => 'Polygon',
-                            'coordinates' => json_decode($ward->boundary_coordinates, true)
-                        ]
-                    ]
-                ]
+                'type' => 'Polygon',
+                'coordinates' => json_decode($ward->boundary_coordinates, true)
             ];
         }
 
@@ -139,24 +133,15 @@ class InfrastructureController extends Controller
         $centerLon = $ward->center_lon ?? 72.8777;
 
         return [
-            'type' => 'FeatureCollection',
-            'features' => [
-                [
-                    'type' => 'Feature',
-                    'properties' => ['ward_id' => $ward->id],
-                    'geometry' => [
-                        'type' => 'Polygon',
-                        'coordinates' => [[
-                            [$centerLon - 0.01, $centerLat - 0.01],
-                            [$centerLon + 0.01, $centerLat - 0.01],
-                            [$centerLon + 0.01, $centerLat + 0.01],
-                            [$centerLon - 0.01, $centerLat + 0.01],
-                            [$centerLon - 0.01, $centerLat - 0.01]
-                        ]]
-                    ]
-                ]
-            ]
-        };
+            'type' => 'Polygon',
+            'coordinates' => [[
+                [$centerLon - 0.01, $centerLat - 0.01],
+                [$centerLon + 0.01, $centerLat - 0.01],
+                [$centerLon + 0.01, $centerLat + 0.01],
+                [$centerLon - 0.01, $centerLat + 0.01],
+                [$centerLon - 0.01, $centerLat - 0.01]
+            ]]
+        ];
     }
 
     public function getInfrastructureData($wardId)
@@ -227,26 +212,34 @@ class InfrastructureController extends Controller
         return $this->fetchInfrastructure($wardId);
     }
 
+    /**
+     * Diagnostic route: confirms which python3 PHP sees,
+     * its version, and whether `requests` is importable.
+     */
     public function testPython()
     {
         try {
-            // Test if Python3 is available
-            $testCommand = "python3 -c 'import sys; print(sys.version)' 2>&1";
-            $process = Process::command($testCommand)->run();
+            $whichPython = Process::command(['which', 'python3'])->run();
+            $pythonPath = trim($whichPython->output());
 
-            if ($process->successful()) {
-                return response()->json([
-                    'success' => true,
-                    'python_version' => trim($process->output()),
-                    'message' => 'Python3 is available'
-                ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Python3 is not available',
-                    'error' => $process->errorOutput()
-                ]);
-            }
+            $versionProcess = Process::command([$pythonPath ?: 'python3', '--version'])->run();
+
+            $requestsCheck = Process::command([
+                $pythonPath ?: 'python3',
+                '-c',
+                'import requests; print(requests.__version__)'
+            ])->run();
+
+            return response()->json([
+                'success' => true,
+                'which_python3' => $pythonPath,
+                'python_version' => trim($versionProcess->output() . $versionProcess->errorOutput()),
+                'requests_available' => $requestsCheck->successful(),
+                'requests_version_or_error' => $requestsCheck->successful()
+                    ? trim($requestsCheck->output())
+                    : trim($requestsCheck->errorOutput()),
+                'whoami' => trim(Process::command(['whoami'])->run()->output()),
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
