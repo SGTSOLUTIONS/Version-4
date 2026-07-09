@@ -32,24 +32,10 @@ class InfrastructureController extends Controller
     }
 
     /**
-     * Serve summary counts for a ward (used by dashboard stat card).
-     * File must be manually placed at:
-     * public/data/infrastructure/ward_{wardId}/summary.json
-     * OR this will auto-generate it from infrastructure.geojson if missing.
+     * Generate summary counts for a ward directly from infrastructure.geojson.
      */
     public function getInfrastructureSummary($wardId)
     {
-        $summaryPath = public_path("data/infrastructure/ward_{$wardId}/summary.json");
-
-        if (File::exists($summaryPath)) {
-            $summary = json_decode(File::get($summaryPath), true);
-            return response()->json([
-                'success' => true,
-                'summary' => $summary
-            ]);
-        }
-
-        // Auto-generate summary from infrastructure.geojson if summary.json wasn't provided
         $dataPath = public_path("data/infrastructure/ward_{$wardId}/infrastructure.geojson");
 
         if (!File::exists($dataPath)) {
@@ -81,28 +67,35 @@ class InfrastructureController extends Controller
     }
 
     /**
-     * Serve a single feature-type GeoJSON (optional — only works if you
-     * also upload per-type files like road.geojson, building.geojson, etc.)
+     * Serve a single feature-type GeoJSON, filtered directly from
+     * infrastructure.geojson by properties.type.
      */
     public function getFeatureByType($wardId, $type)
     {
-        $filename = strtolower(str_replace(' ', '_', $type)) . '.geojson';
-        $filePath = public_path("data/infrastructure/ward_{$wardId}/{$filename}");
+        $dataPath = public_path("data/infrastructure/ward_{$wardId}/infrastructure.geojson");
 
-        if (!File::exists($filePath)) {
+        if (!File::exists($dataPath)) {
             return response()->json([
                 'success' => false,
-                'message' => "No data found for feature type: {$type}"
+                'message' => 'No infrastructure data found for this ward'
             ], 404);
         }
 
-        $data = json_decode(File::get($filePath), true);
+        $data = json_decode(File::get($dataPath), true);
+        $allFeatures = $data['features'] ?? [];
+
+        $filtered = array_values(array_filter($allFeatures, function ($feature) use ($type) {
+            return strtolower($feature['properties']['type'] ?? '') === strtolower($type);
+        }));
 
         return response()->json([
             'success' => true,
             'type' => $type,
-            'count' => count($data['features'] ?? []),
-            'data' => $data
+            'count' => count($filtered),
+            'data' => [
+                'type' => 'FeatureCollection',
+                'features' => $filtered
+            ]
         ]);
     }
 }
