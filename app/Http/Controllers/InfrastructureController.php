@@ -7,9 +7,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 class InfrastructureController extends Controller
 {
+    /**
+     * Absolute path to the Python interpreter to use.
+     * Uses a dedicated virtualenv so this doesn't depend on
+     * whatever python3 the web server user's $PATH resolves to.
+     */
+    private function pythonBinary(): string
+    {
+        return base_path('venv/bin/python3');
+    }
+
     public function fetchInfrastructure($wardId)
     {
         $ward = \App\Models\Ward::findOrFail($wardId);
@@ -25,9 +36,22 @@ class InfrastructureController extends Controller
         File::ensureDirectoryExists(dirname($boundaryFile));
         file_put_contents($boundaryFile, json_encode($boundary));
 
-        // Execute Python script
+        $pythonBin = $this->pythonBinary();
+
+        if (!file_exists($pythonBin)) {
+            File::delete($boundaryFile);
+            Log::error("Python venv interpreter not found at: {$pythonBin}");
+            return response()->json([
+                'success' => false,
+                'message' => 'Server misconfiguration: Python environment not found.',
+                'error' => "Expected interpreter at {$pythonBin} but it does not exist. " .
+                           "Run: python3 -m venv venv && venv/bin/pip install requests",
+            ], 500);
+        }
+
+        // Execute Python script using the explicit venv interpreter
         $command = [
-            'python3',
+            $pythonBin,
             $pythonScript,
             '--boundary',
             $boundaryFile,
@@ -35,7 +59,7 @@ class InfrastructureController extends Controller
             $outputDir
         ];
 
-        $process = Process::command($command);
+        $process = Process::timeout(180)->command($command);
         $result = $process->run();
 
         // Clean up temp file
@@ -49,6 +73,12 @@ class InfrastructureController extends Controller
                 'data_path' => $outputDir
             ]);
         } else {
+            Log::error('Infrastructure fetch failed', [
+                'ward_id' => $wardId,
+                'error_output' => $result->errorOutput(),
+                'exit_code' => $result->exitCode(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch infrastructure data',
