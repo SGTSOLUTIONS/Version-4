@@ -114,10 +114,18 @@
             z-index: 1000;
         }
 
+        .custom-label-toggle {
+            position: absolute;
+            right: 30px;
+            top: 246px;
+            z-index: 1000;
+        }
+
         .layer-toggle-btn,
         .location-toggle-btn,
         .search-toggle-btn,
         .edit-toggle-btn,
+        .label-toggle-btn,
         .fullscreen-btn {
             width: 44px;
             height: 44px;
@@ -137,10 +145,17 @@
         .location-toggle-btn:hover,
         .search-toggle-btn:hover,
         .edit-toggle-btn:hover,
+        .label-toggle-btn:hover,
         .fullscreen-btn:hover {
             background: #f8fafc;
             transform: scale(1.02);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .label-toggle-btn.active-label {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #2563eb;
         }
 
         .location-toggle-btn.active-location,
@@ -1078,6 +1093,24 @@
         .infrastructure-legend .toggle-all-btn:hover {
             background: #e2e8f0;
         }
+
+        /* ─── Infrastructure Properties Modal ─── */
+        .infra-prop-table {
+            width: 100%;
+            font-size: 0.85rem;
+        }
+        .infra-prop-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .infra-prop-table .label-cell {
+            font-weight: 600;
+            color: #64748b;
+            width: 40%;
+        }
+        .infra-prop-table .value-cell {
+            color: #1e293b;
+        }
     </style>
 @endpush
 
@@ -1500,6 +1533,33 @@
             </div>
         </div>
     </div>
+
+    <!-- ============================================================ -->
+    <!-- INFRASTRUCTURE PROPERTIES MODAL                              -->
+    <!-- ============================================================ -->
+    <div class="modal fade" id="infraPropertiesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bld-modal-content">
+                <div class="modal-header bld-modal-header">
+                    <div class="bld-header-inner">
+                        <div class="bld-header-icon"><i class="bi bi-map"></i></div>
+                        <div>
+                            <h5 class="bld-modal-title">Infrastructure Properties</h5>
+                            <span class="bld-gisid-badge">Type: <span id="infraType"></span></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="infraPropertiesContent"></div>
+                </div>
+                <div class="modal-footer bld-modal-footer">
+                    <span class="bld-footer-status">Infrastructure feature details</span>
+                    <button type="button" class="btn bld-btn-cancel" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -1582,6 +1642,8 @@
             });
 
             // ─── STYLES ───
+            let showLabels = true;
+
             function createPolygonStyle(feature) {
                 const gisid = feature.get('gisid');
                 const sqft = feature.get('sqfeet') || '0';
@@ -1589,7 +1651,7 @@
                 const color = polygonData ? 'red' : 'blue';
                 const centerPoint = feature.getGeometry().getInteriorPoint();
 
-                return [
+                const styles = [
                     new ol.style.Style({
                         stroke: new ol.style.Stroke({
                             color,
@@ -1600,8 +1662,11 @@
                         fill: new ol.style.Fill({
                             color: 'rgba(0,0,255,0.1)'
                         })
-                    }),
-                    new ol.style.Style({
+                    })
+                ];
+
+                if (showLabels) {
+                    styles.push(new ol.style.Style({
                         geometry: centerPoint,
                         text: new ol.style.Text({
                             text: sqft + ' SQFT',
@@ -1621,8 +1686,10 @@
                             textAlign: 'center',
                             offsetY: 0
                         })
-                    })
-                ];
+                    }));
+                }
+
+                return styles;
             }
 
             function createLineStyle(feature) {
@@ -1637,7 +1704,7 @@
                         })
                     })
                 ];
-                if (roadName) {
+                if (showLabels && roadName) {
                     styles.push(new ol.style.Style({
                         text: new ol.style.Text({
                             text: String(roadName),
@@ -1666,7 +1733,8 @@
                 if (polygonData) {
                     color = pointCount > 0 ? (polygonData.number_bill == pointCount ? 'green' : 'red') : 'blue';
                 }
-                return new ol.style.Style({
+
+                const style = new ol.style.Style({
                     image: new ol.style.Circle({
                         radius: 8,
                         fill: new ol.style.Fill({
@@ -1676,9 +1744,12 @@
                             color,
                             width: 2
                         })
-                    }),
-                    text: new ol.style.Text({
-                        text: gisid ? String(gisid) : '',
+                    })
+                });
+
+                if (showLabels && gisid) {
+                    style.setText(new ol.style.Text({
+                        text: String(gisid),
                         scale: 1.3,
                         offsetY: -15,
                         fill: new ol.style.Fill({
@@ -1688,8 +1759,47 @@
                             color: '#fff',
                             width: 3
                         })
-                    })
-                });
+                    }));
+                }
+
+                return style;
+            }
+
+            function createInfraStyle(color) {
+                return (feature) => {
+                    const geometryType = feature.getGeometry().getType();
+                    const name = feature.get('name') || feature.get('osm_id') || '';
+
+                    if (geometryType === 'Point') {
+                        return new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: 8,
+                                fill: new ol.style.Fill({ color }),
+                                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+                            }),
+                            text: showLabels ? new ol.style.Text({
+                                text: name,
+                                font: '12px Arial',
+                                offsetY: -15,
+                                fill: new ol.style.Fill({ color: '#000000' }),
+                                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+                            }) : undefined
+                        });
+                    }
+
+                    if (geometryType === 'LineString') {
+                        return new ol.style.Style({
+                            stroke: new ol.style.Stroke({ color, width: 4 })
+                        });
+                    }
+
+                    if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
+                        return new ol.style.Style({
+                            fill: new ol.style.Fill({ color: color + '33' }),
+                            stroke: new ol.style.Stroke({ color, width: 2 })
+                        });
+                    }
+                };
             }
 
             // ─── SOURCES ───
@@ -1774,6 +1884,17 @@
                 loadLinesToSource();
                 loadPointsToSource();
                 buildSearchIndex();
+                // Refresh styles
+                polygonLayer.setStyle(createPolygonStyle);
+                lineLayer.setStyle(createLineStyle);
+                pointLayer.setStyle(createPointStyle);
+                // Refresh infra styles
+                Object.values(infraLayers).forEach(layer => {
+                    const title = layer.get('title');
+                    if (title && infraColors[title]) {
+                        layer.setStyle(createInfraStyle(infraColors[title]));
+                    }
+                });
             }
 
             loadPolygonsToSource();
@@ -2742,6 +2863,15 @@
                 updateLayerUI();
             }
 
+            // ─── LABEL TOGGLE ───
+            function toggleLabels() {
+                showLabels = !showLabels;
+                $('#labelToggleBtn').toggleClass('active-label', showLabels);
+                $('#labelToggleBtn i').toggleClass('bi-fonts', showLabels).toggleClass('bi-fonts', !showLabels);
+                reloadAllSources();
+                showToast(showLabels ? '🏷️ Labels ON' : '🏷️ Labels OFF', 1500);
+            }
+
             // ─── INFRASTRUCTURE LAYERS ───
             let infraLayers = {};
             let infraGrouped = {};
@@ -2773,42 +2903,6 @@
                 'Cemetery': '#A1887F',
                 'Tree': '#388E3C'
             };
-
-            function createInfraStyle(color) {
-                return (feature) => {
-                    const geometryType = feature.getGeometry().getType();
-
-                    if (geometryType === 'Point') {
-                        return new ol.style.Style({
-                            image: new ol.style.Circle({
-                                radius: 8,
-                                fill: new ol.style.Fill({ color }),
-                                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
-                            }),
-                            text: new ol.style.Text({
-                                text: feature.get('name') || '',
-                                font: '12px Arial',
-                                offsetY: -15,
-                                fill: new ol.style.Fill({ color: '#000000' }),
-                                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
-                            })
-                        });
-                    }
-
-                    if (geometryType === 'LineString') {
-                        return new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color, width: 4 })
-                        });
-                    }
-
-                    if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
-                        return new ol.style.Style({
-                            fill: new ol.style.Fill({ color: color + '33' }),
-                            stroke: new ol.style.Stroke({ color, width: 2 })
-                        });
-                    }
-                };
-            }
 
             function loadInfrastructure(wardId) {
                 $.ajax({
@@ -2869,6 +2963,7 @@
                             osm_id: feature.properties.osm_id || '',
                             properties: feature.properties
                         });
+                        olFeature.setId(feature.properties.osm_id || feature.properties.id || Math.random().toString());
                         source.addFeature(olFeature);
                     });
 
@@ -2881,13 +2976,87 @@
 
                     map.addLayer(layer);
                     infraLayers[type] = layer;
+
+                    // Add click handler for infrastructure features
+                    const clickHandler = new ol.interaction.Select({
+                        layers: [layer],
+                        style: new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: '#0000ff',
+                                width: 3
+                            }),
+                            fill: new ol.style.Fill({
+                                color: 'rgba(0,0,255,0.1)'
+                            })
+                        })
+                    });
+
+                    clickHandler.on('select', function(e) {
+                        if (e.selected.length > 0) {
+                            showInfraProperties(e.selected[0]);
+                            setTimeout(() => clickHandler.getFeatures().clear(), 100);
+                        }
+                    });
+
+                    map.addInteraction(clickHandler);
                 });
 
                 createInfraLegend(grouped);
             }
 
+            function showInfraProperties(feature) {
+                const props = feature.get('properties') || {};
+                const type = feature.get('type') || 'Unknown';
+                const name = feature.get('name') || props.name || '';
+
+                $('#infraType').text(type);
+
+                let html = `
+                    <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Feature Properties</div>
+                    <table class="infra-prop-table">
+                        <tr><td class="label-cell">Type</td><td class="value-cell"><strong>${type}</strong></td></tr>
+                        <tr><td class="label-cell">Name</td><td class="value-cell">${name || '-'}</td></tr>
+                        <tr><td class="label-cell">OSM ID</td><td class="value-cell">${feature.get('osm_id') || props.osm_id || '-'}</td></tr>
+                `;
+
+                // Add all other properties
+                Object.keys(props).forEach(key => {
+                    if (key !== 'type' && key !== 'name' && key !== 'osm_id') {
+                        const val = props[key];
+                        if (val !== null && val !== undefined && val !== '') {
+                            html += `<tr><td class="label-cell">${key.replace(/_/g, ' ').toUpperCase()}</td><td class="value-cell">${val}</td></tr>`;
+                        }
+                    }
+                });
+
+                html += `</table>`;
+
+                // Add geometry info
+                const geom = feature.getGeometry();
+                if (geom) {
+                    const geomType = geom.getType();
+                    html += `
+                        <div class="bld-section-divider mt-3 mb-2"><i class="bi bi-geo me-2"></i>Geometry</div>
+                        <table class="infra-prop-table">
+                            <tr><td class="label-cell">Geometry Type</td><td class="value-cell">${geomType}</td></tr>
+                    `;
+                    if (geomType === 'Point') {
+                        const coords = geom.getCoordinates();
+                        const lonLat = ol.proj.toLonLat(coords);
+                        html += `
+                            <tr><td class="label-cell">Longitude</td><td class="value-cell">${lonLat[0].toFixed(6)}</td></tr>
+                            <tr><td class="label-cell">Latitude</td><td class="value-cell">${lonLat[1].toFixed(6)}</td></tr>
+                        `;
+                    }
+                    html += `</table>`;
+                }
+
+                $('#infraPropertiesContent').html(html);
+                const modal = new bootstrap.Modal(document.getElementById('infraPropertiesModal'));
+                modal.show();
+            }
+
             function createInfraLegend(grouped) {
-                // Remove existing legend
                 $('.infrastructure-legend').remove();
 
                 const legend = document.createElement('div');
@@ -2925,7 +3094,6 @@
 
                 document.getElementById('map').appendChild(legend);
 
-                // Toggle All button
                 $('#toggleAllInfra').on('click', function(e) {
                     e.stopPropagation();
                     const allVisible = Object.values(infraLayers).every(l => l.getVisible());
@@ -2979,6 +3147,15 @@
                             <div class="layer-name">Points</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
+                    </div>
+                </div>
+            `);
+
+            // ─── LABEL TOGGLE BUTTON ───
+            $mapContainer.append(`
+                <div class="custom-label-toggle">
+                    <div class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
+                        <i class="bi bi-fonts"></i>
                     </div>
                 </div>
             `);
@@ -3093,6 +3270,12 @@
             $mapContainer.append(
                 `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`
             );
+
+            // ─── LABEL TOGGLE EVENT ───
+            $(document).on('click', '#labelToggleBtn', function(e) {
+                e.stopPropagation();
+                toggleLabels();
+            });
 
             // ─── LAYER DROPDOWN EVENTS ───
             $(document).on('click', '.layer-toggle-btn', function(e) {
