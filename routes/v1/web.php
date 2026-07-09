@@ -18,7 +18,6 @@ use App\Http\Controllers\TeamManagementController;
 use App\Http\Controllers\InfrastructureController;
 
 Route::prefix('infrastructure')->group(function () {
-    Route::get('/fetch/{wardId}', [InfrastructureController::class, 'fetchInfrastructure']);
     Route::get('/data/{wardId}', [InfrastructureController::class, 'getInfrastructureData']);
     Route::get('/summary/{wardId}', [InfrastructureController::class, 'getInfrastructureSummary']);
     Route::get('/type/{wardId}/{type}', [InfrastructureController::class, 'getFeatureByType']);
