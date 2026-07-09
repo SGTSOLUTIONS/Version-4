@@ -3837,7 +3837,7 @@
                     this.addLegend(grouped);
 
                     // Fit map to features
-                    this.fitToFeatures(geojson.features);
+
                 }
 
                 createLayer(type, features) {
@@ -4108,42 +4108,7 @@
         `;
                 }
 
-                fitToFeatures(features) {
-                    if (!features || features.length === 0) return;
 
-                    const extent = [Infinity, Infinity, -Infinity, -Infinity];
-
-                    features.forEach(feature => {
-                        const geom = feature.geometry;
-                        if (!geom) return;
-
-                        let coords = [];
-                        if (geom.type === 'Point') {
-                            coords = [geom.coordinates];
-                        } else if (geom.type === 'LineString') {
-                            coords = geom.coordinates;
-                        } else if (geom.type === 'Polygon') {
-                            coords = geom.coordinates[0];
-                        }
-
-                        coords.forEach(c => {
-                            const [lon, lat] = c;
-                            if (lon < extent[0]) extent[0] = lon;
-                            if (lat < extent[1]) extent[1] = lat;
-                            if (lon > extent[2]) extent[2] = lon;
-                            if (lat > extent[3]) extent[3] = lat;
-                        });
-                    });
-
-                    if (extent[0] !== Infinity) {
-                        const olExtent = ol.proj.transformExtent(extent, 'EPSG:4326', 'EPSG:3857');
-                        this.map.getView().fit(olExtent, {
-                            padding: [50, 50, 50, 50],
-                            duration: 1000,
-                            maxZoom: 18
-                        });
-                    }
-                }
             }
 
             // Initialize infrastructure manager
