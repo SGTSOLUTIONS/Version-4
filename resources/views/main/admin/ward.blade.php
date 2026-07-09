@@ -499,10 +499,7 @@
                         active: 'bg-success',
                         inactive: 'bg-secondary'
                     } [ward.status] || 'bg-secondary';
-
-                    html += `
-                        <div class="acard">
-                            // <div class="acard-img-wrap">
+      // <div class="acard-img-wrap">
                             //     <img src="${imageUrl}"
                             //          onerror="this.src='${assetBase}images/default-ward.png'">
                             //     <div class="acard-overlay"></div>
@@ -510,6 +507,9 @@
                             //         Ward
                             //     </span>
                             // </div>
+                    html += `
+                        <div class="acard">
+
                             <div class="acard-body">
                                 <div class="acard-meta">
                                     <i class="bi bi-building"></i>
