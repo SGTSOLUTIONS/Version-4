@@ -3013,6 +3013,9 @@
             function toggleDroneLayer() {
                 droneLayer.setVisible(!droneLayer.getVisible());
                 updateLayerUI();
+                if (droneImageryLayer) {
+                    droneImageryLayer.show = droneLayer.getVisible();
+                }
             }
 
             // ─── LABEL TOGGLE ───
@@ -4350,6 +4353,55 @@
             let cesiumViewer = null;
             let cesiumBuildingEntities = [];
             let is3DActive = false;
+            let droneImageryLayer = null;
+
+            // Your polygon/line/point coordinates are stored in EPSG:3857 (Web Mercator),
+            // same as fed straight into ol.geom.Polygon() with no proj transform.
+            // Cesium needs plain lon/lat degrees, so convert via ol.proj.toLonLat().
+            function ringToLonLatFlatArray(ringCoords) {
+                const flat = [];
+                ringCoords.forEach(c => {
+                    const lonlat = ol.proj.toLonLat(c);
+                    flat.push(lonlat[0], lonlat[1]);
+                });
+                return flat;
+            }
+
+            // ─── Add / refresh the drone orthophoto as a georeferenced Cesium imagery layer ───
+            function addDroneImageryTo3D() {
+                if (!cesiumViewer) return;
+
+                // remove any existing drone layer before re-adding (keeps it in sync on refresh)
+                if (droneImageryLayer) {
+                    cesiumViewer.imageryLayers.remove(droneImageryLayer);
+                    droneImageryLayer = null;
+                }
+
+                if (!droneImageURL || droneImageURL === "{{ asset('') }}") return;
+
+                if (!isLatLon) {
+                    console.warn('Drone extent is not lon/lat — cannot place in 3D globe.');
+                    return;
+                }
+
+                const rectangle = Cesium.Rectangle.fromDegrees(
+                    imageExtentRaw[0], // west
+                    imageExtentRaw[1], // south
+                    imageExtentRaw[2], // east
+                    imageExtentRaw[3]  // north
+                );
+
+                const provider = new Cesium.SingleTileImageryProvider({
+                    url: droneImageURL,
+                    rectangle: rectangle
+                });
+
+                droneImageryLayer = cesiumViewer.imageryLayers.addImageryProvider(provider);
+                droneImageryLayer.alpha = 0.9;
+
+                // mirror the 2D toggle's current visibility state
+                droneImageryLayer.show = droneLayer.getVisible();
+            }
 
             function init3DViewer() {
                 if (cesiumViewer) return cesiumViewer;
@@ -4376,23 +4428,15 @@
                     '<div class="cesium-info-box">🧊 3D inspect mode — switch back to 2D to edit</div>'
                 );
 
-                return cesiumViewer;
-            }
+                addDroneImageryTo3D();
 
-            // Your polygon/line/point coordinates are stored in EPSG:3857 (Web Mercator),
-            // same as fed straight into ol.geom.Polygon() with no proj transform.
-            // Cesium needs plain lon/lat degrees, so convert via ol.proj.toLonLat().
-            function ringToLonLatFlatArray(ringCoords) {
-                const flat = [];
-                ringCoords.forEach(c => {
-                    const lonlat = ol.proj.toLonLat(c);
-                    flat.push(lonlat[0], lonlat[1]);
-                });
-                return flat;
+                return cesiumViewer;
             }
 
             function refreshCesiumBuildings() {
                 if (!cesiumViewer) return;
+
+                addDroneImageryTo3D();
 
                 // Clear old entities before re-drawing latest data
                 cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
