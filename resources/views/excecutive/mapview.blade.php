@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet"/>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
 
     <style>
         /* ─── Layout ─── */
@@ -320,6 +320,7 @@
             color: #3b82f6;
             opacity: 0;
         }
+
         .layer-dropdown-item.active .layer-check {
             opacity: 1;
         }
@@ -350,9 +351,17 @@
         }
 
         @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
-            70% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+            }
+
+            70% {
+                box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
         }
 
         .location-toast {
@@ -488,8 +497,15 @@
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
         }
 
         .split-action-btn .close-btn {
@@ -988,13 +1004,33 @@
                 right: 10px;
             }
 
-            .custom-layer-switcher   { top: 10px; }
-            .custom-location-switcher{ top: 58px; }
-            .custom-search-switcher  { top: 106px; }
-            .custom-edit-toggle      { top: 154px; }
-            .custom-label-toggle     { top: 202px; }
-            .custom-legend-toggle    { top: 250px; }
-            .custom-3d-toggle        { top: 298px; }
+            .custom-layer-switcher {
+                top: 10px;
+            }
+
+            .custom-location-switcher {
+                top: 58px;
+            }
+
+            .custom-search-switcher {
+                top: 106px;
+            }
+
+            .custom-edit-toggle {
+                top: 154px;
+            }
+
+            .custom-label-toggle {
+                top: 202px;
+            }
+
+            .custom-legend-toggle {
+                top: 250px;
+            }
+
+            .custom-3d-toggle {
+                top: 298px;
+            }
 
             .layer-toggle-btn,
             .location-toggle-btn,
@@ -1162,10 +1198,10 @@
             bottom: 30px;
             right: 30px;
             z-index: 1000;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
             padding: 12px 16px;
             border-radius: 12px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
             max-height: 400px;
             overflow-y: auto;
             min-width: 180px;
@@ -1248,15 +1284,18 @@
             width: 100%;
             font-size: 0.85rem;
         }
+
         .infra-prop-table td {
             padding: 6px 8px;
             border-bottom: 1px solid #f1f5f9;
         }
+
         .infra-prop-table .label-cell {
             font-weight: 600;
             color: #64748b;
             width: 40%;
         }
+
         .infra-prop-table .value-cell {
             color: #1e293b;
         }
@@ -1333,14 +1372,16 @@
             <div class="stat-icon stat-icon-blue"><i class="bi bi-bounding-box"></i></div>
             <div>
                 <div class="stat-label">Total Building Area</div>
-                <div class="stat-value">{{ number_format($analytics['total_building_area'] ?? 0, 0) }} <span class="stat-sub">sqft</span></div>
+                <div class="stat-value">{{ number_format($analytics['total_building_area'] ?? 0, 0) }} <span
+                        class="stat-sub">sqft</span></div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon stat-icon-green"><i class="bi bi-clipboard-data"></i></div>
             <div>
                 <div class="stat-label">Total Assessment Area</div>
-                <div class="stat-value">{{ number_format($analytics['total_assessment_area'] ?? 0, 0) }} <span class="stat-sub">sqft</span></div>
+                <div class="stat-value">{{ number_format($analytics['total_assessment_area'] ?? 0, 0) }} <span
+                        class="stat-sub">sqft</span></div>
             </div>
         </div>
     </div>
@@ -1377,12 +1418,14 @@
                 <div class="bld-image-strip">
                     <div class="bld-img-wrap">
                         <img id="bv_img1" src="" style="display:none;">
-                        <div id="bv_img1_empty" class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
+                        <div id="bv_img1_empty"
+                            class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
                     <div class="bld-img-wrap">
                         <img id="bv_img2" src="" style="display:none;">
-                        <div id="bv_img2_empty" class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
+                        <div id="bv_img2_empty"
+                            class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
@@ -1636,7 +1679,8 @@
     <div class="modal fade" id="deleteFeatureModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius:16px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.15);">
-                <div class="modal-header" style="background:#fff3f3; border-bottom:1px solid #fecdd3; border-radius:16px 16px 0 0; padding:16px 24px;">
+                <div class="modal-header"
+                    style="background:#fff3f3; border-bottom:1px solid #fecdd3; border-radius:16px 16px 0 0; padding:16px 24px;">
                     <h5 class="modal-title" style="color:#dc2626; font-weight:700; margin:0;">
                         <i class="bi bi-trash3-fill me-2"></i>Delete Feature
                     </h5>
@@ -1667,16 +1711,20 @@
                             style="border-radius:10px; border:1.5px solid #e5e7eb; padding:10px 14px; font-size:0.9rem;">
                         <div id="deleteGisError" class="text-danger mt-1" style="font-size:0.8rem; display:none;"></div>
                     </div>
-                    <div id="deleteConfirmBox" style="display:none; background:#fff3f3; border:1px solid #fecdd3; border-radius:10px; padding:12px 14px;">
+                    <div id="deleteConfirmBox"
+                        style="display:none; background:#fff3f3; border:1px solid #fecdd3; border-radius:10px; padding:12px 14px;">
                         <p class="mb-0" style="font-size:0.82rem; color:#dc2626;">
                             <i class="bi bi-exclamation-triangle-fill me-1"></i>
                             This will <strong>permanently delete</strong> this feature and cannot be undone.
                         </p>
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:10px; font-weight:600; padding:8px 20px;">Cancel</button>
-                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger" style="border-radius:10px; font-weight:600; padding:8px 24px; min-width:120px;">
+                <div class="modal-footer"
+                    style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                        style="border-radius:10px; font-weight:600; padding:8px 20px;">Cancel</button>
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger"
+                        style="border-radius:10px; font-weight:600; padding:8px 24px; min-width:120px;">
                         <i class="bi bi-trash3 me-1"></i>Delete
                     </button>
                 </div>
@@ -1925,29 +1973,47 @@
                         return new ol.style.Style({
                             image: new ol.style.Circle({
                                 radius: 8,
-                                fill: new ol.style.Fill({ color }),
-                                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+                                fill: new ol.style.Fill({
+                                    color
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: '#ffffff',
+                                    width: 2
+                                })
                             }),
                             text: showLabels ? new ol.style.Text({
                                 text: name,
                                 font: '12px Arial',
                                 offsetY: -15,
-                                fill: new ol.style.Fill({ color: '#000000' }),
-                                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+                                fill: new ol.style.Fill({
+                                    color: '#000000'
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: '#ffffff',
+                                    width: 2
+                                })
                             }) : undefined
                         });
                     }
 
                     if (geometryType === 'LineString') {
                         return new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color, width: 4 })
+                            stroke: new ol.style.Stroke({
+                                color,
+                                width: 4
+                            })
                         });
                     }
 
                     if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
                         return new ol.style.Style({
-                            fill: new ol.style.Fill({ color: color + '33' }),
-                            stroke: new ol.style.Stroke({ color, width: 2 })
+                            fill: new ol.style.Fill({
+                                color: color + '33'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color,
+                                width: 2
+                            })
                         });
                     }
                 };
@@ -1982,8 +2048,10 @@
                 lineSource.clear();
                 lines.forEach(l => {
                     try {
-                        let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l.coordinates;
-                        while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
+                        let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l
+                            .coordinates;
+                        while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][
+                                0])) {
                             coords = coords[0];
                         }
                         const isValid = coords.length >= 2 && coords.every(c =>
@@ -2083,13 +2151,19 @@
                 zIndex: 999
             });
 
-            let watchId = null, locationFeature = null, accuracyFeature = null;
-            let liveActive = false, trackActive = false;
+            let watchId = null,
+                locationFeature = null,
+                accuracyFeature = null;
+            let liveActive = false,
+                trackActive = false;
             let currentLocation = null;
 
             function updateLiveMarker(lon, lat, accuracy) {
                 const coords = ol.proj.fromLonLat([lon, lat]);
-                currentLocation = { lon, lat };
+                currentLocation = {
+                    lon,
+                    lat
+                };
                 if (!locationFeature) {
                     locationFeature = new ol.Feature({
                         geometry: new ol.geom.Point(coords)
@@ -2135,7 +2209,11 @@
             }
 
             function onPosition(position) {
-                const { longitude, latitude, accuracy } = position.coords;
+                const {
+                    longitude,
+                    latitude,
+                    accuracy
+                } = position.coords;
                 updateLiveMarker(longitude, latitude, accuracy);
                 if (trackActive) {
                     map.getView().animate({
@@ -2231,7 +2309,8 @@
                 }
                 const anyActive = liveActive || trackActive;
                 $('#locationToggleBtn').toggleClass('active-location', anyActive);
-                $('#locationToggleBtn i').toggleClass('bi-geo-alt-fill', anyActive).toggleClass('bi-geo-alt', !anyActive);
+                $('#locationToggleBtn i').toggleClass('bi-geo-alt-fill', anyActive).toggleClass('bi-geo-alt', !
+                    anyActive);
             }
 
             // ─── MAP ───
@@ -2247,7 +2326,8 @@
             });
 
             // ─── INTERACTIONS ───
-            let drawInteraction = null, selectInteraction = null;
+            let drawInteraction = null,
+                selectInteraction = null;
             let routeLayer = null;
             let selectedFeatureForSplit = null;
             let modifyInteraction = null;
@@ -2297,7 +2377,10 @@
                 if (type === 'success') icon = 'success';
                 else if (type === 'error') icon = 'error';
                 else if (type === 'warning') icon = 'warning';
-                Toast.fire({ icon, title: message });
+                Toast.fire({
+                    icon,
+                    title: message
+                });
             }
 
             // ─── Disable interactions ───
@@ -2406,7 +2489,8 @@
                 let amenHtml = '';
                 amenities.forEach(([label, val]) => {
                     if (val === 'Yes') {
-                        amenHtml += `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                        amenHtml +=
+                            `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
                     }
                 });
                 $('#bv_amenities').html(amenHtml || '<span class="text-muted small">No amenities recorded</span>');
@@ -2416,14 +2500,16 @@
 
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
                 if (item.image) {
-                    $('#bv_img1').attr('src', item.image.startsWith('http') ? item.image : assetUrl + item.image).show();
+                    $('#bv_img1').attr('src', item.image.startsWith('http') ? item.image : assetUrl + item.image)
+                        .show();
                     $('#bv_img1_empty').hide();
                 } else {
                     $('#bv_img1').hide();
                     $('#bv_img1_empty').show();
                 }
                 if (item.image2) {
-                    $('#bv_img2').attr('src', item.image2.startsWith('http') ? item.image2 : assetUrl + item.image2).show();
+                    $('#bv_img2').attr('src', item.image2.startsWith('http') ? item.image2 : assetUrl + item.image2)
+                        .show();
                     $('#bv_img2_empty').hide();
                 } else {
                     $('#bv_img2').hide();
@@ -2444,7 +2530,10 @@
                 $.ajax({
                     url: '/commissioner/get-point-details',
                     method: 'GET',
-                    data: { gisid: gisid, ward_id: {{ $ward->id }} },
+                    data: {
+                        gisid: gisid,
+                        ward_id: {{ $ward->id }}
+                    },
                     success: function(res) {
                         if (res.status) {
                             callback(res.data);
@@ -2500,7 +2589,8 @@
                     const qcFilled = [pd.qcusage, pd.qcsqfeet, pd.qc_remarks]
                         .filter(val => val !== null && val !== '' && val !== undefined).length;
                     const qcClass = qcFilled === 3 ? 'complete' : qcFilled === 0 ? 'empty' : 'partial';
-                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' : 'QC Partial';
+                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' :
+                        'QC Partial';
 
                     html += `
                         <div class="point-data-card" data-id="${pd.id}">
@@ -2600,20 +2690,20 @@
                                     <div class="tax-card">
                                         <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
                                         ${ptList.length ? ptList.map(pt => `
-                                            <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
-                                                <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
-                                            </div>
-                                        `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
+                                                <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                                    <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                                </div>
+                                            `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
                                     </div>
                                 </div>
                             </div>
@@ -2658,7 +2748,8 @@
 
             $(document).on('click', '#saveQcBtn', function() {
                 const id = $('#qc_point_data_id').val();
-                const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
+                const $btn = $(this).prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm"></span> Saving...');
 
                 $.ajax({
                     url: `/point-data/${id}/qc`,
@@ -2685,10 +2776,12 @@
                         }
                     },
                     error: function(xhr) {
-                        showFlashMessage(xhr.responseJSON?.message || 'Failed to save QC data.', 'error');
+                        showFlashMessage(xhr.responseJSON?.message || 'Failed to save QC data.',
+                            'error');
                     },
                     complete: function() {
-                        $btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save QC');
+                        $btn.prop('disabled', false).html(
+                            '<i class="bi bi-save me-1"></i>Save QC');
                     }
                 });
             });
@@ -2801,11 +2894,14 @@
                             geometryType: 'polygon',
                             searchText: `${poly.gisid} ${poly.sqfeet} building`
                         });
-                    } catch (e) { console.error('Error parsing polygon:', e); }
+                    } catch (e) {
+                        console.error('Error parsing polygon:', e);
+                    }
                 });
                 lines.forEach(line => {
                     try {
-                        const coords = typeof line.coordinates === 'string' ? JSON.parse(line.coordinates) : line.coordinates;
+                        const coords = typeof line.coordinates === 'string' ? JSON.parse(line.coordinates) :
+                            line.coordinates;
                         searchIndex.push({
                             id: line.gisid,
                             type: 'line',
@@ -2815,7 +2911,9 @@
                             geometryType: 'line',
                             searchText: `${line.gisid} ${line.road_name || ''} road`
                         });
-                    } catch (e) { console.error('Error parsing line:', e); }
+                    } catch (e) {
+                        console.error('Error parsing line:', e);
+                    }
                 });
                 points.forEach(point => {
                     try {
@@ -2828,7 +2926,9 @@
                             geometryType: 'point',
                             searchText: `${point.gisid} point`
                         });
-                    } catch (e) { console.error('Error parsing point:', e); }
+                    } catch (e) {
+                        console.error('Error parsing point:', e);
+                    }
                 });
                 pointDatas.forEach(pd => {
                     try {
@@ -2843,7 +2943,9 @@
                             assessment: pd.assessment,
                             searchText: `${pd.gisid} ${pd.assessment} ${pd.owner_name} ${pd.phone_number}`
                         });
-                    } catch (e) { console.error('Error parsing pointData:', e); }
+                    } catch (e) {
+                        console.error('Error parsing pointData:', e);
+                    }
                 });
             }
 
@@ -2901,7 +3003,10 @@
 
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
-                        currentLocation = { lon: pos.coords.longitude, lat: pos.coords.latitude };
+                        currentLocation = {
+                            lon: pos.coords.longitude,
+                            lat: pos.coords.latitude
+                        };
                         callback(currentLocation);
                     },
                     function(error) {
@@ -2917,7 +3022,8 @@
             }
 
             function getRoute(startLon, startLat, endLon, endLat) {
-                const url = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
+                const url =
+                    `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
                 showToast('🗺️ Calculating route...', 2000);
                 fetch(url).then(r => r.json()).then(data => {
                     if (!data.routes || !data.routes.length) {
@@ -3107,21 +3213,28 @@
                         try {
                             switch (feature.geometry.type) {
                                 case 'Point':
-                                    geometry = new ol.geom.Point(ol.proj.fromLonLat(feature.geometry.coordinates));
+                                    geometry = new ol.geom.Point(ol.proj.fromLonLat(feature.geometry
+                                        .coordinates));
                                     break;
                                 case 'LineString':
-                                    geometry = new ol.geom.LineString(feature.geometry.coordinates.map(c => ol.proj.fromLonLat(c)));
+                                    geometry = new ol.geom.LineString(feature.geometry.coordinates
+                                        .map(c => ol.proj.fromLonLat(c)));
                                     break;
                                 case 'Polygon':
-                                    geometry = new ol.geom.Polygon([feature.geometry.coordinates[0].map(c => ol.proj.fromLonLat(c))]);
+                                    geometry = new ol.geom.Polygon([feature.geometry.coordinates[0]
+                                        .map(c => ol.proj.fromLonLat(c))
+                                    ]);
                                     break;
                                 case 'MultiPolygon':
                                     geometry = new ol.geom.MultiPolygon(
-                                        feature.geometry.coordinates.map(poly => poly[0].map(c => ol.proj.fromLonLat(c)))
+                                        feature.geometry.coordinates.map(poly => poly[0].map(
+                                            c => ol.proj.fromLonLat(c)))
                                     );
                                     break;
                             }
-                        } catch (e) { return; }
+                        } catch (e) {
+                            return;
+                        }
 
                         if (!geometry) return;
                         const olFeature = new ol.Feature({
@@ -3131,7 +3244,8 @@
                             osm_id: feature.properties.osm_id || '',
                             properties: feature.properties
                         });
-                        olFeature.setId(feature.properties.osm_id || feature.properties.id || Math.random().toString());
+                        olFeature.setId(feature.properties.osm_id || feature.properties.id || Math
+                            .random().toString());
                         source.addFeature(olFeature);
                     });
 
@@ -3191,7 +3305,8 @@
                     if (key !== 'type' && key !== 'name' && key !== 'osm_id') {
                         const val = props[key];
                         if (val !== null && val !== undefined && val !== '') {
-                            html += `<tr><td class="label-cell">${key.replace(/_/g, ' ').toUpperCase()}</td><td class="value-cell">${val}</td></tr>`;
+                            html +=
+                                `<tr><td class="label-cell">${key.replace(/_/g, ' ').toUpperCase()}</td><td class="value-cell">${val}</td></tr>`;
                         }
                     }
                 });
@@ -3567,7 +3682,8 @@
                 $('.layer-dropdown').removeClass('show');
                 $('#editDropdown').removeClass('show');
                 $('#editToggleBtn').removeClass('active-edit');
-                if ($('#searchDropdown').hasClass('show')) setTimeout(() => $('#gisSearchInput').focus(), 100);
+                if ($('#searchDropdown').hasClass('show')) setTimeout(() => $('#gisSearchInput').focus(),
+                    100);
             });
 
             $(document).on('click', '.search-tab-btn', function() {
@@ -3591,7 +3707,8 @@
                 } else {
                     results.slice(0, 10).forEach(item => {
                         const displayTitle = item.type === 'pointdata' ?
-                            `${item.title} | Owner: ${item.subtitle.split('|')[1] || ''}` : item.title;
+                            `${item.title} | Owner: ${item.subtitle.split('|')[1] || ''}` : item
+                            .title;
                         const displaySubtitle = item.type === 'pointdata' ?
                             `GIS ID: ${item.point_gisid || 'N/A'}` : item.subtitle;
                         const icon = item.geometryType === 'point' ? 'geo-alt' :
@@ -3655,7 +3772,8 @@
                                 <div class="search-result-subtitle">GIS ID: ${pd.point_gisid || 'N/A'} | Phone: ${pd.phone_number || 'N/A'}</div>
                             </div>`;
                     });
-                    $('#filterResults').html(html || '<div class="p-2 text-muted">No matches</div>');
+                    $('#filterResults').html(html ||
+                    '<div class="p-2 text-muted">No matches</div>');
                 });
             });
 
@@ -4293,7 +4411,8 @@
                 }
 
                 const $btn = $(this);
-                $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting…').prop('disabled', true);
+                $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting…').prop(
+                    'disabled', true);
 
                 $.ajax({
                     url: '/delete-feature',
@@ -4301,11 +4420,16 @@
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    data: { type, gisid },
+                    data: {
+                        type,
+                        gisid
+                    },
                     success: function(response) {
-                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteFeatureModal'));
+                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                            'deleteFeatureModal'));
                         if (deleteModal) deleteModal.hide();
-                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled', false);
+                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
+                            false);
 
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
@@ -4324,8 +4448,10 @@
                         });
                     },
                     error: function(xhr) {
-                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled', false);
-                        const msg = xhr.responseJSON?.message || `No ${type} found with GIS ID: ${gisid}`;
+                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
+                            false);
+                        const msg = xhr.responseJSON?.message ||
+                            `No ${type} found with GIS ID: ${gisid}`;
                         $('#deleteGisError').text(msg).show();
                     }
                 });
@@ -4333,8 +4459,10 @@
 
             // ─── CLOSE DROPDOWNS ───
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass('show');
-                if (!$(e.target).closest('.custom-location-switcher').length) $('#locationDropdown').removeClass('show');
+                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass(
+                    'show');
+                if (!$(e.target).closest('.custom-location-switcher').length) $('#locationDropdown')
+                    .removeClass('show');
                 if (!$(e.target).closest('.custom-search-switcher').length) {
                     $('#searchDropdown').removeClass('show');
                     $('#searchToggleBtn').removeClass('active-search');
@@ -4388,7 +4516,7 @@
                     imageExtentRaw[0], // west
                     imageExtentRaw[1], // south
                     imageExtentRaw[2], // east
-                    imageExtentRaw[3]  // north
+                    imageExtentRaw[3] // north
                 );
 
                 const provider = new Cesium.SingleTileImageryProvider({
@@ -4409,7 +4537,7 @@
                 window.CESIUM_BASE_URL = 'https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/';
 
                 cesiumViewer = new Cesium.Viewer('cesiumContainer', {
-                    animation: false,
+                    animation: true,
                     timeline: false,
                     geocoder: false,
                     homeButton: false,
@@ -4452,12 +4580,14 @@
                         // const floors = polygonData?.number_floor ? parseInt(polygonData.number_floor) || 1 : 1;
                         // const height = Math.max(3, floors) * 3;
                         const floors = Math.floor(Math.random() * 7); // 0 to 6
-const height = Math.max(3, floors) * 3;
+                        const height = Math.max(3, floors) * 3;
                         const isMapped = !!polygonData;
 
-                        const color = isMapped
-                            ? Cesium.Color.fromCssColorString('#dc2626').withAlpha(0.75)  // red = has building data (matches your 2D style)
-                            : Cesium.Color.fromCssColorString('#2563eb').withAlpha(0.55); // blue = unmapped
+                        const color = isMapped ?
+                            Cesium.Color.fromCssColorString('#dc2626').withAlpha(
+                            0.75) // red = has building data (matches your 2D style)
+                            :
+                            Cesium.Color.fromCssColorString('#2563eb').withAlpha(0.55); // blue = unmapped
 
                         const entity = cesiumViewer.entities.add({
                             name: 'Building ' + poly.gisid,
