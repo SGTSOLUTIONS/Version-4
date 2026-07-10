@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet"/>
 
     <style>
         /* ─── Layout ─── */
@@ -36,6 +37,7 @@
             border: 1px solid #e5e7eb;
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            position: relative;
         }
 
         .map-header {
@@ -82,6 +84,65 @@
 
         .map-card.fullscreen-mode #map {
             height: calc(100vh - 5px);
+        }
+
+        /* ─── 3D View ─── */
+        #cesiumContainer {
+            display: none;
+            width: 100%;
+            height: 800px;
+        }
+
+        .map-card.fullscreen-mode #cesiumContainer {
+            height: calc(100vh - 5px);
+        }
+
+        .custom-3d-toggle {
+            position: absolute;
+            right: 30px;
+            top: 358px;
+            z-index: 1000;
+        }
+
+        .threed-toggle-btn {
+            width: 44px;
+            height: 44px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid #e5e7eb;
+            color: #1e293b;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+        }
+
+        .threed-toggle-btn:hover {
+            background: #f8fafc;
+            transform: scale(1.02);
+        }
+
+        .threed-toggle-btn.active-3d {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+
+        .cesium-info-box {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 999;
+            background: rgba(15, 23, 42, 0.85);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            max-width: 260px;
+            line-height: 1.5;
         }
 
         /* ─── Controls ─── */
@@ -922,7 +983,8 @@
             .custom-search-switcher,
             .custom-edit-toggle,
             .custom-label-toggle,
-            .custom-legend-toggle {
+            .custom-legend-toggle,
+            .custom-3d-toggle {
                 right: 10px;
             }
 
@@ -932,6 +994,7 @@
             .custom-edit-toggle      { top: 154px; }
             .custom-label-toggle     { top: 202px; }
             .custom-legend-toggle    { top: 250px; }
+            .custom-3d-toggle        { top: 298px; }
 
             .layer-toggle-btn,
             .location-toggle-btn,
@@ -939,7 +1002,8 @@
             .edit-toggle-btn,
             .label-toggle-btn,
             .legend-toggle-btn,
-            .fullscreen-btn {
+            .fullscreen-btn,
+            .threed-toggle-btn {
                 width: 38px;
                 height: 38px;
                 font-size: 1rem;
@@ -1290,6 +1354,7 @@
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
         </div>
         <div id="map"></div>
+        <div id="cesiumContainer"></div>
     </div>
 
     <!-- ============================================================ -->
@@ -1652,6 +1717,7 @@
     <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Cesium.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -3378,6 +3444,15 @@
                 `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`
             );
 
+            // ─── 3D TOGGLE BUTTON (attached to mapCard so it survives #map being hidden) ───
+            $mapCard.append(`
+                <div class="custom-3d-toggle">
+                    <div class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
+                        <i class="bi bi-box"></i>
+                    </div>
+                </div>
+            `);
+
             // ─── LABEL TOGGLE EVENT ───
             $(document).on('click', '#labelToggleBtn', function(e) {
                 e.stopPropagation();
@@ -3596,7 +3671,10 @@
                     $icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
                     isFullscreen = false;
                 }
-                setTimeout(() => map.updateSize(), 100);
+                setTimeout(() => {
+                    map.updateSize();
+                    if (is3DActive && cesiumViewer) cesiumViewer.resize();
+                }, 100);
             });
 
             // ─── EDIT TOGGLE EVENTS ───
@@ -4264,6 +4342,135 @@
                 }
             });
 
+            // ════════════════════════════════════════════════════════════
+            // 3D VIEW TOGGLE — Cesium globe, mirrors the editable 2D data
+            // No API key / token required (OpenStreetMap imagery, flat terrain)
+            // Editing tools remain 2D-only; 3D is view/inspect only.
+            // ════════════════════════════════════════════════════════════
+            let cesiumViewer = null;
+            let cesiumBuildingEntities = [];
+            let is3DActive = false;
+
+            function init3DViewer() {
+                if (cesiumViewer) return cesiumViewer;
+
+                window.CESIUM_BASE_URL = 'https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/';
+
+                cesiumViewer = new Cesium.Viewer('cesiumContainer', {
+                    animation: false,
+                    timeline: false,
+                    geocoder: false,
+                    homeButton: false,
+                    sceneModePicker: false,
+                    navigationHelpButton: false,
+                    baseLayerPicker: false,
+                    fullscreenButton: false,
+                    // No ion token needed — open imagery + flat ellipsoid terrain
+                    imageryProvider: new Cesium.OpenStreetMapImageryProvider({
+                        url: 'https://a.tile.openstreetmap.org/'
+                    }),
+                    terrainProvider: new Cesium.EllipsoidTerrainProvider()
+                });
+
+                cesiumViewer.container.insertAdjacentHTML('beforeend',
+                    '<div class="cesium-info-box">🧊 3D inspect mode — switch back to 2D to edit</div>'
+                );
+
+                return cesiumViewer;
+            }
+
+            // Your polygon/line/point coordinates are stored in EPSG:3857 (Web Mercator),
+            // same as fed straight into ol.geom.Polygon() with no proj transform.
+            // Cesium needs plain lon/lat degrees, so convert via ol.proj.toLonLat().
+            function ringToLonLatFlatArray(ringCoords) {
+                const flat = [];
+                ringCoords.forEach(c => {
+                    const lonlat = ol.proj.toLonLat(c);
+                    flat.push(lonlat[0], lonlat[1]);
+                });
+                return flat;
+            }
+
+            function refreshCesiumBuildings() {
+                if (!cesiumViewer) return;
+
+                // Clear old entities before re-drawing latest data
+                cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
+                cesiumBuildingEntities = [];
+
+                polygons.forEach(poly => {
+                    try {
+                        const coords = JSON.parse(poly.coordinates); // outer ring, EPSG:3857
+                        const flat = ringToLonLatFlatArray(coords);
+                        if (flat.length < 6) return; // need at least 3 points
+
+                        const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
+                        const floors = polygonData?.number_floor ? parseInt(polygonData.number_floor) || 1 : 1;
+                        const height = Math.max(3, floors) * 3; // ~3m per floor, real data-driven
+                        const isMapped = !!polygonData;
+
+                        const color = isMapped
+                            ? Cesium.Color.fromCssColorString('#dc2626').withAlpha(0.75)  // red = has building data (matches your 2D style)
+                            : Cesium.Color.fromCssColorString('#2563eb').withAlpha(0.55); // blue = unmapped
+
+                        const entity = cesiumViewer.entities.add({
+                            name: 'Building ' + poly.gisid,
+                            polygon: {
+                                hierarchy: Cesium.Cartesian3.fromDegreesArray(flat),
+                                height: 0,
+                                extrudedHeight: height,
+                                material: color,
+                                outline: true,
+                                outlineColor: Cesium.Color.WHITE,
+                                outlineWidth: 1
+                            },
+                            description: `
+                                <b>GIS ID:</b> ${poly.gisid}<br>
+                                <b>Area:</b> ${poly.sqfeet || 0} sqft<br>
+                                <b>Floors:</b> ${floors}<br>
+                                <b>Status:</b> ${isMapped ? 'Mapped' : 'Unmapped'}
+                            `
+                        });
+
+                        cesiumBuildingEntities.push(entity);
+                    } catch (e) {
+                        console.error('Cesium build error for gisid', poly.gisid, e);
+                    }
+                });
+
+                if (cesiumBuildingEntities.length) {
+                    cesiumViewer.zoomTo(cesiumViewer.entities);
+                }
+            }
+
+            function toggle3DView() {
+                is3DActive = !is3DActive;
+                $('#threeDToggleBtn').toggleClass('active-3d', is3DActive);
+                $('#threeDToggleBtn i').toggleClass('bi-box', !is3DActive).toggleClass('bi-badge-3d', is3DActive);
+
+                if (is3DActive) {
+                    // Turn off any active edit mode before leaving 2D
+                    disableAllInteractions();
+                    setNoneMode();
+
+                    $('#map').hide();
+                    $('#cesiumContainer').show();
+                    init3DViewer();
+                    refreshCesiumBuildings();
+                    showToast('🧊 3D View — switch back to 2D to edit', 2500);
+                } else {
+                    $('#cesiumContainer').hide();
+                    $('#map').show();
+                    setTimeout(() => map.updateSize(), 100);
+                    showToast('🗺️ Back to 2D editable view', 1500);
+                }
+            }
+
+            $(document).on('click', '#threeDToggleBtn', function(e) {
+                e.stopPropagation();
+                toggle3DView();
+            });
+
             // ─── INIT ───
             buildSearchIndex();
             updateLayerUI();
@@ -4277,7 +4484,7 @@
             // Load infrastructure
             loadInfrastructure({{ $ward->id }});
 
-            console.log('✅ Executive GIS Dashboard ready');
+            console.log('✅ Executive GIS Dashboard ready (2D + 3D)');
         });
     </script>
 @endpush
