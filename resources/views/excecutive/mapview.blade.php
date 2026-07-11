@@ -4448,10 +4448,15 @@
                         const flat = ringToLonLatFlatArray(coords);
                         if (flat.length < 6) return; // need at least 3 points
 
-                        const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
-                        const floors = polygonData?.number_floor ? parseInt(polygonData.number_floor) || 1 : 1;
-                        const height = Math.max(3, floors) * 3; // ~3m per floor, real data-driven
-                        const isMapped = !!polygonData;
+                      const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
+
+                            const floors = polygonData?.number_floor
+                                ? parseInt(polygonData.number_floor) || 1
+                                : Math.floor(Math.random() * 7); // 0-6
+
+                            const height = Math.max(1, floors) * 3;
+
+                            const isMapped = !!polygonData;
 
                         const color = isMapped
                             ? Cesium.Color.fromCssColorString('#dc2626').withAlpha(0.75)  // red = has building data (matches your 2D style)
