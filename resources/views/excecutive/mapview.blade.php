@@ -98,59 +98,6 @@
             height: calc(100vh - 5px);
         }
 
-        .custom-3d-toggle {
-            position: absolute;
-            right: 30px;
-            top: 415px;
-            z-index: 1000;
-        }
-
-        .map-card.fullscreen-mode .custom-3d-toggle {
-            top: 20px;
-            right: 80px;
-        }
-
-        .threed-toggle-btn {
-            width: 44px;
-            height: 44px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: 1px solid #e5e7eb;
-            color: #1e293b;
-            font-size: 1.2rem;
-            transition: all 0.2s ease;
-        }
-
-        .threed-toggle-btn:hover {
-            background: #f8fafc;
-            transform: scale(1.02);
-        }
-
-        .threed-toggle-btn.active-3d {
-            background: #eff6ff;
-            border-color: #3b82f6;
-            color: #2563eb;
-        }
-
-        .cesium-info-box {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            z-index: 999;
-            background: rgba(15, 23, 42, 0.85);
-            color: white;
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 12px;
-            max-width: 260px;
-            line-height: 1.5;
-        }
-
         /* ─── Controls ─── */
         .custom-layer-switcher {
             position: absolute;
@@ -160,21 +107,11 @@
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
 
-        .map-card.fullscreen-mode .custom-layer-switcher {
-            top: 10px;
-            right: 10px;
-        }
-
         .custom-location-switcher {
             position: absolute;
             right: 30px;
             top: 74px;
             z-index: 1000;
-        }
-
-        .map-card.fullscreen-mode .custom-location-switcher {
-            top: 58px;
-            right: 10px;
         }
 
         .custom-search-switcher {
@@ -184,21 +121,11 @@
             z-index: 1000;
         }
 
-        .map-card.fullscreen-mode .custom-search-switcher {
-            top: 106px;
-            right: 10px;
-        }
-
         .custom-edit-toggle {
             position: absolute;
             right: 30px;
             top: 190px;
             z-index: 1000;
-        }
-
-        .map-card.fullscreen-mode .custom-edit-toggle {
-            top: 154px;
-            right: 10px;
         }
 
         .custom-label-toggle {
@@ -208,11 +135,6 @@
             z-index: 1000;
         }
 
-        .map-card.fullscreen-mode .custom-label-toggle {
-            top: 202px;
-            right: 10px;
-        }
-
         .custom-legend-toggle {
             position: absolute;
             right: 30px;
@@ -220,21 +142,12 @@
             z-index: 1000;
         }
 
-        .map-card.fullscreen-mode .custom-legend-toggle {
-            top: 250px;
-            right: 10px;
-        }
-
         .custom-3d-toggle {
             position: absolute;
             right: 30px;
             top: 358px;
             z-index: 1000;
-        }
-
-        .map-card.fullscreen-mode .custom-3d-toggle {
-            top: 298px;
-            right: 10px;
+            display: block;
         }
 
         .fullscreen-btn {
@@ -262,10 +175,68 @@
             transform: scale(1.02);
         }
 
+        /* ─── Fullscreen Mode Overrides ─── */
+        .map-card.fullscreen-mode .custom-layer-switcher {
+            top: 10px;
+            right: 10px;
+        }
+
+        .map-card.fullscreen-mode .custom-location-switcher {
+            top: 58px;
+            right: 10px;
+        }
+
+        .map-card.fullscreen-mode .custom-search-switcher {
+            top: 106px;
+            right: 10px;
+        }
+
+        .map-card.fullscreen-mode .custom-edit-toggle {
+            top: 154px;
+            right: 10px;
+        }
+
+        .map-card.fullscreen-mode .custom-label-toggle {
+            top: 202px;
+            right: 10px;
+        }
+
+        .map-card.fullscreen-mode .custom-legend-toggle {
+            top: 250px;
+            right: 10px;
+        }
+
+        .map-card.fullscreen-mode .custom-3d-toggle {
+            top: 298px;
+            right: 10px;
+            display: block !important;
+            z-index: 1001;
+        }
+
         .map-card.fullscreen-mode .fullscreen-btn {
             bottom: 20px;
             right: 20px;
             z-index: 10000;
+        }
+
+        .map-card.fullscreen-mode .layer-toggle-btn,
+        .map-card.fullscreen-mode .location-toggle-btn,
+        .map-card.fullscreen-mode .search-toggle-btn,
+        .map-card.fullscreen-mode .edit-toggle-btn,
+        .map-card.fullscreen-mode .label-toggle-btn,
+        .map-card.fullscreen-mode .legend-toggle-btn,
+        .map-card.fullscreen-mode .threed-toggle-btn {
+            width: 38px;
+            height: 38px;
+            font-size: 1rem;
+            border-radius: 10px;
+        }
+
+        .map-card.fullscreen-mode .layer-dropdown,
+        .map-card.fullscreen-mode .location-dropdown,
+        .map-card.fullscreen-mode .search-dropdown,
+        .map-card.fullscreen-mode .edit-dropdown {
+            min-width: 200px;
         }
 
         .layer-toggle-btn,
@@ -273,7 +244,8 @@
         .search-toggle-btn,
         .edit-toggle-btn,
         .label-toggle-btn,
-        .legend-toggle-btn {
+        .legend-toggle-btn,
+        .threed-toggle-btn {
             width: 44px;
             height: 44px;
             background: white;
@@ -289,24 +261,13 @@
             font-size: 1.2rem;
         }
 
-        .map-card.fullscreen-mode .layer-toggle-btn,
-        .map-card.fullscreen-mode .location-toggle-btn,
-        .map-card.fullscreen-mode .search-toggle-btn,
-        .map-card.fullscreen-mode .edit-toggle-btn,
-        .map-card.fullscreen-mode .label-toggle-btn,
-        .map-card.fullscreen-mode .legend-toggle-btn {
-            width: 38px;
-            height: 38px;
-            font-size: 1rem;
-            border-radius: 10px;
-        }
-
         .layer-toggle-btn:hover,
         .location-toggle-btn:hover,
         .search-toggle-btn:hover,
         .edit-toggle-btn:hover,
         .label-toggle-btn:hover,
         .legend-toggle-btn:hover,
+        .threed-toggle-btn:hover,
         .fullscreen-btn:hover {
             background: #f8fafc;
             transform: scale(1.02);
@@ -333,6 +294,12 @@
             color: #2563eb;
         }
 
+        .threed-toggle-btn.active-3d {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+
         .layer-dropdown,
         .location-dropdown,
         .search-dropdown,
@@ -351,13 +318,6 @@
             overflow: hidden;
             max-height: 0;
             min-width: 240px;
-        }
-
-        .map-card.fullscreen-mode .layer-dropdown,
-        .map-card.fullscreen-mode .location-dropdown,
-        .map-card.fullscreen-mode .search-dropdown,
-        .map-card.fullscreen-mode .edit-dropdown {
-            min-width: 200px;
         }
 
         .layer-dropdown.show,
@@ -473,6 +433,20 @@
         .location-toast.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
+        }
+
+        .cesium-info-box {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 999;
+            background: rgba(15, 23, 42, 0.85);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            max-width: 260px;
+            line-height: 1.5;
         }
 
         /* ─── Search ─── */
@@ -1063,95 +1037,6 @@
             color: #1e293b;
         }
 
-        @media (max-width: 768px) {
-            #map {
-                height: 600px;
-            }
-
-            .bld-image-strip {
-                height: 150px;
-            }
-
-            .bld-summary-card {
-                flex: 1 1 45%;
-            }
-
-            .point-data-card-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .bld-modal-footer {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .point-data-card-header {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .point-data-card-actions {
-                justify-content: flex-start;
-            }
-
-            .custom-layer-switcher,
-            .custom-location-switcher,
-            .custom-search-switcher,
-            .custom-edit-toggle,
-            .custom-label-toggle,
-            .custom-legend-toggle,
-            .custom-3d-toggle {
-                right: 10px;
-            }
-
-            .custom-layer-switcher   { top: 10px; }
-            .custom-location-switcher{ top: 58px; }
-            .custom-search-switcher  { top: 106px; }
-            .custom-edit-toggle      { top: 154px; }
-            .custom-label-toggle     { top: 202px; }
-            .custom-legend-toggle    { top: 250px; }
-            .custom-3d-toggle        { top: 298px; }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .edit-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .fullscreen-btn,
-            .threed-toggle-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 1rem;
-                border-radius: 10px;
-            }
-
-            .search-dropdown {
-                width: min(320px, calc(100vw - 40px));
-            }
-
-            .infrastructure-legend {
-                left: 10px;
-                right: 10px;
-                bottom: 10px;
-                width: auto;
-                max-width: none;
-                min-width: 0;
-                max-height: 45vh;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .infrastructure-legend {
-                max-height: 40vh;
-                font-size: 11px;
-            }
-
-            .infrastructure-legend .legend-title {
-                font-size: 13px;
-            }
-        }
-
         /* ─── Ward Analytics Strip ─── */
         .stat-strip {
             display: grid;
@@ -1233,18 +1118,6 @@
             font-size: .72rem;
             font-weight: 600;
             color: #94a3b8;
-        }
-
-        @media (max-width: 992px) {
-            .stat-strip {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 576px) {
-            .stat-strip {
-                grid-template-columns: 1fr;
-            }
         }
 
         /* ─── Per-building variation badge in modal ─── */
@@ -1374,6 +1247,107 @@
         }
         .infra-prop-table .value-cell {
             color: #1e293b;
+        }
+
+        @media (max-width: 768px) {
+            #map {
+                height: 600px;
+            }
+
+            .bld-image-strip {
+                height: 150px;
+            }
+
+            .bld-summary-card {
+                flex: 1 1 45%;
+            }
+
+            .point-data-card-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .bld-modal-footer {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .point-data-card-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .point-data-card-actions {
+                justify-content: flex-start;
+            }
+
+            .custom-layer-switcher,
+            .custom-location-switcher,
+            .custom-search-switcher,
+            .custom-edit-toggle,
+            .custom-label-toggle,
+            .custom-legend-toggle,
+            .custom-3d-toggle {
+                right: 10px;
+            }
+
+            .custom-layer-switcher   { top: 10px; }
+            .custom-location-switcher{ top: 58px; }
+            .custom-search-switcher  { top: 106px; }
+            .custom-edit-toggle      { top: 154px; }
+            .custom-label-toggle     { top: 202px; }
+            .custom-legend-toggle    { top: 250px; }
+            .custom-3d-toggle        { top: 298px; }
+
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .edit-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .fullscreen-btn,
+            .threed-toggle-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+                border-radius: 10px;
+            }
+
+            .search-dropdown {
+                width: min(320px, calc(100vw - 40px));
+            }
+
+            .infrastructure-legend {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                width: auto;
+                max-width: none;
+                min-width: 0;
+                max-height: 45vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .infrastructure-legend {
+                max-height: 40vh;
+                font-size: 11px;
+            }
+
+            .infrastructure-legend .legend-title {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .stat-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stat-strip {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 @endpush
@@ -2555,14 +2529,12 @@
                         $empty.hide();
                         $error.hide();
 
-                        // Handle loading error
                         $img.off('error').on('error', function() {
                             $(this).hide();
                             $empty.hide();
                             $error.show();
                         });
 
-                        // Handle successful load
                         $img.off('load').on('load', function() {
                             $(this).show();
                             $empty.hide();
@@ -3590,7 +3562,7 @@
                 `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`
             );
 
-            // ─── 3D TOGGLE BUTTON ───
+            // ─── 3D TOGGLE BUTTON (attached to mapCard) ───
             $mapCard.append(`
                 <div class="custom-3d-toggle">
                     <div class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
@@ -3598,6 +3570,37 @@
                     </div>
                 </div>
             `);
+
+            // ─── FULLSCREEN ───
+            let isFullscreen = false;
+            $(document).on('click', '#fullscreenBtn', function() {
+                const $icon = $(this).find('i');
+                const $card = $('#mapCard');
+                const $container = $('#map');
+
+                if (!isFullscreen) {
+                    $card.addClass('fullscreen-mode');
+                    $container.addClass('fullscreen');
+                    // Ensure 3D toggle is visible in fullscreen
+                    $('.custom-3d-toggle').css('display', 'block !important');
+                    $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
+                    isFullscreen = true;
+                } else {
+                    $card.removeClass('fullscreen-mode');
+                    $container.removeClass('fullscreen');
+                    $icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
+                    isFullscreen = false;
+                }
+
+                setTimeout(function() {
+                    map.updateSize();
+                    if (window.is3DActive && window.cesiumViewer) {
+                        window.cesiumViewer.resize();
+                    }
+                    // Ensure 3D button remains visible
+                    $('.custom-3d-toggle').css('display', isFullscreen ? 'block !important' : 'block');
+                }, 150);
+            });
 
             // ─── LABEL TOGGLE EVENT ───
             $(document).on('click', '#labelToggleBtn', function(e) {
@@ -3800,29 +3803,6 @@
                     });
                     $('#filterResults').html(html || '<div class="p-2 text-muted">No matches</div>');
                 });
-            });
-
-            // ─── FULLSCREEN ───
-            let isFullscreen = false;
-            $(document).on('click', '#fullscreenBtn', function() {
-                const $icon = $(this).find('i');
-                if (!isFullscreen) {
-                    $mapCard.addClass('fullscreen-mode');
-                    $mapContainer.addClass('fullscreen');
-                    // Ensure 3D toggle is visible in fullscreen
-                    $('.custom-3d-toggle').css('display', 'block');
-                    $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
-                    isFullscreen = true;
-                } else {
-                    $mapCard.removeClass('fullscreen-mode');
-                    $mapContainer.removeClass('fullscreen');
-                    $icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
-                    isFullscreen = false;
-                }
-                setTimeout(() => {
-                    map.updateSize();
-                    if (is3DActive && cesiumViewer) cesiumViewer.resize();
-                }, 100);
             });
 
             // ─── EDIT TOGGLE EVENTS ───
@@ -4498,6 +4478,10 @@
             let is3DActive = false;
             let droneImageryLayer = null;
 
+            // Make variables accessible globally for fullscreen resize
+            window.is3DActive = is3DActive;
+            window.cesiumViewer = cesiumViewer;
+
             function ringToLonLatFlatArray(ringCoords) {
                 const flat = [];
                 ringCoords.forEach(c => {
@@ -4565,6 +4549,7 @@
 
                 addDroneImageryTo3D();
 
+                window.cesiumViewer = cesiumViewer;
                 return cesiumViewer;
             }
 
@@ -4623,6 +4608,7 @@
 
             function toggle3DView() {
                 is3DActive = !is3DActive;
+                window.is3DActive = is3DActive;
                 $('#threeDToggleBtn').toggleClass('active-3d', is3DActive);
                 $('#threeDToggleBtn i').toggleClass('bi-box', !is3DActive).toggleClass('bi-badge-3d', is3DActive);
 
