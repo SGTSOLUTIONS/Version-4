@@ -3387,6 +3387,7 @@
             }
 
             // ─── UI INJECTION ───
+            // All controls are appended to #map
             $mapContainer.append(`
                 <div class="custom-layer-switcher">
                     <div class="layer-toggle-btn"><i class="bi bi-layers"></i></div>
@@ -3558,18 +3559,18 @@
                 </div>
             `);
 
-            $mapContainer.append(
-                `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`
-            );
-
-            // ─── 3D TOGGLE BUTTON (attached to mapCard) ───
-            $mapCard.append(`
+            // ─── 3D TOGGLE BUTTON (appended to #map, not mapCard) ───
+            $mapContainer.append(`
                 <div class="custom-3d-toggle">
                     <div class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
                         <i class="bi bi-box"></i>
                     </div>
                 </div>
             `);
+
+            $mapContainer.append(
+                `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`
+            );
 
             // ─── FULLSCREEN ───
             let isFullscreen = false;
