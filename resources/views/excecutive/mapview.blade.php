@@ -91,6 +91,7 @@
             display: none;
             width: 100%;
             height: 800px;
+            position: relative;
         }
 
         .map-card.fullscreen-mode #cesiumContainer {
@@ -100,8 +101,13 @@
         .custom-3d-toggle {
             position: absolute;
             right: 30px;
-            top: 358px;
+            top: 415px;
             z-index: 1000;
+        }
+
+        .map-card.fullscreen-mode .custom-3d-toggle {
+            top: 20px;
+            right: 80px;
         }
 
         .threed-toggle-btn {
@@ -154,11 +160,21 @@
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
 
+        .map-card.fullscreen-mode .custom-layer-switcher {
+            top: 10px;
+            right: 10px;
+        }
+
         .custom-location-switcher {
             position: absolute;
             right: 30px;
             top: 74px;
             z-index: 1000;
+        }
+
+        .map-card.fullscreen-mode .custom-location-switcher {
+            top: 58px;
+            right: 10px;
         }
 
         .custom-search-switcher {
@@ -168,11 +184,21 @@
             z-index: 1000;
         }
 
+        .map-card.fullscreen-mode .custom-search-switcher {
+            top: 106px;
+            right: 10px;
+        }
+
         .custom-edit-toggle {
             position: absolute;
             right: 30px;
             top: 190px;
             z-index: 1000;
+        }
+
+        .map-card.fullscreen-mode .custom-edit-toggle {
+            top: 154px;
+            right: 10px;
         }
 
         .custom-label-toggle {
@@ -182,6 +208,11 @@
             z-index: 1000;
         }
 
+        .map-card.fullscreen-mode .custom-label-toggle {
+            top: 202px;
+            right: 10px;
+        }
+
         .custom-legend-toggle {
             position: absolute;
             right: 30px;
@@ -189,13 +220,60 @@
             z-index: 1000;
         }
 
+        .map-card.fullscreen-mode .custom-legend-toggle {
+            top: 250px;
+            right: 10px;
+        }
+
+        .custom-3d-toggle {
+            position: absolute;
+            right: 30px;
+            top: 358px;
+            z-index: 1000;
+        }
+
+        .map-card.fullscreen-mode .custom-3d-toggle {
+            top: 298px;
+            right: 10px;
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 44px;
+            height: 44px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid #e5e7eb;
+            color: #1e293b;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+        }
+
+        .fullscreen-btn:hover {
+            background: #f8fafc;
+            transform: scale(1.02);
+        }
+
+        .map-card.fullscreen-mode .fullscreen-btn {
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+
         .layer-toggle-btn,
         .location-toggle-btn,
         .search-toggle-btn,
         .edit-toggle-btn,
         .label-toggle-btn,
-        .legend-toggle-btn,
-        .fullscreen-btn {
+        .legend-toggle-btn {
             width: 44px;
             height: 44px;
             background: white;
@@ -209,6 +287,18 @@
             border: 1px solid #e5e7eb;
             color: #1e293b;
             font-size: 1.2rem;
+        }
+
+        .map-card.fullscreen-mode .layer-toggle-btn,
+        .map-card.fullscreen-mode .location-toggle-btn,
+        .map-card.fullscreen-mode .search-toggle-btn,
+        .map-card.fullscreen-mode .edit-toggle-btn,
+        .map-card.fullscreen-mode .label-toggle-btn,
+        .map-card.fullscreen-mode .legend-toggle-btn {
+            width: 38px;
+            height: 38px;
+            font-size: 1rem;
+            border-radius: 10px;
         }
 
         .layer-toggle-btn:hover,
@@ -261,6 +351,13 @@
             overflow: hidden;
             max-height: 0;
             min-width: 240px;
+        }
+
+        .map-card.fullscreen-mode .layer-dropdown,
+        .map-card.fullscreen-mode .location-dropdown,
+        .map-card.fullscreen-mode .search-dropdown,
+        .map-card.fullscreen-mode .edit-dropdown {
+            min-width: 200px;
         }
 
         .layer-dropdown.show,
@@ -405,13 +502,6 @@
             max-height: 300px;
             overflow-y: auto;
             overflow-x: hidden;
-        }
-
-        .fullscreen-btn {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
         }
 
         /* ── Edit Controls ── */
@@ -607,6 +697,10 @@
             flex: 1;
             position: relative;
             overflow: hidden;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .bld-img-wrap+.bld-img-wrap {
@@ -635,6 +729,29 @@
             font-weight: 600;
             padding: 18px 12px 8px;
             letter-spacing: .3px;
+        }
+
+        .bld-img-wrap .bld-img-empty {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bld-img-wrap .bld-img-empty i {
+            font-size: 2rem;
+            opacity: 0.5;
+        }
+
+        .bld-img-wrap .bld-img-error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
 
         .bld-summary-strip {
@@ -977,7 +1094,6 @@
                 justify-content: flex-start;
             }
 
-            /* ── Right-side icon stack becomes tighter on mobile ── */
             .custom-layer-switcher,
             .custom-location-switcher,
             .custom-search-switcher,
@@ -1014,7 +1130,6 @@
                 width: min(320px, calc(100vw - 40px));
             }
 
-            /* ── Legend becomes a bottom sheet on mobile ── */
             .infrastructure-legend {
                 left: 10px;
                 right: 10px;
@@ -1375,14 +1490,28 @@
                 </div>
 
                 <div class="bld-image-strip">
-                    <div class="bld-img-wrap">
-                        <img id="bv_img1" src="" style="display:none;">
-                        <div id="bv_img1_empty" class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
+                    <div class="bld-img-wrap" id="bv_img1_wrap">
+                        <img id="bv_img1" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
+                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;">
+                            <i class="bi bi-image"></i>
+                            <span>No Image</span>
+                        </div>
+                        <div id="bv_img1_error" class="bld-img-error" style="display:none;">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Failed to load</span>
+                        </div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
-                    <div class="bld-img-wrap">
-                        <img id="bv_img2" src="" style="display:none;">
-                        <div id="bv_img2_empty" class="d-flex align-items-center justify-content-center h-100 text-white-50">No Image</div>
+                    <div class="bld-img-wrap" id="bv_img2_wrap">
+                        <img id="bv_img2" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
+                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;">
+                            <i class="bi bi-image"></i>
+                            <span>No Image</span>
+                        </div>
+                        <div id="bv_img2_error" class="bld-img-error" style="display:none;">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Failed to load</span>
+                        </div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
@@ -2035,11 +2164,9 @@
                 loadLinesToSource();
                 loadPointsToSource();
                 buildSearchIndex();
-                // Refresh styles
                 polygonLayer.setStyle(createPolygonStyle);
                 lineLayer.setStyle(createLineStyle);
                 pointLayer.setStyle(createPointStyle);
-                // Refresh infra styles
                 Object.values(infraLayers).forEach(layer => {
                     const title = layer.get('title');
                     if (title && infraColors[title]) {
@@ -2414,21 +2541,42 @@
                 $('#bv_remarks').text(item.remarks || '—');
                 $('#bv_corp_remarks').text(item.corporationremarks || '—');
 
+                // ─── IMAGE LOADING ───
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
-                if (item.image) {
-                    $('#bv_img1').attr('src', item.image.startsWith('http') ? item.image : assetUrl + item.image).show();
-                    $('#bv_img1_empty').hide();
-                } else {
-                    $('#bv_img1').hide();
-                    $('#bv_img1_empty').show();
+
+                function loadImage(imgId, emptyId, errorId, imagePath) {
+                    const $img = $('#' + imgId);
+                    const $empty = $('#' + emptyId);
+                    const $error = $('#' + errorId);
+
+                    if (imagePath) {
+                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath.replace(/^\/+/, '');
+                        $img.attr('src', fullPath).show();
+                        $empty.hide();
+                        $error.hide();
+
+                        // Handle loading error
+                        $img.off('error').on('error', function() {
+                            $(this).hide();
+                            $empty.hide();
+                            $error.show();
+                        });
+
+                        // Handle successful load
+                        $img.off('load').on('load', function() {
+                            $(this).show();
+                            $empty.hide();
+                            $error.hide();
+                        });
+                    } else {
+                        $img.hide();
+                        $empty.show();
+                        $error.hide();
+                    }
                 }
-                if (item.image2) {
-                    $('#bv_img2').attr('src', item.image2.startsWith('http') ? item.image2 : assetUrl + item.image2).show();
-                    $('#bv_img2_empty').hide();
-                } else {
-                    $('#bv_img2').hide();
-                    $('#bv_img2_empty').show();
-                }
+
+                loadImage('bv_img1', 'bv_img1_empty', 'bv_img1_error', item.image);
+                loadImage('bv_img2', 'bv_img2_empty', 'bv_img2_error', item.image2);
 
                 $('#buildingViewPointsBtn').off('click').on('click', function() {
                     bootstrap.Modal.getInstance(document.getElementById('buildingViewModal')).hide();
@@ -2995,7 +3143,6 @@
                 const droneItem = $('.layer-dropdown-item[data-layer="Drone View"]');
                 droneVisible ? droneItem.addClass('active') : droneItem.removeClass('active');
 
-                // Update infrastructure legend item visibility
                 $('.infrastructure-legend .legend-item').each(function() {
                     const type = $(this).data('type');
                     if (type && infraLayers[type]) {
@@ -3044,7 +3191,6 @@
             let infraLayers = {};
             let infraGrouped = {};
 
-            // Colors for infrastructure types
             const infraColors = {
                 'Road': '#FF6B6B',
                 'Road Junction': '#FFB74D',
@@ -3145,7 +3291,6 @@
                     map.addLayer(layer);
                     infraLayers[type] = layer;
 
-                    // Add click handler for infrastructure features
                     const clickHandler = new ol.interaction.Select({
                         layers: [layer],
                         style: new ol.style.Style({
@@ -3318,7 +3463,6 @@
                 </div>
             `);
 
-            // ─── LABEL TOGGLE BUTTON ───
             $mapContainer.append(`
                 <div class="custom-label-toggle">
                     <div class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
@@ -3327,7 +3471,6 @@
                 </div>
             `);
 
-            // ─── LEGEND TOGGLE BUTTON ───
             $mapContainer.append(`
                 <div class="custom-legend-toggle">
                     <div class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
@@ -3447,7 +3590,7 @@
                 `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`
             );
 
-            // ─── 3D TOGGLE BUTTON (attached to mapCard so it survives #map being hidden) ───
+            // ─── 3D TOGGLE BUTTON ───
             $mapCard.append(`
                 <div class="custom-3d-toggle">
                     <div class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
@@ -3666,6 +3809,8 @@
                 if (!isFullscreen) {
                     $mapCard.addClass('fullscreen-mode');
                     $mapContainer.addClass('fullscreen');
+                    // Ensure 3D toggle is visible in fullscreen
+                    $('.custom-3d-toggle').css('display', 'block');
                     $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
                     isFullscreen = true;
                 } else {
@@ -4346,18 +4491,13 @@
             });
 
             // ════════════════════════════════════════════════════════════
-            // 3D VIEW TOGGLE — Cesium globe, mirrors the editable 2D data
-            // No API key / token required (OpenStreetMap imagery, flat terrain)
-            // Editing tools remain 2D-only; 3D is view/inspect only.
+            // 3D VIEW TOGGLE — Cesium globe
             // ════════════════════════════════════════════════════════════
             let cesiumViewer = null;
             let cesiumBuildingEntities = [];
             let is3DActive = false;
             let droneImageryLayer = null;
 
-            // Your polygon/line/point coordinates are stored in EPSG:3857 (Web Mercator),
-            // same as fed straight into ol.geom.Polygon() with no proj transform.
-            // Cesium needs plain lon/lat degrees, so convert via ol.proj.toLonLat().
             function ringToLonLatFlatArray(ringCoords) {
                 const flat = [];
                 ringCoords.forEach(c => {
@@ -4367,11 +4507,9 @@
                 return flat;
             }
 
-            // ─── Add / refresh the drone orthophoto as a georeferenced Cesium imagery layer ───
             function addDroneImageryTo3D() {
                 if (!cesiumViewer) return;
 
-                // remove any existing drone layer before re-adding (keeps it in sync on refresh)
                 if (droneImageryLayer) {
                     cesiumViewer.imageryLayers.remove(droneImageryLayer);
                     droneImageryLayer = null;
@@ -4385,10 +4523,10 @@
                 }
 
                 const rectangle = Cesium.Rectangle.fromDegrees(
-                    imageExtentRaw[0], // west
-                    imageExtentRaw[1], // south
-                    imageExtentRaw[2], // east
-                    imageExtentRaw[3]  // north
+                    imageExtentRaw[0],
+                    imageExtentRaw[1],
+                    imageExtentRaw[2],
+                    imageExtentRaw[3]
                 );
 
                 const provider = new Cesium.SingleTileImageryProvider({
@@ -4398,8 +4536,6 @@
 
                 droneImageryLayer = cesiumViewer.imageryLayers.addImageryProvider(provider);
                 droneImageryLayer.alpha = 0.9;
-
-                // mirror the 2D toggle's current visibility state
                 droneImageryLayer.show = droneLayer.getVisible();
             }
 
@@ -4417,7 +4553,6 @@
                     navigationHelpButton: false,
                     baseLayerPicker: false,
                     fullscreenButton: false,
-                    // No ion token needed — open imagery + flat ellipsoid terrain
                     imageryProvider: new Cesium.OpenStreetMapImageryProvider({
                         url: 'https://a.tile.openstreetmap.org/'
                     }),
@@ -4438,29 +4573,23 @@
 
                 addDroneImageryTo3D();
 
-                // Clear old entities before re-drawing latest data
                 cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
                 cesiumBuildingEntities = [];
 
                 polygons.forEach(poly => {
                     try {
-                        const coords = JSON.parse(poly.coordinates); // outer ring, EPSG:3857
+                        const coords = JSON.parse(poly.coordinates);
                         const flat = ringToLonLatFlatArray(coords);
-                        if (flat.length < 6) return; // need at least 3 points
+                        if (flat.length < 6) return;
 
-                      const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
-
-                            const floors = polygonData?.number_floor
-                                ? parseInt(polygonData.number_floor) || 1
-                                : Math.floor(Math.random() * 7); // 0-6
-
-                            const height = Math.max(1, floors) * 3;
-
-                            const isMapped = !!polygonData;
+                        const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
+                        const floors = polygonData?.number_floor ? parseInt(polygonData.number_floor) || 1 : 1;
+                        const height = Math.max(1, floors) * 3;
+                        const isMapped = !!polygonData;
 
                         const color = isMapped
-                            ? Cesium.Color.fromCssColorString('#dc2626').withAlpha(0.75)  // red = has building data (matches your 2D style)
-                            : Cesium.Color.fromCssColorString('#2563eb').withAlpha(0.55); // blue = unmapped
+                            ? Cesium.Color.fromCssColorString('#dc2626').withAlpha(0.75)
+                            : Cesium.Color.fromCssColorString('#2563eb').withAlpha(0.55);
 
                         const entity = cesiumViewer.entities.add({
                             name: 'Building ' + poly.gisid,
@@ -4498,7 +4627,6 @@
                 $('#threeDToggleBtn i').toggleClass('bi-box', !is3DActive).toggleClass('bi-badge-3d', is3DActive);
 
                 if (is3DActive) {
-                    // Turn off any active edit mode before leaving 2D
                     disableAllInteractions();
                     setNoneMode();
 
@@ -4530,7 +4658,6 @@
                 droneLayer.setVisible(false);
             }
 
-            // Load infrastructure
             loadInfrastructure({{ $ward->id }});
 
             console.log('✅ Executive GIS Dashboard ready (2D + 3D)');
