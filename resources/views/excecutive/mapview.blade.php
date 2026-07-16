@@ -1737,6 +1737,9 @@
     <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+    <!-- FIX 1: CESIUM_BASE_URL must be set BEFORE Cesium.js loads, as a plain global -->
+    <script>window.CESIUM_BASE_URL = 'https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/';</script>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Cesium.js"></script>
 
     <script>
@@ -4392,10 +4395,12 @@
                 return flat;
             }
 
-            function init3DViewerWithDroneBase() {
+            // FIX 2 & 3: async init — SingleTileImageryProvider must be created via
+            // the async fromUrl() factory in modern CesiumJS, and Rectangle values
+            // are in RADIANS so they must be converted with Cesium.Math.toDegrees()
+            // before being used as degrees in Cartesian3.fromDegrees().
+            async function init3DViewerWithDroneBase() {
                 if (cesiumViewer) return cesiumViewer;
-
-                window.CESIUM_BASE_URL = 'https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/';
 
                 cesiumViewer = new Cesium.Viewer('cesiumContainer', {
                     animation: false,
@@ -4409,6 +4414,14 @@
                     imageryProvider: false,
                     terrainProvider: new Cesium.EllipsoidTerrainProvider()
                 });
+
+                function addOsmFallback() {
+                    cesiumViewer.imageryLayers.addImageryProvider(
+                        new Cesium.OpenStreetMapImageryProvider({
+                            url: "https://tile.openstreetmap.org/"
+                        })
+                    );
+                }
 
                 // ─── CHECK IF DRONE IMAGE EXISTS ───
                 if (droneImageURL && droneImageURL !== "{{ asset('') }}") {
@@ -4435,9 +4448,8 @@
                             );
                         }
 
-                        // Add drone image as base layer
-                        const provider = new Cesium.SingleTileImageryProvider({
-                            url: droneImageURL,
+                        // Add drone image as base layer (async factory required in modern Cesium)
+                        const provider = await Cesium.SingleTileImageryProvider.fromUrl(droneImageURL, {
                             rectangle: rect
                         });
 
@@ -4448,18 +4460,15 @@
                         console.log('✅ Drone image set as base layer in 3D view');
                         console.log('Rectangle:', rect);
 
-                        // Fly to the drone image extent
-                        const west = rect.west;
-                        const south = rect.south;
-                        const east = rect.east;
-                        const north = rect.north;
-                        const centerLon = (west + east) / 2;
-                        const centerLat = (south + north) / 2;
+                        // rect.west/east/south/north are RADIANS — convert to degrees
+                        const centerLon = Cesium.Math.toDegrees((rect.west + rect.east) / 2);
+                        const centerLat = Cesium.Math.toDegrees((rect.south + rect.north) / 2);
+                        const widthDeg = Cesium.Math.toDegrees(rect.east - rect.west);
 
                         // Calculate appropriate height based on extent size
                         const height = Math.max(
                             200,
-                            (east - west) * 111000 * 0.5 // Approximate meters per degree
+                            widthDeg * 111000 * 0.5 // Approximate meters per degree
                         );
 
                         cesiumViewer.camera.flyTo({
@@ -4476,20 +4485,12 @@
                     } catch (error) {
                         console.error('Error loading drone image as base:', error);
                         // Fallback to OSM
-                        cesiumViewer.imageryLayers.addImageryProvider(
-                            new Cesium.OpenStreetMapImageryProvider({
-                                url: "https://tile.openstreetmap.org/"
-                            })
-                        );
+                        addOsmFallback();
                         showToast('⚠️ Drone image failed, using OSM base', 3000);
                     }
                 } else {
                     // No drone image, use OSM
-                    cesiumViewer.imageryLayers.addImageryProvider(
-                        new Cesium.OpenStreetMapImageryProvider({
-                            url: "https://tile.openstreetmap.org/"
-                        })
-                    );
+                    addOsmFallback();
                     showToast('🗺️ Using OpenStreetMap base (No drone image)', 2000);
                 }
 
@@ -4555,7 +4556,8 @@
                 }
             }
 
-            function toggle3DView() {
+            // FIX: toggle3DView is now async so it can await the Cesium init
+            async function toggle3DView() {
                 is3DActive = !is3DActive;
                 window.is3DActive = is3DActive;
                 $('#threeDToggleBtn').toggleClass('active-3d', is3DActive);
@@ -4567,10 +4569,8 @@
 
                     $('#map').hide();
                     $('#cesiumContainer').show();
-                    init3DViewerWithDroneBase();
-                    setTimeout(() => {
-                        refreshCesiumBuildings();
-                    }, 500);
+                    await init3DViewerWithDroneBase();
+                    refreshCesiumBuildings();
                     showToast('🧊 3D View with Drone Image as Base', 3000);
                 } else {
                     $('#cesiumContainer').hide();
