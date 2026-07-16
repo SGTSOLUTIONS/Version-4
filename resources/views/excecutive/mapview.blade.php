@@ -4359,7 +4359,7 @@
                 return flat;
             }
 
-            // ─── FIXED 3D VIEWER WITH PROPER BASEMAP ───
+            // ─── FIXED 3D VIEWER WITH PROPER IMAGE LOADING ───
             function init3DViewerWithFallback() {
                 if (cesiumViewer) return cesiumViewer;
 
@@ -4378,47 +4378,72 @@
                     terrainProvider: new Cesium.EllipsoidTerrainProvider()
                 });
 
-                // ─── ALWAYS LOAD BASEMAP FIRST ───
-                let basemapLoaded = false;
+                // ─── TRY DRONE IMAGE FIRST, THEN FALLBACK ───
+                let droneLoaded = false;
+                let loadAttempted = false;
 
-                function loadBasemap() {
+                // Check if drone image exists and is valid
+                const droneUrl = droneImageURL || '';
+                const hasValidDroneImage = droneUrl && droneUrl !== "{{ asset('') }}" && droneUrl !== '';
+
+                function loadFallbackImagery() {
+                    if (loadAttempted) return;
+                    loadAttempted = true;
+
                     try {
-                        // Try Satellite imagery first (best for 3D)
+                        // Remove any existing imagery layers
+                        cesiumViewer.imageryLayers.removeAll();
+
+                        // Try Satellite imagery first (better than OSM)
                         cesiumViewer.imageryLayers.addImageryProvider(
                             new Cesium.ArcGisMapServerImageryProvider({
                                 url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
                             })
                         );
-                        basemapLoaded = true;
-                        console.log('✅ Satellite basemap loaded');
-                        return true;
-                    } catch (error) {
-                        console.warn('Satellite failed, trying OSM:', error);
-                        try {
-                            // Fallback to OpenStreetMap
-                            cesiumViewer.imageryLayers.addImageryProvider(
-                                new Cesium.OpenStreetMapImageryProvider({
-                                    url: 'https://tile.openstreetmap.org/'
-                                })
-                            );
-                            basemapLoaded = true;
-                            console.log('✅ OSM basemap loaded');
-                            return true;
-                        } catch (e) {
-                            console.error('All basemaps failed:', e);
-                            return false;
+
+                        showToast('🛰️ Using Satellite imagery (Drone not available)', 3000);
+                        console.log('✅ Satellite imagery loaded as fallback');
+
+                        // Fly to the ward location
+                        if (imageExtentRaw && imageExtentRaw.length === 4) {
+                            let centerLon, centerLat;
+                            if (isLatLon) {
+                                centerLon = (imageExtentRaw[0] + imageExtentRaw[2]) / 2;
+                                centerLat = (imageExtentRaw[1] + imageExtentRaw[3]) / 2;
+                            } else {
+                                function webMercatorToWgs84(x, y) {
+                                    var lon = (x / 20037508.34) * 180;
+                                    var lat = (y / 20037508.34) * 180;
+                                    lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI / 2);
+                                    return [lon, lat];
+                                }
+                                const center = webMercatorToWgs84(
+                                    (imageExtentRaw[0] + imageExtentRaw[2]) / 2,
+                                    (imageExtentRaw[1] + imageExtentRaw[3]) / 2
+                                );
+                                centerLon = center[0];
+                                centerLat = center[1];
+                            }
+
+                            cesiumViewer.camera.flyTo({
+                                destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat, 500),
+                                duration: 2
+                            });
                         }
+
+                    } catch (error) {
+                        // Final fallback: OpenStreetMap
+                        cesiumViewer.imageryLayers.addImageryProvider(
+                            new Cesium.OpenStreetMapImageryProvider({
+                                url: 'https://tile.openstreetmap.org/'
+                            })
+                        );
+                        showToast('🗺️ Using OpenStreetMap (Satellite failed)', 3000);
+                        console.log('✅ OSM loaded as final fallback');
                     }
                 }
 
-                // Load basemap
-                loadBasemap();
-
-                // ─── TRY DRONE IMAGE AS OVERLAY ───
-                const droneUrl = droneImageURL || '';
-                const hasValidDroneImage = droneUrl && droneUrl !== "{{ asset('') }}" && droneUrl !== '';
-
-                if (hasValidDroneImage && basemapLoaded) {
+                if (hasValidDroneImage) {
                     try {
                         // Create rectangle for drone image
                         let rect;
@@ -4430,6 +4455,7 @@
                                 imageExtentRaw[3]
                             );
                         } else {
+                            // Convert EPSG:3857 to WGS84
                             function webMercatorToWgs84(x, y) {
                                 var lon = (x / 20037508.34) * 180;
                                 var lat = (y / 20037508.34) * 180;
@@ -4441,25 +4467,33 @@
                             rect = Cesium.Rectangle.fromDegrees(bl[0], bl[1], tr[0], tr[1]);
                         }
 
-                        // Add drone image as overlay
+                        // Remove any existing imagery layers
+                        cesiumViewer.imageryLayers.removeAll();
+
+                        // Create the provider
                         const provider = new Cesium.SingleTileImageryProvider({
                             url: droneUrl,
                             rectangle: rect
                         });
 
-                        // Try to load the drone image
-                        let droneLoaded = false;
+                        // Try to load the image with a timeout
+                        let imageLoadSuccess = false;
+
+                        // Create a temporary image to check if it loads
                         const img = new Image();
                         img.crossOrigin = 'anonymous';
 
                         img.onload = function() {
-                            if (!droneLoaded) {
-                                droneLoaded = true;
+                            imageLoadSuccess = true;
+                            if (!loadAttempted) {
+                                loadAttempted = true;
                                 try {
                                     droneImageryLayer = cesiumViewer.imageryLayers.addImageryProvider(provider);
-                                    droneImageryLayer.alpha = 0.7;
+                                    droneImageryLayer.alpha = 1.0;
                                     droneImageryLayer.show = true;
-                                    console.log('✅ Drone overlay loaded on basemap');
+                                    droneLoaded = true;
+
+                                    console.log('✅ Drone image loaded in 3D view');
 
                                     // Fly to drone extent
                                     const west = rect.west;
@@ -4480,79 +4514,61 @@
                                         duration: 2
                                     });
 
-                                    showToast('🛩️ Drone overlay + Satellite basemap', 3000);
+                                    showToast('🛩️ Drone image loaded in 3D view', 3000);
                                 } catch (e) {
-                                    console.error('Error adding drone overlay:', e);
+                                    console.error('Error adding drone imagery:', e);
+                                    loadFallbackImagery();
                                 }
                             }
                         };
 
                         img.onerror = function() {
-                            if (!droneLoaded) {
-                                droneLoaded = true;
-                                console.log('Drone overlay not available, using basemap only');
-                                flyToWard();
+                            if (!loadAttempted) {
+                                console.warn('Drone image failed to load, using fallback');
+                                loadFallbackImagery();
                             }
                         };
 
-                        // Set a timeout
+                        // Set a timeout for loading
                         setTimeout(function() {
-                            if (!droneLoaded) {
-                                droneLoaded = true;
-                                console.log('Drone overlay timeout, using basemap only');
-                                flyToWard();
+                            if (!loadAttempted) {
+                                loadAttempted = true;
+                                if (!imageLoadSuccess) {
+                                    console.warn('Drone image load timeout, using fallback');
+                                    loadFallbackImagery();
+                                }
                             }
-                        }, 10000);
+                        }, 15000);
 
+                        // Start loading the image
                         img.src = droneUrl;
 
                     } catch (error) {
-                        console.error('Drone overlay setup failed:', error);
-                        flyToWard();
+                        console.error('Drone image setup failed:', error);
+                        loadFallbackImagery();
                     }
                 } else {
-                    // No drone image, just fly to ward
-                    flyToWard();
+                    // No drone image, use fallback
+                    loadFallbackImagery();
                 }
 
-                function flyToWard() {
-                    if (imageExtentRaw && imageExtentRaw.length === 4) {
-                        let centerLon, centerLat;
-                        if (isLatLon) {
-                            centerLon = (imageExtentRaw[0] + imageExtentRaw[2]) / 2;
-                            centerLat = (imageExtentRaw[1] + imageExtentRaw[3]) / 2;
-                        } else {
-                            function webMercatorToWgs84(x, y) {
-                                var lon = (x / 20037508.34) * 180;
-                                var lat = (y / 20037508.34) * 180;
-                                lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI / 2);
-                                return [lon, lat];
-                            }
-                            const center = webMercatorToWgs84(
-                                (imageExtentRaw[0] + imageExtentRaw[2]) / 2,
-                                (imageExtentRaw[1] + imageExtentRaw[3]) / 2
-                            );
-                            centerLon = center[0];
-                            centerLat = center[1];
+                // If for some reason nothing loaded after 5 seconds, force fallback
+                setTimeout(function() {
+                    if (!loadAttempted) {
+                        loadAttempted = true;
+                        if (!droneLoaded) {
+                            loadFallbackImagery();
                         }
-
-                        cesiumViewer.camera.flyTo({
-                            destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat, 500),
-                            duration: 2
-                        });
-                        showToast('🗺️ 3D View with Satellite/OSM basemap', 3000);
                     }
-                }
+                }, 5000);
 
                 // Add info box
                 setTimeout(function() {
                     const infoBox = document.querySelector('.cesium-info-box');
                     if (infoBox) {
-                        infoBox.textContent = '🧊 3D View — Satellite/OSM Basemap with 3D Buildings';
-                    } else {
-                        cesiumViewer.container.insertAdjacentHTML('beforeend',
-                            '<div class="cesium-info-box">🧊 3D View — Satellite/OSM Basemap with 3D Buildings</div>'
-                        );
+                        infoBox.textContent = '🧊 3D view — ' +
+                            (droneLoaded ? 'Drone Image' : 'Satellite/OSM') +
+                            ' — switch back to 2D to edit';
                     }
                 }, 1000);
 
@@ -4626,15 +4642,11 @@
 
                     $('#map').hide();
                     $('#cesiumContainer').show();
-
-                    // Initialize with basemap
                     init3DViewerWithFallback();
-
                     setTimeout(() => {
                         refreshCesiumBuildings();
                     }, 800);
-
-                    showToast('🧊 3D View with Satellite/OSM basemap', 2500);
+                    showToast('🧊 3D View loaded', 2500);
                 } else {
                     $('#cesiumContainer').hide();
                     $('#map').show();
@@ -4666,7 +4678,7 @@
 
             loadInfrastructure({{ $ward->id }});
 
-            console.log('✅ Executive GIS Dashboard ready with 3D basemap');
+            console.log('✅ Executive GIS Dashboard ready with 3D fallback');
         });
     </script>
 @endpush
