@@ -170,6 +170,15 @@
             font-size: 0.7rem;
         }
 
+        .badge-partial {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+
         .btn-export {
             border-radius: 8px;
             font-weight: 600;
@@ -308,6 +317,33 @@
             font-weight: 600;
             font-size: 0.8rem;
             padding: 6px 14px;
+        }
+
+        .usage-detail-box {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 6px 12px;
+            display: inline-block;
+            font-size: 0.78rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .usage-detail-box .label {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .usage-detail-box .value {
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        .usage-detail-box .value.mismatch {
+            color: #dc2626;
+        }
+
+        .usage-detail-box .value.match {
+            color: #16a34a;
         }
 
         @media (max-width: 768px) {
@@ -509,23 +545,24 @@
             <div class="spinner"></div>
         </div>
         <div class="table-header">
-            <h5><i class="bi bi-table me-2"></i>Variation Details</h5>
+            <h5><i class="bi bi-table me-2"></i>Usage Variation Details</h5>
             <span class="text-muted small" id="recordCount">Total: {{ count($buildingVariations) }} records</span>
         </div>
         <div class="table-responsive">
             <table class="table table-hover" id="variationTable">
                 <thead>
                     <tr>
-                        <th style="width:60px;">#</th>
+                        <th style="width:50px;">#</th>
                         <th>GIS ID</th>
+                        <th>Building Usage</th>
+                        <th>Assessment Usage</th>
+                        <th>Usage Status</th>
                         <th>Building Area</th>
                         <th>Assessment Area</th>
                         <th>Area Variation</th>
-                        <th>Variation %</th>
                         <th>Area Status</th>
-                        <th>Usage Status</th>
                         <th>Assessments</th>
-                        <th style="width:120px;">Progress</th>
+                        <th style="width:100px;">Progress</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -533,26 +570,42 @@
                         <tr class="variation-row">
                             <td>{{ $loop->iteration }}</td>
                             <td><code>{{ $variation['gisid'] }}</code></td>
+                            <td>
+                                <span class="usage-detail-box">
+                                    <span class="label">Usage:</span>
+                                    <span class="value">{{ $variation['building_usage'] ?? 'N/A' }}</span>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="usage-detail-box">
+                                    <span class="label">Usage:</span>
+                                    <span class="value {{ $variation['usage_status'] == 'VARIATION' ? 'mismatch' : 'match' }}">
+                                        {{ $variation['assessment_usage'] ?? 'N/A' }}
+                                    </span>
+                                </span>
+                                @if($variation['assessment_usage'] && $variation['building_usage'] && $variation['building_usage'] != $variation['assessment_usage'])
+                                    <span class="badge badge-variation ms-1">Mismatch</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($variation['usage_status'] == 'VARIATION')
+                                    <span class="badge badge-variation">
+                                        <i class="bi bi-x-circle me-1"></i> Variation
+                                    </span>
+                                @else
+                                    <span class="badge badge-match">
+                                        <i class="bi bi-check-circle me-1"></i> Match
+                                    </span>
+                                @endif
+                            </td>
                             <td>{{ number_format($variation['building_area'], 2) }} sqft</td>
                             <td>{{ number_format($variation['assessment_area'], 2) }} sqft</td>
                             <td class="{{ $variation['area_variation'] > 0 ? 'text-danger' : ($variation['area_variation'] < 0 ? 'text-success' : 'text-muted') }}">
                                 {{ $variation['area_variation'] > 0 ? '+' : '' }}{{ number_format($variation['area_variation'], 2) }}
                             </td>
                             <td>
-                                {{ number_format($variation['variation_percentage'], 1) }}%
-                                <div class="variation-progress">
-                                    <div class="bar {{ $variation['variation_percentage'] > 10 ? 'bar-danger' : ($variation['variation_percentage'] > 5 ? 'bar-warning' : 'bar-success') }}"
-                                         style="width: {{ min($variation['variation_percentage'], 100) }}%;"></div>
-                                </div>
-                            </td>
-                            <td>
                                 <span class="{{ $variation['area_status'] == 'VARIATION' ? 'badge-variation' : 'badge-match' }}">
                                     {{ $variation['area_status'] }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="{{ $variation['usage_status'] == 'VARIATION' ? 'badge-variation' : 'badge-match' }}">
-                                    {{ $variation['usage_status'] }}
                                 </span>
                             </td>
                             <td>
@@ -572,7 +625,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10">
+                            <td colspan="11">
                                 <div class="empty-state">
                                     <i class="bi bi-inbox"></i>
                                     <h5>No Records Found</h5>
@@ -656,7 +709,7 @@
                 if (!data || data.length === 0) {
                     $tbody.append(`
                         <tr>
-                            <td colspan="10">
+                            <td colspan="11">
                                 <div class="empty-state">
                                     <i class="bi bi-inbox"></i>
                                     <h5>No Matching Records</h5>
@@ -681,21 +734,36 @@
                     const areaBadge = item.area_status === 'VARIATION' ? 'badge-variation' : 'badge-match';
                     const assessmentBadge = item.assessment_count === 0 ? 'bg-secondary' : 'bg-primary';
 
+                    // Check if usage status is variation
+                    const isUsageVariation = item.usage_status === 'VARIATION';
+                    const usageValueClass = isUsageVariation ? 'mismatch' : 'match';
+
                     $tbody.append(`
                         <tr class="variation-row">
                             <td>${index + 1}</td>
                             <td><code>${item.gisid}</code></td>
+                            <td>
+                                <span class="usage-detail-box">
+                                    <span class="label">Usage:</span>
+                                    <span class="value">${item.building_usage || 'N/A'}</span>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="usage-detail-box">
+                                    <span class="label">Usage:</span>
+                                    <span class="value ${usageValueClass}">${item.assessment_usage || 'N/A'}</span>
+                                </span>
+                                ${isUsageVariation ? `<span class="badge badge-variation ms-1">Mismatch</span>` : ''}
+                            </td>
+                            <td>
+                                <span class="${usageBadge}">
+                                    ${isUsageVariation ? '<i class="bi bi-x-circle me-1"></i> Variation' : '<i class="bi bi-check-circle me-1"></i> Match'}
+                                </span>
+                            </td>
                             <td>${item.building_area.toFixed(2)} sqft</td>
                             <td>${item.assessment_area.toFixed(2)} sqft</td>
                             <td class="${areaClass}">${areaSign}${item.area_variation.toFixed(2)}</td>
-                            <td>
-                                ${item.variation_percentage.toFixed(1)}%
-                                <div class="variation-progress">
-                                    <div class="bar ${progressClass}" style="width: ${Math.min(item.variation_percentage, 100)}%;"></div>
-                                </div>
-                            </td>
                             <td><span class="${areaBadge}">${item.area_status}</span></td>
-                            <td><span class="${usageBadge}">${item.usage_status}</span></td>
                             <td><span class="badge ${assessmentBadge}">${item.assessment_count}</span></td>
                             <td>
                                 <div class="d-flex align-items-center gap-1">
@@ -863,7 +931,7 @@
             // Load initial data with AJAX
             fetchFilteredData();
 
-            console.log('✅ Variation page ready with backend AJAX filters and export');
+            console.log('✅ Usage Variation page ready with detailed display');
         });
     </script>
 @endpush

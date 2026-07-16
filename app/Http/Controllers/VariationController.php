@@ -94,97 +94,110 @@ class VariationController extends Controller
     /**
      * Build Area & Usage Variation
      */
-    private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData)
-    {
-        $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
-        $misByAssessment = collect($misData)->keyBy('assessment');
+   private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData)
+{
+    $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
+    $misByAssessment = collect($misData)->keyBy('assessment');
 
-        $pointDataByGisid = [];
+    $pointDataByGisid = [];
 
-        foreach ($pointDatas as $pd) {
-            $pointDataByGisid[$pd->point_gisid][] = $pd;
-        }
-
-        $result = [];
-
-        foreach ($polygons as $polygon) {
-
-            $gisid = $polygon->gisid;
-            $polygonSqfeet = floatval($polygon->sqfeet ?? 0);
-
-            $polyData = $polygonDataByGisid->get($gisid);
-
-            if ($polyData) {
-                $numberFloor = floatval($polyData->number_floor ?? 0);
-                $basement = floatval($polyData->basement ?? 0);
-
-                $buildingArea = ($numberFloor > 0 ? $numberFloor : 1) * $polygonSqfeet;
-
-                if ($basement > 0) {
-                    $buildingArea += ($polygonSqfeet * $basement);
-                }
-
-                $buildingUsage = $polyData->building_usage ?? null;
-
-            } else {
-                $buildingArea = $polygonSqfeet;
-                $buildingUsage = null;
-            }
-
-            $assessmentArea = 0;
-            $assessmentCount = 0;
-            $hasUsageMismatch = false;
-
-            if (isset($pointDataByGisid[$gisid])) {
-
-                foreach ($pointDataByGisid[$gisid] as $pd) {
-
-                    $assessmentCount++;
-
-                    $mis = $misByAssessment->get($pd->assessment);
-
-                    $pointArea = 0;
-
-                    if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
-                        $pointArea = floatval($pd->qcsqfeet);
-                    } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
-                        $pointArea = floatval($mis->plot_area);
-                    }
-
-                    $assessmentArea += $pointArea;
-
-                    $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
-
-                    if (
-                        $buildingUsage &&
-                        $pointUsage &&
-                        strtoupper(trim($buildingUsage)) !== strtoupper(trim($pointUsage))
-                    ) {
-                        $hasUsageMismatch = true;
-                    }
-                }
-            }
-
-            $areaVariation = $buildingArea - $assessmentArea;
-
-            $variationPercentage = $buildingArea > 0
-                ? round((abs($areaVariation) / $buildingArea) * 100, 1)
-                : 0;
-
-            $result[$gisid] = [
-                'gisid' => $gisid,
-                'building_area' => round($buildingArea, 2),
-                'assessment_area' => round($assessmentArea, 2),
-                'area_variation' => round($areaVariation, 2),
-                'variation_percentage' => $variationPercentage,
-                'area_status' => abs($areaVariation) > 1 ? 'VARIATION' : 'MATCH',
-                'usage_status' => $hasUsageMismatch ? 'VARIATION' : 'MATCH',
-                'assessment_count' => $assessmentCount,
-            ];
-        }
-
-        return $result;
+    foreach ($pointDatas as $pd) {
+        $pointDataByGisid[$pd->point_gisid][] = $pd;
     }
+
+    $result = [];
+
+    foreach ($polygons as $polygon) {
+
+        $gisid = $polygon->gisid;
+        $polygonSqfeet = floatval($polygon->sqfeet ?? 0);
+
+        $polyData = $polygonDataByGisid->get($gisid);
+
+        // ─── BUILDING USAGE ───
+        $buildingUsage = null;
+        if ($polyData) {
+            $numberFloor = floatval($polyData->number_floor ?? 0);
+            $basement = floatval($polyData->basement ?? 0);
+
+            $buildingArea = ($numberFloor > 0 ? $numberFloor : 1) * $polygonSqfeet;
+
+            if ($basement > 0) {
+                $buildingArea += ($polygonSqfeet * $basement);
+            }
+
+            $buildingUsage = $polyData->building_usage ?? null;
+        } else {
+            $buildingArea = $polygonSqfeet;
+        }
+
+        // ─── ASSESSMENT DATA ───
+        $assessmentArea = 0;
+        $assessmentCount = 0;
+        $hasUsageMismatch = false;
+        $assessmentUsage = null;
+
+        if (isset($pointDataByGisid[$gisid])) {
+
+            foreach ($pointDataByGisid[$gisid] as $pd) {
+
+                $assessmentCount++;
+
+                $mis = $misByAssessment->get($pd->assessment);
+
+                $pointArea = 0;
+
+                if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
+                    $pointArea = floatval($pd->qcsqfeet);
+                } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
+                    $pointArea = floatval($mis->plot_area);
+                }
+
+                $assessmentArea += $pointArea;
+
+                // ─── GET ASSESSMENT USAGE ───
+                $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
+
+                // Store the first assessment usage for display
+                if (!$assessmentUsage && $pointUsage) {
+                    $assessmentUsage = $pointUsage;
+                }
+
+                if (
+                    $buildingUsage &&
+                    $pointUsage &&
+                    strtoupper(trim($buildingUsage)) !== strtoupper(trim($pointUsage))
+                ) {
+                    $hasUsageMismatch = true;
+                }
+            }
+        }
+
+        $areaVariation = $buildingArea - $assessmentArea;
+
+        $variationPercentage = $buildingArea > 0
+            ? round((abs($areaVariation) / $buildingArea) * 100, 1)
+            : 0;
+
+        $result[$gisid] = [
+            'gisid' => $gisid,
+            'building_area' => round($buildingArea, 2),
+            'assessment_area' => round($assessmentArea, 2),
+            'area_variation' => round($areaVariation, 2),
+            'variation_percentage' => $variationPercentage,
+            'area_status' => abs($areaVariation) > 1 ? 'VARIATION' : 'MATCH',
+
+            // ─── USAGE DETAILS ───
+            'building_usage' => $buildingUsage,
+            'assessment_usage' => $assessmentUsage,
+            'usage_status' => $hasUsageMismatch ? 'VARIATION' : 'MATCH',
+
+            'assessment_count' => $assessmentCount,
+        ];
+    }
+
+    return $result;
+}
 
     /**
      * Filter variations via AJAX
