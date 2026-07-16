@@ -148,112 +148,6 @@
             display: block;
         }
 
-        .custom-variation-toggle {
-            position: absolute;
-            right: 30px;
-            top: 414px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .variation-btn {
-            width: 44px;
-            height: 44px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 1px solid #e5e7eb;
-            color: #1e293b;
-            font-size: 1.2rem;
-            position: relative;
-        }
-
-        .variation-btn:hover {
-            background: #f8fafc;
-            transform: scale(1.02);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .variation-btn.active-variation {
-            background: #eff6ff;
-            border-color: #3b82f6;
-            color: #2563eb;
-        }
-
-        .variation-btn .badge-dot {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 2px solid white;
-        }
-
-        .badge-dot.area {
-            background: #ef4444;
-        }
-
-        .badge-dot.usage {
-            background: #f59e0b;
-        }
-
-        .variation-legend {
-            position: absolute;
-            bottom: 80px;
-            right: 30px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 12px 16px;
-            border-radius: 12px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
-            min-width: 180px;
-            font-size: 12px;
-            border: 1px solid #e5e7eb;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(10px);
-            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
-            pointer-events: none;
-        }
-
-        .variation-legend.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-            pointer-events: auto;
-        }
-
-        .variation-legend .legend-title {
-            font-weight: 700;
-            margin-bottom: 8px;
-            font-size: 13px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 6px;
-        }
-
-        .variation-legend .legend-item {
-            display: flex;
-            align-items: center;
-            padding: 3px 0;
-            gap: 8px;
-        }
-
-        .variation-legend .color-box {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            flex-shrink: 0;
-            border: 1px solid #e5e7eb;
-        }
-
         .fullscreen-btn {
             position: absolute;
             bottom: 20px;
@@ -1424,8 +1318,7 @@
             .custom-edit-toggle,
             .custom-label-toggle,
             .custom-legend-toggle,
-            .custom-3d-toggle,
-            .custom-variation-toggle {
+            .custom-3d-toggle {
                 right: 10px;
             }
             .custom-layer-switcher {
@@ -1449,9 +1342,6 @@
             .custom-3d-toggle {
                 top: 298px;
             }
-            .custom-variation-toggle {
-                top: 346px;
-            }
             .layer-toggle-btn,
             .location-toggle-btn,
             .search-toggle-btn,
@@ -1459,8 +1349,7 @@
             .label-toggle-btn,
             .legend-toggle-btn,
             .fullscreen-btn,
-            .threed-toggle-btn,
-            .variation-btn {
+            .threed-toggle-btn {
                 width: 38px;
                 height: 38px;
                 font-size: 1rem;
@@ -1484,10 +1373,6 @@
             .filter-section .row>div {
                 margin-bottom: 8px;
             }
-            .variation-legend {
-                right: 10px;
-                bottom: 70px;
-            }
         }
 
         @media (max-width: 480px) {
@@ -1500,11 +1385,6 @@
             }
             .stat-strip {
                 grid-template-columns: 1fr;
-            }
-            .variation-legend {
-                right: 10px;
-                bottom: 70px;
-                min-width: 150px;
             }
         }
 
@@ -1536,7 +1416,6 @@
                         <i class="bi bi-geo-alt me-1"></i> Ward {{ $ward->ward_no }}
                     </span>
                     <span class="text-muted small"><i class="bi bi-building me-1"></i> {{ $ward->zone->zone_name ?? 'N/A' }}</span>
-                    <span class="text-muted small" id="wardBuildingCount"><i class="bi bi-building me-1"></i> {{ count($buildingData['buildings'] ?? []) }} buildings</span>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-2">
@@ -1974,146 +1853,20 @@
                             color: building.color,
                             sqfeet: building.sqfeet,
                             type: 'Building',
-                            originalData: building,
-                            isAreaVariation: building.is_area_variation || false,
-                            isUsageVariation: building.is_usage_variation || false
+                            originalData: building
                         });
                         feature.setId(building.gisid);
-
-                        // Apply variation styles if enabled
-                        applyBuildingStyle(feature);
-
+                        const color = building.color || '#BDBDBD';
+                        feature.setStyle(new ol.style.Style({
+                            fill: new ol.style.Fill({ color: color + '66' }),
+                            stroke: new ol.style.Stroke({ color: color, width: 2.5 })
+                        }));
                         buildingSource.addFeature(feature);
                     } catch (e) {
                         console.error('Building parse error:', e);
                     }
                 });
                 currentFilteredBuildings = dataToLoad;
-            }
-
-            // ─── VARIATION STATES ───
-            let showAreaVariation = false;
-            let showUsageVariation = false;
-
-            // ─── BUILDING STYLE WITH VARIATIONS ───
-            function applyBuildingStyle(feature) {
-                const gisid = feature.get('gisid');
-                const color = feature.get('color') || '#BDBDBD';
-                const isAreaVar = feature.get('isAreaVariation') || false;
-                const isUsageVar = feature.get('isUsageVariation') || false;
-
-                let fillColor = color + '66';
-                let strokeColor = color;
-                let strokeWidth = 2.5;
-                let dash = undefined;
-
-                // Apply variation styles
-                if (showAreaVariation && isAreaVar) {
-                    strokeColor = '#ef4444';
-                    strokeWidth = 4;
-                    dash = [8, 4];
-                    fillColor = 'rgba(239, 68, 68, 0.2)';
-                }
-
-                if (showUsageVariation && isUsageVar) {
-                    strokeColor = '#f59e0b';
-                    strokeWidth = 4;
-                    dash = [4, 4];
-                    fillColor = 'rgba(245, 158, 11, 0.2)';
-                }
-
-                // If both variations are active and both are true, use a combined style
-                if (showAreaVariation && showUsageVariation && isAreaVar && isUsageVar) {
-                    strokeColor = '#8b5cf6';
-                    strokeWidth = 5;
-                    dash = [8, 4, 4, 4];
-                    fillColor = 'rgba(139, 92, 246, 0.2)';
-                }
-
-                feature.setStyle(new ol.style.Style({
-                    fill: new ol.style.Fill({ color: fillColor }),
-                    stroke: new ol.style.Stroke({
-                        color: strokeColor,
-                        width: strokeWidth,
-                        lineDash: dash
-                    })
-                }));
-            }
-
-            // ─── TOGGLE VARIATION FUNCTIONS ───
-            function toggleAreaVariation() {
-                showAreaVariation = !showAreaVariation;
-                $('#areaVariationBtn').toggleClass('active-variation', showAreaVariation);
-
-                // Update all building styles
-                buildingSource.getFeatures().forEach(feature => {
-                    applyBuildingStyle(feature);
-                });
-
-                // Show/hide legend
-                updateVariationLegend();
-
-                const msg = showAreaVariation ? '🔴 Area variations highlighted' : '🔴 Area variations hidden';
-                showToast(msg, 2000);
-            }
-
-            function toggleUsageVariation() {
-                showUsageVariation = !showUsageVariation;
-                $('#usageVariationBtn').toggleClass('active-variation', showUsageVariation);
-
-                // Update all building styles
-                buildingSource.getFeatures().forEach(feature => {
-                    applyBuildingStyle(feature);
-                });
-
-                // Show/hide legend
-                updateVariationLegend();
-
-                const msg = showUsageVariation ? '🟠 Usage variations highlighted' : '🟠 Usage variations hidden';
-                showToast(msg, 2000);
-            }
-
-            function updateVariationLegend() {
-                const $legend = $('#variationLegend');
-                const hasActive = showAreaVariation || showUsageVariation;
-
-                if (hasActive) {
-                    let html = '<div class="legend-title">📊 Variation Legend</div>';
-
-                    if (showAreaVariation) {
-                        const count = buildingSource.getFeatures().filter(f => f.get('isAreaVariation')).length;
-                        html += `
-                            <div class="legend-item">
-                                <div class="color-box" style="background:#ef4444; border:2px dashed #ef4444;"></div>
-                                <span>Area Variation (${count})</span>
-                            </div>
-                        `;
-                    }
-
-                    if (showUsageVariation) {
-                        const count = buildingSource.getFeatures().filter(f => f.get('isUsageVariation')).length;
-                        html += `
-                            <div class="legend-item">
-                                <div class="color-box" style="background:#f59e0b; border:2px dashed #f59e0b;"></div>
-                                <span>Usage Variation (${count})</span>
-                            </div>
-                        `;
-                    }
-
-                    if (showAreaVariation && showUsageVariation) {
-                        const count = buildingSource.getFeatures().filter(f => f.get('isAreaVariation') && f.get('isUsageVariation')).length;
-                        html += `
-                            <div class="legend-item">
-                                <div class="color-box" style="background:#8b5cf6; border:2px dashed #8b5cf6;"></div>
-                                <span>Both Variations (${count})</span>
-                            </div>
-                        `;
-                    }
-
-                    $legend.html(html).addClass('show');
-                } else {
-                    $legend.removeClass('show');
-                }
             }
 
             // ─── BUILDING LAYER ───
@@ -3615,32 +3368,6 @@
                 </div>
             `);
 
-            // ─── VARIATION TOGGLE BUTTONS ───
-            $mapContainer.append(`
-                <div class="custom-variation-toggle">
-                    <div class="variation-btn" id="areaVariationBtn" title="Toggle Area Variation">
-                        <i class="bi bi-rulers"></i>
-                        <span class="badge-dot area"></span>
-                    </div>
-                    <div class="variation-btn" id="usageVariationBtn" title="Toggle Usage Variation">
-                        <i class="bi bi-tags"></i>
-                        <span class="badge-dot usage"></span>
-                    </div>
-                </div>
-                <div class="variation-legend" id="variationLegend"></div>
-            `);
-
-            // ─── VARIATION EVENT BINDING ───
-            $(document).on('click', '#areaVariationBtn', function(e) {
-                e.stopPropagation();
-                toggleAreaVariation();
-            });
-
-            $(document).on('click', '#usageVariationBtn', function(e) {
-                e.stopPropagation();
-                toggleUsageVariation();
-            });
-
             $mapContainer.append(`
                 <div class="custom-location-switcher">
                     <div class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></div>
@@ -4951,7 +4678,7 @@
 
             loadInfrastructure({{ $ward->id }});
 
-            console.log('✅ Executive GIS Dashboard ready with 3D fallback and variation toggles');
+            console.log('✅ Executive GIS Dashboard ready with 3D fallback');
         });
     </script>
 @endpush
