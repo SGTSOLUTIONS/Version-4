@@ -1504,6 +1504,7 @@
                         <option value="MIXED">Mixed</option>
                         <option value="GOVERNMENT">Government</option>
                         <option value="VACANT">Vacant</option>
+                        <option value="OTHER">Other</option>
                     @endif
                 </select>
             </div>
@@ -1596,9 +1597,14 @@
                     <span class="legend-label">Government</span>
                     <span class="legend-count">0</span>
                 </span>
+                <span class="legend-item" style="background:#FFFBEB; border:1px solid #FCD34D;">
+                    <span class="color-dot" style="background:#FFD700;"></span>
+                    <span class="legend-label">Vacant</span>
+                    <span class="legend-count">0</span>
+                </span>
                 <span class="legend-item">
                     <span class="color-dot" style="background:#9E9E9E;"></span>
-                    <span class="legend-label">Vacant</span>
+                    <span class="legend-label">Other</span>
                     <span class="legend-count">0</span>
                 </span>
             @endif
@@ -2030,8 +2036,8 @@
                 'INSTITUTIONAL': '#9C27B0', // Purple
                 'MIXED': '#F44336', // Red
                 'GOVERNMENT': '#607D8B', // Blue Grey
-                'VACANT': '#FFD700', // Gold Yellow
-                'OTHER': '#9E9E9E' // Grey
+                'VACANT': '#FFD700', // Gold/Yellow - Changed from grey
+                'OTHER': '#9E9E9E' // Grey - for unknown/other
             };
 
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
@@ -2354,7 +2360,8 @@
                         let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l
                             .coordinates;
                         while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][
-                                0])) {
+                                0
+                            ])) {
                             coords = coords[0];
                         }
                         const isValid = coords.length >= 2 && coords.every(c =>
@@ -3078,20 +3085,20 @@
                                     <div class="tax-card">
                                         <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
                                         ${ptList.length ? ptList.map(pt => `
-                                                <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
-                                                    <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
-                                                    <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
-                                                    <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
-                                                    <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
-                                                    <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
-                                                    <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
-                                                    <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
-                                                    <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
-                                                    <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
-                                                    <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
-                                                    <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
-                                                </div>
-                                            `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
+                                                            <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                                                <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                                                <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                                            </div>
+                                                        `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
                                     </div>
                                 </div>
                             </div>
@@ -4194,7 +4201,7 @@
                             </div>`;
                     });
                     $('#filterResults').html(html ||
-                    '<div class="p-2 text-muted">No matches</div>');
+                        '<div class="p-2 text-muted">No matches</div>');
                 });
             });
 

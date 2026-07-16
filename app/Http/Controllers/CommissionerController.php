@@ -1810,17 +1810,18 @@ class CommissionerController extends Controller
 
         // Define usage color mapping
         $usageColors = [
-            'RESIDENTIAL' => '#4CAF50',  // Green
-            'COMMERCIAL'  => '#2196F3',  // Blue
-            'INDUSTRIAL'  => '#FF9800',  // Orange
-            'INSTITUTIONAL' => '#9C27B0', // Purple
-            'MIXED'       => '#F44336',  // Red
-            'GOVERNMENT'  => '#607D8B',  // Blue Grey
-            'VACANT'      => '#9E9E9E',  // Grey
+            'RESIDENTIAL' => '#4CAF50',    // Green
+            'COMMERCIAL'  => '#2196F3',    // Blue
+            'INDUSTRIAL'  => '#FF9800',    // Orange
+            'INSTITUTIONAL' => '#9C27B0',  // Purple
+            'MIXED'       => '#F44336',    // Red
+            'GOVERNMENT'  => '#607D8B',    // Blue Grey
+            'VACANT'      => '#FFD700',    // Gold/Yellow
+            'OTHER'       => '#9E9E9E',    // Grey
         ];
 
-        // Default color for unknown usage
-        $defaultColor = '#BDBDBD';
+        // Default color for unknown usage - use OTHER color
+        $defaultColor = '#9E9E9E';
 
         $polygons = DB::table($polygonsTable)->get();
         $polygonData = collect();
@@ -1836,26 +1837,28 @@ class CommissionerController extends Controller
             $gisid = $polygon->gisid;
             $buildingData = $polygonData->get($gisid);
 
-            // Get building usage from polygon_data or default
-            $usage = 'VACANT';
+            // Get building usage from polygon_data
+            $usage = 'OTHER'; // Default to OTHER
             if ($buildingData && !empty($buildingData->building_usage)) {
                 $usage = strtoupper(trim($buildingData->building_usage));
 
                 // Map variations to standard types
                 if (strpos($usage, 'RESIDENT') !== false || strpos($usage, 'DWELLING') !== false) {
                     $usage = 'RESIDENTIAL';
-                } elseif (strpos($usage, 'SHOP') !== false || strpos($usage, 'RETAIL') !== false) {
+                } elseif (strpos($usage, 'SHOP') !== false || strpos($usage, 'RETAIL') !== false || strpos($usage, 'COMMERCIAL') !== false) {
                     $usage = 'COMMERCIAL';
                 } elseif (strpos($usage, 'FACTORY') !== false || strpos($usage, 'MANUFACT') !== false) {
                     $usage = 'INDUSTRIAL';
-                } elseif (strpos($usage, 'SCHOOL') !== false || strpos($usage, 'HOSPITAL') !== false) {
+                } elseif (strpos($usage, 'SCHOOL') !== false || strpos($usage, 'HOSPITAL') !== false || strpos($usage, 'COLLEGE') !== false) {
                     $usage = 'INSTITUTIONAL';
-                } elseif (strpos($usage, 'GOV') !== false || strpos($usage, 'OFFICE') !== false) {
+                } elseif (strpos($usage, 'GOV') !== false || strpos($usage, 'OFFICE') !== false || strpos($usage, 'MUNICIPAL') !== false) {
                     $usage = 'GOVERNMENT';
+                } elseif (strpos($usage, 'VACANT') !== false || strpos($usage, 'EMPTY') !== false) {
+                    $usage = 'VACANT';
                 }
             }
 
-            $color = $usageColors[$usage] ?? $defaultColor;
+            $color = $usageColors[$usage] ?? $usageColors['OTHER'];
 
             // Count by usage
             if (!isset($usageCounts[$usage])) {
