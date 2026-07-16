@@ -1955,7 +1955,8 @@
                 'INSTITUTIONAL': '#9C27B0',
                 'MIXED': '#F44336',
                 'GOVERNMENT': '#607D8B',
-                'VACANT': '#9E9E9E',
+                'VACANT': 'yelloow',
+                'OTHER': '#9E9E9E'
             };
 
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
@@ -4823,7 +4824,7 @@
                         const floors = polygonData?.number_floor ? parseInt(polygonData.number_floor) || 1 : 1;
                         const height = Math.max(1, floors) * 3;
                         const isMapped = !!polygonData;
-                        const usage = feature.get('usage') || 'VACANT';
+                        const usage = feature.get('usage') || 'OTHER';
                         const color = usageColors[usage] || '#BDBDBD';
 
                         const entity = cesiumViewer.entities.add({
