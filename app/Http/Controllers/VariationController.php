@@ -92,112 +92,169 @@ class VariationController extends Controller
     }
 
     /**
-     * Build Area & Usage Variation
+     * Build Area & Usage Variation with All Use Cases
      */
-   private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData)
-{
-    $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
-    $misByAssessment = collect($misData)->keyBy('assessment');
+    private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData)
+    {
+        $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
+        $misByAssessment = collect($misData)->keyBy('assessment');
 
-    $pointDataByGisid = [];
+        $pointDataByGisid = [];
 
-    foreach ($pointDatas as $pd) {
-        $pointDataByGisid[$pd->point_gisid][] = $pd;
-    }
+        foreach ($pointDatas as $pd) {
+            $pointDataByGisid[$pd->point_gisid][] = $pd;
+        }
 
-    $result = [];
+        $result = [];
 
-    foreach ($polygons as $polygon) {
+        foreach ($polygons as $polygon) {
 
-        $gisid = $polygon->gisid;
-        $polygonSqfeet = floatval($polygon->sqfeet ?? 0);
+            $gisid = $polygon->gisid;
+            $polygonSqfeet = floatval($polygon->sqfeet ?? 0);
 
-        $polyData = $polygonDataByGisid->get($gisid);
+            $polyData = $polygonDataByGisid->get($gisid);
 
-        // ─── BUILDING USAGE ───
-        $buildingUsage = null;
-        if ($polyData) {
-            $numberFloor = floatval($polyData->number_floor ?? 0);
-            $basement = floatval($polyData->basement ?? 0);
-
-            $buildingArea = ($numberFloor > 0 ? $numberFloor : 1) * $polygonSqfeet;
-
-            if ($basement > 0) {
-                $buildingArea += ($polygonSqfeet * $basement);
-            }
-
-            $buildingUsage = $polyData->building_usage ?? null;
-        } else {
+            // ─── BUILDING USAGE ───
+            $buildingUsage = null;
             $buildingArea = $polygonSqfeet;
-        }
+            $numberFloor = 1;
+            $basement = 0;
 
-        // ─── ASSESSMENT DATA ───
-        $assessmentArea = 0;
-        $assessmentCount = 0;
-        $hasUsageMismatch = false;
-        $assessmentUsage = null;
+            if ($polyData) {
+                $numberFloor = floatval($polyData->number_floor ?? 0);
+                $basement = floatval($polyData->basement ?? 0);
 
-        if (isset($pointDataByGisid[$gisid])) {
+                $buildingArea = ($numberFloor > 0 ? $numberFloor : 1) * $polygonSqfeet;
 
-            foreach ($pointDataByGisid[$gisid] as $pd) {
-
-                $assessmentCount++;
-
-                $mis = $misByAssessment->get($pd->assessment);
-
-                $pointArea = 0;
-
-                if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
-                    $pointArea = floatval($pd->qcsqfeet);
-                } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
-                    $pointArea = floatval($mis->plot_area);
+                if ($basement > 0) {
+                    $buildingArea += ($polygonSqfeet * $basement);
                 }
 
-                $assessmentArea += $pointArea;
+                $buildingUsage = $polyData->building_usage ?? null;
+            }
 
-                // ─── GET ASSESSMENT USAGE ───
-                $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
+            // ─── ASSESSMENT DATA ───
+            $assessmentArea = 0;
+            $assessmentCount = 0;
+            $assessmentUsage = null;
+            $allAssessmentUsages = [];
+            $hasUsageMismatch = false;
+            $hasPartialMatch = false;
 
-                // Store the first assessment usage for display
-                if (!$assessmentUsage && $pointUsage) {
-                    $assessmentUsage = $pointUsage;
-                }
+            if (isset($pointDataByGisid[$gisid])) {
 
-                if (
-                    $buildingUsage &&
-                    $pointUsage &&
-                    strtoupper(trim($buildingUsage)) !== strtoupper(trim($pointUsage))
-                ) {
-                    $hasUsageMismatch = true;
+                foreach ($pointDataByGisid[$gisid] as $pd) {
+
+                    $assessmentCount++;
+
+                    $mis = $misByAssessment->get($pd->assessment);
+
+                    $pointArea = 0;
+
+                    if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
+                        $pointArea = floatval($pd->qcsqfeet);
+                    } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
+                        $pointArea = floatval($mis->plot_area);
+                    }
+
+                    $assessmentArea += $pointArea;
+
+                    // ─── GET ASSESSMENT USAGE ───
+                    $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
+
+                    if ($pointUsage) {
+                        $allAssessmentUsages[] = $pointUsage;
+                    }
+
+                    // Store the first assessment usage for display
+                    if (!$assessmentUsage && $pointUsage) {
+                        $assessmentUsage = $pointUsage;
+                    }
+
+                    // ─── USAGE MISMATCH CHECK ───
+                    if ($buildingUsage && $pointUsage) {
+                        if (strtoupper(trim($buildingUsage)) !== strtoupper(trim($pointUsage))) {
+                            $hasUsageMismatch = true;
+                        } else {
+                            $hasPartialMatch = true;
+                        }
+                    }
                 }
             }
+
+            // ─── DETERMINE USAGE STATUS ───
+            $usageStatus = 'NO_DATA';
+            $usageStatusLabel = 'No Data';
+            $usageBadgeClass = 'badge-secondary';
+
+            // Case 1: Building Usage exists, Assessment Usage exists
+            if ($buildingUsage && $assessmentUsage) {
+                if ($hasUsageMismatch) {
+                    // Check if there are multiple assessments and some match
+                    if ($hasPartialMatch && count($allAssessmentUsages) > 1) {
+                        $usageStatus = 'PARTIAL_MATCH';
+                        $usageStatusLabel = 'Partial Match';
+                        $usageBadgeClass = 'badge-warning';
+                    } else {
+                        $usageStatus = 'VARIATION';
+                        $usageStatusLabel = 'Variation';
+                        $usageBadgeClass = 'badge-variation';
+                    }
+                } else {
+                    $usageStatus = 'MATCH';
+                    $usageStatusLabel = 'Match';
+                    $usageBadgeClass = 'badge-match';
+                }
+            }
+            // Case 2: Building Usage exists, Assessment Usage is NULL
+            elseif ($buildingUsage && !$assessmentUsage) {
+                $usageStatus = 'BUILDING_ONLY';
+                $usageStatusLabel = 'Building Only';
+                $usageBadgeClass = 'badge-partial';
+            }
+            // Case 3: Building Usage is NULL, Assessment Usage exists
+            elseif (!$buildingUsage && $assessmentUsage) {
+                $usageStatus = 'ASSESSMENT_ONLY';
+                $usageStatusLabel = 'Assessment Only';
+                $usageBadgeClass = 'badge-partial';
+            }
+            // Case 4: Both are NULL
+            else {
+                $usageStatus = 'NO_DATA';
+                $usageStatusLabel = 'No Data';
+                $usageBadgeClass = 'badge-secondary';
+            }
+
+            $areaVariation = $buildingArea - $assessmentArea;
+            $variationPercentage = $buildingArea > 0
+                ? round((abs($areaVariation) / $buildingArea) * 100, 1)
+                : 0;
+
+            $result[$gisid] = [
+                'gisid' => $gisid,
+                'building_area' => round($buildingArea, 2),
+                'assessment_area' => round($assessmentArea, 2),
+                'area_variation' => round($areaVariation, 2),
+                'variation_percentage' => $variationPercentage,
+                'area_status' => abs($areaVariation) > 1 ? 'VARIATION' : 'MATCH',
+
+                // ─── USAGE DETAILS ───
+                'building_usage' => $buildingUsage,
+                'assessment_usage' => $assessmentUsage,
+                'all_assessment_usages' => $allAssessmentUsages,
+                'has_multiple_assessments' => count($allAssessmentUsages) > 1,
+
+                // ─── USAGE STATUS WITH LABELS ───
+                'usage_status' => $usageStatus,
+                'usage_status_label' => $usageStatusLabel,
+                'usage_badge_class' => $usageBadgeClass,
+
+                'assessment_count' => $assessmentCount,
+            ];
         }
 
-        $areaVariation = $buildingArea - $assessmentArea;
-
-        $variationPercentage = $buildingArea > 0
-            ? round((abs($areaVariation) / $buildingArea) * 100, 1)
-            : 0;
-
-        $result[$gisid] = [
-            'gisid' => $gisid,
-            'building_area' => round($buildingArea, 2),
-            'assessment_area' => round($assessmentArea, 2),
-            'area_variation' => round($areaVariation, 2),
-            'variation_percentage' => $variationPercentage,
-            'area_status' => abs($areaVariation) > 1 ? 'VARIATION' : 'MATCH',
-
-            // ─── USAGE DETAILS ───
-            'building_usage' => $buildingUsage,
-            'assessment_usage' => $assessmentUsage,
-            'usage_status' => $hasUsageMismatch ? 'VARIATION' : 'MATCH',
-
-            'assessment_count' => $assessmentCount,
-        ];
+        return $result;
     }
-
-    return $result;
-}
 
     /**
      * Filter variations via AJAX
@@ -227,11 +284,11 @@ class VariationController extends Controller
         // Apply filters
         $filtered = array_filter($allVariations, function($item) use ($request) {
             // Usage status filter
-            if ($request->usage_status != 'all' && strtolower($item['usage_status']) != $request->usage_status) {
+            if ($request->usage_status != 'all' && $item['usage_status'] != $request->usage_status) {
                 return false;
             }
             // Area status filter
-            if ($request->area_status != 'all' && strtolower($item['area_status']) != $request->area_status) {
+            if ($request->area_status != 'all' && $item['area_status'] != strtoupper($request->area_status)) {
                 return false;
             }
             // GIS ID filter
@@ -262,6 +319,10 @@ class VariationController extends Controller
             'filtered' => count($filtered),
             'usage_match' => count(array_filter($filtered, function($v) { return $v['usage_status'] == 'MATCH'; })),
             'usage_variation' => count(array_filter($filtered, function($v) { return $v['usage_status'] == 'VARIATION'; })),
+            'usage_partial' => count(array_filter($filtered, function($v) { return $v['usage_status'] == 'PARTIAL_MATCH'; })),
+            'usage_building_only' => count(array_filter($filtered, function($v) { return $v['usage_status'] == 'BUILDING_ONLY'; })),
+            'usage_assessment_only' => count(array_filter($filtered, function($v) { return $v['usage_status'] == 'ASSESSMENT_ONLY'; })),
+            'usage_no_data' => count(array_filter($filtered, function($v) { return $v['usage_status'] == 'NO_DATA'; })),
             'area_match' => count(array_filter($filtered, function($v) { return $v['area_status'] == 'MATCH'; })),
             'area_variation' => count(array_filter($filtered, function($v) { return $v['area_status'] == 'VARIATION'; })),
         ];
@@ -302,10 +363,10 @@ class VariationController extends Controller
 
         // Apply filters
         $filtered = array_filter($allVariations, function($item) use ($request) {
-            if ($request->usage_status != 'all' && strtolower($item['usage_status']) != $request->usage_status) {
+            if ($request->usage_status != 'all' && $item['usage_status'] != $request->usage_status) {
                 return false;
             }
-            if ($request->area_status != 'all' && strtolower($item['area_status']) != $request->area_status) {
+            if ($request->area_status != 'all' && $item['area_status'] != strtoupper($request->area_status)) {
                 return false;
             }
             if ($request->gisid && !str_contains($item['gisid'], $request->gisid)) {
@@ -332,12 +393,14 @@ class VariationController extends Controller
             $exportData[] = [
                 'S.No' => $index + 1,
                 'GIS ID' => $item['gisid'],
+                'Building Usage' => $item['building_usage'] ?? 'NULL',
+                'Assessment Usage' => $item['assessment_usage'] ?? 'NULL',
+                'Usage Status' => $item['usage_status_label'],
                 'Building Area (sqft)' => number_format($item['building_area'], 2),
                 'Assessment Area (sqft)' => number_format($item['assessment_area'], 2),
                 'Area Variation' => number_format($item['area_variation'], 2),
                 'Variation %' => number_format($item['variation_percentage'], 1),
                 'Area Status' => $item['area_status'],
-                'Usage Status' => $item['usage_status'],
                 'Assessment Count' => $item['assessment_count']
             ];
         }

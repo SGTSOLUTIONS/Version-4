@@ -152,6 +152,7 @@
             vertical-align: middle;
         }
 
+        /* ─── BADGE STYLES ─── */
         .badge-match {
             background: #dcfce7;
             color: #15803d;
@@ -159,6 +160,9 @@
             border-radius: 20px;
             font-weight: 600;
             font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .badge-variation {
@@ -168,6 +172,9 @@
             border-radius: 20px;
             font-weight: 600;
             font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .badge-partial {
@@ -177,6 +184,45 @@
             border-radius: 20px;
             font-weight: 600;
             font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-building-only {
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-assessment-only {
+            background: #fce7f3;
+            color: #be185d;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-no-data {
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .btn-export {
@@ -346,6 +392,11 @@
             color: #16a34a;
         }
 
+        .usage-detail-box .value.null-value {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
         @media (max-width: 768px) {
             .stat-strip {
                 grid-template-columns: repeat(2, 1fr);
@@ -419,10 +470,37 @@
         </div>
         <div class="col-xl-2 col-lg-3 col-md-4 col-6">
             <div class="stat-card">
-                <div class="stat-icon stat-icon-amber"><i class="bi bi-rulers"></i></div>
+                <div class="stat-icon stat-icon-amber"><i class="bi bi-exclamation-triangle"></i></div>
                 <div>
-                    <div class="stat-label">Area Match</div>
-                    <div class="stat-value" id="statAreaMatch">0</div>
+                    <div class="stat-label">Partial Match</div>
+                    <div class="stat-value" id="statPartialMatch">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-cyan"><i class="bi bi-building"></i></div>
+                <div>
+                    <div class="stat-label">Building Only</div>
+                    <div class="stat-value" id="statBuildingOnly">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-purple"><i class="bi bi-file-earmark-text"></i></div>
+                <div>
+                    <div class="stat-label">Assessment Only</div>
+                    <div class="stat-value" id="statAssessmentOnly">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-pink"><i class="bi bi-dash-circle"></i></div>
+                <div>
+                    <div class="stat-label">No Data</div>
+                    <div class="stat-value" id="statNoData">0</div>
                 </div>
             </div>
         </div>
@@ -432,15 +510,6 @@
                 <div>
                     <div class="stat-label">Area Variation</div>
                     <div class="stat-value" id="statAreaVariation">0</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-purple"><i class="bi bi-file-earmark-text"></i></div>
-                <div>
-                    <div class="stat-label">Filtered Results</div>
-                    <div class="stat-value" id="statFiltered">{{ count($buildingVariations) }}</div>
                 </div>
             </div>
         </div>
@@ -455,8 +524,12 @@
                     <label class="form-label"><i class="bi bi-tags me-1"></i>Usage Status</label>
                     <select name="usage_status" id="filterUsageStatus" class="form-select form-select-sm">
                         <option value="all">All Status</option>
-                        <option value="match">Match</option>
-                        <option value="variation">Variation</option>
+                        <option value="MATCH">✅ Match</option>
+                        <option value="VARIATION">❌ Variation</option>
+                        <option value="PARTIAL_MATCH">⚠️ Partial Match</option>
+                        <option value="BUILDING_ONLY">🏢 Building Only</option>
+                        <option value="ASSESSMENT_ONLY">📄 Assessment Only</option>
+                        <option value="NO_DATA">⬜ No Data</option>
                     </select>
                 </div>
 
@@ -567,36 +640,93 @@
                 </thead>
                 <tbody id="tableBody">
                     @forelse($buildingVariations as $variation)
+                        @php
+                            // Determine badge class and icon based on usage status
+                            $badgeClass = '';
+                            $icon = '';
+                            $label = $variation['usage_status_label'] ?? 'Unknown';
+
+                            switch($variation['usage_status']) {
+                                case 'MATCH':
+                                    $badgeClass = 'badge-match';
+                                    $icon = 'bi-check-circle';
+                                    break;
+                                case 'VARIATION':
+                                    $badgeClass = 'badge-variation';
+                                    $icon = 'bi-x-circle';
+                                    break;
+                                case 'PARTIAL_MATCH':
+                                    $badgeClass = 'badge-partial';
+                                    $icon = 'bi-exclamation-triangle';
+                                    break;
+                                case 'BUILDING_ONLY':
+                                    $badgeClass = 'badge-building-only';
+                                    $icon = 'bi-building';
+                                    break;
+                                case 'ASSESSMENT_ONLY':
+                                    $badgeClass = 'badge-assessment-only';
+                                    $icon = 'bi-file-earmark-text';
+                                    break;
+                                case 'NO_DATA':
+                                default:
+                                    $badgeClass = 'badge-no-data';
+                                    $icon = 'bi-dash-circle';
+                                    break;
+                            }
+
+                            $isUsageVariation = $variation['usage_status'] == 'VARIATION';
+                            $isPartialMatch = $variation['usage_status'] == 'PARTIAL_MATCH';
+                            $isBuildingOnly = $variation['usage_status'] == 'BUILDING_ONLY';
+                            $isAssessmentOnly = $variation['usage_status'] == 'ASSESSMENT_ONLY';
+                            $isNoData = $variation['usage_status'] == 'NO_DATA';
+
+                            $usageValueClass = $isUsageVariation ? 'mismatch' : 'match';
+                            if ($isBuildingOnly || $isAssessmentOnly || $isNoData) {
+                                $usageValueClass = 'null-value';
+                            }
+
+                            // Assessment usage display
+                            $assessmentDisplay = $variation['assessment_usage'] ?? 'N/A';
+                            if ($isBuildingOnly) {
+                                $assessmentDisplay = '— (Not Assessed)';
+                            } elseif ($isNoData) {
+                                $assessmentDisplay = '— (No Data)';
+                            }
+
+                            // Building usage display
+                            $buildingDisplay = $variation['building_usage'] ?? 'N/A';
+                            if ($isAssessmentOnly) {
+                                $buildingDisplay = '— (Not Mapped)';
+                            } elseif ($isNoData) {
+                                $buildingDisplay = '— (No Data)';
+                            }
+                        @endphp
                         <tr class="variation-row">
                             <td>{{ $loop->iteration }}</td>
                             <td><code>{{ $variation['gisid'] }}</code></td>
                             <td>
                                 <span class="usage-detail-box">
                                     <span class="label">Usage:</span>
-                                    <span class="value">{{ $variation['building_usage'] ?? 'N/A' }}</span>
+                                    <span class="value {{ $usageValueClass }}">{{ $buildingDisplay }}</span>
                                 </span>
                             </td>
                             <td>
                                 <span class="usage-detail-box">
                                     <span class="label">Usage:</span>
-                                    <span class="value {{ $variation['usage_status'] == 'VARIATION' ? 'mismatch' : 'match' }}">
-                                        {{ $variation['assessment_usage'] ?? 'N/A' }}
-                                    </span>
+                                    <span class="value {{ $usageValueClass }}">{{ $assessmentDisplay }}</span>
                                 </span>
-                                @if($variation['assessment_usage'] && $variation['building_usage'] && $variation['building_usage'] != $variation['assessment_usage'])
+                                @if($isUsageVariation)
                                     <span class="badge badge-variation ms-1">Mismatch</span>
+                                @endif
+                                @if($isPartialMatch)
+                                    <span class="badge badge-partial ms-1">Partial</span>
                                 @endif
                             </td>
                             <td>
-                                @if($variation['usage_status'] == 'VARIATION')
-                                    <span class="badge badge-variation">
-                                        <i class="bi bi-x-circle me-1"></i> Variation
-                                    </span>
-                                @else
-                                    <span class="badge badge-match">
-                                        <i class="bi bi-check-circle me-1"></i> Match
-                                    </span>
-                                @endif
+                                <span class="{{ $badgeClass }}">
+                                    <i class="{{ $icon }} me-1"></i>
+                                    {{ $label }}
+                                </span>
                             </td>
                             <td>{{ number_format($variation['building_area'], 2) }} sqft</td>
                             <td>{{ number_format($variation['assessment_area'], 2) }} sqft</td>
@@ -730,13 +860,54 @@
                     if (item.variation_percentage > 10) progressClass = 'bar-danger';
                     else if (item.variation_percentage > 5) progressClass = 'bar-warning';
 
-                    const usageBadge = item.usage_status === 'VARIATION' ? 'badge-variation' : 'badge-match';
-                    const areaBadge = item.area_status === 'VARIATION' ? 'badge-variation' : 'badge-match';
-                    const assessmentBadge = item.assessment_count === 0 ? 'bg-secondary' : 'bg-primary';
+                    // Determine badge class
+                    let badgeClass = '';
+                    let icon = '';
+                    let label = item.usage_status_label || 'Unknown';
 
-                    // Check if usage status is variation
+                    switch(item.usage_status) {
+                        case 'MATCH':
+                            badgeClass = 'badge-match';
+                            icon = 'bi-check-circle';
+                            break;
+                        case 'VARIATION':
+                            badgeClass = 'badge-variation';
+                            icon = 'bi-x-circle';
+                            break;
+                        case 'PARTIAL_MATCH':
+                            badgeClass = 'badge-partial';
+                            icon = 'bi-exclamation-triangle';
+                            break;
+                        case 'BUILDING_ONLY':
+                            badgeClass = 'badge-building-only';
+                            icon = 'bi-building';
+                            break;
+                        case 'ASSESSMENT_ONLY':
+                            badgeClass = 'badge-assessment-only';
+                            icon = 'bi-file-earmark-text';
+                            break;
+                        case 'NO_DATA':
+                        default:
+                            badgeClass = 'badge-no-data';
+                            icon = 'bi-dash-circle';
+                            break;
+                    }
+
                     const isUsageVariation = item.usage_status === 'VARIATION';
-                    const usageValueClass = isUsageVariation ? 'mismatch' : 'match';
+                    const isPartialMatch = item.usage_status === 'PARTIAL_MATCH';
+                    const isBuildingOnly = item.usage_status === 'BUILDING_ONLY';
+                    const isAssessmentOnly = item.usage_status === 'ASSESSMENT_ONLY';
+                    const isNoData = item.usage_status === 'NO_DATA';
+
+                    const usageValueClass = isUsageVariation ? 'mismatch' : (isBuildingOnly || isAssessmentOnly || isNoData ? 'null-value' : 'match');
+
+                    let assessmentDisplay = item.assessment_usage || 'N/A';
+                    if (isBuildingOnly) assessmentDisplay = '— (Not Assessed)';
+                    if (isNoData) assessmentDisplay = '— (No Data)';
+
+                    let buildingDisplay = item.building_usage || 'N/A';
+                    if (isAssessmentOnly) buildingDisplay = '— (Not Mapped)';
+                    if (isNoData) buildingDisplay = '— (No Data)';
 
                     $tbody.append(`
                         <tr class="variation-row">
@@ -745,26 +916,28 @@
                             <td>
                                 <span class="usage-detail-box">
                                     <span class="label">Usage:</span>
-                                    <span class="value">${item.building_usage || 'N/A'}</span>
+                                    <span class="value ${usageValueClass}">${buildingDisplay}</span>
                                 </span>
                             </td>
                             <td>
                                 <span class="usage-detail-box">
                                     <span class="label">Usage:</span>
-                                    <span class="value ${usageValueClass}">${item.assessment_usage || 'N/A'}</span>
+                                    <span class="value ${usageValueClass}">${assessmentDisplay}</span>
                                 </span>
                                 ${isUsageVariation ? `<span class="badge badge-variation ms-1">Mismatch</span>` : ''}
+                                ${isPartialMatch ? `<span class="badge badge-partial ms-1">Partial</span>` : ''}
                             </td>
                             <td>
-                                <span class="${usageBadge}">
-                                    ${isUsageVariation ? '<i class="bi bi-x-circle me-1"></i> Variation' : '<i class="bi bi-check-circle me-1"></i> Match'}
+                                <span class="${badgeClass}">
+                                    <i class="${icon} me-1"></i>
+                                    ${label}
                                 </span>
                             </td>
                             <td>${item.building_area.toFixed(2)} sqft</td>
                             <td>${item.assessment_area.toFixed(2)} sqft</td>
                             <td class="${areaClass}">${areaSign}${item.area_variation.toFixed(2)}</td>
-                            <td><span class="${areaBadge}">${item.area_status}</span></td>
-                            <td><span class="badge ${assessmentBadge}">${item.assessment_count}</span></td>
+                            <td><span class="${item.area_status === 'VARIATION' ? 'badge-variation' : 'badge-match'}">${item.area_status}</span></td>
+                            <td><span class="badge ${item.assessment_count === 0 ? 'bg-secondary' : 'bg-primary'}">${item.assessment_count}</span></td>
                             <td>
                                 <div class="d-flex align-items-center gap-1">
                                     <span class="text-muted small">${item.assessment_count}</span>
@@ -783,10 +956,13 @@
             function updateStats(stats) {
                 if (!stats) return;
                 $('#statTotal').text(stats.total);
-                $('#statUsageMatch').text(stats.usage_match);
-                $('#statUsageVariation').text(stats.usage_variation);
-                $('#statAreaMatch').text(stats.area_match);
-                $('#statAreaVariation').text(stats.area_variation);
+                $('#statUsageMatch').text(stats.usage_match || 0);
+                $('#statUsageVariation').text(stats.usage_variation || 0);
+                $('#statPartialMatch').text(stats.usage_partial || 0);
+                $('#statBuildingOnly').text(stats.usage_building_only || 0);
+                $('#statAssessmentOnly').text(stats.usage_assessment_only || 0);
+                $('#statNoData').text(stats.usage_no_data || 0);
+                $('#statAreaVariation').text(stats.area_variation || 0);
                 $('#statFiltered').text(stats.filtered);
             }
 
@@ -851,13 +1027,11 @@
             }
 
             // ─── EVENT HANDLERS ───
-            // Form submit - Apply filters
             $('#filterForm').on('submit', function(e) {
                 e.preventDefault();
                 fetchFilteredData();
             });
 
-            // Reset filters
             $('#resetFiltersBtn').on('click', function() {
                 $('#filterUsageStatus').val('all');
                 $('#filterAreaStatus').val('all');
@@ -868,7 +1042,6 @@
                 fetchFilteredData();
             });
 
-            // Clear filters
             $('#clearFiltersBtn').on('click', function() {
                 $('#filterUsageStatus').val('all');
                 $('#filterAreaStatus').val('all');
@@ -879,19 +1052,16 @@
                 fetchFilteredData();
             });
 
-            // Export buttons
             $('#exportExcelBtn').on('click', function() { exportData('xlsx'); });
             $('#exportPdfBtn').on('click', function() { exportData('pdf'); });
             $('#exportCsvBtn').on('click', function() { exportData('csv'); });
 
-            // Real-time GIS ID search with debounce
             let searchTimeout;
             $('#filterGisid').on('input', function() {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(fetchFilteredData, 500);
             });
 
-            // Enter key on number inputs
             $('#filterVarMin, #filterVarMax').on('keypress', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -901,37 +1071,31 @@
 
             // ─── KEYBOARD SHORTCUTS ───
             $(document).on('keydown', function(e) {
-                // Ctrl+Shift+E for Excel
                 if (e.ctrlKey && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
                     e.preventDefault();
                     exportData('xlsx');
                 }
-                // Ctrl+Shift+P for PDF
                 if (e.ctrlKey && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
                     e.preventDefault();
                     exportData('pdf');
                 }
-                // Ctrl+Shift+C for CSV
                 if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
                     e.preventDefault();
                     exportData('csv');
                 }
-                // Ctrl+Shift+R for Reset
                 if (e.ctrlKey && e.shiftKey && (e.key === 'R' || e.key === 'r')) {
                     e.preventDefault();
                     $('#resetFiltersBtn').click();
                 }
-                // Escape to clear filters
                 if (e.key === 'Escape') {
                     $('#clearFiltersBtn').click();
                 }
             });
 
             // ─── INIT ───
-            // Load initial data with AJAX
             fetchFilteredData();
 
-            console.log('✅ Usage Variation page ready with detailed display');
+            console.log('✅ Usage Variation page ready with all status types');
         });
     </script>
 @endpush
