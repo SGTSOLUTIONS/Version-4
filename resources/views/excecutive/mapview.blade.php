@@ -562,9 +562,11 @@
             0% {
                 box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
             }
+
             70% {
                 box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
             }
+
             100% {
                 box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
             }
@@ -698,6 +700,7 @@
                 opacity: 0;
                 transform: translateX(-50%) translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(-50%) translateY(0);
@@ -1292,26 +1295,33 @@
             #map {
                 height: 600px;
             }
+
             .bld-image-strip {
                 height: 150px;
             }
+
             .bld-summary-card {
                 flex: 1 1 45%;
             }
+
             .point-data-card-grid {
                 grid-template-columns: 1fr 1fr;
             }
+
             .bld-modal-footer {
                 flex-direction: column;
                 gap: 10px;
             }
+
             .point-data-card-header {
                 flex-direction: column;
                 gap: 8px;
             }
+
             .point-data-card-actions {
                 justify-content: flex-start;
             }
+
             .custom-layer-switcher,
             .custom-location-switcher,
             .custom-search-switcher,
@@ -1321,27 +1331,35 @@
             .custom-3d-toggle {
                 right: 10px;
             }
+
             .custom-layer-switcher {
                 top: 10px;
             }
+
             .custom-location-switcher {
                 top: 58px;
             }
+
             .custom-search-switcher {
                 top: 106px;
             }
+
             .custom-edit-toggle {
                 top: 154px;
             }
+
             .custom-label-toggle {
                 top: 202px;
             }
+
             .custom-legend-toggle {
                 top: 250px;
             }
+
             .custom-3d-toggle {
                 top: 298px;
             }
+
             .layer-toggle-btn,
             .location-toggle-btn,
             .search-toggle-btn,
@@ -1355,9 +1373,11 @@
                 font-size: 1rem;
                 border-radius: 10px;
             }
+
             .search-dropdown {
                 width: min(320px, calc(100vw - 40px));
             }
+
             .infrastructure-legend {
                 left: 10px;
                 right: 10px;
@@ -1367,9 +1387,11 @@
                 min-width: 0;
                 max-height: 45vh;
             }
+
             .stat-strip {
                 grid-template-columns: repeat(2, 1fr);
             }
+
             .filter-section .row>div {
                 margin-bottom: 8px;
             }
@@ -1380,9 +1402,11 @@
                 max-height: 40vh;
                 font-size: 11px;
             }
+
             .infrastructure-legend .legend-title {
                 font-size: 13px;
             }
+
             .stat-strip {
                 grid-template-columns: 1fr;
             }
@@ -1409,13 +1433,15 @@
 
     <!-- ─── WARD NAVIGATION ─── -->
     <div class="ward-navigation mb-3">
-        <div class="d-flex align-items-center justify-content-between p-3 bg-white rounded-3 border" style="border-color: #e5e7eb !important;">
+        <div class="d-flex align-items-center justify-content-between p-3 bg-white rounded-3 border"
+            style="border-color: #e5e7eb !important;">
             <div class="d-flex align-items-center gap-3">
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size:0.85rem;">
                         <i class="bi bi-geo-alt me-1"></i> Ward {{ $ward->ward_no }}
                     </span>
-                    <span class="text-muted small"><i class="bi bi-building me-1"></i> {{ $ward->zone->zone_name ?? 'N/A' }}</span>
+                    <span class="text-muted small"><i class="bi bi-building me-1"></i>
+                        {{ $ward->zone->zone_name ?? 'N/A' }}</span>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-2">
@@ -1431,14 +1457,66 @@
 
     <!-- ─── WARD ANALYTICS STRIP ─── -->
     <div class="stat-strip">
-        <div class="stat-card"><div class="stat-icon stat-icon-blue"><i class="bi bi-building"></i></div><div><div class="stat-label">Total Buildings</div><div class="stat-value">{{ $analytics['total_buildings'] ?? 0 }}</div></div></div>
-        <div class="stat-card"><div class="stat-icon stat-icon-green"><i class="bi bi-check2-circle"></i></div><div><div class="stat-label">Surveyed Buildings</div><div class="stat-value">{{ $analytics['surveyed_buildings'] ?? 0 }}</div></div></div>
-        <div class="stat-card"><div class="stat-icon stat-icon-purple"><i class="bi bi-graph-up"></i></div><div><div class="stat-label">Survey Progress</div><div class="stat-value">{{ $analytics['survey_percentage'] ?? 0 }}%</div></div></div>
-        <div class="stat-card"><div class="stat-icon stat-icon-cyan"><i class="bi bi-file-earmark-text"></i></div><div><div class="stat-label">Assessments Mapped</div><div class="stat-value">{{ $analytics['total_surveyed_assessments'] ?? 0 }}</div></div></div>
-        <div class="stat-card"><div class="stat-icon stat-icon-amber"><i class="bi bi-rulers"></i></div><div><div class="stat-label">Area Variation</div><div class="stat-value">{{ $analytics['area_variation_count'] ?? 0 }} <span class="stat-sub">({{ $analytics['area_variation_percentage'] ?? 0 }}%)</span></div></div></div>
-        <div class="stat-card"><div class="stat-icon stat-icon-red"><i class="bi bi-tags"></i></div><div><div class="stat-label">Usage Variation</div><div class="stat-value">{{ $analytics['usage_variation_count'] ?? 0 }} <span class="stat-sub">({{ $analytics['usage_variation_percentage'] ?? 0 }}%)</span></div></div></div>
-        <div class="stat-card"><div class="stat-icon stat-icon-blue"><i class="bi bi-bounding-box"></i></div><div><div class="stat-label">Total Building Area</div><div class="stat-value">{{ number_format($analytics['total_building_area'] ?? 0, 0) }} <span class="stat-sub">sqft</span></div></div></div>
-        <div class="stat-card"><div class="stat-icon stat-icon-green"><i class="bi bi-clipboard-data"></i></div><div><div class="stat-label">Total Assessment Area</div><div class="stat-value">{{ number_format($analytics['total_assessment_area'] ?? 0, 0) }} <span class="stat-sub">sqft</span></div></div></div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue"><i class="bi bi-building"></i></div>
+            <div>
+                <div class="stat-label">Total Buildings</div>
+                <div class="stat-value">{{ $analytics['total_buildings'] ?? 0 }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-green"><i class="bi bi-check2-circle"></i></div>
+            <div>
+                <div class="stat-label">Surveyed Buildings</div>
+                <div class="stat-value">{{ $analytics['surveyed_buildings'] ?? 0 }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-purple"><i class="bi bi-graph-up"></i></div>
+            <div>
+                <div class="stat-label">Survey Progress</div>
+                <div class="stat-value">{{ $analytics['survey_percentage'] ?? 0 }}%</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-cyan"><i class="bi bi-file-earmark-text"></i></div>
+            <div>
+                <div class="stat-label">Assessments Mapped</div>
+                <div class="stat-value">{{ $analytics['total_surveyed_assessments'] ?? 0 }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-amber"><i class="bi bi-rulers"></i></div>
+            <div>
+                <div class="stat-label">Area Variation</div>
+                <div class="stat-value">{{ $analytics['area_variation_count'] ?? 0 }} <span
+                        class="stat-sub">({{ $analytics['area_variation_percentage'] ?? 0 }}%)</span></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-red"><i class="bi bi-tags"></i></div>
+            <div>
+                <div class="stat-label">Usage Variation</div>
+                <div class="stat-value">{{ $analytics['usage_variation_count'] ?? 0 }} <span
+                        class="stat-sub">({{ $analytics['usage_variation_percentage'] ?? 0 }}%)</span></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue"><i class="bi bi-bounding-box"></i></div>
+            <div>
+                <div class="stat-label">Total Building Area</div>
+                <div class="stat-value">{{ number_format($analytics['total_building_area'] ?? 0, 0) }} <span
+                        class="stat-sub">sqft</span></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-green"><i class="bi bi-clipboard-data"></i></div>
+            <div>
+                <div class="stat-label">Total Assessment Area</div>
+                <div class="stat-value">{{ number_format($analytics['total_assessment_area'] ?? 0, 0) }} <span
+                        class="stat-sub">sqft</span></div>
+            </div>
+        </div>
     </div>
 
     <!-- ─── FILTER SECTION ─── -->
@@ -1468,8 +1546,10 @@
             <div class="col-md-3">
                 <label class="form-label"><i class="bi bi-rulers me-1"></i>Area Range (sqft)</label>
                 <div class="d-flex gap-2">
-                    <input type="number" id="areaMin" class="form-control form-control-sm" placeholder="Min" value="{{ $areaStats['min'] ?? 0 }}" min="0">
-                    <input type="number" id="areaMax" class="form-control form-control-sm" placeholder="Max" value="{{ $areaStats['max'] ?? 0 }}" min="0">
+                    <input type="number" id="areaMin" class="form-control form-control-sm" placeholder="Min"
+                        value="{{ $areaStats['min'] ?? 0 }}" min="0">
+                    <input type="number" id="areaMax" class="form-control form-control-sm" placeholder="Max"
+                        value="{{ $areaStats['max'] ?? 0 }}" min="0">
                 </div>
             </div>
 
@@ -1484,12 +1564,34 @@
 
             <div class="col-md-3">
                 <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-primary btn-sm" id="applyFiltersBtn"><i class="bi bi-funnel me-1"></i>Apply</button>
-                    <button class="btn btn-outline-secondary btn-sm" id="resetFiltersBtn" title="Reset filters"><i class="bi bi-arrow-counterclockwise"></i></button>
-                    <button class="btn btn-outline-danger btn-sm" id="clearFiltersBtn" title="Clear all filters"><i class="bi bi-x-lg"></i></button>
+                    <button class="btn btn-primary btn-sm" id="applyFiltersBtn">
+                        <i class="bi bi-funnel me-1"></i>Apply
+                    </button>
+
+                    <button class="btn btn-outline-secondary btn-sm" id="resetFiltersBtn" title="Reset filters">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+
+                    <button class="btn btn-outline-danger btn-sm" id="clearFiltersBtn" title="Clear all filters">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+
+                    <!-- Usage Variation -->
+                    <button class="btn btn-success btn-sm variation-btn" data-type="usage"
+                        data-ward="{{ $ward->id }}">
+                        <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
+                    </button>
+
+                    <!-- Area Variation -->
+                    <button class="btn btn-info btn-sm variation-btn" data-type="area" data-ward="{{ $ward->id }}">
+                        <i class="bi bi-bounding-box me-1"></i> Area Variation
+                    </button>
                 </div>
+
                 <div class="mt-1 text-end">
-                    <span class="text-muted small" id="buildingCountDisplay">Showing: {{ count($buildingData['buildings'] ?? []) }} buildings</span>
+                    <span class="text-muted small" id="buildingCountDisplay">
+                        Showing: {{ count($buildingData['buildings'] ?? []) }} buildings
+                    </span>
                 </div>
             </div>
         </div>
@@ -1510,14 +1612,23 @@
                     @endif
                 @endforeach
             @else
-                <span class="legend-item"><span class="color-dot" style="background:#4CAF50;"></span><span class="legend-label">Residential</span><span class="legend-count">0</span></span>
-                <span class="legend-item"><span class="color-dot" style="background:#2196F3;"></span><span class="legend-label">Commercial</span><span class="legend-count">0</span></span>
-                <span class="legend-item"><span class="color-dot" style="background:#FF9800;"></span><span class="legend-label">Industrial</span><span class="legend-count">0</span></span>
-                <span class="legend-item"><span class="color-dot" style="background:#9C27B0;"></span><span class="legend-label">Institutional</span><span class="legend-count">0</span></span>
-                <span class="legend-item"><span class="color-dot" style="background:#F44336;"></span><span class="legend-label">Mixed</span><span class="legend-count">0</span></span>
-                <span class="legend-item"><span class="color-dot" style="background:#607D8B;"></span><span class="legend-label">Government</span><span class="legend-count">0</span></span>
-                <span class="legend-item" style="background:#FFFBEB; border:1px solid #FCD34D;"><span class="color-dot" style="background:#FFD700;"></span><span class="legend-label">Vacant</span><span class="legend-count">0</span></span>
-                <span class="legend-item"><span class="color-dot" style="background:#9E9E9E;"></span><span class="legend-label">Other</span><span class="legend-count">0</span></span>
+                <span class="legend-item"><span class="color-dot" style="background:#4CAF50;"></span><span
+                        class="legend-label">Residential</span><span class="legend-count">0</span></span>
+                <span class="legend-item"><span class="color-dot" style="background:#2196F3;"></span><span
+                        class="legend-label">Commercial</span><span class="legend-count">0</span></span>
+                <span class="legend-item"><span class="color-dot" style="background:#FF9800;"></span><span
+                        class="legend-label">Industrial</span><span class="legend-count">0</span></span>
+                <span class="legend-item"><span class="color-dot" style="background:#9C27B0;"></span><span
+                        class="legend-label">Institutional</span><span class="legend-count">0</span></span>
+                <span class="legend-item"><span class="color-dot" style="background:#F44336;"></span><span
+                        class="legend-label">Mixed</span><span class="legend-count">0</span></span>
+                <span class="legend-item"><span class="color-dot" style="background:#607D8B;"></span><span
+                        class="legend-label">Government</span><span class="legend-count">0</span></span>
+                <span class="legend-item" style="background:#FFFBEB; border:1px solid #FCD34D;"><span class="color-dot"
+                        style="background:#FFD700;"></span><span class="legend-label">Vacant</span><span
+                        class="legend-count">0</span></span>
+                <span class="legend-item"><span class="color-dot" style="background:#9E9E9E;"></span><span
+                        class="legend-label">Other</span><span class="legend-count">0</span></span>
             @endif
         </div>
     </div>
@@ -1549,48 +1660,149 @@
                 </div>
                 <div class="bld-image-strip">
                     <div class="bld-img-wrap" id="bv_img1_wrap">
-                        <img id="bv_img1" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
-                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <img id="bv_img1" src="" style="display:none;"
+                            onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
+                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i
+                                class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i
+                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
                     <div class="bld-img-wrap" id="bv_img2_wrap">
-                        <img id="bv_img2" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
-                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <img id="bv_img2" src="" style="display:none;"
+                            onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
+                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i
+                                class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i
+                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
                 <div class="bld-summary-strip">
-                    <div class="bld-summary-card"><div class="bld-summary-icon">🧾</div><div><div class="bld-summary-label">Bills</div><div class="bld-summary-val" id="bv_bills">0</div></div></div>
-                    <div class="bld-summary-card"><div class="bld-summary-icon">🏬</div><div><div class="bld-summary-label">Shops</div><div class="bld-summary-val" id="bv_shops">0</div></div></div>
-                    <div class="bld-summary-card"><div class="bld-summary-icon">🏢</div><div><div class="bld-summary-label">Floors</div><div class="bld-summary-val" id="bv_floors">0</div></div></div>
-                    <div class="bld-summary-card"><div class="bld-summary-icon">✅</div><div><div class="bld-summary-label">Mapped</div><div class="bld-summary-val" id="bv_mapped">0</div></div></div>
+                    <div class="bld-summary-card">
+                        <div class="bld-summary-icon">🧾</div>
+                        <div>
+                            <div class="bld-summary-label">Bills</div>
+                            <div class="bld-summary-val" id="bv_bills">0</div>
+                        </div>
+                    </div>
+                    <div class="bld-summary-card">
+                        <div class="bld-summary-icon">🏬</div>
+                        <div>
+                            <div class="bld-summary-label">Shops</div>
+                            <div class="bld-summary-val" id="bv_shops">0</div>
+                        </div>
+                    </div>
+                    <div class="bld-summary-card">
+                        <div class="bld-summary-icon">🏢</div>
+                        <div>
+                            <div class="bld-summary-label">Floors</div>
+                            <div class="bld-summary-val" id="bv_floors">0</div>
+                        </div>
+                    </div>
+                    <div class="bld-summary-card">
+                        <div class="bld-summary-icon">✅</div>
+                        <div>
+                            <div class="bld-summary-label">Mapped</div>
+                            <div class="bld-summary-val" id="bv_mapped">0</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="p-3 pb-0" id="bv_variation_wrap"></div>
                 <div class="modal-body p-4">
                     <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-geo-alt bld-info-icon"></i><div><div class="bld-info-label">Zone</div><div class="bld-info-val" id="bv_zone"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-building bld-info-icon"></i><div><div class="bld-info-label">Building Name</div><div class="bld-info-val" id="bv_building_name"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-signpost bld-info-icon"></i><div><div class="bld-info-label">Road</div><div class="bld-info-val" id="bv_road_name"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-telephone bld-info-icon"></i><div><div class="bld-info-label">Phone</div><div class="bld-info-val" id="bv_phone"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-tag bld-info-icon"></i><div><div class="bld-info-label">Usage</div><div class="bld-info-val" id="bv_usage"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-tools bld-info-icon"></i><div><div class="bld-info-label">Construction</div><div class="bld-info-val" id="bv_construction_type"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-house bld-info-icon"></i><div><div class="bld-info-label">Building Type</div><div class="bld-info-val" id="bv_building_type"></div></div></div></div>
-                        <div class="col-md-3"><div class="bld-info-row"><i class="bi bi-droplet bld-info-icon"></i><div><div class="bld-info-label">UGD Status</div><div class="bld-info-val" id="bv_ugd"></div></div></div></div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-geo-alt bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Zone</div>
+                                    <div class="bld-info-val" id="bv_zone"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-building bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Building Name</div>
+                                    <div class="bld-info-val" id="bv_building_name"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-signpost bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Road</div>
+                                    <div class="bld-info-val" id="bv_road_name"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-telephone bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Phone</div>
+                                    <div class="bld-info-val" id="bv_phone"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-tag bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Usage</div>
+                                    <div class="bld-info-val" id="bv_usage"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-tools bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Construction</div>
+                                    <div class="bld-info-val" id="bv_construction_type"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-house bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Building Type</div>
+                                    <div class="bld-info-val" id="bv_building_type"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-droplet bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">UGD Status</div>
+                                    <div class="bld-info-val" id="bv_ugd"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="bld-section-divider mb-3"><i class="bi bi-check2-square me-2"></i>Amenities</div>
                     <div class="mb-4" id="bv_amenities"></div>
                     <div class="bld-section-divider mb-3"><i class="bi bi-chat-text me-2"></i>Remarks</div>
                     <div class="row g-3">
-                        <div class="col-md-6"><div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i><div><div class="bld-info-label">General Remarks</div><div class="bld-info-val" id="bv_remarks"></div></div></div></div>
-                        <div class="col-md-6"><div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i><div><div class="bld-info-label">Corporation Remarks</div><div class="bld-info-val" id="bv_corp_remarks"></div></div></div></div>
+                        <div class="col-md-6">
+                            <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">General Remarks</div>
+                                    <div class="bld-info-val" id="bv_remarks"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Corporation Remarks</div>
+                                    <div class="bld-info-val" id="bv_corp_remarks"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bld-modal-footer">
                     <span class="bld-footer-status">Read-only view</span>
-                    <div><button type="button" class="btn bld-btn-cancel me-2" id="buildingViewPointsBtn"><i class="bi bi-geo-alt me-1"></i>View Assessments</button></div>
+                    <div><button type="button" class="btn bld-btn-cancel me-2" id="buildingViewPointsBtn"><i
+                                class="bi bi-geo-alt me-1"></i>View Assessments</button></div>
                 </div>
             </div>
         </div>
@@ -1603,13 +1815,18 @@
                 <div class="modal-header bld-modal-header">
                     <div class="bld-header-inner">
                         <div class="bld-header-icon"><i class="bi bi-people"></i></div>
-                        <div><h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span id="pdGisid"></span></span></div>
+                        <div>
+                            <h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span
+                                    id="pdGisid"></span></span>
+                        </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small" id="pdBillSummary"></span></div>
-                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch" placeholder="Search by assessment, owner name, or phone number...">
+                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small"
+                            id="pdBillSummary"></span></div>
+                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch"
+                        placeholder="Search by assessment, owner name, or phone number...">
                     <div id="pointDetailsContainer"></div>
                 </div>
             </div>
@@ -1629,7 +1846,8 @@
                 </div>
                 <div class="modal-body p-4">
                     <input type="hidden" id="qc_point_data_id">
-                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment <span id="qc_assessment_display" class="fw-semibold"></span></p>
+                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment
+                        <span id="qc_assessment_display" class="fw-semibold"></span></p>
                     <div class="mb-3">
                         <label class="bld-form-label">QC Usage</label>
                         <select class="form-select bld-input" id="qcusage">
@@ -1651,7 +1869,8 @@
                 </div>
                 <div class="modal-footer bld-modal-footer">
                     <button type="button" class="btn bld-btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save QC</button>
+                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save
+                        QC</button>
                 </div>
             </div>
         </div>
@@ -1661,16 +1880,22 @@
     <div class="modal fade" id="lineDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title">Line/Road Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header">
+                    <h5 class="modal-title">Line/Road Details</h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
                     <form id="lineDetailsForm">
                         <div class="row">
-                            <div class="col-md-6 mb-3"><label class="form-label">GIS ID</label><input type="text" class="form-control" id="line_gisid" name="gisid" readonly></div>
-                            <div class="col-md-6 mb-3"><label class="form-label">Road Name</label><input type="text" class="form-control" id="line_road_name" name="road_name"></div>
+                            <div class="col-md-6 mb-3"><label class="form-label">GIS ID</label><input type="text"
+                                    class="form-control" id="line_gisid" name="gisid" readonly></div>
+                            <div class="col-md-6 mb-3"><label class="form-label">Road Name</label><input type="text"
+                                    class="form-control" id="line_road_name" name="road_name"></div>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Close</button></div>
             </div>
         </div>
     </div>
@@ -1679,16 +1904,20 @@
     <div class="modal fade" id="deleteFeatureModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius:16px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.15);">
-                <div class="modal-header" style="background:#fff3f3; border-bottom:1px solid #fecdd3; border-radius:16px 16px 0 0; padding:16px 24px;">
-                    <h5 class="modal-title" style="color:#dc2626; font-weight:700; margin:0;"><i class="bi bi-trash3-fill me-2"></i>Delete Feature</h5>
+                <div class="modal-header"
+                    style="background:#fff3f3; border-bottom:1px solid #fecdd3; border-radius:16px 16px 0 0; padding:16px 24px;">
+                    <h5 class="modal-title" style="color:#dc2626; font-weight:700; margin:0;"><i
+                            class="bi bi-trash3-fill me-2"></i>Delete Feature</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <p class="text-muted mb-4" style="font-size:0.875rem; line-height:1.5;">Choose the feature type and enter its GIS ID to permanently remove it.</p>
+                    <p class="text-muted mb-4" style="font-size:0.875rem; line-height:1.5;">Choose the feature type and
+                        enter its GIS ID to permanently remove it.</p>
                     <div class="mb-4">
                         <label class="form-label fw-semibold mb-2">Feature Type</label>
                         <div class="d-flex gap-2">
-                            <div class="delete-type-btn active" data-type="polygon"><i class="bi bi-pentagon me-1"></i>Polygon</div>
+                            <div class="delete-type-btn active" data-type="polygon"><i
+                                    class="bi bi-pentagon me-1"></i>Polygon</div>
                             <div class="delete-type-btn" data-type="line"><i class="bi bi-vector-pen me-1"></i>Line</div>
                             <div class="delete-type-btn" data-type="point"><i class="bi bi-geo-alt me-1"></i>Point</div>
                         </div>
@@ -1696,16 +1925,24 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold mb-2">GIS ID</label>
-                        <input type="text" id="deleteGisId" class="form-control" placeholder="Enter GIS ID…" style="border-radius:10px; border:1.5px solid #e5e7eb; padding:10px 14px; font-size:0.9rem;">
+                        <input type="text" id="deleteGisId" class="form-control" placeholder="Enter GIS ID…"
+                            style="border-radius:10px; border:1.5px solid #e5e7eb; padding:10px 14px; font-size:0.9rem;">
                         <div id="deleteGisError" class="text-danger mt-1" style="font-size:0.8rem; display:none;"></div>
                     </div>
-                    <div id="deleteConfirmBox" style="display:none; background:#fff3f3; border:1px solid #fecdd3; border-radius:10px; padding:12px 14px;">
-                        <p class="mb-0" style="font-size:0.82rem; color:#dc2626;"><i class="bi bi-exclamation-triangle-fill me-1"></i>This will <strong>permanently delete</strong> this feature and cannot be undone.</p>
+                    <div id="deleteConfirmBox"
+                        style="display:none; background:#fff3f3; border:1px solid #fecdd3; border-radius:10px; padding:12px 14px;">
+                        <p class="mb-0" style="font-size:0.82rem; color:#dc2626;"><i
+                                class="bi bi-exclamation-triangle-fill me-1"></i>This will <strong>permanently
+                                delete</strong> this feature and cannot be undone.</p>
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:10px; font-weight:600; padding:8px 20px;">Cancel</button>
-                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger" style="border-radius:10px; font-weight:600; padding:8px 24px; min-width:120px;"><i class="bi bi-trash3 me-1"></i>Delete</button>
+                <div class="modal-footer"
+                    style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                        style="border-radius:10px; font-weight:600; padding:8px 20px;">Cancel</button>
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger"
+                        style="border-radius:10px; font-weight:600; padding:8px 24px; min-width:120px;"><i
+                            class="bi bi-trash3 me-1"></i>Delete</button>
                 </div>
             </div>
         </div>
@@ -1718,11 +1955,16 @@
                 <div class="modal-header bld-modal-header">
                     <div class="bld-header-inner">
                         <div class="bld-header-icon"><i class="bi bi-map"></i></div>
-                        <div><h5 class="bld-modal-title">Infrastructure Properties</h5><span class="bld-gisid-badge">Type: <span id="infraType"></span></span></div>
+                        <div>
+                            <h5 class="bld-modal-title">Infrastructure Properties</h5><span class="bld-gisid-badge">Type:
+                                <span id="infraType"></span></span>
+                        </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4"><div id="infraPropertiesContent"></div></div>
+                <div class="modal-body p-4">
+                    <div id="infraPropertiesContent"></div>
+                </div>
                 <div class="modal-footer bld-modal-footer">
                     <span class="bld-footer-status">Infrastructure feature details</span>
                     <button type="button" class="btn bld-btn-cancel" data-bs-dismiss="modal">Close</button>
@@ -1858,8 +2100,13 @@
                         feature.setId(building.gisid);
                         const color = building.color || '#BDBDBD';
                         feature.setStyle(new ol.style.Style({
-                            fill: new ol.style.Fill({ color: color + '66' }),
-                            stroke: new ol.style.Stroke({ color: color, width: 2.5 })
+                            fill: new ol.style.Fill({
+                                color: color + '66'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: color,
+                                width: 2.5
+                            })
                         }));
                         buildingSource.addFeature(feature);
                     } catch (e) {
@@ -1889,8 +2136,15 @@
 
                 const styles = [
                     new ol.style.Style({
-                        stroke: new ol.style.Stroke({ color, width: 4, lineJoin: 'round', lineCap: 'round' }),
-                        fill: new ol.style.Fill({ color: 'rgba(0,0,255,0.1)' })
+                        stroke: new ol.style.Stroke({
+                            color,
+                            width: 4,
+                            lineJoin: 'round',
+                            lineCap: 'round'
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0,0,255,0.1)'
+                        })
                     })
                 ];
 
@@ -1900,9 +2154,16 @@
                         text: new ol.style.Text({
                             text: sqft + ' SQFT',
                             font: 'bold 14px Arial',
-                            fill: new ol.style.Fill({ color: '#000' }),
-                            backgroundFill: new ol.style.Fill({ color: '#fff' }),
-                            backgroundStroke: new ol.style.Stroke({ color: '#000', width: 1 }),
+                            fill: new ol.style.Fill({
+                                color: '#000'
+                            }),
+                            backgroundFill: new ol.style.Fill({
+                                color: '#fff'
+                            }),
+                            backgroundStroke: new ol.style.Stroke({
+                                color: '#000',
+                                width: 1
+                            }),
                             padding: [4, 6, 4, 6],
                             overflow: true,
                             textAlign: 'center',
@@ -1917,7 +2178,12 @@
                 const roadName = feature.get('road_name');
                 const styles = [
                     new ol.style.Style({
-                        stroke: new ol.style.Stroke({ color: 'yellow', width: 4, lineJoin: 'round', lineCap: 'round' })
+                        stroke: new ol.style.Stroke({
+                            color: 'yellow',
+                            width: 4,
+                            lineJoin: 'round',
+                            lineCap: 'round'
+                        })
                     })
                 ];
                 if (showLabels && roadName) {
@@ -1927,8 +2193,13 @@
                             font: 'bold 14px Calibri, sans-serif',
                             placement: 'line',
                             overflow: true,
-                            fill: new ol.style.Fill({ color: '#000' }),
-                            stroke: new ol.style.Stroke({ color: '#fff', width: 3 }),
+                            fill: new ol.style.Fill({
+                                color: '#000'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 3
+                            }),
                             repeat: 400
                         })
                     }));
@@ -1948,8 +2219,13 @@
                 const style = new ol.style.Style({
                     image: new ol.style.Circle({
                         radius: 8,
-                        fill: new ol.style.Fill({ color }),
-                        stroke: new ol.style.Stroke({ color, width: 2 })
+                        fill: new ol.style.Fill({
+                            color
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color,
+                            width: 2
+                        })
                     })
                 });
 
@@ -1958,8 +2234,13 @@
                         text: String(gisid),
                         scale: 1.3,
                         offsetY: -15,
-                        fill: new ol.style.Fill({ color: '#000' }),
-                        stroke: new ol.style.Stroke({ color: '#fff', width: 3 })
+                        fill: new ol.style.Fill({
+                            color: '#000'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#fff',
+                            width: 3
+                        })
                     }));
                 }
                 return style;
@@ -1974,29 +2255,47 @@
                         return new ol.style.Style({
                             image: new ol.style.Circle({
                                 radius: 8,
-                                fill: new ol.style.Fill({ color }),
-                                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+                                fill: new ol.style.Fill({
+                                    color
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: '#ffffff',
+                                    width: 2
+                                })
                             }),
                             text: showLabels ? new ol.style.Text({
                                 text: name,
                                 font: '12px Arial',
                                 offsetY: -15,
-                                fill: new ol.style.Fill({ color: '#000000' }),
-                                stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+                                fill: new ol.style.Fill({
+                                    color: '#000000'
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: '#ffffff',
+                                    width: 2
+                                })
                             }) : undefined
                         });
                     }
 
                     if (geometryType === 'LineString') {
                         return new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color, width: 4 })
+                            stroke: new ol.style.Stroke({
+                                color,
+                                width: 4
+                            })
                         });
                     }
 
                     if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
                         return new ol.style.Style({
-                            fill: new ol.style.Fill({ color: color + '33' }),
-                            stroke: new ol.style.Stroke({ color, width: 2 })
+                            fill: new ol.style.Fill({
+                                color: color + '33'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color,
+                                width: 2
+                            })
                         });
                     }
                 };
@@ -2027,8 +2326,10 @@
                 lineSource.clear();
                 lines.forEach(l => {
                     try {
-                        let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l.coordinates;
-                        while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
+                        let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l
+                            .coordinates;
+                        while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][
+                                0])) {
                             coords = coords[0];
                         }
                         const isValid = coords.length >= 2 && coords.every(c =>
@@ -2125,13 +2426,19 @@
                 zIndex: 999
             });
 
-            let watchId = null, locationFeature = null, accuracyFeature = null;
-            let liveActive = false, trackActive = false;
+            let watchId = null,
+                locationFeature = null,
+                accuracyFeature = null;
+            let liveActive = false,
+                trackActive = false;
             let currentLocation = null;
 
             function updateLiveMarker(lon, lat, accuracy) {
                 const coords = ol.proj.fromLonLat([lon, lat]);
-                currentLocation = { lon, lat };
+                currentLocation = {
+                    lon,
+                    lat
+                };
                 if (!locationFeature) {
                     locationFeature = new ol.Feature({
                         geometry: new ol.geom.Point(coords)
@@ -2139,16 +2446,26 @@
                     locationFeature.setStyle(new ol.style.Style({
                         image: new ol.style.Circle({
                             radius: 10,
-                            fill: new ol.style.Fill({ color: '#3b82f6' }),
-                            stroke: new ol.style.Stroke({ color: '#fff', width: 3 })
+                            fill: new ol.style.Fill({
+                                color: '#3b82f6'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 3
+                            })
                         })
                     }));
                     accuracyFeature = new ol.Feature({
                         geometry: new ol.geom.Circle(coords, accuracy || 10)
                     });
                     accuracyFeature.setStyle(new ol.style.Style({
-                        fill: new ol.style.Fill({ color: 'rgba(59,130,246,0.10)' }),
-                        stroke: new ol.style.Stroke({ color: 'rgba(59,130,246,0.35)', width: 1.5 })
+                        fill: new ol.style.Fill({
+                            color: 'rgba(59,130,246,0.10)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: 'rgba(59,130,246,0.35)',
+                            width: 1.5
+                        })
                     }));
                     liveLocationSource.addFeature(accuracyFeature);
                     liveLocationSource.addFeature(locationFeature);
@@ -2167,7 +2484,11 @@
             }
 
             function onPosition(position) {
-                const { longitude, latitude, accuracy } = position.coords;
+                const {
+                    longitude,
+                    latitude,
+                    accuracy
+                } = position.coords;
                 updateLiveMarker(longitude, latitude, accuracy);
                 if (trackActive) {
                     map.getView().animate({
@@ -2192,9 +2513,15 @@
                     function(error) {
                         let msg = 'Could not get location: ';
                         switch (error.code) {
-                            case error.PERMISSION_DENIED: msg += 'Please allow location access'; break;
-                            case error.POSITION_UNAVAILABLE: msg += 'GPS signal weak'; break;
-                            case error.TIMEOUT: msg += 'Request timed out'; break;
+                            case error.PERMISSION_DENIED:
+                                msg += 'Please allow location access';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                msg += 'GPS signal weak';
+                                break;
+                            case error.TIMEOUT:
+                                msg += 'Request timed out';
+                                break;
                         }
                         showToast(msg, 3000);
                     }, {
@@ -2209,10 +2536,17 @@
                     function(error) {
                         let msg = 'Location error: ';
                         switch (error.code) {
-                            case error.PERMISSION_DENIED: msg += 'Please enable permissions.'; break;
-                            case error.POSITION_UNAVAILABLE: msg += 'Location unavailable.'; break;
-                            case error.TIMEOUT: msg += 'Request timed out.'; break;
-                            default: msg += 'Unknown error.';
+                            case error.PERMISSION_DENIED:
+                                msg += 'Please enable permissions.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                msg += 'Location unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                msg += 'Request timed out.';
+                                break;
+                            default:
+                                msg += 'Unknown error.';
                         }
                         showToast(msg, 3000);
                     }, {
@@ -2250,7 +2584,8 @@
                 }
                 const anyActive = liveActive || trackActive;
                 $('#locationToggleBtn').toggleClass('active-location', anyActive);
-                $('#locationToggleBtn i').toggleClass('bi-geo-alt-fill', anyActive).toggleClass('bi-geo-alt', !anyActive);
+                $('#locationToggleBtn i').toggleClass('bi-geo-alt-fill', anyActive).toggleClass('bi-geo-alt', !
+                    anyActive);
             }
 
             // ─── MAP ───
@@ -2266,7 +2601,8 @@
             });
 
             // ─── INTERACTIONS ───
-            let drawInteraction = null, selectInteraction = null;
+            let drawInteraction = null,
+                selectInteraction = null;
             let routeLayer = null;
             let selectedFeatureForSplit = null;
             let modifyInteraction = null;
@@ -2279,9 +2615,19 @@
             const tempDrawLayer = new ol.layer.Vector({
                 source: tempDrawSource,
                 style: new ol.style.Style({
-                    fill: new ol.style.Fill({ color: 'rgba(255,0,0,0.2)' }),
-                    stroke: new ol.style.Stroke({ color: '#ff0000', width: 3 }),
-                    image: new ol.style.Circle({ radius: 7, fill: new ol.style.Fill({ color: '#ff0000' }) })
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255,0,0,0.2)'
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: '#ff0000',
+                        width: 3
+                    }),
+                    image: new ol.style.Circle({
+                        radius: 7,
+                        fill: new ol.style.Fill({
+                            color: '#ff0000'
+                        })
+                    })
                 })
             });
             map.addLayer(tempDrawLayer);
@@ -2306,7 +2652,10 @@
                 if (type === 'success') icon = 'success';
                 else if (type === 'error') icon = 'error';
                 else if (type === 'warning') icon = 'warning';
-                Toast.fire({ icon, title: message });
+                Toast.fire({
+                    icon,
+                    title: message
+                });
             }
 
             // ─── Disable interactions ───
@@ -2390,9 +2739,12 @@
 
             function updateLegendCounts(filtered) {
                 const counts = {};
-                filtered.forEach(b => { counts[b.usage] = (counts[b.usage] || 0) + 1; });
+                filtered.forEach(b => {
+                    counts[b.usage] = (counts[b.usage] || 0) + 1;
+                });
                 $('.usage-legend .legend-count').each(function() {
-                    const parentText = $(this).closest('.legend-item').find('.legend-label').text().toUpperCase();
+                    const parentText = $(this).closest('.legend-item').find('.legend-label').text()
+                        .toUpperCase();
                     $(this).text(counts[parentText] || 0);
                 });
             }
@@ -2473,17 +2825,23 @@
                 }
 
                 const amenities = [
-                    ['Lift Room', item.liftroom], ['Head Room', item.headroom],
-                    ['Overhead Tank', item.overhead_tank], ['Rainwater Harvesting', item.rainwater_harvesting],
-                    ['Parking', item.parking], ['Ramp', item.ramp],
-                    ['Hoarding', item.hoarding], ['CCTV', item.cctv],
-                    ['Cell Tower', item.cell_tower], ['Solar Panel', item.solar_panel],
+                    ['Lift Room', item.liftroom],
+                    ['Head Room', item.headroom],
+                    ['Overhead Tank', item.overhead_tank],
+                    ['Rainwater Harvesting', item.rainwater_harvesting],
+                    ['Parking', item.parking],
+                    ['Ramp', item.ramp],
+                    ['Hoarding', item.hoarding],
+                    ['CCTV', item.cctv],
+                    ['Cell Tower', item.cell_tower],
+                    ['Solar Panel', item.solar_panel],
                     ['Water Connection', item.water_connection]
                 ];
                 let amenHtml = '';
                 amenities.forEach(([label, val]) => {
                     if (val === 'Yes') {
-                        amenHtml += `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                        amenHtml +=
+                            `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
                     }
                 });
                 $('#bv_amenities').html(amenHtml || '<span class="text-muted small">No amenities recorded</span>');
@@ -2499,7 +2857,8 @@
                     const $error = $('#' + errorId);
 
                     if (imagePath) {
-                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath.replace(/^\/+/, '');
+                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath
+                            .replace(/^\/+/, '');
                         $img.attr('src', fullPath).show();
                         $empty.hide();
                         $error.hide();
@@ -2539,7 +2898,10 @@
                 $.ajax({
                     url: '/commissioner/get-point-details',
                     method: 'GET',
-                    data: { gisid: gisid, ward_id: {{ $ward->id }} },
+                    data: {
+                        gisid: gisid,
+                        ward_id: {{ $ward->id }}
+                    },
                     success: function(res) {
                         if (res.status) {
                             callback(res.data);
@@ -2581,7 +2943,8 @@
                     return;
                 }
 
-                const v = (val) => (val === null || val === undefined || val === '') ? '<span class="text-muted">-</span>' : val;
+                const v = (val) => (val === null || val === undefined || val === '') ?
+                    '<span class="text-muted">-</span>' : val;
 
                 let html = '';
                 records.forEach(record => {
@@ -2594,7 +2957,8 @@
                     const qcFilled = [pd.qcusage, pd.qcsqfeet, pd.qc_remarks]
                         .filter(val => val !== null && val !== '' && val !== undefined).length;
                     const qcClass = qcFilled === 3 ? 'complete' : qcFilled === 0 ? 'empty' : 'partial';
-                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' : 'QC Partial';
+                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' :
+                        'QC Partial';
 
                     html += `
                         <div class="point-data-card" data-id="${pd.id}">
@@ -2694,20 +3058,20 @@
                                     <div class="tax-card">
                                         <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
                                         ${ptList.length ? ptList.map(pt => `
-                                            <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
-                                                <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
-                                            </div>
-                                        `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
+                                                <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                                    <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                                </div>
+                                            `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
                                     </div>
                                 </div>
                             </div>
@@ -2752,7 +3116,8 @@
 
             $(document).on('click', '#saveQcBtn', function() {
                 const id = $('#qc_point_data_id').val();
-                const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
+                const $btn = $(this).prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm"></span> Saving...');
 
                 $.ajax({
                     url: `/point-data/${id}/qc`,
@@ -2779,10 +3144,12 @@
                         }
                     },
                     error: function(xhr) {
-                        showFlashMessage(xhr.responseJSON?.message || 'Failed to save QC data.', 'error');
+                        showFlashMessage(xhr.responseJSON?.message || 'Failed to save QC data.',
+                            'error');
                     },
                     complete: function() {
-                        $btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save QC');
+                        $btn.prop('disabled', false).html(
+                            '<i class="bi bi-save me-1"></i>Save QC');
                     }
                 });
             });
@@ -2825,9 +3192,15 @@
                 if (!feature) return;
                 const type = feature.get('type');
                 switch (type) {
-                    case 'Building': buildingClickHandler(feature); break;
-                    case 'Point': pointClick(feature); break;
-                    case 'LineString': lineClick(feature); break;
+                    case 'Building':
+                        buildingClickHandler(feature);
+                        break;
+                    case 'Point':
+                        pointClick(feature);
+                        break;
+                    case 'LineString':
+                        lineClick(feature);
+                        break;
                 }
             }
 
@@ -2840,10 +3213,24 @@
                 const viewInter = new ol.interaction.Select({
                     layers: [buildingLayer, lineLayer, pointLayer],
                     style: new ol.style.Style({
-                        stroke: new ol.style.Stroke({ color: '#0066cc', width: 2, lineDash: [4, 4] }),
-                        fill: new ol.style.Fill({ color: 'rgba(0,102,204,0.05)' }),
-                        image: new ol.style.Circle({ radius: 6, fill: new ol.style.Fill({ color: '#0066cc' }),
-                            stroke: new ol.style.Stroke({ color: '#fff', width: 2 }) })
+                        stroke: new ol.style.Stroke({
+                            color: '#0066cc',
+                            width: 2,
+                            lineDash: [4, 4]
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0,102,204,0.05)'
+                        }),
+                        image: new ol.style.Circle({
+                            radius: 6,
+                            fill: new ol.style.Fill({
+                                color: '#0066cc'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 2
+                            })
+                        })
                     })
                 });
 
@@ -2873,11 +3260,14 @@
                             geometryType: 'polygon',
                             searchText: `${poly.gisid} ${poly.sqfeet} building`
                         });
-                    } catch (e) { console.error('Error parsing polygon:', e); }
+                    } catch (e) {
+                        console.error('Error parsing polygon:', e);
+                    }
                 });
                 lines.forEach(line => {
                     try {
-                        const coords = typeof line.coordinates === 'string' ? JSON.parse(line.coordinates) : line.coordinates;
+                        const coords = typeof line.coordinates === 'string' ? JSON.parse(line.coordinates) :
+                            line.coordinates;
                         searchIndex.push({
                             id: line.gisid,
                             type: 'line',
@@ -2887,7 +3277,9 @@
                             geometryType: 'line',
                             searchText: `${line.gisid} ${line.road_name || ''} road`
                         });
-                    } catch (e) { console.error('Error parsing line:', e); }
+                    } catch (e) {
+                        console.error('Error parsing line:', e);
+                    }
                 });
                 points.forEach(point => {
                     try {
@@ -2900,7 +3292,9 @@
                             geometryType: 'point',
                             searchText: `${point.gisid} point`
                         });
-                    } catch (e) { console.error('Error parsing point:', e); }
+                    } catch (e) {
+                        console.error('Error parsing point:', e);
+                    }
                 });
                 pointDatas.forEach(pd => {
                     try {
@@ -2915,7 +3309,9 @@
                             assessment: pd.assessment,
                             searchText: `${pd.gisid} ${pd.assessment} ${pd.owner_name} ${pd.phone_number}`
                         });
-                    } catch (e) { console.error('Error parsing pointData:', e); }
+                    } catch (e) {
+                        console.error('Error parsing pointData:', e);
+                    }
                 });
             }
 
@@ -2937,14 +3333,19 @@
                     showToast(`⚠️ No point found for GIS ID: ${gisid}`, 3000);
                     return;
                 }
-                map.getView().animate({ center: coords, zoom: 22, duration: 1000 });
+                map.getView().animate({
+                    center: coords,
+                    zoom: 22,
+                    duration: 1000
+                });
             }
 
             function getCoordsByGisId(gisid) {
                 const point = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
                 if (!point) return null;
                 try {
-                    const coords = typeof point.coordinates === 'string' ? JSON.parse(point.coordinates) : point.coordinates;
+                    const coords = typeof point.coordinates === 'string' ? JSON.parse(point.coordinates) : point
+                        .coordinates;
                     return coords;
                 } catch (e) {
                     console.error('Coord parse error for gisid:', gisid, e);
@@ -2965,7 +3366,10 @@
                 }
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
-                        currentLocation = { lon: pos.coords.longitude, lat: pos.coords.latitude };
+                        currentLocation = {
+                            lon: pos.coords.longitude,
+                            lat: pos.coords.latitude
+                        };
                         callback(currentLocation);
                     },
                     function(error) {
@@ -2981,7 +3385,8 @@
             }
 
             function getRoute(startLon, startLat, endLon, endLat) {
-                const url = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
+                const url =
+                    `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
                 showToast('🗺️ Calculating route...', 2000);
                 fetch(url).then(r => r.json()).then(data => {
                     if (!data.routes || !data.routes.length) {
@@ -2989,17 +3394,28 @@
                         return;
                     }
                     const routeCoords = data.routes[0].geometry.coordinates.map(c => ol.proj.fromLonLat(c));
-                    const routeFeature = new ol.Feature({ geometry: new ol.geom.LineString(routeCoords) });
+                    const routeFeature = new ol.Feature({
+                        geometry: new ol.geom.LineString(routeCoords)
+                    });
                     if (routeLayer) map.removeLayer(routeLayer);
                     routeLayer = new ol.layer.Vector({
-                        source: new ol.source.Vector({ features: [routeFeature] }),
+                        source: new ol.source.Vector({
+                            features: [routeFeature]
+                        }),
                         style: new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color: '#0066ff', width: 5, lineDash: [10, 5] })
+                            stroke: new ol.style.Stroke({
+                                color: '#0066ff',
+                                width: 5,
+                                lineDash: [10, 5]
+                            })
                         })
                     });
                     map.addLayer(routeLayer);
                     const ext = routeFeature.getGeometry().getExtent();
-                    if (ext && ext[0] !== ext[2]) map.getView().fit(ext, { padding: [50, 50, 50, 50], duration: 1000 });
+                    if (ext && ext[0] !== ext[2]) map.getView().fit(ext, {
+                        padding: [50, 50, 50, 50],
+                        duration: 1000
+                    });
                     const dist = (data.routes[0].distance / 1000).toFixed(2);
                     const dur = Math.round(data.routes[0].duration / 60);
                     showToast(`✅ Route found! Distance: ${dist}km, Time: ${dur}min`, 4000);
@@ -3035,7 +3451,8 @@
             const $activeLayerBadge = $('#activeLayerBadge');
 
             function getActiveBaseLayerTitle() {
-                return [osmLayer, satelliteLayer, streetLayer].find(l => l.getVisible())?.get('title') || 'OpenStreetMap';
+                return [osmLayer, satelliteLayer, streetLayer].find(l => l.getVisible())?.get('title') ||
+                    'OpenStreetMap';
             }
 
             function updateLayerUI() {
@@ -3097,14 +3514,30 @@
             let infraGrouped = {};
 
             const infraColors = {
-                'Road': '#FF6B6B', 'Road Junction': '#FFB74D', 'Bus Stop': '#FFA726',
-                'Traffic Signal': '#F44336', 'Bridge': '#8D6E63', 'Drainage Line': '#4FC3F7',
-                'Storm Water Line': '#4DD0E1', 'Sewer Line': '#9575CD', 'Water Supply Line': '#4DB6AC',
-                'Waterbody': '#29B6F6', 'Canal': '#0288D1', 'Culvert': '#00897B',
-                'Fire Hydrant': '#EF5350', 'Water Valve': '#81C784', 'Street Light': '#FFD54F',
-                'Electric Pole': '#FF8A65', 'Street Manhole': '#A1887F', 'Transformer': '#AB47BC',
-                'Building': '#78909C', 'Boundary Wall': '#795548', 'Park': '#66BB6A',
-                'Playground': '#AED581', 'Cemetery': '#A1887F', 'Tree': '#388E3C'
+                'Road': '#FF6B6B',
+                'Road Junction': '#FFB74D',
+                'Bus Stop': '#FFA726',
+                'Traffic Signal': '#F44336',
+                'Bridge': '#8D6E63',
+                'Drainage Line': '#4FC3F7',
+                'Storm Water Line': '#4DD0E1',
+                'Sewer Line': '#9575CD',
+                'Water Supply Line': '#4DB6AC',
+                'Waterbody': '#29B6F6',
+                'Canal': '#0288D1',
+                'Culvert': '#00897B',
+                'Fire Hydrant': '#EF5350',
+                'Water Valve': '#81C784',
+                'Street Light': '#FFD54F',
+                'Electric Pole': '#FF8A65',
+                'Street Manhole': '#A1887F',
+                'Transformer': '#AB47BC',
+                'Building': '#78909C',
+                'Boundary Wall': '#795548',
+                'Park': '#66BB6A',
+                'Playground': '#AED581',
+                'Cemetery': '#A1887F',
+                'Tree': '#388E3C'
             };
 
             function loadInfrastructure(wardId) {
@@ -3142,21 +3575,28 @@
                         try {
                             switch (feature.geometry.type) {
                                 case 'Point':
-                                    geometry = new ol.geom.Point(ol.proj.fromLonLat(feature.geometry.coordinates));
+                                    geometry = new ol.geom.Point(ol.proj.fromLonLat(feature.geometry
+                                        .coordinates));
                                     break;
                                 case 'LineString':
-                                    geometry = new ol.geom.LineString(feature.geometry.coordinates.map(c => ol.proj.fromLonLat(c)));
+                                    geometry = new ol.geom.LineString(feature.geometry.coordinates
+                                        .map(c => ol.proj.fromLonLat(c)));
                                     break;
                                 case 'Polygon':
-                                    geometry = new ol.geom.Polygon([feature.geometry.coordinates[0].map(c => ol.proj.fromLonLat(c))]);
+                                    geometry = new ol.geom.Polygon([feature.geometry.coordinates[0]
+                                        .map(c => ol.proj.fromLonLat(c))
+                                    ]);
                                     break;
                                 case 'MultiPolygon':
                                     geometry = new ol.geom.MultiPolygon(
-                                        feature.geometry.coordinates.map(poly => poly[0].map(c => ol.proj.fromLonLat(c)))
+                                        feature.geometry.coordinates.map(poly => poly[0].map(
+                                            c => ol.proj.fromLonLat(c)))
                                     );
                                     break;
                             }
-                        } catch (e) { return; }
+                        } catch (e) {
+                            return;
+                        }
 
                         if (!geometry) return;
                         const olFeature = new ol.Feature({
@@ -3166,7 +3606,8 @@
                             osm_id: feature.properties.osm_id || '',
                             properties: feature.properties
                         });
-                        olFeature.setId(feature.properties.osm_id || feature.properties.id || Math.random().toString());
+                        olFeature.setId(feature.properties.osm_id || feature.properties.id || Math
+                            .random().toString());
                         source.addFeature(olFeature);
                     });
 
@@ -3183,8 +3624,13 @@
                     const clickHandler = new ol.interaction.Select({
                         layers: [layer],
                         style: new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color: '#0000ff', width: 3 }),
-                            fill: new ol.style.Fill({ color: 'rgba(0,0,255,0.1)' })
+                            stroke: new ol.style.Stroke({
+                                color: '#0000ff',
+                                width: 3
+                            }),
+                            fill: new ol.style.Fill({
+                                color: 'rgba(0,0,255,0.1)'
+                            })
                         })
                     });
 
@@ -3220,7 +3666,8 @@
                     if (key !== 'type' && key !== 'name' && key !== 'osm_id') {
                         const val = props[key];
                         if (val !== null && val !== undefined && val !== '') {
-                            html += `<tr><td class="label-cell">${key.replace(/_/g, ' ').toUpperCase()}</td><td class="value-cell">${val}</td></tr>`;
+                            html +=
+                                `<tr><td class="label-cell">${key.replace(/_/g, ' ').toUpperCase()}</td><td class="value-cell">${val}</td></tr>`;
                         }
                     }
                 });
@@ -3483,7 +3930,8 @@
                 </div>
             `);
 
-            $mapContainer.append(`<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`);
+            $mapContainer.append(
+                `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`);
 
             // ─── FULLSCREEN ───
             let isFullscreen = false;
@@ -3510,7 +3958,8 @@
                     if (window.is3DActive && window.cesiumViewer) {
                         window.cesiumViewer.resize();
                     }
-                    $('.custom-3d-toggle').css('display', isFullscreen ? 'block !important' : 'block');
+                    $('.custom-3d-toggle').css('display', isFullscreen ? 'block !important' :
+                        'block');
                 }, 150);
             });
 
@@ -3626,7 +4075,8 @@
                 $('.layer-dropdown').removeClass('show');
                 $('#editDropdown').removeClass('show');
                 $('#editToggleBtn').removeClass('active-edit');
-                if ($('#searchDropdown').hasClass('show')) setTimeout(() => $('#gisSearchInput').focus(), 100);
+                if ($('#searchDropdown').hasClass('show')) setTimeout(() => $('#gisSearchInput').focus(),
+                    100);
             });
 
             $(document).on('click', '.search-tab-btn', function() {
@@ -3650,7 +4100,8 @@
                 } else {
                     results.slice(0, 10).forEach(item => {
                         const displayTitle = item.type === 'pointdata' ?
-                            `${item.title} | Owner: ${item.subtitle.split('|')[1] || ''}` : item.title;
+                            `${item.title} | Owner: ${item.subtitle.split('|')[1] || ''}` : item
+                            .title;
                         const displaySubtitle = item.type === 'pointdata' ?
                             `GIS ID: ${item.point_gisid || 'N/A'}` : item.subtitle;
                         const icon = item.geometryType === 'point' ? 'geo-alt' :
@@ -3714,7 +4165,8 @@
                                 <div class="search-result-subtitle">GIS ID: ${pd.point_gisid || 'N/A'} | Phone: ${pd.phone_number || 'N/A'}</div>
                             </div>`;
                     });
-                    $('#filterResults').html(html || '<div class="p-2 text-muted">No matches</div>');
+                    $('#filterResults').html(html ||
+                    '<div class="p-2 text-muted">No matches</div>');
                 });
             });
 
@@ -3756,13 +4208,27 @@
                 $(this).addClass('active');
 
                 switch (tool) {
-                    case 'none': setNoneMode(); break;
-                    case 'editPolygon': setEditPolygonMode(); break;
-                    case 'movePolygon': setMovePolygonMode(); break;
-                    case 'split': setSplitMode(); break;
-                    case 'drawPolygon': startDrawing('Polygon'); break;
-                    case 'drawLine': startDrawing('LineString'); break;
-                    case 'drawPoint': startDrawing('Point'); break;
+                    case 'none':
+                        setNoneMode();
+                        break;
+                    case 'editPolygon':
+                        setEditPolygonMode();
+                        break;
+                    case 'movePolygon':
+                        setMovePolygonMode();
+                        break;
+                    case 'split':
+                        setSplitMode();
+                        break;
+                    case 'drawPolygon':
+                        startDrawing('Polygon');
+                        break;
+                    case 'drawLine':
+                        startDrawing('LineString');
+                        break;
+                    case 'drawPoint':
+                        startDrawing('Point');
+                        break;
                 }
 
                 $('#editDropdown').removeClass('show');
@@ -3782,8 +4248,13 @@
                 const editSelect = new ol.interaction.Select({
                     layers: [polygonLayer],
                     style: new ol.style.Style({
-                        stroke: new ol.style.Stroke({ color: '#2563eb', width: 4 }),
-                        fill: new ol.style.Fill({ color: 'rgba(37,99,235,0.2)' })
+                        stroke: new ol.style.Stroke({
+                            color: '#2563eb',
+                            width: 4
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(37,99,235,0.2)'
+                        })
                     })
                 });
 
@@ -3806,8 +4277,13 @@
                         originalGeometry = feature.getGeometry().clone();
 
                         feature.setStyle(new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color: '#2563eb', width: 5 }),
-                            fill: new ol.style.Fill({ color: 'rgba(37,99,235,0.3)' })
+                            stroke: new ol.style.Stroke({
+                                color: '#2563eb',
+                                width: 5
+                            }),
+                            fill: new ol.style.Fill({
+                                color: 'rgba(37,99,235,0.3)'
+                            })
                         }));
 
                         showEditControls(feature);
@@ -3932,8 +4408,13 @@
                 const moveSelect = new ol.interaction.Select({
                     layers: [polygonLayer],
                     style: new ol.style.Style({
-                        stroke: new ol.style.Stroke({ color: '#f59e0b', width: 4 }),
-                        fill: new ol.style.Fill({ color: 'rgba(245,158,11,0.2)' })
+                        stroke: new ol.style.Stroke({
+                            color: '#f59e0b',
+                            width: 4
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(245,158,11,0.2)'
+                        })
                     })
                 });
 
@@ -3955,8 +4436,13 @@
                         originalGeometry = feature.getGeometry().clone();
 
                         feature.setStyle(new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color: '#f59e0b', width: 5 }),
-                            fill: new ol.style.Fill({ color: 'rgba(245,158,11,0.3)' })
+                            stroke: new ol.style.Stroke({
+                                color: '#f59e0b',
+                                width: 5
+                            }),
+                            fill: new ol.style.Fill({
+                                color: 'rgba(245,158,11,0.3)'
+                            })
                         }));
 
                         translateInteraction = new ol.interaction.Translate({
@@ -4091,8 +4577,13 @@
                     if (e.selected.length > 0) {
                         const feature = e.selected[0];
                         feature.setStyle(new ol.style.Style({
-                            stroke: new ol.style.Stroke({ color: '#dc3545', width: 5 }),
-                            fill: new ol.style.Fill({ color: 'rgba(220,53,69,0.3)' })
+                            stroke: new ol.style.Stroke({
+                                color: '#dc3545',
+                                width: 5
+                            }),
+                            fill: new ol.style.Fill({
+                                color: 'rgba(220,53,69,0.3)'
+                            })
                         }));
                         selectedFeatureForSplit = feature;
                         showToast(`✂️ Polygon selected (ID: ${feature.get('gisid')})`, 3000);
@@ -4217,9 +4708,19 @@
                     source: tempDrawSource,
                     type: geometryType,
                     style: new ol.style.Style({
-                        fill: new ol.style.Fill({ color: 'rgba(0,255,0,0.2)' }),
-                        stroke: new ol.style.Stroke({ color: '#00ff00', width: 3 }),
-                        image: new ol.style.Circle({ radius: 7, fill: new ol.style.Fill({ color: '#00ff00' }) })
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0,255,0,0.2)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#00ff00',
+                            width: 3
+                        }),
+                        image: new ol.style.Circle({
+                            radius: 7,
+                            fill: new ol.style.Fill({
+                                color: '#00ff00'
+                            })
+                        })
                     })
                 });
 
@@ -4287,7 +4788,8 @@
                 }
 
                 const $btn = $(this);
-                $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting…').prop('disabled', true);
+                $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting…').prop(
+                    'disabled', true);
 
                 $.ajax({
                     url: '/delete-feature',
@@ -4295,11 +4797,16 @@
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    data: { type, gisid },
+                    data: {
+                        type,
+                        gisid
+                    },
                     success: function(response) {
-                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteFeatureModal'));
+                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                            'deleteFeatureModal'));
                         if (deleteModal) deleteModal.hide();
-                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled', false);
+                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
+                            false);
 
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
@@ -4318,8 +4825,10 @@
                         });
                     },
                     error: function(xhr) {
-                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled', false);
-                        const msg = xhr.responseJSON?.message || `No ${type} found with GIS ID: ${gisid}`;
+                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
+                            false);
+                        const msg = xhr.responseJSON?.message ||
+                            `No ${type} found with GIS ID: ${gisid}`;
                         $('#deleteGisError').text(msg).show();
                     }
                 });
@@ -4327,8 +4836,10 @@
 
             // ─── CLOSE DROPDOWNS ───
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass('show');
-                if (!$(e.target).closest('.custom-location-switcher').length) $('#locationDropdown').removeClass('show');
+                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass(
+                    'show');
+                if (!$(e.target).closest('.custom-location-switcher').length) $('#locationDropdown')
+                    .removeClass('show');
                 if (!$(e.target).closest('.custom-search-switcher').length) {
                     $('#searchDropdown').removeClass('show');
                     $('#searchToggleBtn').removeClass('active-search');
@@ -4414,7 +4925,8 @@
                                 function webMercatorToWgs84(x, y) {
                                     var lon = (x / 20037508.34) * 180;
                                     var lat = (y / 20037508.34) * 180;
-                                    lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI / 2);
+                                    lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI /
+                                        2);
                                     return [lon, lat];
                                 }
                                 const center = webMercatorToWgs84(
@@ -4505,7 +5017,8 @@
                                     const height = Math.max(200, (east - west) * 111000 * 0.5);
 
                                     cesiumViewer.camera.flyTo({
-                                        destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat, height),
+                                        destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat,
+                                            height),
                                         orientation: {
                                             heading: Cesium.Math.toRadians(0),
                                             pitch: Cesium.Math.toRadians(-45),
@@ -4593,7 +5106,8 @@
                         if (flat.length < 6) return;
 
                         const polygonData = polygonDatas.find(d => d.gisid == gisid);
-                        const floors = polygonData?.number_floor ? parseInt(polygonData.number_floor) || 1 : 1;
+                        const floors = polygonData?.number_floor ? parseInt(polygonData.number_floor) || 1 :
+                            1;
                         const height = Math.max(1, floors) * 3;
                         const isMapped = !!polygonData;
                         const usage = feature.get('usage') || 'OTHER';
