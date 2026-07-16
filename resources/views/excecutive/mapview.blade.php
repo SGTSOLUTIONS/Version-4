@@ -175,6 +175,42 @@
             transform: scale(1.02);
         }
 
+        /* ─── Ward Navigation ─── */
+        .ward-navigation .btn {
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 6px 16px;
+            transition: all 0.2s ease;
+        }
+
+        .ward-navigation .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+        }
+
+        .ward-navigation .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .ward-navigation .btn-outline-secondary:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .ward-navigation .badge.bg-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+        }
+
+        #wardProgress {
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            min-width: 50px;
+            text-align: center;
+        }
+
         /* ─── Filter Section ─── */
         .filter-section {
             background: #fff;
@@ -1417,6 +1453,30 @@
         </div>
     </div>
 
+    <!-- ─── WARD NAVIGATION ─── -->
+    <div class="ward-navigation mb-3">
+        <div class="d-flex align-items-center justify-content-between p-3 bg-white rounded-3 border" style="border-color: #e5e7eb !important;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary rounded-pill px-3 py-2" style="font-size:0.85rem;">
+                        <i class="bi bi-geo-alt me-1"></i> Ward {{ $ward->ward_no }}
+                    </span>
+                    <span class="text-muted small">
+                        <i class="bi bi-building me-1"></i> {{ $ward->zone->zone_name ?? 'N/A' }}
+                    </span>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ route('commissioner.map', ['id' => $ward->id + 1]) }}" class="btn btn-primary btn-sm" id="wardNavigationBtn">
+                    <i class="bi bi-arrow-right-circle me-1"></i> Next Ward
+                </a>
+                <span class="badge bg-light text-dark ms-1" id="wardProgress">
+                    <span id="currentWardIndex">1</span>/<span id="totalWardsCount">1</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
     <!-- ─── WARD ANALYTICS STRIP ─── -->
     <div class="stat-strip">
         <div class="stat-card">
@@ -1537,8 +1597,11 @@
                     <button class="btn btn-primary btn-sm flex-fill" id="applyFiltersBtn">
                         <i class="bi bi-funnel me-1"></i>Apply
                     </button>
-                    <button class="btn btn-outline-secondary btn-sm" id="resetFiltersBtn">
+                    <button class="btn btn-outline-secondary btn-sm" id="resetFiltersBtn" title="Reset all filters to show all buildings">
                         <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" id="clearFiltersBtn" title="Clear all filters">
+                        <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
                 <div class="mt-1 text-end">
@@ -2036,8 +2099,8 @@
                 'INSTITUTIONAL': '#9C27B0', // Purple
                 'MIXED': '#F44336', // Red
                 'GOVERNMENT': '#607D8B', // Blue Grey
-                'VACANT': '#FFD700', // Gold/Yellow - Changed from grey
-                'OTHER': '#9E9E9E' // Grey - for unknown/other
+                'VACANT': '#FFD700', // Gold/Yellow
+                'OTHER': '#9E9E9E' // Grey
             };
 
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
@@ -2105,6 +2168,8 @@
             // ─── BUILDING SOURCE WITH USAGE COLORS ───
             const buildingSource = new ol.source.Vector();
 
+            let currentFilteredBuildings = allBuildings;
+
             function loadBuildingsWithColors(filteredBuildings) {
                 buildingSource.clear();
 
@@ -2143,6 +2208,9 @@
                         console.error('Building parse error:', e);
                     }
                 });
+
+                // Store current filtered buildings
+                currentFilteredBuildings = dataToLoad;
             }
 
             // ─── BUILDING LAYER ───
@@ -2360,8 +2428,7 @@
                         let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l
                             .coordinates;
                         while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][
-                                0
-                            ])) {
+                                0])) {
                             coords = coords[0];
                         }
                         const isValid = coords.length >= 2 && coords.every(c =>
@@ -2767,6 +2834,9 @@
                     return true;
                 });
 
+                // Store current filtered buildings
+                currentFilteredBuildings = filtered;
+
                 // Update display count
                 $('#buildingCountDisplay').text(`Showing: ${filtered.length} buildings`);
 
@@ -2775,6 +2845,13 @@
 
                 // Update legend counts
                 updateLegendCounts(filtered);
+
+                // Show toast message
+                if (filtered.length === allBuildings.length) {
+                    showToast('📊 Showing all buildings', 1500);
+                } else {
+                    showToast(`✅ Showing ${filtered.length} buildings with applied filters`, 2000);
+                }
             }
 
             function updateLegendCounts(filtered) {
@@ -2792,13 +2869,51 @@
             }
 
             function resetFilters() {
+                // Reset all filter values to default
                 $('#usageFilter').val('all');
                 const minVal = {{ $areaStats['min'] ?? 0 }};
                 const maxVal = {{ $areaStats['max'] ?? 0 }};
                 $('#areaMin').val(minVal);
                 $('#areaMax').val(maxVal);
                 $('#usageVariationFilter').val('all');
-                filterBuildings();
+
+                // Reset to show all buildings
+                currentFilteredBuildings = allBuildings;
+
+                // Update display count
+                $('#buildingCountDisplay').text(`Showing: ${allBuildings.length} buildings`);
+
+                // Reload with all buildings
+                loadBuildingsWithColors(allBuildings);
+
+                // Update legend counts
+                updateLegendCounts(allBuildings);
+
+                // Show toast message
+                showToast('🔄 Reset all filters - showing all buildings', 2000);
+            }
+
+            function clearFilters() {
+                // Clear filter values
+                $('#usageFilter').val('all');
+                $('#areaMin').val('');
+                $('#areaMax').val('');
+                $('#usageVariationFilter').val('all');
+
+                // Reset to show all buildings
+                currentFilteredBuildings = allBuildings;
+
+                // Update display count
+                $('#buildingCountDisplay').text(`Showing: ${allBuildings.length} buildings`);
+
+                // Reload with all buildings
+                loadBuildingsWithColors(allBuildings);
+
+                // Update legend counts
+                updateLegendCounts(allBuildings);
+
+                // Show toast message
+                showToast('🗑️ Filters cleared - showing all buildings', 2000);
             }
 
             // ─── BUILDING VIEW ───
@@ -3085,20 +3200,20 @@
                                     <div class="tax-card">
                                         <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
                                         ${ptList.length ? ptList.map(pt => `
-                                                            <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
-                                                                <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
-                                                                <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
-                                                                <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
-                                                                <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
-                                                                <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
-                                                                <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
-                                                                <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
-                                                                <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
-                                                                <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
-                                                                <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
-                                                                <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
-                                                            </div>
-                                                        `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
+                                                <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                                    <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                                </div>
+                                            `).join('') : '<div class="tax-card-row"><span class="tax-card-label">No records</span></div>'}
                                     </div>
                                 </div>
                             </div>
@@ -3525,7 +3640,7 @@
                 $('#labelToggleBtn i').toggleClass('bi-fonts', showLabels).toggleClass('bi-fonts', !showLabels);
                 reloadAllSources();
                 // Also refresh building labels
-                loadBuildingsWithColors(allBuildings);
+                loadBuildingsWithColors(currentFilteredBuildings);
                 showToast(showLabels ? '🏷️ Labels ON' : '🏷️ Labels OFF', 1500);
             }
 
@@ -4201,9 +4316,14 @@
                             </div>`;
                     });
                     $('#filterResults').html(html ||
-                        '<div class="p-2 text-muted">No matches</div>');
+                    '<div class="p-2 text-muted">No matches</div>');
                 });
             });
+
+            // ─── FILTER EVENTS ───
+            $(document).on('click', '#applyFiltersBtn', filterBuildings);
+            $(document).on('click', '#resetFiltersBtn', resetFilters);
+            $(document).on('click', '#clearFiltersBtn', clearFilters);
 
             // ─── EDIT TOGGLE EVENTS ───
             $(document).on('click', '#editToggleBtn', function(e) {
@@ -4864,10 +4984,6 @@
                 });
             });
 
-            // ─── FILTER EVENTS ───
-            $(document).on('click', '#applyFiltersBtn', filterBuildings);
-            $(document).on('click', '#resetFiltersBtn', resetFilters);
-
             // ─── CLOSE DROPDOWNS ───
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass(
@@ -4988,8 +5104,8 @@
                             1;
                         const height = Math.max(1, floors) * 3;
                         const isMapped = !!polygonData;
-                        const usage = feature.get('usage') || 'O';
-                        const color = usageColors[usage] || '#BDBDBD';
+                        const usage = feature.get('usage') || 'OTHER';
+                        const color = usageColors[usage] || '#9E9E9E';
 
                         const entity = cesiumViewer.entities.add({
                             name: 'Building ' + gisid,
@@ -5055,6 +5171,7 @@
             updateLayerUI();
 
             // Load buildings with colors
+            currentFilteredBuildings = allBuildings;
             loadBuildingsWithColors(allBuildings);
             $('#buildingCountDisplay').text(`Showing: ${allBuildings.length} buildings`);
 
@@ -5067,7 +5184,7 @@
 
             loadInfrastructure({{ $ward->id }});
 
-            console.log('✅ Executive GIS Dashboard ready with usage color coding');
+            console.log('✅ Executive GIS Dashboard ready with usage color coding and filters');
         });
     </script>
 @endpush
