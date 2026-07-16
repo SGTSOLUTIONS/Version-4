@@ -16,6 +16,7 @@ use App\Http\Controllers\MapController;
 use App\Http\Controllers\PointdataController;
 use App\Http\Controllers\TeamManagementController;
 use App\Http\Controllers\InfrastructureController;
+use App\Http\Controllers\VariationController;
 
 Route::prefix('infrastructure')->group(function () {
     Route::get('/data/{wardId}', [InfrastructureController::class, 'getInfrastructureData']);
@@ -51,8 +52,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/polygon-split', [FeatureController::class, 'polygonSplit']);
     Route::post('/update-polygon', [FeatureController::class, 'polygonUpdate']);
     Route::post('/delete-feature', [FeatureController::class, 'polygonDelete']);
-     Route::post('/point-data/${id}/qc', [CommissionerController::class, 'qcUpdate']);
+    Route::post('/point-data/${id}/qc', [CommissionerController::class, 'qcUpdate']);
 
+    Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])
+        ->name('area.variation');
+
+    Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])
+        ->name('usage.variation');
+        Route::post('/variation/filter', [VariationController::class, 'filterVariations'])->name('variation.filter');
+Route::post('/variation/export', [VariationController::class, 'exportVariations'])->name('variation.export');
 });
 
 
@@ -137,7 +145,7 @@ Route::middleware(['auth', 'role:commissioner'])->prefix('commissioner')->name('
     Route::get('map/{id}', [CommissionerController::class, 'showMap'])
         ->name('ward.showmap');
     Route::get('/get-point-details', [CommissionerController::class, 'getPointDetails'])
-    ->name('getPointDetails');
+        ->name('getPointDetails');
 
     // Add commissioner specific routes here
 });
@@ -195,4 +203,3 @@ Route::middleware(['auth', 'role:surveyor,teamleader'])->group(function () {
 });
 
 Route::get('/survey/map', [MapController::class, 'map'])->name('teamleader.map');
-
