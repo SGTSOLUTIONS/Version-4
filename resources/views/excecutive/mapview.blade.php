@@ -150,6 +150,14 @@
             display: block;
         }
 
+        .custom-drone-3d-toggle {
+            position: absolute;
+            right: 30px;
+            top: 414px;
+            z-index: 1000;
+            display: none;
+        }
+
         .fullscreen-btn {
             position: absolute;
             bottom: 20px;
@@ -389,7 +397,8 @@
         .edit-toggle-btn,
         .label-toggle-btn,
         .legend-toggle-btn,
-        .threed-toggle-btn {
+        .threed-toggle-btn,
+        .drone-3d-toggle-btn {
             width: 44px;
             height: 44px;
             background: white;
@@ -412,6 +421,7 @@
         .label-toggle-btn:hover,
         .legend-toggle-btn:hover,
         .threed-toggle-btn:hover,
+        .drone-3d-toggle-btn:hover,
         .fullscreen-btn:hover {
             background: #f8fafc;
             transform: scale(1.02);
@@ -439,6 +449,12 @@
         }
 
         .threed-toggle-btn.active-3d {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+
+        .drone-3d-toggle-btn.active-drone-3d {
             background: #eff6ff;
             border-color: #3b82f6;
             color: #2563eb;
@@ -1343,7 +1359,8 @@
             .custom-edit-toggle,
             .custom-label-toggle,
             .custom-legend-toggle,
-            .custom-3d-toggle {
+            .custom-3d-toggle,
+            .custom-drone-3d-toggle {
                 right: 10px;
             }
 
@@ -1375,6 +1392,10 @@
                 top: 298px;
             }
 
+            .custom-drone-3d-toggle {
+                top: 346px;
+            }
+
             .layer-toggle-btn,
             .location-toggle-btn,
             .search-toggle-btn,
@@ -1382,7 +1403,8 @@
             .label-toggle-btn,
             .legend-toggle-btn,
             .fullscreen-btn,
-            .threed-toggle-btn {
+            .threed-toggle-btn,
+            .drone-3d-toggle-btn {
                 width: 38px;
                 height: 38px;
                 font-size: 1rem;
@@ -3628,9 +3650,11 @@
             function toggleDroneLayer() {
                 droneLayer.setVisible(!droneLayer.getVisible());
                 updateLayerUI();
+                // Keep the 3D drone imagery layer in sync with the 2D toggle
                 if (droneImageryLayer) {
                     droneImageryLayer.show = droneLayer.getVisible();
                 }
+                $('#droneToggle3DBtn').toggleClass('active-drone-3d', droneLayer.getVisible());
             }
 
             // ─── LABEL TOGGLE ───
@@ -4075,6 +4099,15 @@
                 <div class="custom-3d-toggle">
                     <div class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
                         <i class="bi bi-box"></i>
+                    </div>
+                </div>
+            `);
+
+            // ─── DRONE-IN-3D TOGGLE BUTTON (only visible while in 3D) ───
+            $mapContainer.append(`
+                <div class="custom-drone-3d-toggle">
+                    <div class="drone-3d-toggle-btn" id="droneToggle3DBtn" title="Toggle Drone Imagery in 3D">
+                        <i class="bi bi-camera-drone"></i>
                     </div>
                 </div>
             `);
@@ -5001,7 +5034,7 @@
             });
 
             // ════════════════════════════════════════════════════════════
-            // 3D VIEW TOGGLE — Cesium globe
+            // 3D VIEW TOGGLE — Cesium globe (with Drone Imagery draped on terrain)
             // ════════════════════════════════════════════════════════════
             let cesiumViewer = null;
             let cesiumBuildingEntities = [];
@@ -5020,6 +5053,8 @@
                 return flat;
             }
 
+            // Adds the ward's drone orthophoto as a draped imagery layer on the
+            // Cesium globe, using the SAME extent as the 2D ol.source.ImageStatic.
             function addDroneImageryTo3D() {
                 if (!cesiumViewer) return;
 
@@ -5049,7 +5084,10 @@
 
                 droneImageryLayer = cesiumViewer.imageryLayers.addImageryProvider(provider);
                 droneImageryLayer.alpha = 0.9;
+                // Respect whatever the 2D Drone View toggle is currently set to
                 droneImageryLayer.show = droneLayer.getVisible();
+
+                $('#droneToggle3DBtn').toggleClass('active-drone-3d', droneImageryLayer.show);
             }
 
             function init3DViewer() {
@@ -5144,6 +5182,9 @@
                 $('#threeDToggleBtn').toggleClass('active-3d', is3DActive);
                 $('#threeDToggleBtn i').toggleClass('bi-box', !is3DActive).toggleClass('bi-badge-3d', is3DActive);
 
+                // Show the drone-in-3D toggle button only while 3D is active
+                $('.custom-drone-3d-toggle').css('display', is3DActive ? 'block' : 'none');
+
                 if (is3DActive) {
                     disableAllInteractions();
                     setNoneMode();
@@ -5152,7 +5193,7 @@
                     $('#cesiumContainer').show();
                     init3DViewer();
                     refreshCesiumBuildings();
-                    showToast('🧊 3D View — switch back to 2D to edit', 2500);
+                    showToast('🧊 3D View with drone imagery draped on the model — switch back to 2D to edit', 3000);
                 } else {
                     $('#cesiumContainer').hide();
                     $('#map').show();
@@ -5164,6 +5205,21 @@
             $(document).on('click', '#threeDToggleBtn', function(e) {
                 e.stopPropagation();
                 toggle3DView();
+            });
+
+            // Manual toggle for drone imagery visibility WHILE inside the 3D view
+            $(document).on('click', '#droneToggle3DBtn', function(e) {
+                e.stopPropagation();
+                if (!cesiumViewer || !droneImageryLayer) {
+                    showToast('⚠️ No drone imagery available for this ward', 2000);
+                    return;
+                }
+                droneImageryLayer.show = !droneImageryLayer.show;
+                $(this).toggleClass('active-drone-3d', droneImageryLayer.show);
+                // Keep the 2D drone layer in sync too
+                droneLayer.setVisible(droneImageryLayer.show);
+                updateLayerUI();
+                showToast(droneImageryLayer.show ? '🚁 Drone imagery shown in 3D' : '🚁 Drone imagery hidden in 3D', 1500);
             });
 
             // ─── INIT ───
@@ -5184,7 +5240,7 @@
 
             loadInfrastructure({{ $ward->id }});
 
-            console.log('✅ Executive GIS Dashboard ready with usage color coding and filters');
+            console.log('✅ Executive GIS Dashboard ready with usage color coding, filters, and drone imagery in both 2D and 3D views');
         });
     </script>
 @endpush
