@@ -10,7 +10,7 @@
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
 
     <style>
-        /* ─── Layout ─── */
+        /* ─── All existing styles remain the same ─── */
         .dropdown-header {
             padding: 8px 18px;
             font-size: 0.75rem;
@@ -97,7 +97,6 @@
             height: calc(100vh - 5px);
         }
 
-        /* ─── Controls ─── */
         .custom-layer-switcher {
             position: absolute;
             right: 30px;
@@ -188,7 +187,6 @@
             line-height: 1.5;
         }
 
-        /* ─── Ward Navigation ─── */
         .ward-navigation .btn {
             border-radius: 8px;
             font-weight: 600;
@@ -224,7 +222,6 @@
             text-align: center;
         }
 
-        /* ─── Filter Section ─── */
         .filter-section {
             background: #fff;
             border-radius: 14px;
@@ -255,7 +252,6 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        /* ─── Usage Legend ─── */
         .usage-legend {
             background: #fff;
             border-radius: 14px;
@@ -302,7 +298,6 @@
             font-weight: 700;
         }
 
-        /* ─── Stat Strip ─── */
         .stat-strip {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -338,13 +333,40 @@
             flex-shrink: 0;
         }
 
-        .stat-icon-blue { background: #eff6ff; color: #2563eb; }
-        .stat-icon-green { background: #f0fdf4; color: #16a34a; }
-        .stat-icon-purple { background: #f5f3ff; color: #7c3aed; }
-        .stat-icon-amber { background: #fffbeb; color: #d97706; }
-        .stat-icon-red { background: #fef2f2; color: #dc2626; }
-        .stat-icon-cyan { background: #ecfeff; color: #0891b2; }
-        .stat-icon-pink { background: #fdf2f8; color: #db2777; }
+        .stat-icon-blue {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .stat-icon-green {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .stat-icon-purple {
+            background: #f5f3ff;
+            color: #7c3aed;
+        }
+
+        .stat-icon-amber {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .stat-icon-red {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .stat-icon-cyan {
+            background: #ecfeff;
+            color: #0891b2;
+        }
+
+        .stat-icon-pink {
+            background: #fdf2f8;
+            color: #db2777;
+        }
 
         .stat-label {
             font-size: .68rem;
@@ -368,7 +390,6 @@
             color: #94a3b8;
         }
 
-        /* ─── Layer Controls ─── */
         .layer-toggle-btn,
         .location-toggle-btn,
         .search-toggle-btn,
@@ -538,9 +559,15 @@
         }
 
         @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
-            70% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+            }
+            70% {
+                box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
         }
 
         .location-toast {
@@ -566,7 +593,6 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* ─── Search ─── */
         .search-result-item {
             padding: 10px 16px;
             cursor: pointer;
@@ -595,7 +621,6 @@
             overflow-x: hidden;
         }
 
-        /* ── Edit Controls ── */
         .edit-controls {
             position: absolute;
             bottom: 120px;
@@ -669,8 +694,14 @@
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
         }
 
         .split-action-btn .close-btn {
@@ -724,7 +755,6 @@
             cursor: pointer !important;
         }
 
-        /* ── Modal Styles ── */
         .bld-modal-content {
             border: none;
             border-radius: 20px;
@@ -1013,7 +1043,6 @@
             padding: 40px 20px;
         }
 
-        /* ── Point Data Cards ── */
         .point-data-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -1116,7 +1145,6 @@
             font-style: italic;
         }
 
-        /* ── Tax Cards ── */
         .tax-card {
             background: #f8fafc;
             border-radius: 10px;
@@ -1154,7 +1182,6 @@
             color: #1e293b;
         }
 
-        /* ── Infrastructure Legend ── */
         .infrastructure-legend {
             position: absolute;
             bottom: 30px;
@@ -1261,16 +1288,30 @@
             color: #1e293b;
         }
 
-        /* ── Responsive ── */
         @media (max-width: 768px) {
-            #map { height: 600px; }
-            .bld-image-strip { height: 150px; }
-            .bld-summary-card { flex: 1 1 45%; }
-            .point-data-card-grid { grid-template-columns: 1fr 1fr; }
-            .bld-modal-footer { flex-direction: column; gap: 10px; }
-            .point-data-card-header { flex-direction: column; gap: 8px; }
-            .point-data-card-actions { justify-content: flex-start; }
-
+            #map {
+                height: 600px;
+            }
+            .bld-image-strip {
+                height: 150px;
+            }
+            .bld-summary-card {
+                flex: 1 1 45%;
+            }
+            .point-data-card-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .bld-modal-footer {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .point-data-card-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .point-data-card-actions {
+                justify-content: flex-start;
+            }
             .custom-layer-switcher,
             .custom-location-switcher,
             .custom-search-switcher,
@@ -1280,15 +1321,27 @@
             .custom-3d-toggle {
                 right: 10px;
             }
-
-            .custom-layer-switcher { top: 10px; }
-            .custom-location-switcher { top: 58px; }
-            .custom-search-switcher { top: 106px; }
-            .custom-edit-toggle { top: 154px; }
-            .custom-label-toggle { top: 202px; }
-            .custom-legend-toggle { top: 250px; }
-            .custom-3d-toggle { top: 298px; }
-
+            .custom-layer-switcher {
+                top: 10px;
+            }
+            .custom-location-switcher {
+                top: 58px;
+            }
+            .custom-search-switcher {
+                top: 106px;
+            }
+            .custom-edit-toggle {
+                top: 154px;
+            }
+            .custom-label-toggle {
+                top: 202px;
+            }
+            .custom-legend-toggle {
+                top: 250px;
+            }
+            .custom-3d-toggle {
+                top: 298px;
+            }
             .layer-toggle-btn,
             .location-toggle-btn,
             .search-toggle-btn,
@@ -1302,8 +1355,9 @@
                 font-size: 1rem;
                 border-radius: 10px;
             }
-
-            .search-dropdown { width: min(320px, calc(100vw - 40px)); }
+            .search-dropdown {
+                width: min(320px, calc(100vw - 40px));
+            }
             .infrastructure-legend {
                 left: 10px;
                 right: 10px;
@@ -1313,18 +1367,31 @@
                 min-width: 0;
                 max-height: 45vh;
             }
-            .stat-strip { grid-template-columns: repeat(2, 1fr); }
-            .filter-section .row>div { margin-bottom: 8px; }
+            .stat-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .filter-section .row>div {
+                margin-bottom: 8px;
+            }
         }
 
         @media (max-width: 480px) {
-            .infrastructure-legend { max-height: 40vh; font-size: 11px; }
-            .infrastructure-legend .legend-title { font-size: 13px; }
-            .stat-strip { grid-template-columns: 1fr; }
+            .infrastructure-legend {
+                max-height: 40vh;
+                font-size: 11px;
+            }
+            .infrastructure-legend .legend-title {
+                font-size: 13px;
+            }
+            .stat-strip {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 992px) {
-            .stat-strip { grid-template-columns: repeat(2, 1fr); }
+            .stat-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 @endpush
@@ -1705,29 +1772,62 @@
                 'OTHER': '#9E9E9E'
             };
 
+            // ─── DRONE IMAGE COORDINATES (EPSG:3857 to EPSG:4326 conversion) ───
+            // These are the extent values from your ward (in Web Mercator / EPSG:3857)
+            // You need to convert them to WGS84 / EPSG:4326 for Cesium
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
                 {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
             ];
 
-            const isLatLon = imageExtentRaw[0] > -180 && imageExtentRaw[0] < 180 &&
+            // ─── CONVERT EPSG:3857 to EPSG:4326 (WGS84) ───
+            function webMercatorToWgs84(x, y) {
+                // Web Mercator (EPSG:3857) to WGS84 (EPSG:4326)
+                var lon = (x / 20037508.34) * 180;
+                var lat = (y / 20037508.34) * 180;
+                lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI / 2);
+                return [lon, lat];
+            }
+
+            // Check if the coordinates are already in WGS84 (lat/lon)
+            const isAlreadyWgs84 = imageExtentRaw[0] > -180 && imageExtentRaw[0] < 180 &&
                 imageExtentRaw[1] > -90 && imageExtentRaw[1] < 90;
 
+            let wgs84Extent;
+            if (isAlreadyWgs84) {
+                wgs84Extent = imageExtentRaw;
+                console.log('✅ Extent is already in WGS84 format');
+            } else {
+                // Convert from EPSG:3857 to EPSG:4326
+                const bl = webMercatorToWgs84(imageExtentRaw[0], imageExtentRaw[1]);
+                const tr = webMercatorToWgs84(imageExtentRaw[2], imageExtentRaw[3]);
+                wgs84Extent = [bl[0], bl[1], tr[0], tr[1]];
+                console.log('✅ Converted extent from EPSG:3857 to WGS84:', wgs84Extent);
+            }
+
+            // Also convert for OpenLayers (OL uses EPSG:3857 internally)
             let imageExtent;
-            if (isLatLon) {
+            if (isAlreadyWgs84) {
                 const bl = ol.proj.fromLonLat([imageExtentRaw[0], imageExtentRaw[1]]);
                 const tr = ol.proj.fromLonLat([imageExtentRaw[2], imageExtentRaw[3]]);
                 imageExtent = [bl[0], bl[1], tr[0], tr[1]];
             } else {
+                // Already in EPSG:3857, use as is
                 imageExtent = imageExtentRaw;
             }
 
             let droneImageURL = "{{ asset($ward->drone_image ?? '') }}";
 
+            // Debug: Log the drone image URL and extents
+            console.log('Drone Image URL:', droneImageURL);
+            console.log('Original Extent:', imageExtentRaw);
+            console.log('WGS84 Extent:', wgs84Extent);
+            console.log('OL Extent:', imageExtent);
+
             // ─── LAYERS ───
             const droneLayer = new ol.layer.Image({
                 source: new ol.source.ImageStatic({
                     url: droneImageURL,
-                    imageExtent,
+                    imageExtent: imageExtent,
                     imageSmoothing: false
                 }),
                 opacity: 0.90,
@@ -4306,29 +4406,39 @@
                     navigationHelpButton: false,
                     baseLayerPicker: false,
                     fullscreenButton: false,
-                    // Remove default imagery provider - we'll add drone image as base
                     imageryProvider: false,
                     terrainProvider: new Cesium.EllipsoidTerrainProvider()
                 });
 
-                // ─── DRONE IMAGE AS BASE LAYER ───
-                if (droneImageURL && droneImageURL !== "{{ asset('') }}" && isLatLon) {
+                // ─── CHECK IF DRONE IMAGE EXISTS ───
+                if (droneImageURL && droneImageURL !== "{{ asset('') }}") {
                     try {
                         // Remove all existing imagery layers
                         cesiumViewer.imageryLayers.removeAll();
 
-                        // Create rectangle from extent
-                        const rectangle = Cesium.Rectangle.fromDegrees(
-                            imageExtentRaw[0],
-                            imageExtentRaw[1],
-                            imageExtentRaw[2],
-                            imageExtentRaw[3]
-                        );
+                        // Check if we have valid WGS84 coordinates
+                        let rect;
+                        if (isAlreadyWgs84) {
+                            rect = Cesium.Rectangle.fromDegrees(
+                                imageExtentRaw[0],
+                                imageExtentRaw[1],
+                                imageExtentRaw[2],
+                                imageExtentRaw[3]
+                            );
+                        } else {
+                            // Use converted WGS84 coordinates
+                            rect = Cesium.Rectangle.fromDegrees(
+                                wgs84Extent[0],
+                                wgs84Extent[1],
+                                wgs84Extent[2],
+                                wgs84Extent[3]
+                            );
+                        }
 
-                        // Add drone image as the base layer
+                        // Add drone image as base layer
                         const provider = new Cesium.SingleTileImageryProvider({
                             url: droneImageURL,
-                            rectangle: rectangle
+                            rectangle: rect
                         });
 
                         droneImageryLayer = cesiumViewer.imageryLayers.addImageryProvider(provider);
@@ -4336,17 +4446,24 @@
                         droneImageryLayer.show = true;
 
                         console.log('✅ Drone image set as base layer in 3D view');
+                        console.log('Rectangle:', rect);
 
                         // Fly to the drone image extent
-                        const west = imageExtentRaw[0];
-                        const south = imageExtentRaw[1];
-                        const east = imageExtentRaw[2];
-                        const north = imageExtentRaw[3];
+                        const west = rect.west;
+                        const south = rect.south;
+                        const east = rect.east;
+                        const north = rect.north;
                         const centerLon = (west + east) / 2;
                         const centerLat = (south + north) / 2;
 
+                        // Calculate appropriate height based on extent size
+                        const height = Math.max(
+                            200,
+                            (east - west) * 111000 * 0.5 // Approximate meters per degree
+                        );
+
                         cesiumViewer.camera.flyTo({
-                            destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat, 300),
+                            destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat, height),
                             orientation: {
                                 heading: Cesium.Math.toRadians(0),
                                 pitch: Cesium.Math.toRadians(-45),
@@ -4358,7 +4475,7 @@
                         showToast('🛩️ Drone image as base layer in 3D view', 3000);
                     } catch (error) {
                         console.error('Error loading drone image as base:', error);
-                        // Fallback to OSM if drone image fails
+                        // Fallback to OSM
                         cesiumViewer.imageryLayers.addImageryProvider(
                             new Cesium.OpenStreetMapImageryProvider({
                                 url: "https://tile.openstreetmap.org/"
@@ -4367,7 +4484,7 @@
                         showToast('⚠️ Drone image failed, using OSM base', 3000);
                     }
                 } else {
-                    // Fallback: Use OpenStreetMap if no drone image
+                    // No drone image, use OSM
                     cesiumViewer.imageryLayers.addImageryProvider(
                         new Cesium.OpenStreetMapImageryProvider({
                             url: "https://tile.openstreetmap.org/"
