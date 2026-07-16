@@ -1420,7 +1420,10 @@ class CommissionerController extends Controller
         // ─────────────────────────────────────────────────────────
         $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
         $buildingVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData);
-
+        $buildingData = $this->getBuildingsWithUsageColors($wardId);
+        $availableUsages = array_keys($buildingData['usage_counts']);
+        sort($availableUsages);
+        $areaStats = $this->getAreaVariationStats($wardId, $buildingData['buildings']);
         return view('excecutive.mapview', compact(
             'ward',
             'polygons',
@@ -1431,8 +1434,41 @@ class CommissionerController extends Controller
             'misData',
             'uniqueRoadNames',
             'analytics',
-            'buildingVariations'
+            'buildingVariations',
+            'buildingData',
+            'availableUsages',
+            'areaStats'
         ));
+    }
+    private function getAreaVariationStats($wardId, $buildings)
+    {
+        $stats = [
+            'min' => 0,
+            'max' => 0,
+            'avg' => 0,
+            'total' => 0,
+            'count' => 0,
+        ];
+
+        foreach ($buildings as $building) {
+            $sqfeet = floatval($building['sqfeet'] ?? 0);
+            if ($sqfeet > 0) {
+                $stats['total'] += $sqfeet;
+                $stats['count']++;
+                if ($stats['min'] == 0 || $sqfeet < $stats['min']) {
+                    $stats['min'] = $sqfeet;
+                }
+                if ($sqfeet > $stats['max']) {
+                    $stats['max'] = $sqfeet;
+                }
+            }
+        }
+
+        if ($stats['count'] > 0) {
+            $stats['avg'] = round($stats['total'] / $stats['count'], 2);
+        }
+
+        return $stats;
     }
     private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData)
     {
@@ -1759,5 +1795,88 @@ class CommissionerController extends Controller
             'message'    => 'QC data updated successfully.',
             'point_data' => $updatedPoint,
         ]);
+    }
+    /**
+     * Get building data with usage-based colors for map
+     */
+    private function getBuildingsWithUsageColors($wardId)
+    {
+        $polygonsTable = "polygons_{$wardId}";
+        $polygonDataTable = "polygon_data_{$wardId}";
+
+        if (!Schema::hasTable($polygonsTable)) {
+            return [];
+        }
+
+        // Define usage color mapping
+        $usageColors = [
+            'RESIDENTIAL' => '#4CAF50',  // Green
+            'COMMERCIAL'  => '#2196F3',  // Blue
+            'INDUSTRIAL'  => '#FF9800',  // Orange
+            'INSTITUTIONAL' => '#9C27B0', // Purple
+            'MIXED'       => '#F44336',  // Red
+            'GOVERNMENT'  => '#607D8B',  // Blue Grey
+            'VACANT'      => '#9E9E9E',  // Grey
+        ];
+
+        // Default color for unknown usage
+        $defaultColor = '#BDBDBD';
+
+        $polygons = DB::table($polygonsTable)->get();
+        $polygonData = collect();
+
+        if (Schema::hasTable($polygonDataTable)) {
+            $polygonData = DB::table($polygonDataTable)->get()->keyBy('gisid');
+        }
+
+        $buildings = [];
+        $usageCounts = [];
+
+        foreach ($polygons as $polygon) {
+            $gisid = $polygon->gisid;
+            $buildingData = $polygonData->get($gisid);
+
+            // Get building usage from polygon_data or default
+            $usage = 'VACANT';
+            if ($buildingData && !empty($buildingData->building_usage)) {
+                $usage = strtoupper(trim($buildingData->building_usage));
+
+                // Map variations to standard types
+                if (strpos($usage, 'RESIDENT') !== false || strpos($usage, 'DWELLING') !== false) {
+                    $usage = 'RESIDENTIAL';
+                } elseif (strpos($usage, 'SHOP') !== false || strpos($usage, 'RETAIL') !== false) {
+                    $usage = 'COMMERCIAL';
+                } elseif (strpos($usage, 'FACTORY') !== false || strpos($usage, 'MANUFACT') !== false) {
+                    $usage = 'INDUSTRIAL';
+                } elseif (strpos($usage, 'SCHOOL') !== false || strpos($usage, 'HOSPITAL') !== false) {
+                    $usage = 'INSTITUTIONAL';
+                } elseif (strpos($usage, 'GOV') !== false || strpos($usage, 'OFFICE') !== false) {
+                    $usage = 'GOVERNMENT';
+                }
+            }
+
+            $color = $usageColors[$usage] ?? $defaultColor;
+
+            // Count by usage
+            if (!isset($usageCounts[$usage])) {
+                $usageCounts[$usage] = 0;
+            }
+            $usageCounts[$usage]++;
+
+            $buildings[] = [
+                'gisid' => $gisid,
+                'coordinates' => json_decode($polygon->coordinates, true),
+                'usage' => $usage,
+                'color' => $color,
+                'sqfeet' => $polygon->sqfeet ?? 0,
+                'building_data' => $buildingData,
+            ];
+        }
+
+        return [
+            'buildings' => $buildings,
+            'usage_counts' => $usageCounts,
+            'usage_colors' => $usageColors,
+        ];
     }
 }

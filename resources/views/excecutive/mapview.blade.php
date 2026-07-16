@@ -175,70 +175,151 @@
             transform: scale(1.02);
         }
 
-        /* ─── Fullscreen Mode Overrides ─── */
-        .map-card.fullscreen-mode .custom-layer-switcher {
-            top: 10px;
-            right: 10px;
+        /* ─── Filter Section ─── */
+        .filter-section {
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
         }
 
-        .map-card.fullscreen-mode .custom-location-switcher {
-            top: 58px;
-            right: 10px;
+        .filter-section .form-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
-        .map-card.fullscreen-mode .custom-search-switcher {
-            top: 106px;
-            right: 10px;
+        .filter-section .form-select,
+        .filter-section .form-control {
+            font-size: 0.85rem;
+            border-radius: 8px;
+            border-color: #e5e7eb;
         }
 
-        .map-card.fullscreen-mode .custom-edit-toggle {
-            top: 154px;
-            right: 10px;
+        .filter-section .form-select:focus,
+        .filter-section .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        .map-card.fullscreen-mode .custom-label-toggle {
-            top: 202px;
-            right: 10px;
+        /* ─── Usage Legend ─── */
+        .usage-legend {
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid #e5e7eb;
+            padding: 10px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
         }
 
-        .map-card.fullscreen-mode .custom-legend-toggle {
-            top: 250px;
-            right: 10px;
+        .usage-legend .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: #f8fafc;
+            transition: all 0.2s;
+            cursor: default;
         }
 
-        .map-card.fullscreen-mode .custom-3d-toggle {
-            top: 298px;
-            right: 10px;
-            display: block !important;
-            z-index: 1001;
+        .usage-legend .legend-item:hover {
+            background: #f1f5f9;
         }
 
-        .map-card.fullscreen-mode .fullscreen-btn {
-            bottom: 20px;
-            right: 20px;
-            z-index: 10000;
+        .usage-legend .color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            flex-shrink: 0;
         }
 
-        .map-card.fullscreen-mode .layer-toggle-btn,
-        .map-card.fullscreen-mode .location-toggle-btn,
-        .map-card.fullscreen-mode .search-toggle-btn,
-        .map-card.fullscreen-mode .edit-toggle-btn,
-        .map-card.fullscreen-mode .label-toggle-btn,
-        .map-card.fullscreen-mode .legend-toggle-btn,
-        .map-card.fullscreen-mode .threed-toggle-btn {
-            width: 38px;
-            height: 38px;
-            font-size: 1rem;
+        .usage-legend .legend-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .usage-legend .legend-count {
+            font-size: 0.65rem;
+            background: #e2e8f0;
+            color: #64748b;
+            padding: 1px 7px;
             border-radius: 10px;
+            font-weight: 700;
         }
 
-        .map-card.fullscreen-mode .layer-dropdown,
-        .map-card.fullscreen-mode .location-dropdown,
-        .map-card.fullscreen-mode .search-dropdown,
-        .map-card.fullscreen-mode .edit-dropdown {
-            min-width: 200px;
+        /* ─── Stat Strip ─── */
+        .stat-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
         }
 
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            transition: box-shadow .2s, transform .2s;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .stat-icon-blue { background: #eff6ff; color: #2563eb; }
+        .stat-icon-green { background: #f0fdf4; color: #16a34a; }
+        .stat-icon-purple { background: #f5f3ff; color: #7c3aed; }
+        .stat-icon-amber { background: #fffbeb; color: #d97706; }
+        .stat-icon-red { background: #fef2f2; color: #dc2626; }
+        .stat-icon-cyan { background: #ecfeff; color: #0891b2; }
+        .stat-icon-pink { background: #fdf2f8; color: #db2777; }
+
+        .stat-label {
+            font-size: .68rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            line-height: 1;
+        }
+
+        .stat-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 3px;
+        }
+
+        .stat-sub {
+            font-size: .72rem;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        /* ─── Layer Controls ─── */
         .layer-toggle-btn,
         .location-toggle-btn,
         .search-toggle-btn,
@@ -1037,114 +1118,7 @@
             color: #1e293b;
         }
 
-        /* ─── Ward Analytics Strip ─── */
-        .stat-strip {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-
-        .stat-card {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-            transition: box-shadow .2s, transform .2s;
-        }
-
-        .stat-card:hover {
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-            transform: translateY(-2px);
-        }
-
-        .stat-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.15rem;
-            flex-shrink: 0;
-        }
-
-        .stat-icon-blue {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
-        .stat-icon-green {
-            background: #f0fdf4;
-            color: #16a34a;
-        }
-
-        .stat-icon-purple {
-            background: #f5f3ff;
-            color: #7c3aed;
-        }
-
-        .stat-icon-amber {
-            background: #fffbeb;
-            color: #d97706;
-        }
-
-        .stat-icon-red {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-
-        .stat-label {
-            font-size: .68rem;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: .4px;
-            line-height: 1;
-        }
-
-        .stat-value {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-top: 3px;
-        }
-
-        .stat-sub {
-            font-size: .72rem;
-            font-weight: 600;
-            color: #94a3b8;
-        }
-
-        /* ─── Per-building variation badge in modal ─── */
-        .bv-variation-strip {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-        }
-
-        .bv-variation-card {
-            flex: 1 1 150px;
-            background: #f8fafc;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 10px 14px;
-        }
-
-        .bv-variation-card .stat-label {
-            margin-bottom: 4px;
-        }
-
-        .bv-variation-card .bld-status-tag {
-            margin-top: 6px;
-        }
-
-        /* ─── Infrastructure Legend ─── */
+        /* ── Infrastructure Legend ── */
         .infrastructure-legend {
             position: absolute;
             bottom: 30px;
@@ -1231,7 +1205,7 @@
             background: #e2e8f0;
         }
 
-        /* ─── Infrastructure Properties Modal ─── */
+        /* ── Infrastructure Properties Modal ── */
         .infra-prop-table {
             width: 100%;
             font-size: 0.85rem;
@@ -1249,6 +1223,7 @@
             color: #1e293b;
         }
 
+        /* ── Responsive ── */
         @media (max-width: 768px) {
             #map {
                 height: 600px;
@@ -1325,6 +1300,14 @@
                 min-width: 0;
                 max-height: 45vh;
             }
+
+            .stat-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-section .row > div {
+                margin-bottom: 8px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -1336,17 +1319,15 @@
             .infrastructure-legend .legend-title {
                 font-size: 13px;
             }
+
+            .stat-strip {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 992px) {
             .stat-strip {
                 grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 576px) {
-            .stat-strip {
-                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -1394,7 +1375,7 @@
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon stat-icon-blue"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="stat-icon stat-icon-cyan"><i class="bi bi-file-earmark-text"></i></div>
             <div>
                 <div class="stat-label">Assessments Mapped</div>
                 <div class="stat-value">{{ $analytics['total_surveyed_assessments'] ?? 0 }}</div>
@@ -1434,6 +1415,129 @@
         </div>
     </div>
 
+    <!-- ─── FILTER SECTION ─── -->
+    <div class="filter-section">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">
+                    <i class="bi bi-tags me-1"></i>Usage Filter
+                </label>
+                <select id="usageFilter" class="form-select form-select-sm">
+                    <option value="all">All Usages</option>
+                    @if(isset($availableUsages) && count($availableUsages) > 0)
+                        @foreach($availableUsages as $usage)
+                            <option value="{{ $usage }}">{{ ucfirst(strtolower($usage)) }}</option>
+                        @endforeach
+                    @else
+                        <option value="RESIDENTIAL">Residential</option>
+                        <option value="COMMERCIAL">Commercial</option>
+                        <option value="INDUSTRIAL">Industrial</option>
+                        <option value="INSTITUTIONAL">Institutional</option>
+                        <option value="MIXED">Mixed</option>
+                        <option value="GOVERNMENT">Government</option>
+                        <option value="VACANT">Vacant</option>
+                    @endif
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">
+                    <i class="bi bi-rulers me-1"></i>Area Range (sqft)
+                </label>
+                <div class="d-flex gap-2">
+                    <input type="number" id="areaMin" class="form-control form-control-sm"
+                           placeholder="Min" value="{{ $areaStats['min'] ?? 0 }}" min="0">
+                    <input type="number" id="areaMax" class="form-control form-control-sm"
+                           placeholder="Max" value="{{ $areaStats['max'] ?? 0 }}" min="0">
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">
+                    <i class="bi bi-arrow-left-right me-1"></i>Usage Variation
+                </label>
+                <select id="usageVariationFilter" class="form-select form-select-sm">
+                    <option value="all">All Buildings</option>
+                    <option value="match">Matching Only</option>
+                    <option value="variation">With Variation Only</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary btn-sm flex-fill" id="applyFiltersBtn">
+                        <i class="bi bi-funnel me-1"></i>Apply
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" id="resetFiltersBtn">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                </div>
+                <div class="mt-1 text-end">
+                    <span class="text-muted small" id="buildingCountDisplay">
+                        Showing: {{ count($buildingData['buildings'] ?? []) }} buildings
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── USAGE LEGEND ─── -->
+    <div class="usage-legend">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="fw-semibold small me-2">
+                <i class="bi bi-palette me-1"></i>Usage Legend:
+            </span>
+            @if(isset($buildingData['usage_colors']) && isset($buildingData['usage_counts']))
+                @foreach($buildingData['usage_colors'] as $usage => $color)
+                    @if(in_array($usage, $availableUsages ?? []))
+                        <span class="legend-item">
+                            <span class="color-dot" style="background:{{ $color }};"></span>
+                            <span class="legend-label">{{ ucfirst(strtolower($usage)) }}</span>
+                            <span class="legend-count">{{ $buildingData['usage_counts'][$usage] ?? 0 }}</span>
+                        </span>
+                    @endif
+                @endforeach
+            @else
+                <span class="legend-item">
+                    <span class="color-dot" style="background:#4CAF50;"></span>
+                    <span class="legend-label">Residential</span>
+                    <span class="legend-count">0</span>
+                </span>
+                <span class="legend-item">
+                    <span class="color-dot" style="background:#2196F3;"></span>
+                    <span class="legend-label">Commercial</span>
+                    <span class="legend-count">0</span>
+                </span>
+                <span class="legend-item">
+                    <span class="color-dot" style="background:#FF9800;"></span>
+                    <span class="legend-label">Industrial</span>
+                    <span class="legend-count">0</span>
+                </span>
+                <span class="legend-item">
+                    <span class="color-dot" style="background:#9C27B0;"></span>
+                    <span class="legend-label">Institutional</span>
+                    <span class="legend-count">0</span>
+                </span>
+                <span class="legend-item">
+                    <span class="color-dot" style="background:#F44336;"></span>
+                    <span class="legend-label">Mixed</span>
+                    <span class="legend-count">0</span>
+                </span>
+                <span class="legend-item">
+                    <span class="color-dot" style="background:#607D8B;"></span>
+                    <span class="legend-label">Government</span>
+                    <span class="legend-count">0</span>
+                </span>
+                <span class="legend-item">
+                    <span class="color-dot" style="background:#9E9E9E;"></span>
+                    <span class="legend-label">Vacant</span>
+                    <span class="legend-count">0</span>
+                </span>
+            @endif
+        </div>
+    </div>
+
+    <!-- ─── MAP ─── -->
     <div class="map-card" id="mapCard">
         <div class="map-header">
             <h5 class="map-title">
@@ -1838,6 +1942,22 @@
             let analytics = @json($analytics ?? [], JSON_HEX_TAG);
             let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
 
+            // ─── BUILDING DATA FOR USAGE COLORS ───
+            let buildingData = @json($buildingData ?? [], JSON_HEX_TAG);
+            let allBuildings = buildingData.buildings || [];
+            let usageCounts = buildingData.usage_counts || {};
+
+            // ─── USAGE COLOR MAP ───
+            const usageColors = {
+                'RESIDENTIAL': '#4CAF50',
+                'COMMERCIAL': '#2196F3',
+                'INDUSTRIAL': '#FF9800',
+                'INSTITUTIONAL': '#9C27B0',
+                'MIXED': '#F44336',
+                'GOVERNMENT': '#607D8B',
+                'VACANT': '#9E9E9E',
+            };
+
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
                 {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
             ];
@@ -1893,6 +2013,62 @@
                     url: 'https://{a-c}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
                     attributions: '&copy; OpenStreetMap Contributors'
                 })
+            });
+
+            // ─── SOURCES ───
+            const polygonSource = new ol.source.Vector();
+            const lineSource = new ol.source.Vector();
+            const pointSource = new ol.source.Vector();
+
+            // ─── BUILDING SOURCE WITH USAGE COLORS ───
+            const buildingSource = new ol.source.Vector();
+
+            function loadBuildingsWithColors(filteredBuildings) {
+                buildingSource.clear();
+
+                const dataToLoad = filteredBuildings || allBuildings;
+
+                dataToLoad.forEach(building => {
+                    try {
+                        const coords = building.coordinates;
+                        if (!coords || coords.length < 3) return;
+
+                        const feature = new ol.Feature({
+                            geometry: new ol.geom.Polygon([coords]),
+                            gisid: building.gisid,
+                            usage: building.usage,
+                            color: building.color,
+                            sqfeet: building.sqfeet,
+                            type: 'Building',
+                            originalData: building
+                        });
+                        feature.setId(building.gisid);
+
+                        // Set color-based style
+                        const color = building.color || '#BDBDBD';
+                        feature.setStyle(new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: color + '66' // 40% opacity
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: color,
+                                width: 2.5
+                            })
+                        }));
+
+                        buildingSource.addFeature(feature);
+                    } catch (e) {
+                        console.error('Building parse error:', e);
+                    }
+                });
+            }
+
+            // ─── BUILDING LAYER ───
+            const buildingLayer = new ol.layer.Vector({
+                source: buildingSource,
+                visible: true,
+                title: 'Buildings',
+                zIndex: 10
             });
 
             // ─── STYLES ───
@@ -2056,11 +2232,7 @@
                 };
             }
 
-            // ─── SOURCES ───
-            const polygonSource = new ol.source.Vector();
-            const lineSource = new ol.source.Vector();
-            const pointSource = new ol.source.Vector();
-
+            // ─── LOAD SOURCES ───
             function loadPolygonsToSource() {
                 polygonSource.clear();
                 polygons.forEach(poly => {
@@ -2156,7 +2328,7 @@
             const polygonLayer = new ol.layer.Vector({
                 source: polygonSource,
                 style: createPolygonStyle,
-                visible: true,
+                visible: false, // Hidden, using building layer instead
                 title: 'Polygons'
             });
 
@@ -2339,7 +2511,7 @@
             const map = new ol.Map({
                 target: 'map',
                 layers: [osmLayer, satelliteLayer, streetLayer, droneLayer, polygonLayer, pointLayer,
-                    lineLayer, liveLocationLayer
+                    lineLayer, buildingLayer, liveLocationLayer
                 ],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
@@ -2440,6 +2612,74 @@
                     drawInteraction = null;
                 }
                 tempDrawSource.clear();
+            }
+
+            // ─── FILTER FUNCTIONS ───
+            function filterBuildings() {
+                const selectedUsage = $('#usageFilter').val();
+                const minArea = parseFloat($('#areaMin').val()) || 0;
+                const maxArea = parseFloat($('#areaMax').val()) || Infinity;
+                const variationFilter = $('#usageVariationFilter').val();
+
+                let filtered = allBuildings.filter(building => {
+                    // Usage filter
+                    if (selectedUsage !== 'all' && building.usage !== selectedUsage) {
+                        return false;
+                    }
+
+                    // Area filter
+                    const area = parseFloat(building.sqfeet || 0);
+                    if (area < minArea || area > maxArea) {
+                        return false;
+                    }
+
+                    // Usage variation filter
+                    if (variationFilter === 'match') {
+                        const variation = buildingVariations[building.gisid];
+                        if (!variation || variation.usage_status !== 'MATCH') {
+                            return false;
+                        }
+                    } else if (variationFilter === 'variation') {
+                        const variation = buildingVariations[building.gisid];
+                        if (!variation || variation.usage_status !== 'VARIATION') {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+
+                // Update display count
+                $('#buildingCountDisplay').text(`Showing: ${filtered.length} buildings`);
+
+                // Reload with filtered data
+                loadBuildingsWithColors(filtered);
+
+                // Update legend counts
+                updateLegendCounts(filtered);
+            }
+
+            function updateLegendCounts(filtered) {
+                const counts = {};
+                filtered.forEach(b => {
+                    counts[b.usage] = (counts[b.usage] || 0) + 1;
+                });
+
+                $('.usage-legend .legend-count').each(function() {
+                    const parentText = $(this).closest('.legend-item').find('.legend-label').text().toUpperCase();
+                    const count = counts[parentText] || 0;
+                    $(this).text(count);
+                });
+            }
+
+            function resetFilters() {
+                $('#usageFilter').val('all');
+                const minVal = {{ $areaStats['min'] ?? 0 }};
+                const maxVal = {{ $areaStats['max'] ?? 0 }};
+                $('#areaMin').val(minVal);
+                $('#areaMax').val(maxVal);
+                $('#usageVariationFilter').val('all');
+                filterBuildings();
             }
 
             // ─── BUILDING VIEW ───
@@ -2818,6 +3058,17 @@
             });
 
             // ─── CLICK HANDLERS ───
+            function buildingClickHandler(feature) {
+                const gisid = feature.get('gisid');
+                let building = polygonDatas.find(p => p.gisid == gisid);
+
+                if (building) {
+                    showBuildingView(building);
+                } else {
+                    showFlashMessage('No building data found for this GIS ID', 'warning');
+                }
+            }
+
             function pointClick(feature) {
                 const gisid = feature.get('gisid');
                 let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
@@ -2826,17 +3077,6 @@
                     openPointDetails(gisid);
                 } else {
                     showFlashMessage('No building data found for this point', 'warning');
-                }
-            }
-
-            function polygonClick(feature) {
-                const gisid = feature.get('gisid');
-                let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
-
-                if (building) {
-                    showBuildingView(building);
-                } else {
-                    showFlashMessage('No building data found for this GIS ID', 'warning');
                 }
             }
 
@@ -2853,11 +3093,11 @@
                 if (!feature) return;
                 const type = feature.get('type');
                 switch (type) {
+                    case 'Building':
+                        buildingClickHandler(feature);
+                        break;
                     case 'Point':
                         pointClick(feature);
-                        break;
-                    case 'Polygon':
-                        polygonClick(feature);
                         break;
                     case 'LineString':
                         lineClick(feature);
@@ -2872,7 +3112,7 @@
                 hideEditControls();
 
                 const viewInter = new ol.interaction.Select({
-                    layers: [polygonLayer, lineLayer, pointLayer],
+                    layers: [buildingLayer, lineLayer, pointLayer],
                     style: new ol.style.Style({
                         stroke: new ol.style.Stroke({
                             color: '#0066cc',
@@ -3143,6 +3383,8 @@
                 $('#labelToggleBtn').toggleClass('active-label', showLabels);
                 $('#labelToggleBtn i').toggleClass('bi-fonts', showLabels).toggleClass('bi-fonts', !showLabels);
                 reloadAllSources();
+                // Also refresh building labels
+                loadBuildingsWithColors(allBuildings);
                 showToast(showLabels ? '🏷️ Labels ON' : '🏷️ Labels OFF', 1500);
             }
 
@@ -3387,7 +3629,6 @@
             }
 
             // ─── UI INJECTION ───
-            // All controls are appended to #map
             $mapContainer.append(`
                 <div class="custom-layer-switcher">
                     <div class="layer-toggle-btn"><i class="bi bi-layers"></i></div>
@@ -3430,6 +3671,11 @@
                         <div class="layer-dropdown-item" data-layer-type="vector" data-layer="Points">
                             <div class="layer-icon"><i class="bi bi-geo-alt"></i></div>
                             <div class="layer-name">Points</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Buildings">
+                            <div class="layer-icon"><i class="bi bi-building"></i></div>
+                            <div class="layer-name">Buildings</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
                     </div>
@@ -3559,7 +3805,7 @@
                 </div>
             `);
 
-            // ─── 3D TOGGLE BUTTON (appended to #map, not mapCard) ───
+            // ─── 3D TOGGLE BUTTON ───
             $mapContainer.append(`
                 <div class="custom-3d-toggle">
                     <div class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
@@ -3582,7 +3828,6 @@
                 if (!isFullscreen) {
                     $card.addClass('fullscreen-mode');
                     $container.addClass('fullscreen');
-                    // Ensure 3D toggle is visible in fullscreen
                     $('.custom-3d-toggle').css('display', 'block !important');
                     $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
                     isFullscreen = true;
@@ -3598,7 +3843,6 @@
                     if (window.is3DActive && window.cesiumViewer) {
                         window.cesiumViewer.resize();
                     }
-                    // Ensure 3D button remains visible
                     $('.custom-3d-toggle').css('display', isFullscreen ? 'block !important' : 'block');
                 }, 150);
             });
@@ -3644,6 +3888,7 @@
                     if (layerTitle === 'Polygons') layer = polygonLayer;
                     else if (layerTitle === 'Lines') layer = lineLayer;
                     else if (layerTitle === 'Points') layer = pointLayer;
+                    else if (layerTitle === 'Buildings') layer = buildingLayer;
                     if (layer) {
                         const visible = !layer.getVisible();
                         layer.setVisible(visible);
@@ -4457,6 +4702,10 @@
                 });
             });
 
+            // ─── FILTER EVENTS ───
+            $(document).on('click', '#applyFiltersBtn', filterBuildings);
+            $(document).on('click', '#resetFiltersBtn', resetFilters);
+
             // ─── CLOSE DROPDOWNS ───
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass('show');
@@ -4479,7 +4728,6 @@
             let is3DActive = false;
             let droneImageryLayer = null;
 
-            // Make variables accessible globally for fullscreen resize
             window.is3DActive = is3DActive;
             window.cesiumViewer = cesiumViewer;
 
@@ -4562,43 +4810,45 @@
                 cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
                 cesiumBuildingEntities = [];
 
-                polygons.forEach(poly => {
+                // Get filtered buildings from the map source
+                const filteredFeatures = buildingSource.getFeatures();
+                filteredFeatures.forEach(feature => {
                     try {
-                        const coords = JSON.parse(poly.coordinates);
+                        const gisid = feature.get('gisid');
+                        const coords = feature.getGeometry().getCoordinates()[0];
                         const flat = ringToLonLatFlatArray(coords);
                         if (flat.length < 6) return;
 
-                        const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
+                        const polygonData = polygonDatas.find(d => d.gisid == gisid);
                         const floors = polygonData?.number_floor ? parseInt(polygonData.number_floor) || 1 : 1;
                         const height = Math.max(1, floors) * 3;
                         const isMapped = !!polygonData;
-
-                        const color = isMapped
-                            ? Cesium.Color.fromCssColorString('#dc2626').withAlpha(0.75)
-                            : Cesium.Color.fromCssColorString('#2563eb').withAlpha(0.55);
+                        const usage = feature.get('usage') || 'VACANT';
+                        const color = usageColors[usage] || '#BDBDBD';
 
                         const entity = cesiumViewer.entities.add({
-                            name: 'Building ' + poly.gisid,
+                            name: 'Building ' + gisid,
                             polygon: {
                                 hierarchy: Cesium.Cartesian3.fromDegreesArray(flat),
                                 height: 0,
                                 extrudedHeight: height,
-                                material: color,
+                                material: Cesium.Color.fromCssColorString(color).withAlpha(0.75),
                                 outline: true,
                                 outlineColor: Cesium.Color.WHITE,
                                 outlineWidth: 1
                             },
                             description: `
-                                <b>GIS ID:</b> ${poly.gisid}<br>
-                                <b>Area:</b> ${poly.sqfeet || 0} sqft<br>
+                                <b>GIS ID:</b> ${gisid}<br>
+                                <b>Area:</b> ${feature.get('sqfeet') || 0} sqft<br>
                                 <b>Floors:</b> ${floors}<br>
+                                <b>Usage:</b> ${usage}<br>
                                 <b>Status:</b> ${isMapped ? 'Mapped' : 'Unmapped'}
                             `
                         });
 
                         cesiumBuildingEntities.push(entity);
                     } catch (e) {
-                        console.error('Cesium build error for gisid', poly.gisid, e);
+                        console.error('Cesium build error:', e);
                     }
                 });
 
@@ -4638,6 +4888,11 @@
             // ─── INIT ───
             buildSearchIndex();
             updateLayerUI();
+
+            // Load buildings with colors
+            loadBuildingsWithColors(allBuildings);
+            $('#buildingCountDisplay').text(`Showing: ${allBuildings.length} buildings`);
+
             setNoneMode();
             syncLocationUI();
 
@@ -4647,7 +4902,7 @@
 
             loadInfrastructure({{ $ward->id }});
 
-            console.log('✅ Executive GIS Dashboard ready (2D + 3D)');
+            console.log('✅ Executive GIS Dashboard ready with usage color coding');
         });
     </script>
 @endpush
