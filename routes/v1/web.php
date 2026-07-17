@@ -127,29 +127,36 @@ Route::get('/api/corporation/{id}/boundaries', function ($id) {
 // ─── Commissioner ─────────────────────────────────────────
 Route::middleware(['auth', 'role:commissioner,dc,ac,aro,bc'])->prefix('commissioner')->name('commissioner.')->group(function () {
     Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
-    Route::get('/map', [MapController::class, 'commissionerMap'])->name('map');
+    Route::get('/map', [CommissionerController::class, 'map'])->name('map');
+    Route::get('/map/{id}', [CommissionerController::class, 'showMap'])->name('ward.showmap');
+
+    // API Routes for map data
+    Route::get('/get-point-details', [CommissionerController::class, 'getPointDetails'])->name('getPointDetails');
+    Route::get('/get-ward-data/{wardId}', [CommissionerController::class, 'getWardData'])->name('getWardData');
+    Route::post('/update-polygon', [CommissionerController::class, 'updatePolygon'])->name('updatePolygon');
+    Route::post('/polygon-split', [CommissionerController::class, 'splitPolygon'])->name('splitPolygon');
+    Route::post('/save-feature', [CommissionerController::class, 'saveFeature'])->name('saveFeature');
+    Route::post('/delete-feature', [CommissionerController::class, 'deleteFeature'])->name('deleteFeature');
+    Route::post('/point-data/{id}/qc', [CommissionerController::class, 'qcUpdate'])->name('qcUpdate');
+    Route::get('/infrastructure/data/{wardId}', [CommissionerController::class, 'getInfrastructureData'])->name('infrastructure.data');
+
     // Zone routes
     Route::get('zones/by-corporation', [ZoneController::class, 'getZonesByCorporation'])->name('zones.byCorporation');
     Route::get('zones/list', [ZoneController::class, 'list'])->name('zone.list');
     Route::resource('zones', ZoneController::class);
+
     // Corporation routes
     Route::get('corporations/list', [CorporationController::class, 'list'])->name('corporations.list');
     Route::resource('corporations', CorporationController::class);
     Route::get('corporations/{corporation}', [CorporationController::class, 'show'])->name('corporations.show');
     Route::put('corporations/{corporation}', [CorporationController::class, 'update'])->name('corporations.update');
+
     // Ward routes
     Route::get('wards/list', [WardController::class, 'list'])->name('ward.list');
     Route::resource('wards', WardController::class);
     Route::get('wards/{ward}', [WardController::class, 'show'])->name('wards.show');
     Route::post('wards', [WardController::class, 'store'])->name('wards.store');
     Route::put('wards/{ward}', [WardController::class, 'update'])->name('wards.update');
-
-    Route::get('map/{id}', [CommissionerController::class, 'showMap'])
-        ->name('ward.showmap');
-    Route::get('/get-point-details', [CommissionerController::class, 'getPointDetails'])
-        ->name('getPointDetails');
-
-    // Add commissioner specific routes here
 });
 
 // ─── DC ───────────────────────────────────────────────────

@@ -13,14 +13,91 @@ use Illuminate\Support\Facades\Schema;
 
 class CommissionerController extends Controller
 {
+    /**
+     * Get accessible ward IDs based on user role
+     */
+    private function getAccessibleWardIds()
+    {
+        $user = Auth::user();
+        $wardIds = [];
+
+        if ($user->isCommissioner() || $user->isDC()) {
+            // Commissioner and DC have access to all wards in their corporation
+            $corporation = Corporation::find($user->corporation_id);
+            if ($corporation) {
+                $zones = Zone::where('corp_id', $corporation->id)->get();
+                foreach ($zones as $zone) {
+                    $wards = Ward::where('zone_id', $zone->id)->get();
+                    foreach ($wards as $ward) {
+                        $wardIds[] = $ward->id;
+                    }
+                }
+            }
+        } elseif ($user->isAC() || $user->isARO()) {
+            // AC and ARO have access to wards in their assigned zone only
+            if ($user->zone_id) {
+                $wards = Ward::where('zone_id', $user->zone_id)->get();
+                foreach ($wards as $ward) {
+                    $wardIds[] = $ward->id;
+                }
+            }
+        } elseif ($user->isBC()) {
+            // BC has access to only their assigned ward
+            if ($user->ward_id) {
+                $wardIds[] = $user->ward_id;
+            }
+        }
+
+        return $wardIds;
+    }
+
+    /**
+     * Get accessible ward IDs with ward numbers for a specific corporation
+     */
+    private function getAccessibleWardNos($corporationId)
+    {
+        $user = Auth::user();
+        $wardNos = [];
+
+        if ($user->isCommissioner() || $user->isDC()) {
+            // All wards in corporation
+            $zones = Zone::where('corp_id', $corporationId)->get();
+            foreach ($zones as $zone) {
+                $wards = Ward::where('zone_id', $zone->id)->get();
+                foreach ($wards as $ward) {
+                    $wardNos[] = $ward->ward_no;
+                }
+            }
+        } elseif ($user->isAC() || $user->isARO()) {
+            // Wards in assigned zone
+            if ($user->zone_id) {
+                $wards = Ward::where('zone_id', $user->zone_id)->get();
+                foreach ($wards as $ward) {
+                    $wardNos[] = $ward->ward_no;
+                }
+            }
+        } elseif ($user->isBC()) {
+            // Only assigned ward
+            if ($user->ward_id) {
+                $ward = Ward::find($user->ward_id);
+                if ($ward) {
+                    $wardNos[] = $ward->ward_no;
+                }
+            }
+        }
+
+        return $wardNos;
+    }
+
     public function dashboard()
     {
         $user = auth()->user();
+        $accessibleWardIds = $this->getAccessibleWardIds();
         $corporation = Corporation::with(['zones.wards'])->find($user->corporation_id);
 
-        if (!$corporation) {
+        if (!$corporation || empty($accessibleWardIds)) {
             return view('main.Commissioner.dashboard', [
-                'error' => 'No corporation assigned to your account. Please contact administrator.',
+                'error' => 'No accessible wards found for your role. Please contact administrator.',
                 'stats' => $this->getEmptyStats(),
                 'zoneData' => collect(),
                 'wardData' => collect(),
@@ -40,7 +117,31 @@ class CommissionerController extends Controller
             ]);
         }
 
-        $zones = $corporation->zones()->with(['wards'])->get();
+        // Get accessible zones based on role
+        $zones = collect();
+        if ($user->isCommissioner() || $user->isDC()) {
+            $zones = $corporation->zones()->with(['wards'])->get();
+        } elseif ($user->isAC() || $user->isARO()) {
+            if ($user->zone_id) {
+                $zone = Zone::with(['wards'])->find($user->zone_id);
+                if ($zone) {
+                    $zones = collect([$zone]);
+                }
+            }
+        } elseif ($user->isBC()) {
+            if ($user->ward_id) {
+                $ward = Ward::with(['zone'])->find($user->ward_id);
+                if ($ward && $ward->zone) {
+                    $zone = Zone::with(['wards' => function($query) use ($user) {
+                        $query->where('id', $user->ward_id);
+                    }])->find($ward->zone_id);
+                    if ($zone) {
+                        $zones = collect([$zone]);
+                    }
+                }
+            }
+        }
+
         $allWardIds = $zones->flatMap(fn($zone) => $zone->wards->pluck('id'))->toArray();
         $allWardNos = $zones->flatMap(fn($zone) => $zone->wards->pluck('ward_no'))->toArray();
 
@@ -60,23 +161,23 @@ class CommissionerController extends Controller
         $surveyedAssessments = $this->getSurveyedAssessments($allWardIds);
         $connectedAssessments = $this->getConnectedAssessments($corporation->id, $allWardIds);
 
-        // ─── Half Year Tax Totals (All Tables) ───
+        // ─── Half Year Tax Totals ───
         $misHalfYearTax = $this->getMisHalfYearTax($corporation->id);
         $waterTaxHalfYearTax = $this->getWaterTaxHalfYearTax($corporation->id);
         $ugdHalfYearTax = $this->getUgdHalfYearTax($corporation->id);
         $professionalTaxHalfYearTax = $this->getProfessionalTaxHalfYearTax($corporation->id);
         $totalHalfYearTax = $this->getHalfYearTaxTotal($corporation->id);
 
-        // ─── Balance Totals (All Tables) ───
+        // ─── Balance Totals ───
         $misBalance = $this->getMisBalance($corporation->id);
         $waterTaxBalance = $this->getWaterTaxBalance($corporation->id);
         $ugdBalance = $this->getUgdBalance($corporation->id);
         $professionalTaxBalance = $this->getProfessionalTaxBalance($corporation->id);
         $totalBalance = $misBalance + $waterTaxBalance + $ugdBalance + $professionalTaxBalance;
 
-        $getAllwardBoundary = $this->getAllwardBoundary($corporation->id);
+        $getAllwardBoundary = $this->getAllwardBoundary($corporation->id, $accessibleWardIds);
 
-        // ─── Ward Variation Stats (Area & Usage) — computed once for all wards ───
+        // ─── Ward Variation Stats ───
         $wardVariationStats = $this->getWardVariationStats($corporation->id, $zones);
 
         // ─── Assessment Status ───
@@ -110,7 +211,7 @@ class CommissionerController extends Controller
             'total_balance' => $totalBalance,
         ];
 
-        // ─── Tax Breakdown (All Tables) ───
+        // ─── Tax Breakdown ───
         $taxBreakdown = [
             'mis' => [
                 'count' => $misCount,
@@ -231,7 +332,7 @@ class CommissionerController extends Controller
         $professionalTaxData = $this->getProfessionalTaxData($corporation->id, 5);
 
         // ─── Activities ───
-        $activities = $this->getRecentActivities($corporation->id);
+        $activities = $this->getRecentActivities($corporation->id, $accessibleWardIds);
 
         // ─── Hierarchy Stats ───
         $hierarchyStats = [
@@ -262,6 +363,491 @@ class CommissionerController extends Controller
             'wardVariationStats'
         ));
     }
+
+    /**
+     * Get all ward boundaries with role-based access
+     */
+    private function getAllwardBoundary($corporationId, $accessibleWardIds = null)
+    {
+        $boundaries = [];
+        try {
+            $wardQuery = Ward::where('zone_id', '!=', null);
+
+            if ($accessibleWardIds !== null) {
+                $wardQuery->whereIn('id', $accessibleWardIds);
+            } else {
+                $zones = Zone::where('corp_id', $corporationId)->get();
+                $zoneIds = $zones->pluck('id')->toArray();
+                $wardQuery->whereIn('zone_id', $zoneIds);
+            }
+
+            $wards = $wardQuery->get();
+
+            foreach ($wards as $ward) {
+                if (empty($ward->boundary)) {
+                    continue;
+                }
+                if (is_array($ward->boundary)) {
+                    $boundary = $ward->boundary;
+                } elseif (is_string($ward->boundary)) {
+                    $boundary = json_decode($ward->boundary, true);
+                } else {
+                    $boundary = [];
+                }
+                $boundaries[] = [
+                    'ward_id'  => $ward->id,
+                    'ward_no'  => $ward->ward_no,
+                    'boundary' => $boundary,
+                ];
+            }
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+            return [];
+        }
+        return $boundaries;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // MAP VIEW METHODS
+    // ════════════════════════════════════════════════════════════════
+
+    public function map()
+    {
+        $user = Auth::user();
+
+        // Get the first accessible ward for the map view
+        $accessibleWardIds = $this->getAccessibleWardIds();
+
+        if (empty($accessibleWardIds)) {
+            return redirect()->back()->with('error', 'No wards accessible for your role.');
+        }
+
+        $wardId = $accessibleWardIds[0];
+        return redirect()->route('commissioner.ward.showmap', ['id' => $wardId]);
+    }
+
+    public function showMap($id)
+    {
+        $user = Auth::user();
+        $wardId = $id;
+
+        // Check if user has access to this ward
+        $accessibleWardIds = $this->getAccessibleWardIds();
+        if (!in_array($wardId, $accessibleWardIds)) {
+            abort(403, 'You do not have access to this ward.');
+        }
+
+        $ward = Ward::findOrFail($wardId);
+        $zoneId = $ward->zone_id;
+        $zone = Zone::findOrFail($zoneId);
+        $corp = $zone->corp_id;
+        $wardNo = $ward->ward_no;
+
+        $polygonsTableName = "polygons_{$wardId}";
+        $linesTableName = "lines_{$wardId}";
+        $pointsTableName = "points_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName = "point_data_{$wardId}";
+
+        $misTableName = "mis_{$corp}";
+        $waterTaxTableName = "water_tax_{$corp}";
+        $ugdtable = "ugd_tax_{$corp}";
+        $prefessionaltax = "professional_tax_{$corp}";
+
+        $polygons = DB::table($polygonsTableName)->get();
+        $lines = DB::table($linesTableName)->get();
+        $points = DB::table($pointsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas = DB::table($pointDataTableName)->get();
+
+        $misData = DB::table($misTableName . ' as mis')
+            ->leftJoin($waterTaxTableName . ' as wt', 'mis.assessment', '=', 'wt.assessment')
+            ->leftJoin($ugdtable . ' as ugd', 'mis.assessment', '=', 'ugd.assessment')
+            ->leftJoin($prefessionaltax . ' as pt', 'mis.assessment', '=', 'pt.assessment')
+            ->where('mis.ward_no', $wardNo)
+            ->select(
+                'mis.*',
+                'wt.watertax_no',
+                'wt.old_watertax_no',
+                'ugd.ugd_no',
+                'ugd.old_ugd_no',
+                'pt.pt_number',
+                'pt.old_pt_number'
+            )
+            ->get();
+
+        $uniqueRoadNames = DB::table($misTableName)
+            ->select('road_name')
+            ->whereNotNull('road_name')
+            ->where('road_name', '!=', '')
+            ->distinct()
+            ->orderBy('road_name')
+            ->pluck('road_name');
+
+        // ─────────────────────────────────────────────────────────
+        // ANALYTICS
+        // ─────────────────────────────────────────────────────────
+        $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
+        $buildingVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData);
+        $buildingData = $this->getBuildingsWithUsageColors($wardId);
+        $availableUsages = array_keys($buildingData['usage_counts']);
+        sort($availableUsages);
+        $areaStats = $this->getAreaVariationStats($wardId, $buildingData['buildings']);
+
+        // Get all accessible wards for navigation
+        $accessibleWardIds = $this->getAccessibleWardIds();
+        $accessibleWards = Ward::whereIn('id', $accessibleWardIds)->orderBy('ward_no')->get();
+        $currentIndex = array_search($wardId, $accessibleWardIds);
+        $nextWardId = ($currentIndex !== false && isset($accessibleWardIds[$currentIndex + 1]))
+            ? $accessibleWardIds[$currentIndex + 1]
+            : null;
+
+        return view('excecutive.mapview', compact(
+            'ward',
+            'polygons',
+            'points',
+            'lines',
+            'polygonDatas',
+            'pointDatas',
+            'misData',
+            'uniqueRoadNames',
+            'analytics',
+            'buildingVariations',
+            'buildingData',
+            'availableUsages',
+            'areaStats',
+            'accessibleWards',
+            'currentIndex',
+            'nextWardId'
+        ));
+    }
+
+    // ─── API METHODS ───
+
+    public function getWardData($wardId)
+    {
+        $user = Auth::user();
+
+        // Check access
+        $accessibleWardIds = $this->getAccessibleWardIds();
+        if (!in_array($wardId, $accessibleWardIds)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $ward = Ward::findOrFail($wardId);
+        $zoneId = $ward->zone_id;
+        $zone = Zone::findOrFail($zoneId);
+        $corp = $zone->corp_id;
+
+        $polygonsTableName = "polygons_{$wardId}";
+        $linesTableName = "lines_{$wardId}";
+        $pointsTableName = "points_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName = "point_data_{$wardId}";
+
+        $polygons = DB::table($polygonsTableName)->get();
+        $lines = DB::table($linesTableName)->get();
+        $points = DB::table($pointsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas = DB::table($pointDataTableName)->get();
+
+        return response()->json([
+            'ward' => $ward,
+            'polygons' => $polygons,
+            'lines' => $lines,
+            'points' => $points,
+            'polygonDatas' => $polygonDatas,
+            'pointDatas' => $pointDatas,
+        ]);
+    }
+
+    public function getInfrastructureData($wardId)
+    {
+        $user = Auth::user();
+
+        // Check access
+        $accessibleWardIds = $this->getAccessibleWardIds();
+        if (!in_array($wardId, $accessibleWardIds)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Return infrastructure data - you'll need to implement this based on your data source
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'features' => []
+            ]
+        ]);
+    }
+
+    public function updatePolygon(Request $request)
+    {
+        $user = Auth::user();
+        $wardId = $request->ward_id ?? null;
+
+        if ($wardId) {
+            $accessibleWardIds = $this->getAccessibleWardIds();
+            if (!in_array($wardId, $accessibleWardIds)) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+        }
+
+        // Validate request
+        $request->validate([
+            'gisid' => 'required',
+            'coordinates' => 'required',
+            'sqfeet' => 'nullable|numeric',
+            'ward_id' => 'nullable|integer'
+        ]);
+
+        try {
+            // Find which ward this polygon belongs to
+            $gisid = $request->gisid;
+            $wardId = $request->ward_id;
+
+            if (!$wardId) {
+                // Find the ward by searching through polygon tables
+                $accessibleWardIds = $this->getAccessibleWardIds();
+                foreach ($accessibleWardIds as $wid) {
+                    $table = "polygons_{$wid}";
+                    if (Schema::hasTable($table)) {
+                        $exists = DB::table($table)->where('gisid', $gisid)->exists();
+                        if ($exists) {
+                            $wardId = $wid;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!$wardId) {
+                return response()->json(['error' => 'Ward not found for this GIS ID'], 404);
+            }
+
+            $table = "polygons_{$wardId}";
+            DB::table($table)
+                ->where('gisid', $gisid)
+                ->update([
+                    'coordinates' => $request->coordinates,
+                    'sqfeet' => $request->sqfeet ?? 0,
+                    'updated_at' => now(),
+                ]);
+
+            // Reload data
+            $polygons = DB::table($table)->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Polygon updated successfully',
+                'data' => [
+                    'polygons' => $polygons
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function splitPolygon(Request $request)
+    {
+        $user = Auth::user();
+        $wardId = $request->ward_id ?? null;
+
+        if ($wardId) {
+            $accessibleWardIds = $this->getAccessibleWardIds();
+            if (!in_array($wardId, $accessibleWardIds)) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+        }
+
+        // This is a placeholder - implement polygon splitting logic
+        return response()->json([
+            'success' => true,
+            'message' => 'Polygon split functionality - implement your logic here'
+        ]);
+    }
+
+    public function saveFeature(Request $request)
+    {
+        $user = Auth::user();
+        $wardId = $request->ward_id ?? null;
+
+        if ($wardId) {
+            $accessibleWardIds = $this->getAccessibleWardIds();
+            if (!in_array($wardId, $accessibleWardIds)) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+        }
+
+        // This is a placeholder - implement feature saving logic
+        return response()->json([
+            'success' => true,
+            'message' => 'Feature saved - implement your logic here'
+        ]);
+    }
+
+    public function deleteFeature(Request $request)
+    {
+        $user = Auth::user();
+        $wardId = $request->ward_id ?? null;
+
+        if ($wardId) {
+            $accessibleWardIds = $this->getAccessibleWardIds();
+            if (!in_array($wardId, $accessibleWardIds)) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+        }
+
+        // This is a placeholder - implement feature deletion logic
+        return response()->json([
+            'success' => true,
+            'message' => 'Feature deleted - implement your logic here'
+        ]);
+    }
+
+    public function getPointDetails(Request $request)
+    {
+        $request->validate([
+            'gisid'   => 'required',
+            'ward_id' => 'required|integer',
+        ]);
+
+        $gisid  = $request->gisid;
+        $wardId = $request->ward_id;
+
+        // Check access
+        $accessibleWardIds = $this->getAccessibleWardIds();
+        if (!in_array($wardId, $accessibleWardIds)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $ward = Ward::findOrFail($wardId);
+        $zone = Zone::findOrFail($ward->zone_id);
+        $corpId = $zone->corp_id;
+
+        $pointTable = "point_data_{$wardId}";
+        $misTable = "mis_{$corpId}";
+        $waterTaxTable = "water_tax_{$corpId}";
+        $ugdTaxTable = "ugd_tax_{$corpId}";
+        $professionalTaxTable = "professional_tax_{$corpId}";
+
+        if (!Schema::hasTable($pointTable)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Point table not found.'
+            ], 404);
+        }
+
+        $points = DB::table($pointTable)
+            ->where('point_gisid', $gisid)
+            ->get();
+
+        if ($points->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No points found.'
+            ], 404);
+        }
+
+        $results = [];
+
+        foreach ($points as $point) {
+            $mis = null;
+            if (Schema::hasTable($misTable) && !empty($point->assessment)) {
+                $mis = DB::table($misTable)
+                    ->where('assessment', $point->assessment)
+                    ->first();
+            }
+
+            $waterTax = null;
+            if (Schema::hasTable($waterTaxTable) && !empty($point->assessment)) {
+                $waterTax = DB::table($waterTaxTable)
+                    ->where('assessment', $point->assessment)
+                    ->first();
+            }
+
+            $ugdTax = null;
+            if (Schema::hasTable($ugdTaxTable)) {
+                $ugdTax = DB::table($ugdTaxTable)
+                    ->where('gisid', $point->point_gisid)
+                    ->first();
+            }
+
+            $professionalTax = collect();
+            if (Schema::hasTable($professionalTaxTable) && !empty($point->assessment)) {
+                $professionalTax = DB::table($professionalTaxTable)
+                    ->where('gisid', $point->point_gisid)
+                    ->where('assessment', $point->assessment)
+                    ->get();
+            }
+
+            $results[] = [
+                'point' => $point,
+                'mis' => $mis,
+                'water_tax' => $waterTax,
+                'ugd_tax' => $ugdTax,
+                'professional_tax' => $professionalTax,
+            ];
+        }
+
+        return response()->json([
+            'status' => true,
+            'gisid' => $gisid,
+            'ward_id' => $wardId,
+            'total_points' => count($results),
+            'data' => $results
+        ]);
+    }
+
+    public function qcUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'ward_id'     => 'required|integer',
+            'qcusage'     => 'nullable|string|max:255',
+            'qcsqfeet'    => 'nullable|numeric',
+            'qc_remarks'  => 'nullable|string|max:1000',
+        ]);
+
+        $wardId = $request->ward_id;
+
+        // Check access
+        $accessibleWardIds = $this->getAccessibleWardIds();
+        if (!in_array($wardId, $accessibleWardIds)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $pointTable = "point_data_{$wardId}";
+
+        $point = DB::table($pointTable)->where('id', $id)->first();
+
+        if (!$point) {
+            return response()->json([
+                'message' => 'Point data not found.'
+            ], 404);
+        }
+
+        DB::table($pointTable)
+            ->where('id', $id)
+            ->update([
+                'qcusage'    => $request->qcusage,
+                'qcsqfeet'   => $request->qcsqfeet,
+                'qc_remarks' => $request->qc_remarks,
+                'updated_at' => now(),
+            ]);
+
+        $updatedPoint = DB::table($pointTable)
+            ->where('id', $id)
+            ->first();
+
+        return response()->json([
+            'success'    => true,
+            'message'    => 'QC data updated successfully.',
+            'point_data' => $updatedPoint,
+        ]);
+    }
+
+    // ─── HELPER METHODS ───
+
     private function getWardVariationStats($corporationId, $zones)
     {
         $wardStats = [];
@@ -312,7 +898,6 @@ class CommissionerController extends Controller
             }
         }
 
-        // Rank worst-offending wards first (combined variation score)
         usort($wardStats, function ($a, $b) {
             $scoreA = $a['area_variation_percentage'] + $a['usage_variation_percentage'];
             $scoreB = $b['area_variation_percentage'] + $b['usage_variation_percentage'];
@@ -321,8 +906,391 @@ class CommissionerController extends Controller
 
         return $wardStats;
     }
+
+    private function buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData)
+    {
+        $totalBuildings = count($polygons);
+        $surveyedBuildings = collect($polygonDatas)->pluck('gisid')->unique()->count();
+        $totalSurveyedAssessments = count($pointDatas);
+
+        $surveyPercentage = $totalBuildings > 0
+            ? round(($surveyedBuildings / $totalBuildings) * 100, 1)
+            : 0;
+
+        $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
+        $misByAssessment = collect($misData)->keyBy('assessment');
+
+        $pointDataByGisid = [];
+        foreach ($pointDatas as $pd) {
+            $pointDataByGisid[$pd->point_gisid][] = $pd;
+        }
+
+        $areaVariationCount = 0;
+        $usageVariationCount = 0;
+        $validBuildingsCount = 0;
+        $totalBuildingArea = 0;
+        $totalAssessmentArea = 0;
+
+        foreach ($polygons as $polygon) {
+            $gisid = $polygon->gisid;
+            $polygonSqfeet = floatval($polygon->sqfeet ?? 0);
+
+            $polyData = $polygonDataByGisid->get($gisid);
+            if ($polyData) {
+                $numberFloor = floatval($polyData->number_floor ?? 0);
+                $basement = floatval($polyData->basement ?? 0);
+                $buildingArea = ($numberFloor > 0 ? $numberFloor : 1) * $polygonSqfeet;
+                if ($basement > 0) {
+                    $buildingArea += ($polygonSqfeet * $basement);
+                }
+                $buildingUsage = $polyData->building_usage ?? null;
+            } else {
+                $buildingArea = $polygonSqfeet;
+                $buildingUsage = null;
+            }
+
+            $assessmentArea = 0;
+            $hasUsageMismatch = false;
+
+            if (isset($pointDataByGisid[$gisid])) {
+                foreach ($pointDataByGisid[$gisid] as $pd) {
+                    $mis = $misByAssessment->get($pd->assessment);
+
+                    $pointArea = 0;
+                    if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
+                        $pointArea = floatval($pd->qcsqfeet);
+                    } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
+                        $pointArea = floatval($mis->plot_area);
+                    }
+                    $assessmentArea += $pointArea;
+
+                    $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
+                    if (
+                        $buildingUsage && $pointUsage
+                        && strtoupper(trim($buildingUsage)) != strtoupper(trim($pointUsage))
+                    ) {
+                        $hasUsageMismatch = true;
+                    }
+                }
+            }
+
+            $totalBuildingArea += $buildingArea;
+            $totalAssessmentArea += $assessmentArea;
+
+            if ($buildingArea > 0 && $assessmentArea > 0) {
+                $validBuildingsCount++;
+                if (abs($buildingArea - $assessmentArea) > 1) {
+                    $areaVariationCount++;
+                }
+                if ($hasUsageMismatch) {
+                    $usageVariationCount++;
+                }
+            }
+        }
+
+        return [
+            'total_buildings' => $totalBuildings,
+            'surveyed_buildings' => $surveyedBuildings,
+            'total_surveyed_assessments' => $totalSurveyedAssessments,
+            'survey_percentage' => $surveyPercentage,
+            'area_variation_count' => $areaVariationCount,
+            'usage_variation_count' => $usageVariationCount,
+            'area_variation_percentage' => $validBuildingsCount > 0
+                ? round(($areaVariationCount / $validBuildingsCount) * 100, 1) : 0,
+            'usage_variation_percentage' => $validBuildingsCount > 0
+                ? round(($usageVariationCount / $validBuildingsCount) * 100, 1) : 0,
+            'total_building_area' => round($totalBuildingArea, 2),
+            'total_assessment_area' => round($totalAssessmentArea, 2),
+        ];
+    }
+
+    private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData)
+    {
+        $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
+        $misByAssessment = collect($misData)->keyBy('assessment');
+
+        $pointDataByGisid = [];
+        foreach ($pointDatas as $pd) {
+            $pointDataByGisid[$pd->point_gisid][] = $pd;
+        }
+
+        $result = [];
+
+        foreach ($polygons as $polygon) {
+            $gisid = $polygon->gisid;
+            $polygonSqfeet = floatval($polygon->sqfeet ?? 0);
+
+            $polyData = $polygonDataByGisid->get($gisid);
+            if ($polyData) {
+                $numberFloor = floatval($polyData->number_floor ?? 0);
+                $basement = floatval($polyData->basement ?? 0);
+                $buildingArea = ($numberFloor > 0 ? $numberFloor : 1) * $polygonSqfeet;
+                if ($basement > 0) {
+                    $buildingArea += ($polygonSqfeet * $basement);
+                }
+                $buildingUsage = $polyData->building_usage ?? null;
+            } else {
+                $buildingArea = $polygonSqfeet;
+                $buildingUsage = null;
+            }
+
+            $assessmentArea = 0;
+            $assessmentCount = 0;
+            $hasUsageMismatch = false;
+
+            if (isset($pointDataByGisid[$gisid])) {
+                foreach ($pointDataByGisid[$gisid] as $pd) {
+                    $assessmentCount++;
+                    $mis = $misByAssessment->get($pd->assessment);
+
+                    $pointArea = 0;
+                    if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
+                        $pointArea = floatval($pd->qcsqfeet);
+                    } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
+                        $pointArea = floatval($mis->plot_area);
+                    }
+                    $assessmentArea += $pointArea;
+
+                    $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
+                    if (
+                        $buildingUsage && $pointUsage
+                        && strtoupper(trim($buildingUsage)) != strtoupper(trim($pointUsage))
+                    ) {
+                        $hasUsageMismatch = true;
+                    }
+                }
+            }
+
+            $areaVariation = $buildingArea - $assessmentArea;
+            $variationPercentage = $buildingArea > 0
+                ? round((abs($areaVariation) / $buildingArea) * 100, 1) : 0;
+
+            $result[$gisid] = [
+                'gisid' => $gisid,
+                'building_area' => round($buildingArea, 2),
+                'assessment_area' => round($assessmentArea, 2),
+                'area_variation' => round($areaVariation, 2),
+                'variation_percentage' => $variationPercentage,
+                'area_status' => (abs($areaVariation) > 1) ? 'VARIATION' : 'MATCH',
+                'usage_status' => $hasUsageMismatch ? 'VARIATION' : 'MATCH',
+                'assessment_count' => $assessmentCount,
+            ];
+        }
+
+        return $result;
+    }
+
+    private function getAreaVariationStats($wardId, $buildings)
+    {
+        $stats = [
+            'min' => 0,
+            'max' => 0,
+            'avg' => 0,
+            'total' => 0,
+            'count' => 0,
+        ];
+
+        foreach ($buildings as $building) {
+            $sqfeet = floatval($building['sqfeet'] ?? 0);
+            if ($sqfeet > 0) {
+                $stats['total'] += $sqfeet;
+                $stats['count']++;
+                if ($stats['min'] == 0 || $sqfeet < $stats['min']) {
+                    $stats['min'] = $sqfeet;
+                }
+                if ($sqfeet > $stats['max']) {
+                    $stats['max'] = $sqfeet;
+                }
+            }
+        }
+
+        if ($stats['count'] > 0) {
+            $stats['avg'] = round($stats['total'] / $stats['count'], 2);
+        }
+
+        return $stats;
+    }
+
+    private function getBuildingsWithUsageColors($wardId)
+    {
+        $polygonsTable = "polygons_{$wardId}";
+        $polygonDataTable = "polygon_data_{$wardId}";
+
+        if (!Schema::hasTable($polygonsTable)) {
+            return ['buildings' => [], 'usage_counts' => [], 'usage_colors' => []];
+        }
+
+        $usageColors = [
+            'RESIDENTIAL' => '#4CAF50',
+            'COMMERCIAL'  => '#2196F3',
+            'INDUSTRIAL'  => '#FF9800',
+            'INSTITUTIONAL' => '#9C27B0',
+            'MIXED'       => '#F44336',
+            'GOVERNMENT'  => '#607D8B',
+            'VACANT'      => '#FFD700',
+            'OTHER'       => '#9E9E9E',
+        ];
+
+        $polygons = DB::table($polygonsTable)->get();
+        $polygonData = collect();
+
+        if (Schema::hasTable($polygonDataTable)) {
+            $polygonData = DB::table($polygonDataTable)->get()->keyBy('gisid');
+        }
+
+        $buildings = [];
+        $usageCounts = [];
+
+        foreach ($polygons as $polygon) {
+            $gisid = $polygon->gisid;
+            $buildingData = $polygonData->get($gisid);
+
+            $usage = 'OTHER';
+            if ($buildingData && !empty($buildingData->building_usage)) {
+                $usage = strtoupper(trim($buildingData->building_usage));
+                if (strpos($usage, 'RESIDENT') !== false || strpos($usage, 'DWELLING') !== false) {
+                    $usage = 'RESIDENTIAL';
+                } elseif (strpos($usage, 'SHOP') !== false || strpos($usage, 'RETAIL') !== false || strpos($usage, 'COMMERCIAL') !== false) {
+                    $usage = 'COMMERCIAL';
+                } elseif (strpos($usage, 'FACTORY') !== false || strpos($usage, 'MANUFACT') !== false) {
+                    $usage = 'INDUSTRIAL';
+                } elseif (strpos($usage, 'SCHOOL') !== false || strpos($usage, 'HOSPITAL') !== false || strpos($usage, 'COLLEGE') !== false) {
+                    $usage = 'INSTITUTIONAL';
+                } elseif (strpos($usage, 'GOV') !== false || strpos($usage, 'OFFICE') !== false || strpos($usage, 'MUNICIPAL') !== false) {
+                    $usage = 'GOVERNMENT';
+                } elseif (strpos($usage, 'VACANT') !== false || strpos($usage, 'EMPTY') !== false) {
+                    $usage = 'VACANT';
+                }
+            }
+
+            $color = $usageColors[$usage] ?? $usageColors['OTHER'];
+
+            if (!isset($usageCounts[$usage])) {
+                $usageCounts[$usage] = 0;
+            }
+            $usageCounts[$usage]++;
+
+            $buildings[] = [
+                'gisid' => $gisid,
+                'coordinates' => json_decode($polygon->coordinates, true),
+                'usage' => $usage,
+                'color' => $color,
+                'sqfeet' => $polygon->sqfeet ?? 0,
+                'building_data' => $buildingData,
+            ];
+        }
+
+        return [
+            'buildings' => $buildings,
+            'usage_counts' => $usageCounts,
+            'usage_colors' => $usageColors,
+        ];
+    }
+
+    private function getRecentActivities($corporationId, $accessibleWardIds)
+    {
+        $activities = [];
+        $tables = [
+            'mis_' . $corporationId,
+            'water_tax_' . $corporationId,
+            'ugd_tax_' . $corporationId,
+            'professional_tax_' . $corporationId,
+        ];
+
+        $typeLabels = [
+            'mis' => 'Assessment',
+            'water_tax' => 'Water Tax',
+            'ugd_tax' => 'UGD Tax',
+            'professional_tax' => 'Professional Tax',
+        ];
+
+        $typeColors = [
+            'mis' => '#0f6b47',
+            'water_tax' => '#1d4ed8',
+            'ugd_tax' => '#a9741a',
+            'professional_tax' => '#5b21b6',
+        ];
+
+        $typeIcons = [
+            'mis' => 'clipboard-data',
+            'water_tax' => 'droplet',
+            'ugd_tax' => 'pipe',
+            'professional_tax' => 'briefcase',
+        ];
+
+        foreach ($tables as $table) {
+            if (!Schema::hasTable($table)) {
+                continue;
+            }
+
+            try {
+                $tableType = str_replace('_' . $corporationId, '', $table);
+                $typeLabel = $typeLabels[$tableType] ?? ucfirst($tableType);
+                $color = $typeColors[$tableType] ?? '#0f6b47';
+                $icon = $typeIcons[$tableType] ?? 'file-text';
+
+                $recentItems = DB::table($table)
+                    ->orderBy('id', 'desc')
+                    ->limit(3)
+                    ->get();
+
+                foreach ($recentItems as $item) {
+                    $numberField = 'assessment';
+                    if ($tableType == 'water_tax') $numberField = 'watertax_no';
+                    elseif ($tableType == 'ugd_tax') $numberField = 'ugd_no';
+                    elseif ($tableType == 'professional_tax') $numberField = 'pt_number';
+
+                    $itemNo = $item->$numberField ?? $typeLabel . str_pad($item->id, 6, '0', STR_PAD_LEFT);
+                    $ownerName = $item->owner_name ?? 'N/A';
+
+                    $statusText = '';
+                    if (!empty($item->gisid)) {
+                        $statusText = '✓ Completed';
+                    } else {
+                        $statusText = '⏳ Pending';
+                    }
+
+                    $activities[] = [
+                        'icon' => $icon,
+                        'color' => $color,
+                        'text' => '<strong>' . $typeLabel . '</strong> ' . $itemNo . ' - ' . $ownerName . ' (' . $statusText . ')',
+                        'time' => $this->getTimeAgo(now()),
+                    ];
+                }
+            } catch (\Exception $e) {
+                // Skip if error
+            }
+        }
+
+        // Get entries from point_data tables for accessible wards
+        foreach ($accessibleWardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table)) {
+                try {
+                    $recentPoints = DB::table($table)
+                        ->orderBy('id', 'desc')
+                        ->limit(2)
+                        ->get();
+
+                    foreach ($recentPoints as $point) {
+                        $activities[] = [
+                            'icon' => 'pin-map',
+                            'color' => '#e11d48',
+                            'text' => '<strong>Survey Entry</strong> - Building ' . ($point->building_no ?? 'N/A') . ' surveyed in Ward ' . $wardId,
+                            'time' => $this->getTimeAgo(now()),
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    // Skip
+                }
+            }
+        }
+
+        return array_slice($activities, 0, 10);
+    }
+
     // ════════════════════════════════════════════════════════════════
-    // HALF YEAR TAX METHODS
+    // TAX AND STATISTICS METHODS (existing methods remain the same)
     // ════════════════════════════════════════════════════════════════
 
     private function getHalfYearTaxTotal($corporationId)
@@ -363,7 +1331,6 @@ class CommissionerController extends Controller
         if (!Schema::hasTable($table)) {
             return 0;
         }
-
         try {
             if (Schema::hasColumn($table, 'half_year_tax')) {
                 return DB::table($table)->sum('half_year_tax');
@@ -380,7 +1347,6 @@ class CommissionerController extends Controller
         if (!Schema::hasTable($table)) {
             return 0;
         }
-
         try {
             if (Schema::hasColumn($table, 'slab_rate')) {
                 return DB::table($table)->sum('slab_rate');
@@ -397,7 +1363,6 @@ class CommissionerController extends Controller
         if (!Schema::hasTable($table)) {
             return 0;
         }
-
         try {
             if (Schema::hasColumn($table, 'ugd_tax_amount')) {
                 return DB::table($table)->sum('ugd_tax_amount');
@@ -414,7 +1379,6 @@ class CommissionerController extends Controller
         if (!Schema::hasTable($table)) {
             return 0;
         }
-
         try {
             if (Schema::hasColumn($table, 'half_year_tax')) {
                 return DB::table($table)->sum('half_year_tax');
@@ -425,17 +1389,12 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    // ════════════════════════════════════════════════════════════════
-    // BALANCE METHODS
-    // ════════════════════════════════════════════════════════════════
-
     private function getMisBalance($corporationId)
     {
         $table = 'mis_' . $corporationId;
         if (!Schema::hasTable($table)) {
             return 0;
         }
-
         try {
             if (Schema::hasColumn($table, 'balance')) {
                 return DB::table($table)->sum('balance');
@@ -452,7 +1411,6 @@ class CommissionerController extends Controller
         if (!Schema::hasTable($table)) {
             return 0;
         }
-
         try {
             if (Schema::hasColumn($table, 'balance')) {
                 return DB::table($table)->sum('balance');
@@ -469,7 +1427,6 @@ class CommissionerController extends Controller
         if (!Schema::hasTable($table)) {
             return 0;
         }
-
         try {
             if (Schema::hasColumn($table, 'balance')) {
                 return DB::table($table)->sum('balance');
@@ -486,7 +1443,6 @@ class CommissionerController extends Controller
         if (!Schema::hasTable($table)) {
             return 0;
         }
-
         try {
             if (Schema::hasColumn($table, 'balance')) {
                 return DB::table($table)->sum('balance');
@@ -497,51 +1453,37 @@ class CommissionerController extends Controller
         return 0;
     }
 
-    private function getBalanceByWards($corporationId, $wardNos)
+    private function getTotalBuildings($wardIds)
     {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->whereIn('ward_no', $wardNos)
-                    ->sum('balance');
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = "polygons_{$wardId}";
+            if (Schema::hasTable($table)) {
+                try {
+                    $total += DB::table($table)->count();
+                } catch (\Exception $e) {
+                    continue;
+                }
             }
-        } catch (\Exception $e) {
-            return 0;
         }
-        return 0;
+        return $total;
     }
 
-    // ════════════════════════════════════════════════════════════════
-    // ZONE PERFORMANCE METHODS
-    // ════════════════════════════════════════════════════════════════
-
-    private function getTotalHalfYearTaxByWards($corporationId, $wardNos)
+    private function getBuildingsByWards($wardIds)
     {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'half_year_tax')) {
-                return DB::table($table)
-                    ->whereIn('ward_no', $wardNos)
-                    ->sum('half_year_tax');
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = "polygons_{$wardId}";
+            if (Schema::hasTable($table)) {
+                try {
+                    $total += DB::table($table)->count();
+                } catch (\Exception $e) {
+                    continue;
+                }
             }
-        } catch (\Exception $e) {
-            return 0;
         }
-        return 0;
+        return $total;
     }
-
-    // ════════════════════════════════════════════════════════════════
-    // ASSESSMENT METHODS
-    // ════════════════════════════════════════════════════════════════
 
     private function getTotalAssessments($corporationId)
     {
@@ -562,7 +1504,320 @@ class CommissionerController extends Controller
         if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
             return 0;
         }
+        try {
+            return DB::table($table)->whereIn('ward_no', $wardNos)->count();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
 
+    private function getBalanceByWards($corporationId, $wardNos)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
+            return 0;
+        }
+        try {
+            if (Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)
+                    ->whereIn('ward_no', $wardNos)
+                    ->sum('balance');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getTotalHalfYearTaxByWards($corporationId, $wardNos)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
+            return 0;
+        }
+        try {
+            if (Schema::hasColumn($table, 'half_year_tax')) {
+                return DB::table($table)
+                    ->whereIn('ward_no', $wardNos)
+                    ->sum('half_year_tax');
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getSurveyedAssessments($wardIds)
+    {
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table)) {
+                try {
+                    $total += DB::table($table)->count();
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+        return $total;
+    }
+
+    private function getSurveyedByWards($wardIds)
+    {
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table)) {
+                try {
+                    $total += DB::table($table)->count();
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+        return $total;
+    }
+
+    private function getConnectedAssessments($corporationId, $wardIds)
+    {
+        $misTable = 'mis_' . $corporationId;
+        if (!Schema::hasTable($misTable)) {
+            return 0;
+        }
+
+        $gisids = [];
+        try {
+            if (Schema::hasColumn($misTable, 'gisid')) {
+                $gisids = DB::table($misTable)->pluck('gisid')->filter()->toArray();
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+
+        if (empty($gisids)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table) && Schema::hasColumn($table, 'gisid')) {
+                try {
+                    $total += DB::table($table)
+                        ->whereIn('gisid', $gisids)
+                        ->count();
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+        return $total;
+    }
+
+    private function getConnectedByWards($corporationId, $wardIds)
+    {
+        $misTable = 'mis_' . $corporationId;
+        if (!Schema::hasTable($misTable)) {
+            return 0;
+        }
+
+        $gisids = [];
+        try {
+            if (Schema::hasColumn($misTable, 'gisid')) {
+                $gisids = DB::table($misTable)->pluck('gisid')->filter()->toArray();
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+
+        if (empty($gisids)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table) && Schema::hasColumn($table, 'gisid')) {
+                try {
+                    $total += DB::table($table)
+                        ->whereIn('gisid', $gisids)
+                        ->count();
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+        return $total;
+    }
+
+    private function getActiveAssessments($corporationId)
+    {
+        $misTable = 'mis_' . $corporationId;
+        if (!Schema::hasTable($misTable)) {
+            return 0;
+        }
+        return DB::table($misTable)->count();
+    }
+
+    private function getPaidAssessments($corporationId)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+        try {
+            if (Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)
+                    ->where('balance', '=', 0)
+                    ->count();
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getOverdueAssessments($corporationId)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+        try {
+            if (Schema::hasColumn($table, 'balance')) {
+                return DB::table($table)
+                    ->where('balance', '>', 0)
+                    ->count();
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getNotInMis($corporationId, $wardIds)
+    {
+        $misTable = 'mis_' . $corporationId;
+        if (!Schema::hasTable($misTable)) {
+            return 0;
+        }
+
+        $assessments = [];
+        try {
+            $assessments = DB::table($misTable)->pluck('assessment')->filter()->toArray();
+        } catch (\Exception $e) {
+            return 0;
+        }
+
+        if (empty($assessments)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = 'point_data_' . $wardId;
+            if (Schema::hasTable($table)) {
+                try {
+                    $total += DB::table($table)
+                        ->whereNotIn('assessment', $assessments)
+                        ->count();
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+        return $total;
+    }
+
+    private function getTotalOwners($corporationId)
+    {
+        $table = 'mis_' . $corporationId;
+        if (!Schema::hasTable($table)) {
+            return 0;
+        }
+        try {
+            if (Schema::hasColumn($table, 'owner_name')) {
+                $owners = DB::table($table)->pluck('owner_name')->filter()->toArray();
+                return count(array_unique($owners));
+            }
+        } catch (\Exception $e) {
+            return 0;
+        }
+        return 0;
+    }
+
+    private function getWaterTaxCount($corporationId)
+    {
+        $table = 'water_tax_' . $corporationId;
+        if (Schema::hasTable($table)) {
+            try {
+                return DB::table($table)->count();
+            } catch (\Exception $e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    private function getUgdCount($corporationId)
+    {
+        $table = 'ugd_tax_' . $corporationId;
+        if (Schema::hasTable($table)) {
+            try {
+                return DB::table($table)->count();
+            } catch (\Exception $e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    private function getProfessionalTaxCount($corporationId)
+    {
+        $table = 'professional_tax_' . $corporationId;
+        if (Schema::hasTable($table)) {
+            try {
+                return DB::table($table)->count();
+            } catch (\Exception $e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    private function getWaterTaxByWards($corporationId, $wardNos)
+    {
+        $table = 'water_tax_' . $corporationId;
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
+            return 0;
+        }
+        try {
+            return DB::table($table)->whereIn('ward_no', $wardNos)->count();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    private function getUgdByWards($corporationId, $wardNos)
+    {
+        $table = 'ugd_tax_' . $corporationId;
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
+            return 0;
+        }
+        try {
+            return DB::table($table)->whereIn('ward_no', $wardNos)->count();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    private function getProfessionalTaxByWards($corporationId, $wardNos)
+    {
+        $table = 'professional_tax_' . $corporationId;
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
+            return 0;
+        }
         try {
             return DB::table($table)->whereIn('ward_no', $wardNos)->count();
         } catch (\Exception $e) {
@@ -626,229 +1881,6 @@ class CommissionerController extends Controller
         return $assessments;
     }
 
-    private function getActiveAssessments($corporationId)
-    {
-        $misTable = 'mis_' . $corporationId;
-        if (!Schema::hasTable($misTable)) {
-            return 0;
-        }
-        return DB::table($misTable)->count();
-    }
-
-    private function getPaidAssessments($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->where('balance', '=', 0)
-                    ->count();
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getOverdueAssessments($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'balance')) {
-                return DB::table($table)
-                    ->where('balance', '>', 0)
-                    ->count();
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    private function getNotInMis($corporationId, $wardIds)
-    {
-        $misTable = 'mis_' . $corporationId;
-        if (!Schema::hasTable($misTable)) {
-            return 0;
-        }
-
-        $assessments = [];
-        try {
-            $assessments = DB::table($misTable)->pluck('assessment')->filter()->toArray();
-        } catch (\Exception $e) {
-            return 0;
-        }
-
-        if (empty($assessments)) {
-            return 0;
-        }
-
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table)) {
-                try {
-                    $total += DB::table($table)
-                        ->whereNotIn('assessment', $assessments)
-                        ->count();
-                } catch (\Exception $e) {
-                    // Skip
-                }
-            }
-        }
-        return $total;
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    // SURVEY METHODS
-    // ════════════════════════════════════════════════════════════════
-
-    private function getSurveyedAssessments($wardIds)
-    {
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table)) {
-                try {
-                    $total += DB::table($table)->count();
-                } catch (\Exception $e) {
-                    // Skip
-                }
-            }
-        }
-        return $total;
-    }
-
-    private function getSurveyedByWards($wardIds)
-    {
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table)) {
-                try {
-                    $total += DB::table($table)->count();
-                } catch (\Exception $e) {
-                    // Skip
-                }
-            }
-        }
-        return $total;
-    }
-
-    private function getConnectedAssessments($corporationId, $wardIds)
-    {
-        $misTable = 'mis_' . $corporationId;
-        if (!Schema::hasTable($misTable)) {
-            return 0;
-        }
-
-        $gisids = [];
-        try {
-            if (Schema::hasColumn($misTable, 'gisid')) {
-                $gisids = DB::table($misTable)->pluck('gisid')->filter()->toArray();
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-
-        if (empty($gisids)) {
-            return 0;
-        }
-
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table) && Schema::hasColumn($table, 'gisid')) {
-                try {
-                    $total += DB::table($table)
-                        ->whereIn('gisid', $gisids)
-                        ->count();
-                } catch (\Exception $e) {
-                    // Skip
-                }
-            }
-        }
-        return $total;
-    }
-
-    private function getConnectedByWards($corporationId, $wardIds)
-    {
-        $misTable = 'mis_' . $corporationId;
-        if (!Schema::hasTable($misTable)) {
-            return 0;
-        }
-
-        $gisids = [];
-        try {
-            if (Schema::hasColumn($misTable, 'gisid')) {
-                $gisids = DB::table($misTable)->pluck('gisid')->filter()->toArray();
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-
-        if (empty($gisids)) {
-            return 0;
-        }
-
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table) && Schema::hasColumn($table, 'gisid')) {
-                try {
-                    $total += DB::table($table)
-                        ->whereIn('gisid', $gisids)
-                        ->count();
-                } catch (\Exception $e) {
-                    // Skip
-                }
-            }
-        }
-        return $total;
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    // BUILDING METHODS
-    // ════════════════════════════════════════════════════════════════
-
-    private function getTotalBuildings($wardIds)
-    {
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $tables = $this->getWardPolygonTables($wardId);
-            if (Schema::hasTable($tables[0])) {
-                $total += DB::table($tables[0])->count();
-            }
-        }
-        return $total;
-    }
-
-    private function getBuildingsByWards($wardIds)
-    {
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $tables = $this->getWardPolygonTables($wardId);
-            foreach ($tables as $table) {
-                if (Schema::hasTable($table)) {
-                    try {
-                        $total += DB::table($table)->count();
-                    } catch (\Exception $e) {
-                        // Skip
-                    }
-                }
-            }
-        }
-        return $total;
-    }
-
     private function getBuildingData($wardIds, $limit = 10)
     {
         $buildings = [];
@@ -857,169 +1889,41 @@ class CommissionerController extends Controller
         foreach ($wardIds as $wardId) {
             if ($count >= $limit) break;
 
-            $tables = $this->getWardPolygonTables($wardId);
-            foreach ($tables as $table) {
-                if ($count >= $limit) break;
+            $table = "polygons_{$wardId}";
+            if (Schema::hasTable($table)) {
+                try {
+                    $columns = Schema::getColumnListing($table);
+                    $select = [];
 
-                if (Schema::hasTable($table)) {
-                    try {
-                        $columns = Schema::getColumnListing($table);
-                        $select = [];
+                    if (in_array('gisid', $columns)) $select[] = 'gisid';
+                    if (in_array('sqfeet', $columns)) $select[] = 'sqfeet';
+                    if (in_array('coordinates', $columns)) $select[] = 'coordinates';
 
-                        if (in_array('building_no', $columns)) $select[] = 'building_no';
-                        if (in_array('ward_id', $columns)) $select[] = 'ward_id';
-                        if (in_array('type', $columns)) $select[] = 'type';
-                        if (in_array('floors', $columns)) $select[] = 'floors';
-                        if (in_array('owner_name', $columns)) $select[] = 'owner_name';
-
-                        if (empty($select)) {
-                            $select = ['id'];
-                        }
-
-                        $results = DB::table($table)
-                            ->select($select)
-                            ->limit($limit - $count)
-                            ->get();
-
-                        foreach ($results as $building) {
-                            $ward = isset($building->ward_id) ? Ward::find($building->ward_id) : null;
-                            $buildings[] = [
-                                'building_no' => $building->building_no ?? $building->id ?? 'N/A',
-                                'ward' => $ward ? 'Ward ' . $ward->ward_no : 'Ward ' . $wardId,
-                                'type' => $building->type ?? 'N/A',
-                                'floors' => $building->floors ?? 0,
-                                'owner' => $building->owner_name ?? 'N/A',
-                            ];
-                            $count++;
-                        }
-                    } catch (\Exception $e) {
-                        // Skip
+                    if (empty($select)) {
+                        $select = ['id'];
                     }
+
+                    $results = DB::table($table)
+                        ->select($select)
+                        ->limit($limit - $count)
+                        ->get();
+
+                    foreach ($results as $polygon) {
+                        $buildings[] = [
+                            'gisid' => $polygon->gisid ?? $polygon->id,
+                            'sqfeet' => $polygon->sqfeet ?? 0,
+                            'ward_id' => $wardId,
+                        ];
+                        $count++;
+                    }
+                } catch (\Exception $e) {
+                    continue;
                 }
             }
         }
 
         return $buildings;
     }
-
-    private function getWardPolygonTables($wardId)
-    {
-        return [
-            'polygons_' . $wardId,
-            'polygon_data_' . $wardId,
-        ];
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    // TAX TYPE COUNT METHODS (Based on ward_no)
-    // ════════════════════════════════════════════════════════════════
-
-    private function getWaterTaxCount($corporationId)
-    {
-        $table = 'water_tax_' . $corporationId;
-        if (Schema::hasTable($table)) {
-            try {
-                return DB::table($table)->count();
-            } catch (\Exception $e) {
-                return 0;
-            }
-        }
-        return 0;
-    }
-
-    private function getUgdCount($corporationId)
-    {
-        $table = 'ugd_tax_' . $corporationId;
-        if (Schema::hasTable($table)) {
-            try {
-                return DB::table($table)->count();
-            } catch (\Exception $e) {
-                return 0;
-            }
-        }
-        return 0;
-    }
-
-    private function getProfessionalTaxCount($corporationId)
-    {
-        $table = 'professional_tax_' . $corporationId;
-        if (Schema::hasTable($table)) {
-            try {
-                return DB::table($table)->count();
-            } catch (\Exception $e) {
-                return 0;
-            }
-        }
-        return 0;
-    }
-
-    private function getWaterTaxByWards($corporationId, $wardNos)
-    {
-        $table = 'water_tax_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
-            return 0;
-        }
-
-        try {
-            return DB::table($table)->whereIn('ward_no', $wardNos)->count();
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    private function getUgdByWards($corporationId, $wardNos)
-    {
-        $table = 'ugd_tax_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
-            return 0;
-        }
-
-        try {
-            return DB::table($table)->whereIn('ward_no', $wardNos)->count();
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    private function getProfessionalTaxByWards($corporationId, $wardNos)
-    {
-        $table = 'professional_tax_' . $corporationId;
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
-            return 0;
-        }
-
-        try {
-            return DB::table($table)->whereIn('ward_no', $wardNos)->count();
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    // OWNER METHODS
-    // ════════════════════════════════════════════════════════════════
-
-    private function getTotalOwners($corporationId)
-    {
-        $table = 'mis_' . $corporationId;
-        if (!Schema::hasTable($table)) {
-            return 0;
-        }
-
-        try {
-            if (Schema::hasColumn($table, 'owner_name')) {
-                $owners = DB::table($table)->pluck('owner_name')->filter()->toArray();
-                return count(array_unique($owners));
-            }
-        } catch (\Exception $e) {
-            return 0;
-        }
-        return 0;
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    // TAX DATA METHODS (For Tables)
-    // ════════════════════════════════════════════════════════════════
 
     private function getWaterTaxData($corporationId, $limit = 5)
     {
@@ -1120,136 +2024,12 @@ class CommissionerController extends Controller
         return $data;
     }
 
-    // ════════════════════════════════════════════════════════════════
-    // ACTIVITY METHODS
-    // ════════════════════════════════════════════════════════════════
-
-    private function getRecentActivities($corporationId)
-    {
-        $activities = [];
-        $tables = [
-            'mis_' . $corporationId,
-            'water_tax_' . $corporationId,
-            'ugd_tax_' . $corporationId,
-            'professional_tax_' . $corporationId,
-        ];
-
-        $typeLabels = [
-            'mis' => 'Assessment',
-            'water_tax' => 'Water Tax',
-            'ugd_tax' => 'UGD Tax',
-            'professional_tax' => 'Professional Tax',
-        ];
-
-        $typeColors = [
-            'mis' => '#0f6b47',
-            'water_tax' => '#1d4ed8',
-            'ugd_tax' => '#a9741a',
-            'professional_tax' => '#5b21b6',
-        ];
-
-        $typeIcons = [
-            'mis' => 'clipboard-data',
-            'water_tax' => 'droplet',
-            'ugd_tax' => 'pipe',
-            'professional_tax' => 'briefcase',
-        ];
-
-        foreach ($tables as $table) {
-            if (!Schema::hasTable($table)) {
-                continue;
-            }
-
-            try {
-                $tableType = str_replace('_' . $corporationId, '', $table);
-                $typeLabel = $typeLabels[$tableType] ?? ucfirst($tableType);
-                $color = $typeColors[$tableType] ?? '#0f6b47';
-                $icon = $typeIcons[$tableType] ?? 'file-text';
-
-                $recentItems = DB::table($table)
-                    ->orderBy('id', 'desc')
-                    ->limit(3)
-                    ->get();
-
-                foreach ($recentItems as $item) {
-                    $numberField = 'assessment';
-                    if ($tableType == 'water_tax') $numberField = 'watertax_no';
-                    elseif ($tableType == 'ugd_tax') $numberField = 'ugd_no';
-                    elseif ($tableType == 'professional_tax') $numberField = 'pt_number';
-
-                    $itemNo = $item->$numberField ?? $typeLabel . str_pad($item->id, 6, '0', STR_PAD_LEFT);
-                    $ownerName = $item->owner_name ?? 'N/A';
-
-                    $statusText = '';
-                    if (!empty($item->gisid)) {
-                        $statusText = '✓ Completed';
-                    } else {
-                        $statusText = '⏳ Pending';
-                    }
-
-                    $activities[] = [
-                        'icon' => $icon,
-                        'color' => $color,
-                        'text' => '<strong>' . $typeLabel . '</strong> ' . $itemNo . ' - ' . $ownerName . ' (' . $statusText . ')',
-                        'time' => $this->getTimeAgo(now()),
-                    ];
-                }
-            } catch (\Exception $e) {
-                // Skip if error
-            }
-        }
-
-        // Get entries from point_data tables
-        try {
-            $wardIds = $this->getWardIds($corporationId);
-            foreach ($wardIds as $wardId) {
-                $table = 'point_data_' . $wardId;
-                if (Schema::hasTable($table)) {
-                    $recentPoints = DB::table($table)
-                        ->orderBy('id', 'desc')
-                        ->limit(2)
-                        ->get();
-
-                    foreach ($recentPoints as $point) {
-                        $activities[] = [
-                            'icon' => 'pin-map',
-                            'color' => '#e11d48',
-                            'text' => '<strong>Survey Entry</strong> - Building ' . ($point->building_no ?? 'N/A') . ' surveyed in Ward ' . $wardId,
-                            'time' => $this->getTimeAgo(now()),
-                        ];
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-            // Skip
-        }
-
-        return array_slice($activities, 0, 10);
-    }
-
-    private function getWardIds($corporationId)
-    {
-        $zones = Zone::where('corp_id', $corporationId)->get();
-        $wardIds = [];
-        foreach ($zones as $zone) {
-            $wards = Ward::where('zone_id', $zone->id)->get();
-            foreach ($wards as $ward) {
-                $wardIds[] = $ward->id;
-            }
-        }
-        return $wardIds;
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    // HELPER METHODS
-    // ════════════════════════════════════════════════════════════════
+    // ─── HELPER METHODS ───
 
     private function formatCurrency($amount)
     {
         if (!$amount) return '₹0';
-
         $amount = (int)$amount;
-
         if ($amount >= 10000000) {
             return '₹' . number_format($amount / 10000000, 2) . ' Cr';
         } elseif ($amount >= 100000) {
@@ -1257,58 +2037,22 @@ class CommissionerController extends Controller
         } elseif ($amount >= 1000) {
             return '₹' . number_format($amount / 1000, 1) . 'K';
         }
-
         return '₹' . number_format($amount);
     }
 
     private function getTimeAgo($timestamp)
     {
         if (!$timestamp) return 'N/A';
-
         try {
             $diff = now()->diffInSeconds($timestamp);
-
             if ($diff < 60) return $diff . ' seconds ago';
             if ($diff < 3600) return floor($diff / 60) . ' minutes ago';
             if ($diff < 86400) return floor($diff / 3600) . ' hours ago';
             if ($diff < 604800) return floor($diff / 86400) . ' days ago';
-
             return date('M d, Y', strtotime($timestamp));
         } catch (\Exception $e) {
             return 'N/A';
         }
-    }
-
-    private function getAllwardBoundary($corporationId)
-    {
-        $boundaries = [];
-        try {
-            $zones = Zone::where('corp_id', $corporationId)->get();
-            foreach ($zones as $zone) {
-                $wards = Ward::where('zone_id', $zone->id)->get();
-                foreach ($wards as $ward) {
-                    if (empty($ward->boundary)) {
-                        continue;
-                    }
-                    if (is_array($ward->boundary)) {
-                        $boundary = $ward->boundary;
-                    } elseif (is_string($ward->boundary)) {
-                        $boundary = json_decode($ward->boundary, true);
-                    } else {
-                        $boundary = [];
-                    }
-                    $boundaries[] = [
-                        'ward_id'  => $ward->id,
-                        'ward_no'  => $ward->ward_no,
-                        'boundary' => $boundary,
-                    ];
-                }
-            }
-        } catch (\Exception $e) {
-            \Log::error($e->getMessage());
-            return [];
-        }
-        return $boundaries;
     }
 
     private function getEmptyStats()
@@ -1357,529 +2101,6 @@ class CommissionerController extends Controller
             'water_tax' => ['count' => 0, 'half_year_tax' => 0, 'balance' => 0, 'table' => ''],
             'ugd' => ['count' => 0, 'half_year_tax' => 0, 'balance' => 0, 'table' => ''],
             'professional_tax' => ['count' => 0, 'half_year_tax' => 0, 'balance' => 0, 'table' => ''],
-        ];
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    // SHOW MAP METHOD
-    // ════════════════════════════════════════════════════════════════
-
-    public function showMap($id)
-    {
-        $user = Auth::user();
-        $wardId = $id;
-        $ward = Ward::findOrFail($wardId);
-        $zoneId = $ward->zone_id;
-        $zone = Zone::findOrFail($zoneId);
-        $corp = $zone->corp_id;
-        $wardNo = $ward->ward_no;
-
-        $polygonsTableName = "polygons_{$wardId}";
-        $linesTableName = "lines_{$wardId}";
-        $pointsTableName = "points_{$wardId}";
-        $polygonDataTableName = "polygon_data_{$wardId}";
-        $pointDataTableName = "point_data_{$wardId}";
-
-        $misTableName = "mis_{$corp}";
-        $waterTaxTableName = "water_tax_{$corp}";
-        $ugdtable = "ugd_tax_{$corp}";
-        $prefessionaltax = "professional_tax_{$corp}";
-
-        $polygons = DB::table($polygonsTableName)->get();
-        $lines = DB::table($linesTableName)->get();
-        $points = DB::table($pointsTableName)->get();
-        $polygonDatas = DB::table($polygonDataTableName)->get();
-        $pointDatas = DB::table($pointDataTableName)->get();
-
-        $misData = DB::table($misTableName . ' as mis')
-            ->leftJoin($waterTaxTableName . ' as wt', 'mis.assessment', '=', 'wt.assessment')
-            ->leftJoin($ugdtable . ' as ugd', 'mis.assessment', '=', 'ugd.assessment')
-            ->leftJoin($prefessionaltax . ' as pt', 'mis.assessment', '=', 'pt.assessment')
-            ->where('mis.ward_no', $wardNo)
-            ->select(
-                'mis.*',
-                'wt.watertax_no',
-                'wt.old_watertax_no',
-                'ugd.ugd_no',
-                'ugd.old_ugd_no',
-                'pt.pt_number',
-                'pt.old_pt_number'
-            )
-            ->get();
-
-        $uniqueRoadNames = DB::table($misTableName)
-            ->select('road_name')
-            ->whereNotNull('road_name')
-            ->where('road_name', '!=', '')
-            ->distinct()
-            ->orderBy('road_name')
-            ->pluck('road_name');
-
-        // ─────────────────────────────────────────────────────────
-        // ANALYTICS
-        // ─────────────────────────────────────────────────────────
-        $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
-        $buildingVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData);
-        $buildingData = $this->getBuildingsWithUsageColors($wardId);
-        $availableUsages = array_keys($buildingData['usage_counts']);
-        sort($availableUsages);
-        $areaStats = $this->getAreaVariationStats($wardId, $buildingData['buildings']);
-        return view('excecutive.mapview', compact(
-            'ward',
-            'polygons',
-            'points',
-            'lines',
-            'polygonDatas',
-            'pointDatas',
-            'misData',
-            'uniqueRoadNames',
-            'analytics',
-            'buildingVariations',
-            'buildingData',
-            'availableUsages',
-            'areaStats'
-        ));
-    }
-    private function getAreaVariationStats($wardId, $buildings)
-    {
-        $stats = [
-            'min' => 0,
-            'max' => 0,
-            'avg' => 0,
-            'total' => 0,
-            'count' => 0,
-        ];
-
-        foreach ($buildings as $building) {
-            $sqfeet = floatval($building['sqfeet'] ?? 0);
-            if ($sqfeet > 0) {
-                $stats['total'] += $sqfeet;
-                $stats['count']++;
-                if ($stats['min'] == 0 || $sqfeet < $stats['min']) {
-                    $stats['min'] = $sqfeet;
-                }
-                if ($sqfeet > $stats['max']) {
-                    $stats['max'] = $sqfeet;
-                }
-            }
-        }
-
-        if ($stats['count'] > 0) {
-            $stats['avg'] = round($stats['total'] / $stats['count'], 2);
-        }
-
-        return $stats;
-    }
-    private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData)
-    {
-        $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
-        $misByAssessment = collect($misData)->keyBy('assessment');
-
-        $pointDataByGisid = [];
-        foreach ($pointDatas as $pd) {
-            $pointDataByGisid[$pd->point_gisid][] = $pd;
-        }
-
-        $result = [];
-
-        foreach ($polygons as $polygon) {
-            $gisid = $polygon->gisid;
-            $polygonSqfeet = floatval($polygon->sqfeet ?? 0);
-
-            $polyData = $polygonDataByGisid->get($gisid);
-            if ($polyData) {
-                $numberFloor = floatval($polyData->number_floor ?? 0);
-                $basement = floatval($polyData->basement ?? 0);
-                $buildingArea = ($numberFloor > 0 ? $numberFloor : 1) * $polygonSqfeet;
-                if ($basement > 0) {
-                    $buildingArea += ($polygonSqfeet * $basement);
-                }
-                $buildingUsage = $polyData->building_usage ?? null;
-            } else {
-                $buildingArea = $polygonSqfeet;
-                $buildingUsage = null;
-            }
-
-            $assessmentArea = 0;
-            $assessmentCount = 0;
-            $hasUsageMismatch = false;
-
-            if (isset($pointDataByGisid[$gisid])) {
-                foreach ($pointDataByGisid[$gisid] as $pd) {
-                    $assessmentCount++;
-                    $mis = $misByAssessment->get($pd->assessment);
-
-                    $pointArea = 0;
-                    if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
-                        $pointArea = floatval($pd->qcsqfeet);
-                    } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
-                        $pointArea = floatval($mis->plot_area);
-                    }
-                    $assessmentArea += $pointArea;
-
-                    $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
-                    if (
-                        $buildingUsage && $pointUsage
-                        && strtoupper(trim($buildingUsage)) != strtoupper(trim($pointUsage))
-                    ) {
-                        $hasUsageMismatch = true;
-                    }
-                }
-            }
-
-            $areaVariation = $buildingArea - $assessmentArea;
-            $variationPercentage = $buildingArea > 0
-                ? round((abs($areaVariation) / $buildingArea) * 100, 1) : 0;
-
-            $result[$gisid] = [
-                'gisid' => $gisid,
-                'building_area' => round($buildingArea, 2),
-                'assessment_area' => round($assessmentArea, 2),
-                'area_variation' => round($areaVariation, 2),
-                'variation_percentage' => $variationPercentage,
-                'area_status' => (abs($areaVariation) > 1) ? 'VARIATION' : 'MATCH',
-                'usage_status' => $hasUsageMismatch ? 'VARIATION' : 'MATCH',
-                'assessment_count' => $assessmentCount,
-            ];
-        }
-
-        return $result;
-    }
-    /**
-     * Build ward-level analytics: building/survey counts, survey %,
-     * and area/usage variation against MIS records, matched by assessment.
-     */
-    private function buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData)
-    {
-        $totalBuildings = count($polygons);
-
-        // Unique surveyed buildings = distinct gisid present in polygon_data
-        $surveyedBuildings = collect($polygonDatas)->pluck('gisid')->unique()->count();
-
-        // Total surveyed assessments = count of point_data rows
-        $totalSurveyedAssessments = count($pointDatas);
-
-        $surveyPercentage = $totalBuildings > 0
-            ? round(($surveyedBuildings / $totalBuildings) * 100, 1)
-            : 0;
-
-        // Index polygonData by gisid for quick building lookups
-        $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
-
-        // Index mis by assessment for area/usage comparison
-        $misByAssessment = collect($misData)->keyBy('assessment');
-
-        // Group pointData by point_gisid (a building can have multiple assessments)
-        $pointDataByGisid = [];
-        foreach ($pointDatas as $pd) {
-            $pointDataByGisid[$pd->point_gisid][] = $pd;
-        }
-
-        $areaVariationCount = 0;
-        $usageVariationCount = 0;
-        $validBuildingsCount = 0;
-        $totalBuildingArea = 0;
-        $totalAssessmentArea = 0;
-
-        foreach ($polygons as $polygon) {
-            $gisid = $polygon->gisid;
-            $polygonSqfeet = floatval($polygon->sqfeet ?? 0);
-
-            $polyData = $polygonDataByGisid->get($gisid);
-            if ($polyData) {
-                $numberFloor = floatval($polyData->number_floor ?? 0);
-                $basement = floatval($polyData->basement ?? 0);
-                $buildingArea = ($numberFloor > 0 ? $numberFloor : 1) * $polygonSqfeet;
-                if ($basement > 0) {
-                    $buildingArea += ($polygonSqfeet * $basement);
-                }
-                $buildingUsage = $polyData->building_usage ?? null;
-            } else {
-                $buildingArea = $polygonSqfeet;
-                $buildingUsage = null;
-            }
-
-            $assessmentArea = 0;
-            $hasUsageMismatch = false;
-
-            if (isset($pointDataByGisid[$gisid])) {
-                foreach ($pointDataByGisid[$gisid] as $pd) {
-                    $mis = $misByAssessment->get($pd->assessment);
-
-                    $pointArea = 0;
-                    if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
-                        $pointArea = floatval($pd->qcsqfeet);
-                    } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
-                        $pointArea = floatval($mis->plot_area);
-                    }
-                    $assessmentArea += $pointArea;
-
-                    $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
-                    if (
-                        $buildingUsage && $pointUsage
-                        && strtoupper(trim($buildingUsage)) != strtoupper(trim($pointUsage))
-                    ) {
-                        $hasUsageMismatch = true;
-                    }
-                }
-            }
-
-            $totalBuildingArea += $buildingArea;
-            $totalAssessmentArea += $assessmentArea;
-
-            if ($buildingArea > 0 && $assessmentArea > 0) {
-                $validBuildingsCount++;
-
-                if (abs($buildingArea - $assessmentArea) > 1) {
-                    $areaVariationCount++;
-                }
-                if ($hasUsageMismatch) {
-                    $usageVariationCount++;
-                }
-            }
-        }
-
-        return [
-            'total_buildings' => $totalBuildings,
-            'surveyed_buildings' => $surveyedBuildings,
-            'total_surveyed_assessments' => $totalSurveyedAssessments,
-            'survey_percentage' => $surveyPercentage,
-            'area_variation_count' => $areaVariationCount,
-            'usage_variation_count' => $usageVariationCount,
-            'area_variation_percentage' => $validBuildingsCount > 0
-                ? round(($areaVariationCount / $validBuildingsCount) * 100, 1) : 0,
-            'usage_variation_percentage' => $validBuildingsCount > 0
-                ? round(($usageVariationCount / $validBuildingsCount) * 100, 1) : 0,
-            'total_building_area' => round($totalBuildingArea, 2),
-            'total_assessment_area' => round($totalAssessmentArea, 2),
-        ];
-    }
-    public function getPointDetails(Request $request)
-    {
-        $request->validate([
-            'gisid'   => 'required',
-            'ward_id' => 'required|integer',
-        ]);
-
-        $gisid  = $request->gisid;
-        $wardId = $request->ward_id;
-
-        $ward = Ward::findOrFail($wardId);
-        $zone = Zone::findOrFail($ward->zone_id);
-        $corpId = $zone->corp_id;
-
-        $pointTable = "point_data_{$wardId}";
-        $misTable = "mis_{$corpId}";
-        $waterTaxTable = "water_tax_{$corpId}";
-        $ugdTaxTable = "ugd_tax_{$corpId}";
-        $professionalTaxTable = "professional_tax_{$corpId}";
-
-        if (!Schema::hasTable($pointTable)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Point table not found.'
-            ], 404);
-        }
-
-        $points = DB::table($pointTable)
-            ->where('point_gisid', $gisid)
-            ->get();
-
-        if ($points->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'No points found.'
-            ], 404);
-        }
-
-        $results = [];
-
-        foreach ($points as $point) {
-
-            // MIS
-            $mis = null;
-            if (Schema::hasTable($misTable) && !empty($point->assessment)) {
-                $mis = DB::table($misTable)
-                    ->where('assessment', $point->assessment)
-                    ->first();
-            }
-
-            // Water Tax
-            $waterTax = null;
-            if (Schema::hasTable($waterTaxTable) && !empty($point->assessment)) {
-                $waterTax = DB::table($waterTaxTable)
-                    ->where('assessment', $point->assessment)
-                    ->first();
-            }
-
-            // UGD Tax
-            $ugdTax = null;
-            if (Schema::hasTable($ugdTaxTable)) {
-                $ugdTax = DB::table($ugdTaxTable)
-                    ->where('gisid', $point->point_gisid)
-                    ->first();
-            }
-
-            // Professional Tax (Multiple)
-            $professionalTax = collect();
-            if (Schema::hasTable($professionalTaxTable) && !empty($point->assessment)) {
-                $professionalTax = DB::table($professionalTaxTable)
-                    ->where('gisid', $point->point_gisid)
-                    ->where('assessment', $point->assessment)
-                    ->get();
-            }
-
-            $results[] = [
-                // Point Details
-                'point' => $point,
-
-                // MIS
-                'mis' => $mis,
-
-                // Water Tax
-                'water_tax' => $waterTax,
-
-                // UGD Tax
-                'ugd_tax' => $ugdTax,
-
-                // Multiple Professional Tax Records
-                'professional_tax' => $professionalTax,
-            ];
-        }
-
-        return response()->json([
-            'status' => true,
-            'gisid' => $gisid,
-            'ward_id' => $wardId,
-            'total_points' => count($results),
-            'data' => $results
-        ]);
-    }
-
-
-    public function qcUpdate(Request $request, $id)
-    {
-        $request->validate([
-            'ward_id'     => 'required|integer',
-            'qcusage'     => 'nullable|string|max:255',
-            'qcsqfeet'    => 'nullable|numeric',
-            'qc_remarks'  => 'nullable|string|max:1000',
-        ]);
-
-        $wardId = $request->ward_id;
-        $pointTable = "point_data_{$wardId}";
-
-        $point = DB::table($pointTable)->where('id', $id)->first();
-
-        if (!$point) {
-            return response()->json([
-                'message' => 'Point data not found.'
-            ], 404);
-        }
-
-        DB::table($pointTable)
-            ->where('id', $id)
-            ->update([
-                'qcusage'    => $request->qcusage,
-                'qcsqfeet'   => $request->qcsqfeet,
-                'qc_remarks' => $request->qc_remarks,
-                'updated_at' => now(),
-            ]);
-
-        $updatedPoint = DB::table($pointTable)
-            ->where('id', $id)
-            ->first();
-
-        return response()->json([
-            'success'    => true,
-            'message'    => 'QC data updated successfully.',
-            'point_data' => $updatedPoint,
-        ]);
-    }
-    /**
-     * Get building data with usage-based colors for map
-     */
-    private function getBuildingsWithUsageColors($wardId)
-    {
-        $polygonsTable = "polygons_{$wardId}";
-        $polygonDataTable = "polygon_data_{$wardId}";
-
-        if (!Schema::hasTable($polygonsTable)) {
-            return [];
-        }
-
-        // Define usage color mapping
-        $usageColors = [
-            'RESIDENTIAL' => '#4CAF50',    // Green
-            'COMMERCIAL'  => '#2196F3',    // Blue
-            'INDUSTRIAL'  => '#FF9800',    // Orange
-            'INSTITUTIONAL' => '#9C27B0',  // Purple
-            'MIXED'       => '#F44336',    // Red
-            'GOVERNMENT'  => '#607D8B',    // Blue Grey
-            'VACANT'      => '#FFD700',    // Gold/Yellow
-            'OTHER'       => '#9E9E9E',    // Grey
-        ];
-
-        // Default color for unknown usage - use OTHER color
-        $defaultColor = '#9E9E9E';
-
-        $polygons = DB::table($polygonsTable)->get();
-        $polygonData = collect();
-
-        if (Schema::hasTable($polygonDataTable)) {
-            $polygonData = DB::table($polygonDataTable)->get()->keyBy('gisid');
-        }
-
-        $buildings = [];
-        $usageCounts = [];
-
-        foreach ($polygons as $polygon) {
-            $gisid = $polygon->gisid;
-            $buildingData = $polygonData->get($gisid);
-
-            // Get building usage from polygon_data
-            $usage = 'OTHER'; // Default to OTHER
-            if ($buildingData && !empty($buildingData->building_usage)) {
-                $usage = strtoupper(trim($buildingData->building_usage));
-
-                // Map variations to standard types
-                if (strpos($usage, 'RESIDENT') !== false || strpos($usage, 'DWELLING') !== false) {
-                    $usage = 'RESIDENTIAL';
-                } elseif (strpos($usage, 'SHOP') !== false || strpos($usage, 'RETAIL') !== false || strpos($usage, 'COMMERCIAL') !== false) {
-                    $usage = 'COMMERCIAL';
-                } elseif (strpos($usage, 'FACTORY') !== false || strpos($usage, 'MANUFACT') !== false) {
-                    $usage = 'INDUSTRIAL';
-                } elseif (strpos($usage, 'SCHOOL') !== false || strpos($usage, 'HOSPITAL') !== false || strpos($usage, 'COLLEGE') !== false) {
-                    $usage = 'INSTITUTIONAL';
-                } elseif (strpos($usage, 'GOV') !== false || strpos($usage, 'OFFICE') !== false || strpos($usage, 'MUNICIPAL') !== false) {
-                    $usage = 'GOVERNMENT';
-                } elseif (strpos($usage, 'VACANT') !== false || strpos($usage, 'EMPTY') !== false) {
-                    $usage = 'VACANT';
-                }
-            }
-
-            $color = $usageColors[$usage] ?? $usageColors['OTHER'];
-
-            // Count by usage
-            if (!isset($usageCounts[$usage])) {
-                $usageCounts[$usage] = 0;
-            }
-            $usageCounts[$usage]++;
-
-            $buildings[] = [
-                'gisid' => $gisid,
-                'coordinates' => json_decode($polygon->coordinates, true),
-                'usage' => $usage,
-                'color' => $color,
-                'sqfeet' => $polygon->sqfeet ?? 0,
-                'building_data' => $buildingData,
-            ];
-        }
-
-        return [
-            'buildings' => $buildings,
-            'usage_counts' => $usageCounts,
-            'usage_colors' => $usageColors,
         ];
     }
 }

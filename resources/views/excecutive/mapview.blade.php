@@ -1417,6 +1417,109 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        /* 3D Building Hover Effect */
+        .cesium-building-highlight {
+            outline: 2px solid #00ff00 !important;
+            outline-offset: 2px !important;
+        }
+
+        /* 3D Info Panel */
+        .cesium-3d-info-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 80%;
+        }
+
+        .cesium-3d-info-panel.show {
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .cesium-3d-info-panel .close-panel {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+        }
+
+        .cesium-3d-info-panel .close-panel:hover {
+            background: #c82333;
+        }
+
+        /* 3D Building Click Tooltip */
+        .cesium-3d-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 200px;
+            white-space: nowrap;
+        }
+
+        .cesium-3d-tooltip.show {
+            display: block;
+        }
+
+        .cesium-3d-tooltip .tooltip-title {
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .cesium-3d-tooltip .tooltip-sub {
+            color: #94a3b8;
+            font-size: 11px;
+        }
+
+        /* 3D Route Display */
+        .cesium-route-label {
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
     </style>
 @endpush
 
@@ -1640,6 +1743,16 @@
         </div>
         <div id="map"></div>
         <div id="cesiumContainer"></div>
+        <!-- 3D Info Panel -->
+        <div class="cesium-3d-info-panel" id="cesium3dInfoPanel">
+            <button class="close-panel" id="close3dInfoPanel">✕</button>
+            <div id="cesium3dInfoContent">
+                <strong>🏢 Building Details</strong>
+                <div id="cesium3dBuildingInfo"></div>
+            </div>
+        </div>
+        <!-- 3D Tooltip -->
+        <div class="cesium-3d-tooltip" id="cesium3dTooltip"></div>
     </div>
 
     <!-- ─── MODALS ─── -->
@@ -1973,6 +2086,7 @@
         </div>
     </div>
 @endsection
+
 @push('scripts')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
@@ -2100,7 +2214,6 @@
                         feature.setId(building.gisid);
                         const color = building.color || '#BDBDBD';
                         feature.setStyle(new ol.style.Style({
-
                             stroke: new ol.style.Stroke({
                                 color: color,
                                 width: 2.5
@@ -2140,7 +2253,6 @@
                             lineJoin: 'round',
                             lineCap: 'round'
                         }),
-
                     })
                 ];
 
@@ -3324,19 +3436,7 @@
                 );
             }
 
-            function zoomToFeature(gisid) {
-                const coords = getCoordsByGisId(gisid);
-                if (!coords) {
-                    showToast(`⚠️ No point found for GIS ID: ${gisid}`, 3000);
-                    return;
-                }
-                map.getView().animate({
-                    center: coords,
-                    zoom: 22,
-                    duration: 1000
-                });
-            }
-
+            // ─── GET COORDINATES BY GIS ID (for 2D) ───
             function getCoordsByGisId(gisid) {
                 const point = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
                 if (!point) return null;
@@ -3350,7 +3450,21 @@
                 }
             }
 
-            // ─── ROUTING ───
+            // ─── ZOOM TO FEATURE (2D) ───
+            function zoomToFeature(gisid) {
+                const coords = getCoordsByGisId(gisid);
+                if (!coords) {
+                    showToast(`⚠️ No point found for GIS ID: ${gisid}`, 3000);
+                    return;
+                }
+                map.getView().animate({
+                    center: coords,
+                    zoom: 22,
+                    duration: 1000
+                });
+            }
+
+            // ─── ROUTING (2D) ───
             function getCurrentLocation(callback) {
                 if (!navigator.geolocation) {
                     Swal.fire('Error', 'Geolocation not supported', 'error');
@@ -3439,6 +3553,13 @@
                     map.removeLayer(routeLayer);
                     routeLayer = null;
                     showToast('🗑️ Route cleared', 2000);
+                }
+                // Clear 3D route if exists
+                if (window.cesiumRouteEntity) {
+                    if (cesiumViewer) {
+                        cesiumViewer.entities.remove(window.cesiumRouteEntity);
+                    }
+                    window.cesiumRouteEntity = null;
                 }
             }
 
@@ -4084,6 +4205,7 @@
                 $('#filterTab').toggle(tab === 'filter');
             });
 
+            // ─── SEARCH INPUT HANDLER ───
             $(document).on('keyup', '#gisSearchInput', function() {
                 const value = $(this).val();
                 if (!value || value.length < 1) {
@@ -4118,13 +4240,33 @@
                 $('#searchResults').html(html);
             });
 
+            // ─── ZOOM BUTTON (works in both 2D and 3D) ───
             $(document).on('click', '.zoom-btn', function(e) {
                 e.stopPropagation();
                 const id = $(this).data('id');
                 const type = $(this).data('type');
                 const item = searchIndex.find(f => f.id == id && f.type === type);
+
                 if (item) {
-                    zoomToFeature(item.id);
+                    // Check if in 3D mode
+                    if (is3DActive && cesiumViewer) {
+                        // Zoom in 3D
+                        const coords = getCoordsByGisId(item.id);
+                        if (coords) {
+                            const lonlat = ol.proj.toLonLat(coords);
+                            cesiumViewer.camera.flyTo({
+                                destination: Cesium.Cartesian3.fromDegrees(lonlat[0], lonlat[1],
+                                    200),
+                                duration: 2
+                            });
+                            showToast(`🔍 Zooming to ${item.title} in 3D`, 1500);
+                        } else {
+                            showToast('⚠️ Coordinates not found for this item', 2000);
+                        }
+                    } else {
+                        // Zoom in 2D
+                        zoomToFeature(item.id);
+                    }
                     $('#searchDropdown').removeClass('show');
                     $('#searchToggleBtn').removeClass('active-search');
                     $('#gisSearchInput').val('');
@@ -4132,19 +4274,95 @@
                 }
             });
 
+            // ─── DIRECTION BUTTON (works in both 2D and 3D) ───
             $(document).on('click', '.direction-btn', function(e) {
                 e.stopPropagation();
                 const id = $(this).data('id');
                 const type = $(this).data('type');
                 const item = searchIndex.find(f => f.id == id && f.type === type);
+
                 if (item) {
-                    getDirectionToFeature(item);
+                    if (is3DActive && cesiumViewer) {
+                        // Direction in 3D
+                        getDirectionToFeature3D(item);
+                    } else {
+                        getDirectionToFeature(item);
+                    }
                     $('#searchDropdown').removeClass('show');
                     $('#searchToggleBtn').removeClass('active-search');
                     $('#gisSearchInput').val('');
                     $('#searchResults').html('');
                 }
             });
+
+            // ─── 3D DIRECTION ───
+            function getDirectionToFeature3D(feature) {
+                getCurrentLocation(function(loc) {
+                    if (!loc) return;
+                    const coords = getCoordsByGisId(feature.id);
+                    if (!coords) {
+                        Swal.fire('Error', `No coordinates for GIS ID: ${feature.id}`, 'error');
+                        return;
+                    }
+                    const lonLat = ol.proj.toLonLat(coords);
+                    getRoute3D(loc.lon, loc.lat, lonLat[0], lonLat[1]);
+                });
+            }
+
+            function getRoute3D(startLon, startLat, endLon, endLat) {
+                const url =
+                    `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
+                showToast('🗺️ Calculating 3D route...', 2000);
+
+                fetch(url)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.routes || !data.routes.length) {
+                            Swal.fire('Error', 'No route found', 'error');
+                            return;
+                        }
+
+                        // Remove old route
+                        if (window.cesiumRouteEntity) {
+                            cesiumViewer.entities.remove(window.cesiumRouteEntity);
+                            window.cesiumRouteEntity = null;
+                        }
+
+                        const routeCoords = data.routes[0].geometry.coordinates.map(c =>
+                            Cesium.Cartesian3.fromDegrees(c[0], c[1])
+                        );
+
+                        // Add route line in 3D
+                        window.cesiumRouteEntity = cesiumViewer.entities.add({
+                            polyline: {
+                                positions: routeCoords,
+                                width: 6,
+                                material: new Cesium.PolylineGlowMaterialProperty({
+                                    glowPower: 0.2,
+                                    color: Cesium.Color.BLUE
+                                }),
+                                arcType: Cesium.ArcType.GEODESIC
+                            }
+                        });
+
+                        // Fly to route
+                        const routeExtent = data.routes[0].geometry.coordinates;
+                        const centerLon = (routeExtent[0][0] + routeExtent[routeExtent.length - 1][0]) / 2;
+                        const centerLat = (routeExtent[0][1] + routeExtent[routeExtent.length - 1][1]) / 2;
+                        const dist = (data.routes[0].distance / 1000).toFixed(2);
+                        const dur = Math.round(data.routes[0].duration / 60);
+
+                        cesiumViewer.camera.flyTo({
+                            destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat, 300),
+                            duration: 2
+                        });
+
+                        showToast(`✅ 3D Route found! Distance: ${dist}km, Time: ${dur}min`, 4000);
+                    })
+                    .catch(() => {
+                        Swal.fire('Error', 'Failed to calculate route', 'error');
+                    });
+            }
 
             // ─── FILTER SEARCH ───
             $('#applyFilterBtn').on('click', function() {
@@ -4848,26 +5066,87 @@
             });
 
             // ════════════════════════════════════════════════════════════
-            // 3D VIEW TOGGLE — Cesium globe with Satellite/OSM fallback
+            // 3D VIEW TOGGLE — Fixed with proper coordinate conversion
             // ════════════════════════════════════════════════════════════
             let cesiumViewer = null;
             let cesiumBuildingEntities = [];
             let is3DActive = false;
             let droneImageryLayer = null;
+            let cesiumClickHandler = null;
+            let cesiumHoverHandler = null;
+            let cesiumSelectedBuilding = null;
 
             window.is3DActive = is3DActive;
             window.cesiumViewer = cesiumViewer;
 
+            // ─── FIXED: Proper coordinate conversion for Cesium ───
             function ringToLonLatFlatArray(ringCoords) {
                 const flat = [];
                 ringCoords.forEach(c => {
+                    // OpenLayers stores coordinates in EPSG:3857 (Web Mercator)
+                    // Convert to WGS84 for Cesium
                     const lonlat = ol.proj.toLonLat(c);
                     flat.push(lonlat[0], lonlat[1]);
                 });
                 return flat;
             }
 
-            // ─── FIXED 3D VIEWER WITH PROPER IMAGE LOADING ───
+            // ─── Get building data for 3D click ───
+            function getBuildingDataFor3D(gisid) {
+                return polygonDatas.find(p => p.gisid == gisid);
+            }
+
+            // ─── Show 3D building details panel ───
+            function show3DBuildingDetails(gisid) {
+                const building = getBuildingDataFor3D(gisid);
+                if (!building) {
+                    showToast('⚠️ No building data found', 2000);
+                    return;
+                }
+
+                const $panel = $('#cesium3dInfoPanel');
+                const $content = $('#cesium3dBuildingInfo');
+
+                $content.html(`
+                    <div style="margin-top:8px; text-align:left; font-size:13px;">
+                        <div><strong>GIS ID:</strong> ${building.gisid}</div>
+                        <div><strong>Usage:</strong> ${building.building_usage || 'N/A'}</div>
+                        <div><strong>Area:</strong> ${building.sqfeet || 'N/A'} sqft</div>
+                        <div><strong>Floors:</strong> ${building.number_floor || 'N/A'}</div>
+                        <div><strong>Bills:</strong> ${building.number_bill || 0}</div>
+                        <div><strong>Shops:</strong> ${building.number_shop || 0}</div>
+                        <div style="margin-top:6px;">
+                            <button class="btn btn-sm btn-primary" onclick="viewBuildingInModal('${building.gisid}')" style="border-radius:6px;">
+                                <i class="bi bi-eye"></i> View Full Details
+                            </button>
+                            <button class="btn btn-sm btn-success" onclick="getDirectionToBuilding3D('${building.gisid}')" style="border-radius:6px;">
+                                <i class="bi bi-compass"></i> Direction
+                            </button>
+                        </div>
+                    </div>
+                `);
+
+                $panel.addClass('show');
+                cesiumSelectedBuilding = building;
+            }
+
+            // ─── Make functions globally accessible ───
+            window.viewBuildingInModal = function(gisid) {
+                const building = getBuildingDataFor3D(gisid);
+                if (building) {
+                    $('#cesium3dInfoPanel').removeClass('show');
+                    showBuildingView(building);
+                }
+            };
+
+            window.getDirectionToBuilding3D = function(gisid) {
+                const item = searchIndex.find(f => f.id == gisid && f.type === 'polygon');
+                if (item) {
+                    getDirectionToFeature3D(item);
+                }
+            };
+
+            // ─── INIT 3D VIEWER WITH FALLBACK ───
             function init3DViewerWithFallback() {
                 if (cesiumViewer) return cesiumViewer;
 
@@ -4890,7 +5169,6 @@
                 let droneLoaded = false;
                 let loadAttempted = false;
 
-                // Check if drone image exists and is valid
                 const droneUrl = droneImageURL || '';
                 const hasValidDroneImage = droneUrl && droneUrl !== "{{ asset('') }}" && droneUrl !== '';
 
@@ -4899,10 +5177,9 @@
                     loadAttempted = true;
 
                     try {
-                        // Remove any existing imagery layers
                         cesiumViewer.imageryLayers.removeAll();
 
-                        // Try Satellite imagery first (better than OSM)
+                        // Try Satellite imagery first
                         cesiumViewer.imageryLayers.addImageryProvider(
                             new Cesium.ArcGisMapServerImageryProvider({
                                 url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
@@ -4912,33 +5189,7 @@
                         showToast('🛰️ Using Satellite imagery (Drone not available)', 3000);
                         console.log('✅ Satellite imagery loaded as fallback');
 
-                        // Fly to the ward location
-                        if (imageExtentRaw && imageExtentRaw.length === 4) {
-                            let centerLon, centerLat;
-                            if (isLatLon) {
-                                centerLon = (imageExtentRaw[0] + imageExtentRaw[2]) / 2;
-                                centerLat = (imageExtentRaw[1] + imageExtentRaw[3]) / 2;
-                            } else {
-                                function webMercatorToWgs84(x, y) {
-                                    var lon = (x / 20037508.34) * 180;
-                                    var lat = (y / 20037508.34) * 180;
-                                    lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI /
-                                        2);
-                                    return [lon, lat];
-                                }
-                                const center = webMercatorToWgs84(
-                                    (imageExtentRaw[0] + imageExtentRaw[2]) / 2,
-                                    (imageExtentRaw[1] + imageExtentRaw[3]) / 2
-                                );
-                                centerLon = center[0];
-                                centerLat = center[1];
-                            }
-
-                            cesiumViewer.camera.flyTo({
-                                destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat, 500),
-                                duration: 2
-                            });
-                        }
+                        flyToWardLocation();
 
                     } catch (error) {
                         // Final fallback: OpenStreetMap
@@ -4949,12 +5200,42 @@
                         );
                         showToast('🗺️ Using OpenStreetMap (Satellite failed)', 3000);
                         console.log('✅ OSM loaded as final fallback');
+                        flyToWardLocation();
+                    }
+                }
+
+                function flyToWardLocation() {
+                    if (imageExtentRaw && imageExtentRaw.length === 4) {
+                        let centerLon, centerLat;
+                        if (isLatLon) {
+                            centerLon = (imageExtentRaw[0] + imageExtentRaw[2]) / 2;
+                            centerLat = (imageExtentRaw[1] + imageExtentRaw[3]) / 2;
+                        } else {
+                            function webMercatorToWgs84(x, y) {
+                                var lon = (x / 20037508.34) * 180;
+                                var lat = (y / 20037508.34) * 180;
+                                lat = 180 / Math.PI * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI /
+                                    2);
+                                return [lon, lat];
+                            }
+                            const center = webMercatorToWgs84(
+                                (imageExtentRaw[0] + imageExtentRaw[2]) / 2,
+                                (imageExtentRaw[1] + imageExtentRaw[3]) / 2
+                            );
+                            centerLon = center[0];
+                            centerLat = center[1];
+                        }
+
+                        const height = Math.max(300, (imageExtentRaw[2] - imageExtentRaw[0]) * 111000 * 0.6);
+                        cesiumViewer.camera.flyTo({
+                            destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat, height),
+                            duration: 2
+                        });
                     }
                 }
 
                 if (hasValidDroneImage) {
                     try {
-                        // Create rectangle for drone image
                         let rect;
                         if (isLatLon) {
                             rect = Cesium.Rectangle.fromDegrees(
@@ -4964,7 +5245,6 @@
                                 imageExtentRaw[3]
                             );
                         } else {
-                            // Convert EPSG:3857 to WGS84
                             function webMercatorToWgs84(x, y) {
                                 var lon = (x / 20037508.34) * 180;
                                 var lat = (y / 20037508.34) * 180;
@@ -4976,19 +5256,14 @@
                             rect = Cesium.Rectangle.fromDegrees(bl[0], bl[1], tr[0], tr[1]);
                         }
 
-                        // Remove any existing imagery layers
                         cesiumViewer.imageryLayers.removeAll();
 
-                        // Create the provider
                         const provider = new Cesium.SingleTileImageryProvider({
                             url: droneUrl,
                             rectangle: rect
                         });
 
-                        // Try to load the image with a timeout
                         let imageLoadSuccess = false;
-
-                        // Create a temporary image to check if it loads
                         const img = new Image();
                         img.crossOrigin = 'anonymous';
 
@@ -5004,7 +5279,6 @@
 
                                     console.log('✅ Drone image loaded in 3D view');
 
-                                    // Fly to drone extent
                                     const west = rect.west;
                                     const south = rect.south;
                                     const east = rect.east;
@@ -5025,6 +5299,7 @@
                                     });
 
                                     showToast('🛩️ Drone image loaded in 3D view', 3000);
+                                    setup3DInteractions();
                                 } catch (e) {
                                     console.error('Error adding drone imagery:', e);
                                     loadFallbackImagery();
@@ -5039,7 +5314,6 @@
                             }
                         };
 
-                        // Set a timeout for loading
                         setTimeout(function() {
                             if (!loadAttempted) {
                                 loadAttempted = true;
@@ -5050,7 +5324,6 @@
                             }
                         }, 15000);
 
-                        // Start loading the image
                         img.src = droneUrl;
 
                     } catch (error) {
@@ -5058,11 +5331,9 @@
                         loadFallbackImagery();
                     }
                 } else {
-                    // No drone image, use fallback
                     loadFallbackImagery();
                 }
 
-                // If for some reason nothing loaded after 5 seconds, force fallback
                 setTimeout(function() {
                     if (!loadAttempted) {
                         loadAttempted = true;
@@ -5072,13 +5343,12 @@
                     }
                 }, 5000);
 
-                // Add info box
                 setTimeout(function() {
                     const infoBox = document.querySelector('.cesium-info-box');
                     if (infoBox) {
                         infoBox.textContent = '🧊 3D view — ' +
                             (droneLoaded ? 'Drone Image' : 'Satellite/OSM') +
-                            ' — switch back to 2D to edit';
+                            ' — Click buildings for details | Switch to 2D to edit';
                     }
                 }, 1000);
 
@@ -5086,6 +5356,84 @@
                 return cesiumViewer;
             }
 
+            // ─── SETUP 3D INTERACTIONS (Click, Hover) ───
+            function setup3DInteractions() {
+                if (!cesiumViewer) return;
+
+                // Remove old handlers
+                if (cesiumClickHandler) {
+                    cesiumViewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+                    cesiumClickHandler = null;
+                }
+                if (cesiumHoverHandler) {
+                    cesiumViewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+                    cesiumHoverHandler = null;
+                }
+
+                // ─── CLICK HANDLER ───
+                cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(cesiumViewer.canvas);
+                cesiumClickHandler.setInputAction(function(click) {
+                    const picked = cesiumViewer.scene.pick(click.position);
+
+                    // Close info panel if clicking empty space
+                    if (!Cesium.defined(picked) || !Cesium.defined(picked.id)) {
+                        $('#cesium3dInfoPanel').removeClass('show');
+                        $('#cesium3dTooltip').removeClass('show');
+                        return;
+                    }
+
+                    const entity = picked.id;
+                    if (entity && entity.name && entity.name.startsWith('Building ')) {
+                        const gisid = entity.name.replace('Building ', '');
+                        show3DBuildingDetails(gisid);
+                        showToast(`🏢 Building ${gisid} selected`, 2000);
+                    }
+                }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+                // ─── HOVER HANDLER ───
+                cesiumHoverHandler = new Cesium.ScreenSpaceEventHandler(cesiumViewer.canvas);
+                cesiumHoverHandler.setInputAction(function(movement) {
+                    const picked = cesiumViewer.scene.pick(movement.endPosition);
+                    const $tooltip = $('#cesium3dTooltip');
+
+                    if (Cesium.defined(picked) && Cesium.defined(picked.id)) {
+                        const entity = picked.id;
+                        if (entity && entity.name && entity.name.startsWith('Building ')) {
+                            const gisid = entity.name.replace('Building ', '');
+                            const building = getBuildingDataFor3D(gisid);
+                            if (building) {
+                                $tooltip.html(`
+                                    <div class="tooltip-title">🏢 ${building.building_name || 'Building'}</div>
+                                    <div class="tooltip-sub">GIS: ${gisid} | ${building.building_usage || 'N/A'}</div>
+                                    <div class="tooltip-sub">${building.sqfeet || 0} sqft | ${building.number_floor || 0} floors</div>
+                                `);
+                                $tooltip.addClass('show');
+
+                                // Position tooltip near cursor
+                                const canvas = cesiumViewer.canvas;
+                                const rect = canvas.getBoundingClientRect();
+                                const x = movement.endPosition.x + rect.left + 15;
+                                const y = movement.endPosition.y + rect.top - 10;
+                                $tooltip.css({
+                                    left: Math.min(x, window.innerWidth - 220),
+                                    top: Math.min(y, window.innerHeight - 100)
+                                });
+
+                                // Change cursor
+                                cesiumViewer.canvas.style.cursor = 'pointer';
+                            }
+                        } else {
+                            $tooltip.removeClass('show');
+                            cesiumViewer.canvas.style.cursor = 'default';
+                        }
+                    } else {
+                        $tooltip.removeClass('show');
+                        cesiumViewer.canvas.style.cursor = 'default';
+                    }
+                }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+            }
+
+            // ─── REFRESH CESIUM BUILDINGS ───
             function refreshCesiumBuildings() {
                 if (!cesiumViewer) return;
 
@@ -5095,21 +5443,35 @@
 
                 // Get filtered buildings from the map source
                 const filteredFeatures = buildingSource.getFeatures();
+
+                if (!filteredFeatures.length) {
+                    console.log('No buildings to display in 3D');
+                    return;
+                }
+
                 filteredFeatures.forEach(feature => {
                     try {
                         const gisid = feature.get('gisid');
-                        const coords = feature.getGeometry().getCoordinates()[0];
+                        if (!gisid) return;
+
+                        const geometry = feature.getGeometry();
+                        if (!geometry || geometry.getType() !== 'Polygon') return;
+
+                        const coords = geometry.getCoordinates()[0];
+                        if (!coords || coords.length < 3) return;
+
+                        // ─── FIXED: Proper coordinate conversion ───
                         const flat = ringToLonLatFlatArray(coords);
                         if (flat.length < 6) return;
 
                         const polygonData = polygonDatas.find(d => d.gisid == gisid);
-                        const floors = polygonData?.number_floor ? parseInt(polygonData.number_floor) || 1 :
-                            1;
+                        const floors = polygonData?.number_floor ? parseInt(polygonData.number_floor) || 1 : 1;
                         const height = Math.max(1, floors) * 3;
-                        const isMapped = !!polygonData;
-                        const usage = feature.get('usage') || 'OTHER';
+                        const usage = polygonData?.building_usage || feature.get('usage') || 'OTHER';
                         const color = usageColors[usage] || '#9E9E9E';
+                        const isMapped = !!polygonData;
 
+                        // ─── ADD BUILDING ENTITY ───
                         const entity = cesiumViewer.entities.add({
                             name: 'Building ' + gisid,
                             polygon: {
@@ -5126,8 +5488,14 @@
                                 <b>Area:</b> ${feature.get('sqfeet') || 0} sqft<br>
                                 <b>Floors:</b> ${floors}<br>
                                 <b>Usage:</b> ${usage}<br>
-                                <b>Status:</b> ${isMapped ? 'Mapped' : 'Unmapped'}
-                            `
+                                <b>Status:</b> ${isMapped ? '✅ Mapped' : '❌ Unmapped'}
+                            `,
+                            properties: {
+                                gisid: gisid,
+                                floors: floors,
+                                usage: usage,
+                                isMapped: isMapped
+                            }
                         });
 
                         cesiumBuildingEntities.push(entity);
@@ -5137,10 +5505,29 @@
                 });
 
                 if (cesiumBuildingEntities.length) {
-                    cesiumViewer.zoomTo(cesiumViewer.entities);
+                    try {
+                        cesiumViewer.zoomTo(cesiumViewer.entities);
+                    } catch (e) {
+                        // Fallback: fly to first building
+                        if (cesiumBuildingEntities.length > 0) {
+                            const first = cesiumBuildingEntities[0];
+                            if (first && first.position) {
+                                cesiumViewer.camera.flyTo({
+                                    destination: first.position.getValue(),
+                                    duration: 1
+                                });
+                            }
+                        }
+                    }
                 }
+
+                // Re-setup interactions after buildings are loaded
+                setTimeout(setup3DInteractions, 500);
+
+                console.log(`✅ ${cesiumBuildingEntities.length} buildings loaded in 3D`);
             }
 
+            // ─── TOGGLE 3D VIEW ───
             function toggle3DView() {
                 is3DActive = !is3DActive;
                 window.is3DActive = is3DActive;
@@ -5154,18 +5541,44 @@
                     $('#map').hide();
                     $('#cesiumContainer').show();
                     init3DViewerWithFallback();
+
                     setTimeout(() => {
                         refreshCesiumBuildings();
                     }, 800);
-                    showToast('🧊 3D View loaded', 2500);
+
+                    showToast('🧊 3D View loaded — Click buildings for details', 2500);
+
+                    // Show info panel for 3D mode
+                    const infoBox = document.createElement('div');
+                    infoBox.className = 'cesium-info-box';
+                    infoBox.textContent = '🏢 Click on any building to see details | Search & Direction available';
+                    const existingInfo = document.querySelector('.cesium-info-box');
+                    if (existingInfo) existingInfo.remove();
+                    document.getElementById('cesiumContainer').appendChild(infoBox);
+
                 } else {
                     $('#cesiumContainer').hide();
                     $('#map').show();
                     setTimeout(() => map.updateSize(), 100);
                     showToast('🗺️ Back to 2D editable view', 1500);
+
+                    // Remove info box
+                    const infoBox = document.querySelector('.cesium-info-box');
+                    if (infoBox) infoBox.remove();
+                    $('#cesium3dInfoPanel').removeClass('show');
+                    $('#cesium3dTooltip').removeClass('show');
                 }
             }
 
+            // ─── Close 3D Info Panel ───
+            $(document).on('click', '#close3dInfoPanel', function() {
+                $('#cesium3dInfoPanel').removeClass('show');
+                if (cesiumSelectedBuilding) {
+                    cesiumSelectedBuilding = null;
+                }
+            });
+
+            // ─── 3D TOGGLE EVENT ───
             $(document).on('click', '#threeDToggleBtn', function(e) {
                 e.stopPropagation();
                 toggle3DView();
@@ -5189,7 +5602,7 @@
 
             loadInfrastructure({{ $ward->id }});
 
-            console.log('✅ Executive GIS Dashboard ready with 3D fallback');
+            console.log('✅ Executive GIS Dashboard ready with 3D view, search, direction, and click details');
         });
     </script>
 @endpush
