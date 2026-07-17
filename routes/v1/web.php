@@ -171,13 +171,13 @@ Route::middleware(['auth', 'role:ac'])->prefix('ac')->name('ac.')->group(functio
 
 // ─── ARO ──────────────────────────────────────────────────
 Route::middleware(['auth', 'role:aro'])->prefix('aro')->name('aro.')->group(function () {
-    Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+     Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
     // Add aro specific routes here
 });
 
 // ─── BC ───────────────────────────────────────────────────
 Route::middleware(['auth', 'role:bc'])->prefix('bc')->name('bc.')->group(function () {
-    Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
     // Add bc specific routes here
 });
 
