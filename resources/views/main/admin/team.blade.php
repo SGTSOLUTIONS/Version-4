@@ -134,6 +134,9 @@ $(document).ready(function() {
     let totalPages = 1;
     let isLoading = false;
 
+    // ─── All corporations data for filtering ───
+    const allCorporations = @json($corporations);
+
     // Flash Message Function
     function showFlashMessage(message, type = 'success') {
         const container = $('#flashMessageContainer');
@@ -208,6 +211,66 @@ $(document).ready(function() {
             if (m === '>') return '&gt;';
             return m;
         });
+    }
+
+    // ─── Helper functions for filtering ───
+    function zonesFor(corporationId) {
+        const corp = allCorporations.find(c => c.id == corporationId);
+        if (!corp || !corp.zones) return [];
+        return corp.zones.map(z => ({ value: z.id, text: z.zone_name }));
+    }
+
+    function wardsFor(zoneId) {
+        for (const corp of allCorporations) {
+            const zone = (corp.zones || []).find(z => z.id == zoneId);
+            if (zone) {
+                return (zone.wards || []).map(w => ({ value: w.id, text: 'Ward ' + w.ward_no }));
+            }
+        }
+        return [];
+    }
+
+    // ─── Update ward filter based on zone selection ───
+    function updateWardFilterByZone() {
+        const zoneId = $('#zoneFilter').val();
+        const corporationId = $('#corporationFilter').val();
+
+        if (zoneId) {
+            $('#wardFilter option').each(function() {
+                const wardZoneId = $(this).data('zone');
+                if (wardZoneId) {
+                    $(this).toggle(wardZoneId == zoneId);
+                }
+            });
+        } else if (corporationId) {
+            // Show wards only for selected corporation
+            const corpZones = zonesFor(corporationId);
+            const zoneIds = corpZones.map(z => z.value);
+            $('#wardFilter option').each(function() {
+                const wardZoneId = $(this).data('zone');
+                if (wardZoneId) {
+                    $(this).toggle(zoneIds.includes(wardZoneId));
+                }
+            });
+        } else {
+            $('#wardFilter option').show();
+        }
+    }
+
+    // ─── Update zone options based on corporation ───
+    function updateZoneFilterByCorporation() {
+        const corporationId = $('#corporationFilter').val();
+
+        if (corporationId) {
+            $('#zoneFilter option').each(function() {
+                const corpId = $(this).data('corporation');
+                if (corpId) {
+                    $(this).toggle(corpId == corporationId);
+                }
+            });
+        } else {
+            $('#zoneFilter option').show();
+        }
     }
 
     function loadTeams(page = 1) {
@@ -398,28 +461,49 @@ $(document).ready(function() {
         }
     }
 
-    // Filter change handlers
+    // ─── FIXED: Filter change handlers with proper filtering ───
+
+    // Search input
     $('#teamSearch').on('input', function() {
         loadTeams(1);
     });
 
+    // Status filter
     $('#statusFilter').on('change', function() {
         loadTeams(1);
     });
 
+    // ─── FIXED: Corporation filter ───
     $('#corporationFilter').on('change', function() {
-        let corporationId = $(this).val();
+        const corporationId = $(this).val();
+
+        // Reset zone and ward filters
         $('#zoneFilter').val('');
         $('#wardFilter').val('');
+
+        // Update zone options based on corporation
+        updateZoneFilterByCorporation();
+
+        // Update ward options based on corporation
+        updateWardFilterByZone();
+
         loadTeams(1);
     });
 
+    // ─── FIXED: Zone filter ───
     $('#zoneFilter').on('change', function() {
-        let zoneId = $(this).val();
+        const zoneId = $(this).val();
+
+        // Reset ward filter
         $('#wardFilter').val('');
+
+        // Update ward options based on zone
+        updateWardFilterByZone();
+
         loadTeams(1);
     });
 
+    // ─── FIXED: Ward filter ───
     $('#wardFilter').on('change', function() {
         loadTeams(1);
     });
@@ -431,7 +515,7 @@ $(document).ready(function() {
         if (page) loadTeams(page);
     });
 
-    // View Team Details
+    // ─── View Team Details ───
     $(document).on('click', '.view-team-btn', function() {
         const id = $(this).data('id');
 
@@ -581,7 +665,7 @@ $(document).ready(function() {
         });
     });
 
-    // Assign Surveyor
+    // ─── Assign Surveyor ───
     $(document).on('click', '.assign-surveyor-btn', function() {
         const teamId = $(this).data('team-id');
         const surveyorId = $('#availableSurveyorSelect').val();
@@ -619,7 +703,7 @@ $(document).ready(function() {
         });
     });
 
-    // Remove Surveyor
+    // ─── Remove Surveyor ───
     $(document).on('click', '.remove-surveyor-btn', function() {
         const teamId = $(this).data('team-id');
         const surveyorId = $(this).data('surveyor-id');
@@ -649,7 +733,7 @@ $(document).ready(function() {
         }
     });
 
-    // Delete Team
+    // ─── Delete Team ───
     $(document).on('click', '.delete-btn', function() {
         let id = $(this).data('id');
         let name = $(this).data('name');
@@ -683,7 +767,17 @@ $(document).ready(function() {
         });
     });
 
-    // Initial load
+    // ─── Initialize filters on page load ───
+    function initializeFilters() {
+        // Update zone options based on corporation
+        updateZoneFilterByCorporation();
+
+        // Update ward options based on zone/corporation
+        updateWardFilterByZone();
+    }
+    initializeFilters();
+
+    // ─── Initial load ───
     loadTeams(1);
 });
 </script>
