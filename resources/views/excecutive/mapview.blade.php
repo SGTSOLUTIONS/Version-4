@@ -2100,9 +2100,7 @@
                         feature.setId(building.gisid);
                         const color = building.color || '#BDBDBD';
                         feature.setStyle(new ol.style.Style({
-                            fill: new ol.style.Fill({
-                                color: color + '66'
-                            }),
+
                             stroke: new ol.style.Stroke({
                                 color: color,
                                 width: 2.5
@@ -2142,9 +2140,7 @@
                             lineJoin: 'round',
                             lineCap: 'round'
                         }),
-                        fill: new ol.style.Fill({
-                            color: 'rgba(0,0,255,0.1)'
-                        })
+
                     })
                 ];
 
