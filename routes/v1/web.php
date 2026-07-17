@@ -59,10 +59,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])
         ->name('usage.variation');
-       Route::post('/variation/filter', [VariationController::class, 'filterVariations'])->name('variation.filter');
-Route::post('/variation/export', [VariationController::class, 'exportVariations'])->name('variation.export');
-Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])->name('variation.usage');
-Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])->name('variation.area');
+    Route::post('/variation/filter', [VariationController::class, 'filterVariations'])->name('variation.filter');
+    Route::post('/variation/export', [VariationController::class, 'exportVariations'])->name('variation.export');
+    Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])->name('variation.usage');
+    Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])->name('variation.area');
 });
 
 
@@ -125,7 +125,7 @@ Route::get('/api/corporation/{id}/boundaries', function ($id) {
     return response()->json(['boundaries' => $boundaries]);
 })->name('api.corporation.boundaries');
 // ─── Commissioner ─────────────────────────────────────────
-Route::middleware(['auth', 'role:commissioner'])->prefix('commissioner')->name('commissioner.')->group(function () {
+Route::middleware(['auth', 'role:commissioner,ac'])->prefix('commissioner')->name('commissioner.')->group(function () {
     Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
     Route::get('/map', [MapController::class, 'commissionerMap'])->name('map');
     // Zone routes
