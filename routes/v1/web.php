@@ -52,7 +52,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/polygon-split', [FeatureController::class, 'polygonSplit']);
     Route::post('/update-polygon', [FeatureController::class, 'polygonUpdate']);
     Route::post('/delete-feature', [FeatureController::class, 'polygonDelete']);
-    Route::post('/point-data/${id}/qc', [CommissionerController::class, 'qcUpdate']);
+   Route::post('/point-data/{id}/qc', [CommissionerController::class, 'qcUpdate'])->name('qcUpdate');
 
     Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])
         ->name('area.variation');
