@@ -2063,20 +2063,35 @@
 
                 function createPointStyle(feature) {
                     const gisid = feature.get('gisid');
-                    const pointCount = pointDatas.filter(d => d.gisid == gisid).length;
-                    const polygonData = polygonDatas.find(d => d.gisid == gisid);
-                    let color = 'blue';
-                    if (polygonData) {
-                        color = pointCount > 0 ? (polygonData.number_bill == pointCount ? 'green' : 'red') : 'blue';
+
+                    // Find building data for this GIS ID
+                    const buildingData = polygonDatas.find(d => d.gisid == gisid);
+
+                    // Count points that have this GIS ID as point_gisid
+                    const pointCount = pointDatas.filter(d => d.point_gisid == gisid).length;
+
+                    let color = 'blue'; // Default color
+
+                    if (buildingData) {
+                        const expectedBills = parseInt(buildingData.number_bill) || 0;
+
+                        if (pointCount === 0) {
+                            color = 'blue'; // No points mapped
+                        } else if (pointCount >= expectedBills) {
+                            color = 'green'; // All bills are mapped (or more)
+                        } else {
+                            color = 'red'; // Some bills missing
+                        }
                     }
+
                     return new ol.style.Style({
                         image: new ol.style.Circle({
                             radius: 8,
                             fill: new ol.style.Fill({
-                                color
+                                color: color
                             }),
                             stroke: new ol.style.Stroke({
-                                color,
+                                color: color,
                                 width: 2
                             })
                         }),
@@ -4642,7 +4657,7 @@
                 </div>`;
                         });
                         $('#filterResults').html(html ||
-                        '<div class="p-2 text-muted">No matches</div>');
+                            '<div class="p-2 text-muted">No matches</div>');
                     });
                 });
                 $(document).on('click', '.search-tab-btn', function() {
