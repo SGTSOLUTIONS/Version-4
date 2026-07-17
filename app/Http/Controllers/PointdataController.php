@@ -347,12 +347,12 @@ class PointdataController extends Controller
             $exist = DB::table($pointDataTableName)
                 ->where('assessment', $request->assessment)
                 ->exists();
-                 if (!$exist) {
+                 if ($exist) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Validation errors',
                         'errors' => [
-                            'assessment_type' => ['Assessment Already entered . ']
+                            'assessment_type' => ['Assessment Already entered .']
                         ]
                     ], 422);
                 }
