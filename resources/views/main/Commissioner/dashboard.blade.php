@@ -852,7 +852,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-3 col-md-6">
+                {{-- <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-teal">
                         <div class="kpi-icon" style="background:#e6f5f3; color:var(--status-teal);"><i
                                 class="bi bi-check-circle"></i></div>
@@ -861,7 +861,7 @@
                             {{ isset($stats['total_collection']) && $stats['total_collection'] ? '₹' . number_format($stats['total_collection']) : '₹0' }}
                         </div>
                     </div>
-                </div>
+                </div> --}}
             </div>
         </div>
 

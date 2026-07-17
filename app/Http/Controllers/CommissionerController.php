@@ -200,7 +200,7 @@ class CommissionerController extends Controller
             'total_credits' => $totalHalfYearTax,
             'half_year_balance' => $totalBalance,
             'year_collection' => $totalHalfYearTax * 2,
-            'total_collection' => $totalBalance- $totalHalfYearTax ,
+            'total_collection' => $totalBalance - $totalHalfYearTax ,
             'surveyed' => $surveyedAssessments,
             'connected' => $connectedAssessments,
             'mis_count' => $misCount,
