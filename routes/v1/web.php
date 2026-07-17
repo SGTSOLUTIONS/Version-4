@@ -125,7 +125,7 @@ Route::get('/api/corporation/{id}/boundaries', function ($id) {
     return response()->json(['boundaries' => $boundaries]);
 })->name('api.corporation.boundaries');
 // ─── Commissioner ─────────────────────────────────────────
-Route::middleware(['auth', 'role:commissioner,ac'])->prefix('commissioner')->name('commissioner.')->group(function () {
+Route::middleware(['auth', 'role:commissioner,dc,ac,aro,bc'])->prefix('commissioner')->name('commissioner.')->group(function () {
     Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
     Route::get('/map', [MapController::class, 'commissionerMap'])->name('map');
     // Zone routes
@@ -154,14 +154,12 @@ Route::middleware(['auth', 'role:commissioner,ac'])->prefix('commissioner')->nam
 
 // ─── DC ───────────────────────────────────────────────────
 Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(function () {
-    Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
-    // Add dc specific routes here
+    Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
 });
 
 // ─── AC ───────────────────────────────────────────────────
 Route::middleware(['auth', 'role:ac'])->prefix('ac')->name('ac.')->group(function () {
     Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
-
 });
 
 // ─── ARO ──────────────────────────────────────────────────
