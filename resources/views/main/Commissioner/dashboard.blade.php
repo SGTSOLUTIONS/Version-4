@@ -833,22 +833,22 @@
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
-                    <div class="kpi-card accent-blue">
-                        <div class="kpi-icon" style="background:#eaf0fd; color:var(--status-blue);"><i
-                                class="bi bi-wallet2"></i></div>
-                        <div class="kpi-label">Total Balance</div>
-                        <div class="kpi-value">
-                            {{ isset($stats['total_balance']) && $stats['total_balance'] ? '₹' . number_format($stats['total_balance']) : '₹0' }}
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-3 col-md-6">
                     <div class="kpi-card accent-gold">
                         <div class="kpi-icon" style="background:var(--gov-gold-tint); color:var(--gov-gold);"><i
                                 class="bi bi-graph-up-arrow"></i></div>
                         <div class="kpi-label">Yearly Tax</div>
                         <div class="kpi-value">
                             {{ isset($stats['year_collection']) && $stats['year_collection'] ? '₹' . number_format($stats['year_collection']) : '₹0' }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="kpi-card accent-blue">
+                        <div class="kpi-icon" style="background:#eaf0fd; color:var(--status-blue);"><i
+                                class="bi bi-wallet2"></i></div>
+                        <div class="kpi-label">Total Balance</div>
+                        <div class="kpi-value">
+                            {{ isset($stats['total_balance']) && $stats['total_balance'] ? '₹' . number_format($stats['total_balance']) : '₹0' }}
                         </div>
                     </div>
                 </div>

@@ -52,7 +52,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/polygon-split', [FeatureController::class, 'polygonSplit']);
     Route::post('/update-polygon', [FeatureController::class, 'polygonUpdate']);
     Route::post('/delete-feature', [FeatureController::class, 'polygonDelete']);
-   Route::post('/point-data/{id}/qc', [CommissionerController::class, 'qcUpdate'])->name('qcUpdate');
+    Route::post('/point-data/{id}/qc', [CommissionerController::class, 'qcUpdate'])->name('qcUpdate');
 
     Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])
         ->name('area.variation');
@@ -171,7 +171,7 @@ Route::middleware(['auth', 'role:ac'])->prefix('ac')->name('ac.')->group(functio
 
 // ─── ARO ──────────────────────────────────────────────────
 Route::middleware(['auth', 'role:aro'])->prefix('aro')->name('aro.')->group(function () {
-     Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
     // Add aro specific routes here
 });
 
