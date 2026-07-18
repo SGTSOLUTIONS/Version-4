@@ -832,6 +832,7 @@ class CommissionerController extends Controller
                 'qcusage'    => $request->qcusage,
                 'qcsqfeet'   => $request->qcsqfeet,
                 'qc_remarks' => $request->qc_remarks,
+                'qc_role'    => auth()->user()->role,
                 'updated_at' => now(),
             ]);
 
