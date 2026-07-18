@@ -1794,7 +1794,7 @@
                     <div class="bld-summary-card">
                         <div class="bld-summary-icon">🧾</div>
                         <div>
-                            <div class="bld-summary-label">Bills</div>
+                            <div class="bld-summary-label">Assessments</div>
                             <div class="bld-summary-val" id="bv_bills">0</div>
                         </div>
                     </div>
@@ -1827,7 +1827,7 @@
                         <div class="col-md-3">
                             <div class="bld-info-row"><i class="bi bi-geo-alt bld-info-icon"></i>
                                 <div>
-                                    <div class="bld-info-label">Zone</div>
+                                    <div class="bld-info-label">Zoneation</div>
                                     <div class="bld-info-val" id="bv_zone"></div>
                                 </div>
                             </div>

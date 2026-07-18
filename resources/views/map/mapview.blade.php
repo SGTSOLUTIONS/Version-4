@@ -1240,7 +1240,7 @@
                                                 id="building_gisid" value="" readonly>
                                             <div id="building_gisid_error" class="error-message text-danger small"></div>
                                         </div>
-                                        <div class="col-md-3 mb-3"><label class="form-label">Zone</label><select
+                                        <div class="col-md-3 mb-3"><label class="form-label">Zonenation</label><select
                                                 class="form-select" name="building_zone" id="building_zone">
                                                 <option value="">Select Zone</option>
                                                 <option value="ZONE-A">ZONE-A</option>
@@ -1251,7 +1251,7 @@
                                             </select>
                                             <div id="building_zone_error" class="error-message text-danger small"></div>
                                         </div>
-                                        <div class="col-md-3 mb-3"><label class="form-label">Number of Bills</label><input
+                                        <div class="col-md-3 mb-3"><label class="form-label">Number of Assessments</label><input
                                                 type="number" class="form-control" name="number_bill" id="number_bill"
                                                 min="0">
                                             <div id="number_bill_error" class="error-message text-danger small"></div>
@@ -1969,8 +1969,8 @@
                     type: 'base',
                     visible: false,
                     source: new ol.source.XYZ({
-                        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                        attributions: 'Tiles &copy; Esri'
+                        url:'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+        attributions: '&copy; Google',
                     })
                 });
 

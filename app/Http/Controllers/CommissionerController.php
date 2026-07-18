@@ -132,7 +132,7 @@ class CommissionerController extends Controller
             if ($user->ward_id) {
                 $ward = Ward::with(['zone'])->find($user->ward_id);
                 if ($ward && $ward->zone) {
-                    $zone = Zone::with(['wards' => function($query) use ($user) {
+                    $zone = Zone::with(['wards' => function ($query) use ($user) {
                         $query->where('id', $user->ward_id);
                     }])->find($ward->zone_id);
                     if ($zone) {
@@ -200,7 +200,7 @@ class CommissionerController extends Controller
             'total_credits' => $totalHalfYearTax,
             'half_year_balance' => $totalBalance,
             'year_collection' => $totalHalfYearTax * 2,
-            'total_collection' => $totalBalance - $totalHalfYearTax ,
+            'total_collection' => $totalBalance - $totalHalfYearTax,
             'surveyed' => $surveyedAssessments,
             'connected' => $connectedAssessments,
             'mis_count' => $misCount,
@@ -800,61 +800,61 @@ class CommissionerController extends Controller
     }
 
     public function qcUpdate(Request $request, $id)
-{
-    $request->validate([
-        'ward_id'     => 'required|integer',
-        'qcusage'     => 'nullable|string|max:255',
-        'qcsqfeet'    => 'nullable|numeric',
-        'qc_remarks'  => 'nullable|string|max:1000',
-    ]);
-
-    $wardId = $request->ward_id;
-
-    // Check access
-    $accessibleWardIds = $this->getAccessibleWardIds();
-    if (!in_array($wardId, $accessibleWardIds)) {
-        return response()->json(['error' => 'Unauthorized'], 403);
-    }
-
-    $pointTable = "point_data_{$wardId}";
-
-    $point = DB::table($pointTable)->where('id', $id)->first();
-
-    if (!$point) {
-        return response()->json([
-            'message' => 'Point data not found.'
-        ], 404);
-    }
-
-    // Get the authenticated user and their role
-    $user = Auth::user();
-    $userRole = $user->role ?? 'Unknown'; // Adjust based on your role field name
-    $userName = $user->name ?? 'Unknown User';
-
-    // Combine name and role for QC name
-    $qcName = $userName . ' (' . $userRole . ')';
-
-    DB::table($pointTable)
-        ->where('id', $id)
-        ->update([
-            'qcusage'     => $request->qcusage,
-            'qcsqfeet'    => $request->qcsqfeet,
-            'qc_remarks'  => $request->qc_remarks,
-            'qc_name'     => $qcName, // Add the user with role
-            'updated_at'  => now(),
+    {
+        $request->validate([
+            'ward_id'     => 'required|integer',
+            'qcusage'     => 'nullable|string|max:255',
+            'qcsqfeet'    => 'nullable|numeric',
+            'qc_remarks'  => 'nullable|string|max:1000',
         ]);
 
-    $updatedPoint = DB::table($pointTable)
-        ->where('id', $id)
-        ->first();
+        $wardId = $request->ward_id;
 
-    return response()->json([
-        'success'    => true,
-        'message'    => 'QC data updated successfully.',
-        'point_data' => $updatedPoint,
-        'qc_by'      => $qcName, // Include in response for confirmation
-    ]);
-}
+        // Check access
+        $accessibleWardIds = $this->getAccessibleWardIds();
+        if (!in_array($wardId, $accessibleWardIds)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $pointTable = "point_data_{$wardId}";
+
+        $point = DB::table($pointTable)->where('id', $id)->first();
+
+        if (!$point) {
+            return response()->json([
+                'message' => 'Point data not found.'
+            ], 404);
+        }
+
+        // Get the authenticated user and their role
+        $user = Auth::user();
+        $userRole = $user->role ?? 'Unknown'; // Adjust based on your role field name
+        $userName = $user->name ?? 'Unknown User';
+
+        // Combine name and role for QC name
+        $qcName = $userName . ' (' . $userRole . ')';
+
+        DB::table($pointTable)
+            ->where('id', $id)
+            ->update([
+                'qcusage'     => $request->qcusage,
+                'qcsqfeet'    => $request->qcsqfeet,
+                'qc_remarks'  => $request->qc_remarks,
+                'qc_name'     => $qcName, // Add the user with role
+                'updated_at'  => now(),
+            ]);
+
+        $updatedPoint = DB::table($pointTable)
+            ->where('id', $id)
+            ->first();
+
+        return response()->json([
+            'success'    => true,
+            'message'    => 'QC data updated successfully.',
+            'point_data' => $updatedPoint,
+            'qc_by'      => $qcName, // Include in response for confirmation
+        ]);
+    }
 
     // ─── HELPER METHODS ───
 
