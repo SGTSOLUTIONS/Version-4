@@ -1251,9 +1251,9 @@
                                             </select>
                                             <div id="building_zone_error" class="error-message text-danger small"></div>
                                         </div>
-                                        <div class="col-md-3 mb-3"><label class="form-label">Number of Assessments</label><input
-                                                type="number" class="form-control" name="number_bill" id="number_bill"
-                                                min="0">
+                                        <div class="col-md-3 mb-3"><label class="form-label">Number of
+                                                Assessments</label><input type="number" class="form-control"
+                                                name="number_bill" id="number_bill" min="0">
                                             <div id="number_bill_error" class="error-message text-danger small"></div>
                                         </div>
                                         <div class="col-md-3 mb-3"><label class="form-label">Number of Shops</label><input
@@ -1969,11 +1969,12 @@
                     type: 'base',
                     visible: false,
                     source: new ol.source.XYZ({
-                        url:'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
-        attributions: '&copy; Google',
+                        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                        attributions: 'Tiles &copy; Esri',
+                        maxZoom: 19,
+                        crossOrigin: 'anonymous'
                     })
                 });
-
                 const streetLayer = new ol.layer.Tile({
                     title: 'Street View',
                     type: 'base',
