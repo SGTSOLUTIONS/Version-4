@@ -209,6 +209,7 @@ class CorporationController extends Controller
                 'code'        => $request->code,
                 'state'       => $request->state,
                 'district'    => $request->district,
+                'type' => $request->type,
                 'pincode'     => $request->pincode,
                 'status'      => $request->status,
                 'description' => $request->description,
@@ -354,6 +355,7 @@ class CorporationController extends Controller
             $corporation->pincode = $request->pincode;
             $corporation->status = $request->status;
             $corporation->description = $request->description;
+            $corporation->type = $request->type;
 
             $corporation->save();
 
