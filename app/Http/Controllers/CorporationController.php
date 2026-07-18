@@ -168,6 +168,48 @@ class CorporationController extends Controller
             ->findOrFail($id);
     }
 
+    /**
+     * Run the various row-level Excel imports for a corporation.
+     * These are plain DML (INSERTs into existing tables), so they are
+     * safe to run inside a DB transaction.
+     */
+    private function runImports(Request $request, int $corporationId): array
+    {
+        $importStats = [];
+
+        if ($request->hasFile('mis_file')) {
+            $misImport = new MisImport($corporationId);
+            Excel::import($misImport, $request->file('mis_file'));
+            $importStats['mis'] = $misImport->getStats();
+        }
+
+        if ($request->hasFile('water_tax_file')) {
+            $waterTaxImport = new WaterTaxImport($corporationId);
+            Excel::import($waterTaxImport, $request->file('water_tax_file'));
+            $importStats['water_tax'] = method_exists($waterTaxImport, 'getStats')
+                ? $waterTaxImport->getStats()
+                : ['message' => 'Imported successfully'];
+        }
+
+        if ($request->hasFile('ugd_tax_file')) {
+            $ugdTaxImport = new UgdTaxImport($corporationId);
+            Excel::import($ugdTaxImport, $request->file('ugd_tax_file'));
+            $importStats['ugd_tax'] = method_exists($ugdTaxImport, 'getStats')
+                ? $ugdTaxImport->getStats()
+                : ['message' => 'Imported successfully'];
+        }
+
+        if ($request->hasFile('professional_tax_file')) {
+            $professionalTaxImport = new ProfessionalTaxImport($corporationId);
+            Excel::import($professionalTaxImport, $request->file('professional_tax_file'));
+            $importStats['professional_tax'] = method_exists($professionalTaxImport, 'getStats')
+                ? $professionalTaxImport->getStats()
+                : ['message' => 'Imported successfully'];
+        }
+
+        return $importStats;
+    }
+
     // =====================================================================
     // CRUD
     // =====================================================================
@@ -197,70 +239,54 @@ class CorporationController extends Controller
             ], 422);
         }
 
-        DB::beginTransaction();
-
         try {
+            // --- Everything that is NOT safely transactional happens first,
+            // OUTSIDE of DB::beginTransaction(). File uploads and GeoJSON
+            // parsing can fail independently of the DB, and the boundary
+            // file is only parsed here (not yet written) so nothing DB-side
+            // has happened yet if this throws.
             $profileImagePath = $request->hasFile('image')
                 ? CommonHelper::uploadProfileImage($request->file('image'), 'corporation/profile')
                 : 'https://ui-avatars.com/api/?name=' . urlencode($request->name) . '&background=1679AB&color=fff';
+
+            $wkt = null;
+            if ($request->hasFile('boundary_file')) {
+                $geometry = $this->extractGeoJsonGeometry($request->file('boundary_file'));
+                $wkt = $this->geoJsonToWkt($geometry);
+            }
+
+            DB::beginTransaction();
 
             $corporation = Corporation::create([
                 'name'        => $request->name,
                 'code'        => $request->code,
                 'state'       => $request->state,
                 'district'    => $request->district,
-                'type' => $request->type,
+                'type'        => $request->type,
                 'pincode'     => $request->pincode,
                 'status'      => $request->status,
                 'description' => $request->description,
                 'image'       => $profileImagePath,
             ]);
 
-            if ($request->hasFile('boundary_file')) {
-                $geometry = $this->extractGeoJsonGeometry($request->file('boundary_file'));
-                $wkt = $this->geoJsonToWkt($geometry);
+            if ($wkt !== null) {
                 $this->saveBoundary($corporation->id, $wkt);
             }
 
+            $importStats = $this->runImports($request, $corporation->id);
+
+            DB::commit();
+
+            // --- DDL runs AFTER the transaction is committed. CREATE TABLE
+            // triggers an implicit commit in MySQL, so it can never safely
+            // live inside a transaction anyway — running it after commit()
+            // keeps Laravel's transaction bookkeeping and MySQL's actual
+            // transaction state in sync.
             $createTable = $this->corporationService->createCorporationTables($corporation->id);
 
             if (!$createTable) {
-                throw new \Exception('Corporation tables could not be created.');
+                throw new \Exception('Corporation was saved, but its data tables could not be created.');
             }
-
-            $importStats = [];
-
-            if ($request->hasFile('mis_file')) {
-                $misImport = new MisImport($corporation->id);
-                Excel::import($misImport, $request->file('mis_file'));
-                $importStats['mis'] = $misImport->getStats();
-            }
-
-            if ($request->hasFile('water_tax_file')) {
-                $waterTaxImport = new WaterTaxImport($corporation->id);
-                Excel::import($waterTaxImport, $request->file('water_tax_file'));
-                $importStats['water_tax'] = method_exists($waterTaxImport, 'getStats')
-                    ? $waterTaxImport->getStats()
-                    : ['message' => 'Imported successfully'];
-            }
-
-            if ($request->hasFile('ugd_tax_file')) {
-                $ugdTaxImport = new UgdTaxImport($corporation->id);
-                Excel::import($ugdTaxImport, $request->file('ugd_tax_file'));
-                $importStats['ugd_tax'] = method_exists($ugdTaxImport, 'getStats')
-                    ? $ugdTaxImport->getStats()
-                    : ['message' => 'Imported successfully'];
-            }
-
-            if ($request->hasFile('professional_tax_file')) {
-                $professionalTaxImport = new ProfessionalTaxImport($corporation->id);
-                Excel::import($professionalTaxImport, $request->file('professional_tax_file'));
-                $importStats['professional_tax'] = method_exists($professionalTaxImport, 'getStats')
-                    ? $professionalTaxImport->getStats()
-                    : ['message' => 'Imported successfully'];
-            }
-
-            DB::commit();
 
             return response()->json([
                 'status'       => true,
@@ -326,25 +352,47 @@ class CorporationController extends Controller
             ], 422);
         }
 
-        DB::beginTransaction();
-
         try {
-            if ($request->hasFile('image')) {
-                if ($corporation->image && !str_starts_with($corporation->image, 'http')) {
-                    Storage::disk('public')->delete($corporation->image);
-                }
+            // --- DDL FIRST, OUTSIDE any transaction. This is the key fix:
+            // CREATE TABLE causes MySQL to implicitly commit any open
+            // transaction, which desyncs Laravel's transaction counter from
+            // MySQL's actual state and produces "There is no active
+            // transaction" on the later DB::commit() call. Running it here,
+            // before beginTransaction(), avoids that entirely. This matters
+            // most for corporations that were bulk-inserted directly via SQL
+            // and never had their tables created through store().
+            $createTable = $this->corporationService->createCorporationTables($corporation->id);
 
-                $corporation->image = CommonHelper::uploadProfileImage(
+            if (!$createTable) {
+                throw new \Exception('Corporation data tables could not be created or verified.');
+            }
+
+            // --- Parse (but don't yet persist) anything that can fail
+            // independently of the DB, same reasoning as in store().
+            $wkt = null;
+            if ($request->hasFile('boundary_file')) {
+                $geometry = $this->extractGeoJsonGeometry($request->file('boundary_file'));
+                $wkt = $this->geoJsonToWkt($geometry);
+            }
+
+            $newImagePath = null;
+            if ($request->hasFile('image')) {
+                $newImagePath = CommonHelper::uploadProfileImage(
                     $request->file('image'),
                     'corporation/profile'
                 );
             }
 
-            $createTable = $this->corporationService->createCorporationTables($corporation->id);
+            DB::beginTransaction();
 
-            if ($request->hasFile('boundary_file')) {
-                $geometry = $this->extractGeoJsonGeometry($request->file('boundary_file'));
-                $wkt = $this->geoJsonToWkt($geometry);
+            if ($newImagePath !== null) {
+                if ($corporation->image && !str_starts_with($corporation->image, 'http')) {
+                    Storage::disk('public')->delete($corporation->image);
+                }
+                $corporation->image = $newImagePath;
+            }
+
+            if ($wkt !== null) {
                 $this->saveBoundary($corporation->id, $wkt);
             }
 
@@ -359,37 +407,7 @@ class CorporationController extends Controller
 
             $corporation->save();
 
-            $importStats = [];
-
-            if ($request->hasFile('mis_file')) {
-                $misImport = new MisImport($corporation->id);
-                Excel::import($misImport, $request->file('mis_file'));
-                $importStats['mis'] = $misImport->getStats();
-            }
-
-            if ($request->hasFile('water_tax_file')) {
-                $waterTaxImport = new WaterTaxImport($corporation->id);
-                Excel::import($waterTaxImport, $request->file('water_tax_file'));
-                $importStats['water_tax'] = method_exists($waterTaxImport, 'getStats')
-                    ? $waterTaxImport->getStats()
-                    : ['message' => 'Imported successfully'];
-            }
-
-            if ($request->hasFile('ugd_tax_file')) {
-                $ugdTaxImport = new UgdTaxImport($corporation->id);
-                Excel::import($ugdTaxImport, $request->file('ugd_tax_file'));
-                $importStats['ugd_tax'] = method_exists($ugdTaxImport, 'getStats')
-                    ? $ugdTaxImport->getStats()
-                    : ['message' => 'Imported successfully'];
-            }
-
-            if ($request->hasFile('professional_tax_file')) {
-                $professionalTaxImport = new ProfessionalTaxImport($corporation->id);
-                Excel::import($professionalTaxImport, $request->file('professional_tax_file'));
-                $importStats['professional_tax'] = method_exists($professionalTaxImport, 'getStats')
-                    ? $professionalTaxImport->getStats()
-                    : ['message' => 'Imported successfully'];
-            }
+            $importStats = $this->runImports($request, $corporation->id);
 
             DB::commit();
 
@@ -416,6 +434,8 @@ class CorporationController extends Controller
     public function destroy(Corporation $corporation)
     {
         try {
+            // DDL (DROP TABLE) also happens outside any transaction, for the
+            // same reason as above.
             $this->corporationService->dropCorporationTables($corporation->id);
 
             DB::beginTransaction();
