@@ -560,4 +560,55 @@ class WardController extends Controller
             ], 500);
         }
     }
+    public function missingBuiilding($ward_id)
+    {
+        $polygonDataTable = "polygon_data_" . $ward_id;
+        $pointDataTable   = "point_data_" . $ward_id;
+        $polygonTable     = "polygons_" . $ward_id;
+
+        $missingBuildings = DB::table("$polygonDataTable as pd")
+            ->leftJoin(
+                DB::raw("(SELECT gisid, COUNT(*) as point_count
+                     FROM $pointDataTable
+                     GROUP BY gisid) pc"),
+                'pd.gisid',
+                '=',
+                'pc.gisid'
+            )
+            ->join("$polygonTable as p", 'pd.gisid', '=', 'p.gisid')
+            ->whereRaw('COALESCE(pc.point_count,0) <> pd.number_bill')
+            ->select(
+                'pd.gisid',
+                'pd.number_bill',
+                DB::raw('COALESCE(pc.point_count,0) as point_count'),
+                DB::raw('ST_AsGeoJSON(p.geom) as geometry')
+            )
+            ->get();
+
+        $features = [];
+
+        foreach ($missingBuildings as $row) {
+
+            $features[] = [
+                "type" => "Feature",
+                "geometry" => json_decode($row->geometry),
+                "properties" => [
+                    "gisid" => $row->gisid,
+                    "number_bill" => $row->number_bill,
+                    "point_count" => $row->point_count,
+                    "status" => "Not Surveyed"
+                ]
+            ];
+        }
+
+        $geojson = [
+            "type" => "FeatureCollection",
+            "features" => $features
+        ];
+        return response(
+            json_encode($geojson, JSON_UNESCAPED_UNICODE)
+        )
+            ->header('Content-Type', 'application/geo+json')
+            ->header('Content-Disposition', 'attachment; filename=missing_buildings.geojson');
+    }
 }

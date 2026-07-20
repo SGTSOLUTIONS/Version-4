@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\RoleEnum;
 use App\Models\User;
 use App\Helpers\CommonHelper;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
@@ -14,14 +16,15 @@ use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
-   public function showLogin()
-{
-    if (Auth::check()) {
-        return redirect($this->getDashboardRoute(Auth::user()->role));
-    }
+    public function showLogin()
+    {
+        if (Auth::check()) {
+            return redirect($this->getDashboardRoute(Auth::user()->role));
+        }
 
-    return view('auth.login');
-}    public function submitLogin(Request $request)
+        return view('auth.login');
+    }
+    public function submitLogin(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
@@ -182,7 +185,7 @@ class AuthController extends Controller
                 ], 500);
             }
         } catch (\Exception $e) {
-            \Log::error('Password reset error: ' . $e->getMessage());
+            Log::error('Password reset error: ' . $e->getMessage());
 
             return response()->json([
                 'status' => false,
@@ -274,13 +277,11 @@ class AuthController extends Controller
                 'redirect' => route('login')
             ]);
         } catch (\Exception $e) {
-            \Log::error('Password reset error: ' . $e->getMessage());
+            Log::error('Password reset error: ' . $e->getMessage());
 
             return response()->json([
                 'message' => 'Failed to reset password. Please try again.'
             ], 500);
         }
     }
-
-
 }

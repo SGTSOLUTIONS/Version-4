@@ -499,14 +499,14 @@
                         active: 'bg-success',
                         inactive: 'bg-secondary'
                     } [ward.status] || 'bg-secondary';
-      // <div class="acard-img-wrap">
-                            //     <img src="${imageUrl}"
-                            //          onerror="this.src='${assetBase}images/default-ward.png'">
-                            //     <div class="acard-overlay"></div>
-                            //     <span class="acard-tag">
-                            //         Ward
-                            //     </span>
-                            // </div>
+                    // <div class="acard-img-wrap">
+                    //     <img src="${imageUrl}"
+                    //          onerror="this.src='${assetBase}images/default-ward.png'">
+                    //     <div class="acard-overlay"></div>
+                    //     <span class="acard-tag">
+                    //         Ward
+                    //     </span>
+                    // </div>
                     html += `
                         <div class="acard">
 
@@ -525,21 +525,21 @@
                                     Ward ${escapeHtml(ward.ward_no)}
                                 </h3>
                                 ${ward.contact_person ? `
-                                    <p class="acard-desc small mb-1">
-                                        <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
-                                        ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
-                                    </p>
-                                ` : ''}
+                                        <p class="acard-desc small mb-1">
+                                            <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
+                                            ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
+                                        </p>
+                                    ` : ''}
                                 ${ward.phone ? `
-                                    <p class="acard-desc small mb-1">
-                                        <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
-                                    </p>
-                                ` : ''}
+                                        <p class="acard-desc small mb-1">
+                                            <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
+                                        </p>
+                                    ` : ''}
                                 ${ward.email ? `
-                                    <p class="acard-desc small mb-1">
-                                        <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
-                                    </p>
-                                ` : ''}
+                                        <p class="acard-desc small mb-1">
+                                            <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
+                                        </p>
+                                    ` : ''}
                                 <div class="acard-footer">
                                     <span class="acard-author">
                                         ${escapeHtml(ward.contact_person || 'No contact')}
@@ -555,11 +555,21 @@
                                     <button class="btn btn-warning btn-sm flex-fill edit-btn" data-id="${ward.id}">
                                         <i class="bi bi-pencil"></i> Edit
                                     </button>
+                                    <button class="btn btn-warning btn-sm flex-fill missing-building-btn" data-id="${ward.id}">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-warning btn-sm flex-fill missing-bill-btn" data-id="${ward.id}">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-warning btn-sm flex-fill edit-btn" data-id="${ward.id}">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+
                                     ${userRole === 'admin' ? `
-                                        <button class="btn btn-danger btn-sm flex-fill delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
-                                    ` : ''}
+                                            <button class="btn btn-danger btn-sm flex-fill delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -681,12 +691,15 @@
                     // Load zones for the commissioner's corporation
                     let corpId = $('#f_corp_id').val();
                     if (corpId) {
-                        $('#f_zone_id').html('<option value="">Loading zones...</option>').prop('disabled', true);
+                        $('#f_zone_id').html('<option value="">Loading zones...</option>').prop('disabled',
+                            true);
                         let url = "{{ route('admin.zones.byCorporation') }}";
                         $.ajax({
                             url: url,
                             type: "GET",
-                            data: { corp_id: corpId },
+                            data: {
+                                corp_id: corpId
+                            },
                             success: function(response) {
                                 let zoneSelect = $('#f_zone_id');
                                 zoneSelect.html('<option value="">Select Zone</option>');
@@ -698,7 +711,8 @@
                                     });
                                     zoneSelect.prop('disabled', false);
                                 } else {
-                                    zoneSelect.html('<option value="">No zones available</option>');
+                                    zoneSelect.html(
+                                        '<option value="">No zones available</option>');
                                     zoneSelect.prop('disabled', true);
                                 }
                             }
@@ -707,7 +721,8 @@
                 @else
                     // For admin, enable corporation selection
                     $('#f_corp_id').prop('disabled', false);
-                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop('disabled', true);
+                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop(
+                        'disabled', true);
                 @endif
 
                 $('#wardModal').modal('show');
@@ -764,7 +779,8 @@
                         $('#wardSaveBtn').prop('disabled', false).html('Save Ward');
                         $('#wardForm')[0].reset();
                         $('#wardModal').modal('hide');
-                        showFlashMessage(response.message || 'Ward saved successfully', 'success');
+                        showFlashMessage(response.message || 'Ward saved successfully',
+                            'success');
                         loadWards(currentPage);
                     },
                     error: function(xhr) {
@@ -787,7 +803,8 @@
                             });
                             showFlashMessage('Please fix validation errors', 'error');
                         } else {
-                            let errorMessage = xhr.responseJSON?.message || 'Something went wrong';
+                            let errorMessage = xhr.responseJSON?.message ||
+                                'Something went wrong';
                             showFlashMessage(errorMessage, 'error');
                             console.error('Server error:', xhr.responseJSON);
                         }
@@ -811,7 +828,8 @@
                     type: "GET",
                     success: function(response) {
                         let ward = response.data;
-                        $('#modalTitle').html('<i class="bi bi-pencil-square me-2"></i> Edit Ward');
+                        $('#modalTitle').html(
+                            '<i class="bi bi-pencil-square me-2"></i> Edit Ward');
                         $('#wardId').val(ward.id);
 
                         let corpId = null;
@@ -896,11 +914,13 @@
                         },
                         success: function(response) {
                             $('#deleteModal').modal('hide');
-                            showFlashMessage(response.message || 'Ward deleted successfully', 'success');
+                            showFlashMessage(response.message || 'Ward deleted successfully',
+                                'success');
                             loadWards(1);
                         },
                         error: function(xhr) {
-                            showFlashMessage(xhr.responseJSON?.message || 'Failed to delete ward', 'error');
+                            showFlashMessage(xhr.responseJSON?.message ||
+                                'Failed to delete ward', 'error');
                         }
                     });
                 });
@@ -931,18 +951,20 @@
                             }
                         }
                         let corporationName = '-';
-                        if (ward.zone && typeof ward.zone === 'object' && ward.zone.corporation) {
+                        if (ward.zone && typeof ward.zone === 'object' && ward.zone
+                            .corporation) {
                             corporationName = ward.zone.corporation.name || '-';
                         }
-                        let imageUrl = ward.drone_image ? "{{ asset('') }}" + ward.drone_image : null;
+                        let imageUrl = ward.drone_image ? "{{ asset('') }}" + ward
+                            .drone_image : null;
 
                         let html = `
                             <div class="row">
                                 <div class="col-12 text-center mb-3">
                                     ${imageUrl ? `<img src="${imageUrl}" alt="${escapeHtml(ward.ward_no)}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 10px;">` :
                                         `<div style="width: 150px; height: 150px; background: #e9ecef; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;">
-                                            <i class="bi bi-building fs-1 text-muted"></i>
-                                        </div>`}
+                                                <i class="bi bi-building fs-1 text-muted"></i>
+                                            </div>`}
                                 </div>
                                 <div class="col-md-6"><strong>Corporation:</strong><br><p>${escapeHtml(corporationName)}</p></div>
                                 <div class="col-md-6"><strong>Zone:</strong><br><p>${escapeHtml(zoneName)}</p></div>
@@ -961,6 +983,24 @@
                     },
                     error: function() {
                         showFlashMessage('Failed to load ward details', 'error');
+                    }
+                });
+            });
+
+              $(document).on('click', '.missing-building-btn', function() {
+                let id = $(this).data('id');
+                let url;
+
+                 url = "/wards/" + id;
+
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    success: function(response) {
+                        showFlashMessage('Failed to load ward data', 'success');
+                    },
+                    error: function() {
+                        showFlashMessage('Failed to load ward data', 'error');
                     }
                 });
             });
