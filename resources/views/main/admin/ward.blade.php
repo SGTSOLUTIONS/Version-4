@@ -987,23 +987,13 @@
                 });
             });
 
-              $(document).on('click', '.missing-building-btn', function() {
-                let id = $(this).data('id');
-                let url;
+             $(document).on('click', '.missing-building-btn', function () {
 
-                 url = "/wards/" + id;
+    let id = $(this).data('id');
 
-                $.ajax({
-                    url: url,
-                    type: "GET",
-                    success: function(response) {
-                        showFlashMessage('Failed to load ward data', 'success');
-                    },
-                    error: function() {
-                        showFlashMessage('Failed to load ward data', 'error');
-                    }
-                });
-            });
+    window.location.href = "/wards/" + id;
+
+});
 
             // Initial load
             loadWards(1);
