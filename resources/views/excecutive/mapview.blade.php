@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
     <style>
-        #map{
+        #map {
             height: 100vh;
             width: 100%;
         }
@@ -143,17 +143,18 @@
                     });
                 }
             })
-            function loadPolygonSource(){
+
+            function loadPolygonSource() {
                 polygonSource.clear();
-                polygons,forEach(poly =>{
+                polygons, forEach(poly => {
                     try {
                         let coords = json.pharse(poly.coordinates);
-                        const feature =  new ol.feature({
+                        const feature = new ol.feature({
                             geomentry: new ol.geom.polygon([coords]),
-                            gisid:poly.gisid,
+                            gisid: poly.gisid,
                             type: 'polygon',
                             sqfeet: poly.sqfeet || '0',
-                            orginalData:poly
+                            orginalData: poly
                         });
                         feature.setid(poly.gisid);
                     } catch (e) {
@@ -162,7 +163,22 @@
                 })
 
             }
-
+            loadPolygonSource();
+            const polygonLayer = new ol.layer.Vector({
+                source: polygonSource,
+                style: createPolygonStyle,
+                visible: false,
+                title: 'Polygons'
+            });
+            const map = new ol.Map({
+                target: 'map',
+                layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer,
+                ],
+                view: new ol.View({
+                    center: ol.extent.getCenter(imageExtent),
+                    zoom: 18
+                })
+            });
 
         });
     </script>
