@@ -572,7 +572,7 @@ public function missingBuiilding($ward_id)
             ->leftJoin(
                 DB::raw("
                     (
-                        SELECT gisid, COUNT(*) AS point_count
+                        SELECT point_gisid, COUNT(*) AS point_count
                         FROM {$pointDataTable}
                         GROUP BY point_gisid
                     ) pc
