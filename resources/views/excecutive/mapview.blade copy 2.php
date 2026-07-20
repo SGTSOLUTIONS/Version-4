@@ -10,7 +10,7 @@
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
 
     <style>
-        /* ─── Base Styles ─── */
+        /* ─── All existing styles remain the same ─── */
         .dropdown-header {
             padding: 8px 18px;
             font-size: 0.75rem;
@@ -97,7 +97,6 @@
             height: calc(100vh - 5px);
         }
 
-        /* ─── Control Buttons ─── */
         .custom-layer-switcher {
             position: absolute;
             right: 30px;
@@ -188,7 +187,6 @@
             line-height: 1.5;
         }
 
-        /* ─── Ward Navigation ─── */
         .ward-navigation .btn {
             border-radius: 8px;
             font-weight: 600;
@@ -224,7 +222,6 @@
             text-align: center;
         }
 
-        /* ─── Filter Section ─── */
         .filter-section {
             background: #fff;
             border-radius: 14px;
@@ -255,7 +252,6 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        /* ─── Usage Legend ─── */
         .usage-legend {
             background: #fff;
             border-radius: 14px;
@@ -302,7 +298,6 @@
             font-weight: 700;
         }
 
-        /* ─── Stats ─── */
         .stat-strip {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -395,7 +390,6 @@
             color: #94a3b8;
         }
 
-        /* ─── Dropdown Buttons ─── */
         .layer-toggle-btn,
         .location-toggle-btn,
         .search-toggle-btn,
@@ -568,15 +562,16 @@
             0% {
                 box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
             }
+
             70% {
                 box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
             }
+
             100% {
                 box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
             }
         }
 
-        /* ─── Location Toast ─── */
         .location-toast {
             position: absolute;
             bottom: 74px;
@@ -600,7 +595,6 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* ─── Search ─── */
         .search-result-item {
             padding: 10px 16px;
             cursor: pointer;
@@ -629,7 +623,6 @@
             overflow-x: hidden;
         }
 
-        /* ─── Edit Controls ─── */
         .edit-controls {
             position: absolute;
             bottom: 120px;
@@ -678,7 +671,6 @@
             background: #d1d5db;
         }
 
-        /* ─── Split Action Button ─── */
         .split-action-btn {
             position: absolute;
             bottom: 120px;
@@ -708,6 +700,7 @@
                 opacity: 0;
                 transform: translateX(-50%) translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(-50%) translateY(0);
@@ -726,7 +719,6 @@
             opacity: 1;
         }
 
-        /* ─── Delete Type Buttons ─── */
         .delete-type-btn {
             flex: 1;
             padding: 10px 14px;
@@ -754,7 +746,6 @@
             color: #2563eb !important;
         }
 
-        /* ─── Mode Cursors ─── */
         .draw-mode {
             cursor: crosshair !important;
         }
@@ -767,7 +758,6 @@
             cursor: pointer !important;
         }
 
-        /* ─── Modal Styles ─── */
         .bld-modal-content {
             border: none;
             border-radius: 20px;
@@ -1056,7 +1046,6 @@
             padding: 40px 20px;
         }
 
-        /* ─── Point Data Cards ─── */
         .point-data-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -1196,7 +1185,6 @@
             color: #1e293b;
         }
 
-        /* ─── Infrastructure Legend ─── */
         .infrastructure-legend {
             position: absolute;
             bottom: 30px;
@@ -1303,95 +1291,6 @@
             color: #1e293b;
         }
 
-        /* ─── 3D Styles ─── */
-        .cesium-3d-info-panel {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 14px;
-            z-index: 1000;
-            display: none;
-            pointer-events: none;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            max-width: 80%;
-        }
-
-        .cesium-3d-info-panel.show {
-            display: block;
-            animation: fadeInUp 0.3s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        .cesium-3d-info-panel .close-panel {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #dc3545;
-            border: none;
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto;
-        }
-
-        .cesium-3d-info-panel .close-panel:hover {
-            background: #c82333;
-        }
-
-        .cesium-3d-tooltip {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            pointer-events: none;
-            z-index: 1000;
-            display: none;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            max-width: 200px;
-            white-space: nowrap;
-        }
-
-        .cesium-3d-tooltip.show {
-            display: block;
-        }
-
-        .cesium-3d-tooltip .tooltip-title {
-            font-weight: 600;
-            color: #60a5fa;
-        }
-
-        .cesium-3d-tooltip .tooltip-sub {
-            color: #94a3b8;
-            font-size: 11px;
-        }
-
-        /* ─── Responsive ─── */
         @media (max-width: 768px) {
             #map {
                 height: 600px;
@@ -1518,11 +1417,113 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        /* 3D Building Hover Effect */
+        .cesium-building-highlight {
+            outline: 2px solid #00ff00 !important;
+            outline-offset: 2px !important;
+        }
+
+        /* 3D Info Panel */
+        .cesium-3d-info-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 80%;
+        }
+
+        .cesium-3d-info-panel.show {
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .cesium-3d-info-panel .close-panel {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+        }
+
+        .cesium-3d-info-panel .close-panel:hover {
+            background: #c82333;
+        }
+
+        /* 3D Building Click Tooltip */
+        .cesium-3d-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 200px;
+            white-space: nowrap;
+        }
+
+        .cesium-3d-tooltip.show {
+            display: block;
+        }
+
+        .cesium-3d-tooltip .tooltip-title {
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .cesium-3d-tooltip .tooltip-sub {
+            color: #94a3b8;
+            font-size: 11px;
+        }
+
+        /* 3D Route Display */
+        .cesium-route-label {
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
     </style>
 @endpush
 
 @section('content')
-    <!-- ─── PAGE HEADER ─── -->
     <div class="ol-page-header">
         <div>
             <h1 class="ol-page-title">Executive GIS Dashboard</h1>
@@ -1669,19 +1670,26 @@
                     <button class="btn btn-primary btn-sm" id="applyFiltersBtn">
                         <i class="bi bi-funnel me-1"></i>Apply
                     </button>
+
                     <button class="btn btn-outline-secondary btn-sm" id="resetFiltersBtn" title="Reset filters">
                         <i class="bi bi-arrow-counterclockwise"></i>
                     </button>
+
                     <button class="btn btn-outline-danger btn-sm" id="clearFiltersBtn" title="Clear all filters">
                         <i class="bi bi-x-lg"></i>
                     </button>
+
+                    <!-- Usage Variation -->
                     <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
                         <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
                     </a>
+
+                    <!-- Area Variation -->
                     <a href="{{ url('area-variation/' . $ward->id) }}" class="btn btn-info btn-sm">
                         <i class="bi bi-bounding-box me-1"></i> Area Variation
                     </a>
                 </div>
+
                 <div class="mt-1 text-end">
                     <span class="text-muted small" id="buildingCountDisplay">
                         Showing: {{ count($buildingData['buildings'] ?? []) }} buildings
@@ -2106,7 +2114,6 @@
             let buildingData = @json($buildingData ?? [], JSON_HEX_TAG);
             let allBuildings = buildingData.buildings || [];
             let usageCounts = buildingData.usage_counts || {};
-            let currentFilteredBuildings = allBuildings;
 
             // ─── USAGE COLOR MAP ───
             const usageColors = {
@@ -2182,8 +2189,43 @@
             const polygonSource = new ol.source.Vector();
             const lineSource = new ol.source.Vector();
             const pointSource = new ol.source.Vector();
+
+            // ─── BUILDING SOURCE WITH USAGE COLORS ───
             const buildingSource = new ol.source.Vector();
-            const tempDrawSource = new ol.source.Vector();
+
+            let currentFilteredBuildings = allBuildings;
+
+            function loadBuildingsWithColors(filteredBuildings) {
+                buildingSource.clear();
+                const dataToLoad = filteredBuildings || allBuildings;
+                dataToLoad.forEach(building => {
+                    try {
+                        const coords = building.coordinates;
+                        if (!coords || coords.length < 3) return;
+                        const feature = new ol.Feature({
+                            geometry: new ol.geom.Polygon([coords]),
+                            gisid: building.gisid,
+                            usage: building.usage,
+                            color: building.color,
+                            sqfeet: building.sqfeet,
+                            type: 'Building',
+                            originalData: building
+                        });
+                        feature.setId(building.gisid);
+                        const color = building.color || '#BDBDBD';
+                        feature.setStyle(new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: color,
+                                width: 2.5
+                            })
+                        }));
+                        buildingSource.addFeature(feature);
+                    } catch (e) {
+                        console.error('Building parse error:', e);
+                    }
+                });
+                currentFilteredBuildings = dataToLoad;
+            }
 
             // ─── BUILDING LAYER ───
             const buildingLayer = new ol.layer.Vector({
@@ -2367,7 +2409,7 @@
                 };
             }
 
-            // ─── LOAD FUNCTIONS ───
+            // ─── LOAD SOURCES ───
             function loadPolygonsToSource() {
                 polygonSource.clear();
                 polygons.forEach(poly => {
@@ -2442,175 +2484,224 @@
                 });
             }
 
-            function loadBuildingsWithColors(filteredBuildings) {
-                buildingSource.clear();
-                const dataToLoad = filteredBuildings || allBuildings;
-
-                if (!dataToLoad || dataToLoad.length === 0) {
-                    console.log('No buildings to load');
-                    return;
-                }
-
-                dataToLoad.forEach(building => {
-                    try {
-                        const coords = building.coordinates;
-                        if (!coords || coords.length < 3) return;
-
-                        const validCoords = coords.map(coord => {
-                            if (Array.isArray(coord) && coord.length >= 2) {
-                                return coord;
-                            }
-                            return null;
-                        }).filter(c => c !== null);
-
-                        if (validCoords.length < 3) return;
-
-                        const feature = new ol.Feature({
-                            geometry: new ol.geom.Polygon([validCoords]),
-                            gisid: building.gisid,
-                            usage: building.usage,
-                            color: building.color,
-                            sqfeet: building.sqfeet,
-                            type: 'Building',
-                            originalData: building
-                        });
-                        feature.setId(building.gisid);
-
-                        const color = building.color || '#BDBDBD';
-                        feature.setStyle(new ol.style.Style({
-                            stroke: new ol.style.Stroke({
-                                color: color,
-                                width: 2.5
-                            })
-                        }));
-
-                        buildingSource.addFeature(feature);
-                    } catch (e) {
-                        console.error('Building parse error for GISID:', building.gisid, e);
-                    }
-                });
-
-                currentFilteredBuildings = dataToLoad;
-                console.log(`✅ ${buildingSource.getFeatures().length} buildings loaded`);
-            }
-
             function reloadAllSources() {
                 loadPolygonsToSource();
                 loadLinesToSource();
                 loadPointsToSource();
                 buildSearchIndex();
-
                 polygonLayer.setStyle(createPolygonStyle);
                 lineLayer.setStyle(createLineStyle);
                 pointLayer.setStyle(createPointStyle);
-
-                if (currentFilteredBuildings) {
-                    loadBuildingsWithColors(currentFilteredBuildings);
-                } else {
-                    loadBuildingsWithColors(allBuildings);
-                }
-
-                if (is3DActive) {
-                    setTimeout(refreshCesiumBuildings, 500);
-                }
-
                 Object.values(infraLayers).forEach(layer => {
                     const title = layer.get('title');
                     if (title && infraColors[title]) {
                         layer.setStyle(createInfraStyle(infraColors[title]));
                     }
                 });
-
-                updateLegendCounts(currentFilteredBuildings || allBuildings);
             }
 
-            // ─── FILTER FUNCTIONS ───
-            function filterBuildings() {
-                const selectedUsage = $('#usageFilter').val();
-                const minArea = parseFloat($('#areaMin').val()) || 0;
-                const maxArea = parseFloat($('#areaMax').val()) || Infinity;
-                const variationFilter = $('#usageVariationFilter').val();
+            loadPolygonsToSource();
+            loadLinesToSource();
+            loadPointsToSource();
 
-                let filtered = allBuildings.filter(building => {
-                    if (selectedUsage !== 'all' && building.usage !== selectedUsage) return false;
-                    const area = parseFloat(building.sqfeet || 0);
-                    if (area < minArea || area > maxArea) return false;
-                    if (variationFilter === 'match') {
-                        const variation = buildingVariations[building.gisid];
-                        if (!variation || variation.usage_status !== 'MATCH') return false;
-                    } else if (variationFilter === 'variation') {
-                        const variation = buildingVariations[building.gisid];
-                        if (!variation || variation.usage_status !== 'VARIATION') return false;
+            const polygonLayer = new ol.layer.Vector({
+                source: polygonSource,
+                style: createPolygonStyle,
+                visible: false,
+                title: 'Polygons'
+            });
+
+            const lineLayer = new ol.layer.Vector({
+                source: lineSource,
+                style: createLineStyle,
+                visible: true,
+                title: 'Lines',
+                renderBuffer: 200
+            });
+
+            const pointLayer = new ol.layer.Vector({
+                source: pointSource,
+                style: createPointStyle,
+                visible: true,
+                title: 'Points'
+            });
+
+            // ─── LIVE LOCATION ───
+            const liveLocationSource = new ol.source.Vector();
+            const liveLocationLayer = new ol.layer.Vector({
+                source: liveLocationSource,
+                visible: true,
+                title: 'Live Location',
+                zIndex: 999
+            });
+
+            let watchId = null,
+                locationFeature = null,
+                accuracyFeature = null;
+            let liveActive = false,
+                trackActive = false;
+            let currentLocation = null;
+
+            function updateLiveMarker(lon, lat, accuracy) {
+                const coords = ol.proj.fromLonLat([lon, lat]);
+                currentLocation = {
+                    lon,
+                    lat
+                };
+                if (!locationFeature) {
+                    locationFeature = new ol.Feature({
+                        geometry: new ol.geom.Point(coords)
+                    });
+                    locationFeature.setStyle(new ol.style.Style({
+                        image: new ol.style.Circle({
+                            radius: 10,
+                            fill: new ol.style.Fill({
+                                color: '#3b82f6'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 3
+                            })
+                        })
+                    }));
+                    accuracyFeature = new ol.Feature({
+                        geometry: new ol.geom.Circle(coords, accuracy || 10)
+                    });
+                    accuracyFeature.setStyle(new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: 'rgba(59,130,246,0.10)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: 'rgba(59,130,246,0.35)',
+                            width: 1.5
+                        })
+                    }));
+                    liveLocationSource.addFeature(accuracyFeature);
+                    liveLocationSource.addFeature(locationFeature);
+                } else {
+                    locationFeature.getGeometry().setCoordinates(coords);
+                    accuracyFeature.getGeometry().setCenter(coords);
+                    accuracyFeature.getGeometry().setRadius(accuracy || 10);
+                }
+            }
+
+            function clearLiveMarker() {
+                liveLocationSource.clear();
+                locationFeature = null;
+                accuracyFeature = null;
+                currentLocation = null;
+            }
+
+            function onPosition(position) {
+                const {
+                    longitude,
+                    latitude,
+                    accuracy
+                } = position.coords;
+                updateLiveMarker(longitude, latitude, accuracy);
+                if (trackActive) {
+                    map.getView().animate({
+                        center: ol.proj.fromLonLat([longitude, latitude]),
+                        duration: 400
+                    });
+                }
+            }
+
+            function startWatching() {
+                if (!navigator.geolocation) {
+                    showToast('⚠️ Geolocation not supported', 3000);
+                    return false;
+                }
+                if (watchId !== null) return true;
+
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        onPosition(pos);
+                        showToast('📍 Location acquired', 2000);
+                    },
+                    function(error) {
+                        let msg = 'Could not get location: ';
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                msg += 'Please allow location access';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                msg += 'GPS signal weak';
+                                break;
+                            case error.TIMEOUT:
+                                msg += 'Request timed out';
+                                break;
+                        }
+                        showToast(msg, 3000);
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
                     }
-                    return true;
-                });
+                );
 
-                currentFilteredBuildings = filtered;
-                $('#buildingCountDisplay').text(`Showing: ${filtered.length} buildings`);
-                loadBuildingsWithColors(filtered);
-                updateLegendCounts(filtered);
+                watchId = navigator.geolocation.watchPosition(
+                    onPosition,
+                    function(error) {
+                        let msg = 'Location error: ';
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                msg += 'Please enable permissions.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                msg += 'Location unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                msg += 'Request timed out.';
+                                break;
+                            default:
+                                msg += 'Unknown error.';
+                        }
+                        showToast(msg, 3000);
+                    }, {
+                        enableHighAccuracy: true,
+                        maximumAge: 10000,
+                        timeout: 15000
+                    }
+                );
+                return true;
+            }
 
-                if (is3DActive) {
-                    setTimeout(refreshCesiumBuildings, 300);
+            function stopWatching() {
+                if (watchId !== null) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
                 }
+            }
 
-                if (filtered.length === allBuildings.length) {
-                    showToast('📊 Showing all buildings', 1500);
+            function syncLocationUI() {
+                const $liveItem = $('#liveLocationItem');
+                const $trackItem = $('#trackMeItem');
+                if (liveActive) {
+                    $liveItem.addClass('active');
+                    $('#liveLocationBadge').text('ON');
                 } else {
-                    showToast(`✅ Showing ${filtered.length} buildings with applied filters`, 2000);
+                    $liveItem.removeClass('active');
+                    $('#liveLocationBadge').text('OFF');
                 }
-            }
-
-            function updateLegendCounts(filtered) {
-                const counts = {};
-                if (!filtered || filtered.length === 0) {
-                    allBuildings.forEach(b => {
-                        counts[b.usage] = (counts[b.usage] || 0) + 1;
-                    });
+                if (trackActive) {
+                    $trackItem.addClass('active');
+                    $('#trackMeBadge').html('<span class="track-pulse"></span> ON');
                 } else {
-                    filtered.forEach(b => {
-                        counts[b.usage] = (counts[b.usage] || 0) + 1;
-                    });
+                    $trackItem.removeClass('active');
+                    $('#trackMeBadge').text('OFF');
                 }
-
-                $('.usage-legend .legend-count').each(function() {
-                    const parentText = $(this).closest('.legend-item').find('.legend-label').text()
-                        .toUpperCase();
-                    $(this).text(counts[parentText] || 0);
-                });
-            }
-
-            function resetFilters() {
-                $('#usageFilter').val('all');
-                $('#areaMin').val({{ $areaStats['min'] ?? 0 }});
-                $('#areaMax').val({{ $areaStats['max'] ?? 0 }});
-                $('#usageVariationFilter').val('all');
-                currentFilteredBuildings = allBuildings;
-                $('#buildingCountDisplay').text(`Showing: ${allBuildings.length} buildings`);
-                loadBuildingsWithColors(allBuildings);
-                updateLegendCounts(allBuildings);
-                if (is3DActive) setTimeout(refreshCesiumBuildings, 300);
-                showToast('🔄 Reset all filters - showing all buildings', 2000);
-            }
-
-            function clearFilters() {
-                $('#usageFilter').val('all');
-                $('#areaMin').val('');
-                $('#areaMax').val('');
-                $('#usageVariationFilter').val('all');
-                currentFilteredBuildings = allBuildings;
-                $('#buildingCountDisplay').text(`Showing: ${allBuildings.length} buildings`);
-                loadBuildingsWithColors(allBuildings);
-                updateLegendCounts(allBuildings);
-                if (is3DActive) setTimeout(refreshCesiumBuildings, 300);
-                showToast('🗑️ Filters cleared - showing all buildings', 2000);
+                const anyActive = liveActive || trackActive;
+                $('#locationToggleBtn').toggleClass('active-location', anyActive);
+                $('#locationToggleBtn i').toggleClass('bi-geo-alt-fill', anyActive).toggleClass('bi-geo-alt', !
+                    anyActive);
             }
 
             // ─── MAP ───
             const map = new ol.Map({
                 target: 'map',
                 layers: [osmLayer, satelliteLayer, streetLayer, droneLayer, polygonLayer, pointLayer,
-                    lineLayer, buildingLayer
+                    lineLayer, buildingLayer, liveLocationLayer
                 ],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
@@ -2629,6 +2720,7 @@
             let originalGeometry = null;
             let legendVisible = false;
 
+            const tempDrawSource = new ol.source.Vector();
             const tempDrawLayer = new ol.layer.Vector({
                 source: tempDrawSource,
                 style: new ol.style.Style({
@@ -2649,7 +2741,7 @@
             });
             map.addLayer(tempDrawLayer);
 
-            // ─── TOAST ───
+            // ─── Toast ───
             function showToast(msg, duration = 2500) {
                 const $t = $('#locationToast');
                 $t.text(msg).addClass('show');
@@ -2675,7 +2767,7 @@
                 });
             }
 
-            // ─── DISABLE INTERACTIONS ───
+            // ─── Disable interactions ───
             function disableAllInteractions() {
                 if (selectedFeatureForSplit) {
                     selectedFeatureForSplit.setStyle(null);
@@ -2716,95 +2808,80 @@
                 tempDrawSource.clear();
             }
 
-            // ─── VIEW MODE ───
-            function setNoneMode() {
-                disableAllInteractions();
-                hideSplitButton();
-                hideEditControls();
+            // ─── FILTER FUNCTIONS ───
+            function filterBuildings() {
+                const selectedUsage = $('#usageFilter').val();
+                const minArea = parseFloat($('#areaMin').val()) || 0;
+                const maxArea = parseFloat($('#areaMax').val()) || Infinity;
+                const variationFilter = $('#usageVariationFilter').val();
 
-                const viewInter = new ol.interaction.Select({
-                    layers: [buildingLayer, lineLayer, pointLayer],
-                    style: new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: '#0066cc',
-                            width: 2,
-                            lineDash: [4, 4]
-                        }),
-                        fill: new ol.style.Fill({
-                            color: 'rgba(0,102,204,0.05)'
-                        }),
-                        image: new ol.style.Circle({
-                            radius: 6,
-                            fill: new ol.style.Fill({
-                                color: '#0066cc'
-                            }),
-                            stroke: new ol.style.Stroke({
-                                color: '#fff',
-                                width: 2
-                            })
-                        })
-                    })
-                });
-
-                viewInter.on('select', function(e) {
-                    if (e.selected.length > 0) {
-                        showFeatureDetails(e.selected[0]);
-                        setTimeout(() => viewInter.getFeatures().clear(), 100);
+                let filtered = allBuildings.filter(building => {
+                    if (selectedUsage !== 'all' && building.usage !== selectedUsage) return false;
+                    const area = parseFloat(building.sqfeet || 0);
+                    if (area < minArea || area > maxArea) return false;
+                    if (variationFilter === 'match') {
+                        const variation = buildingVariations[building.gisid];
+                        if (!variation || variation.usage_status !== 'MATCH') return false;
+                    } else if (variationFilter === 'variation') {
+                        const variation = buildingVariations[building.gisid];
+                        if (!variation || variation.usage_status !== 'VARIATION') return false;
                     }
+                    return true;
                 });
 
-                map.addInteraction(viewInter);
-                selectInteraction = viewInter;
-                showToast('👁️ Click on features to view details', 2000);
-            }
+                currentFilteredBuildings = filtered;
+                $('#buildingCountDisplay').text(`Showing: ${filtered.length} buildings`);
+                loadBuildingsWithColors(filtered);
+                updateLegendCounts(filtered);
 
-            // ─── SHOW FEATURE DETAILS ───
-            function showFeatureDetails(feature) {
-                if (!feature) return;
-                const type = feature.get('type');
-                switch (type) {
-                    case 'Building':
-                        buildingClickHandler(feature);
-                        break;
-                    case 'Point':
-                        pointClick(feature);
-                        break;
-                    case 'LineString':
-                        lineClick(feature);
-                        break;
+                // Refresh 3D buildings if active
+                if (is3DActive) {
+                    setTimeout(refreshCesiumBuildings, 300);
                 }
-            }
 
-            // ─── BUILDING CLICK HANDLER ───
-            function buildingClickHandler(feature) {
-                const gisid = feature.get('gisid');
-                let building = polygonDatas.find(p => p.gisid == gisid);
-                if (building) {
-                    showBuildingView(building);
+                if (filtered.length === allBuildings.length) {
+                    showToast('📊 Showing all buildings', 1500);
                 } else {
-                    showFlashMessage('No building data found for this GIS ID', 'warning');
+                    showToast(`✅ Showing ${filtered.length} buildings with applied filters`, 2000);
                 }
             }
 
-            // ─── POINT CLICK ───
-            function pointClick(feature) {
-                const gisid = feature.get('gisid');
-                let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
-                if (building) {
-                    openPointDetails(gisid);
-                } else {
-                    showFlashMessage('No building data found for this point', 'warning');
-                }
+            function updateLegendCounts(filtered) {
+                const counts = {};
+                filtered.forEach(b => {
+                    counts[b.usage] = (counts[b.usage] || 0) + 1;
+                });
+                $('.usage-legend .legend-count').each(function() {
+                    const parentText = $(this).closest('.legend-item').find('.legend-label').text()
+                        .toUpperCase();
+                    $(this).text(counts[parentText] || 0);
+                });
             }
 
-            // ─── LINE CLICK ───
-            function lineClick(feature) {
-                const gisid = feature.get('gisid');
-                const roadName = feature.get('road_name') || '';
-                $('#line_gisid').val(gisid || '');
-                $('#line_road_name').val(roadName || '');
-                const modal = new bootstrap.Modal(document.getElementById('lineDetailsModal'));
-                modal.show();
+            function resetFilters() {
+                $('#usageFilter').val('all');
+                $('#areaMin').val({{ $areaStats['min'] ?? 0 }});
+                $('#areaMax').val({{ $areaStats['max'] ?? 0 }});
+                $('#usageVariationFilter').val('all');
+                currentFilteredBuildings = allBuildings;
+                $('#buildingCountDisplay').text(`Showing: ${allBuildings.length} buildings`);
+                loadBuildingsWithColors(allBuildings);
+                updateLegendCounts(allBuildings);
+                if (is3DActive) setTimeout(refreshCesiumBuildings, 300);
+                showToast('🔄 Reset all filters - showing all buildings', 2000);
+            }
+
+            function clearFilters() {
+                $('#usageFilter').val('all');
+                $('#areaMin').val('');
+                $('#areaMax').val('');
+                $('#usageVariationFilter').val('all');
+                currentFilteredBuildings = allBuildings;
+                $('#buildingCountDisplay').text(`Showing: ${allBuildings.length} buildings`);
+                loadBuildingsWithColors(allBuildings);
+                updateLegendCounts(allBuildings);
+                if (is3DActive) setTimeout(refreshCesiumBuildings, 300);
+                showToast('🗑️ Filters cleared - showing all buildings', 2000);
             }
 
             // ─── BUILDING VIEW ───
@@ -2832,21 +2909,21 @@
                     const usageBadgeClass = variation.usage_status === 'MATCH' ? 'complete' : 'empty';
 
                     $('#bv_variation_wrap').html(`
-                        <div class="bv-variation-strip" style="display:flex; gap:12px; flex-wrap:wrap; background:#f8fafc; padding:12px 16px; border-radius:10px; border:1px solid #e5e7eb; margin-bottom:12px;">
-                            <div class="bv-variation-card" style="flex:1; min-width:120px;">
+                        <div class="bv-variation-strip">
+                            <div class="bv-variation-card">
                                 <div class="stat-label">Building Area</div>
                                 <div class="stat-value">${variation.building_area} <span class="stat-sub">sqft</span></div>
                             </div>
-                            <div class="bv-variation-card" style="flex:1; min-width:120px;">
+                            <div class="bv-variation-card">
                                 <div class="stat-label">Assessment Area</div>
                                 <div class="stat-value">${variation.assessment_area} <span class="stat-sub">sqft</span></div>
                             </div>
-                            <div class="bv-variation-card" style="flex:1; min-width:120px;">
+                            <div class="bv-variation-card">
                                 <div class="stat-label">Area Variation</div>
                                 <div class="stat-value">${variation.area_variation} <span class="stat-sub">(${variation.variation_percentage}%)</span></div>
                                 <span class="bld-status-tag ${areaBadgeClass}">${variation.area_status}</span>
                             </div>
-                            <div class="bv-variation-card" style="flex:1; min-width:120px;">
+                            <div class="bv-variation-card">
                                 <div class="stat-label">Usage Check</div>
                                 <span class="bld-status-tag ${usageBadgeClass}">${variation.usage_status}</span>
                             </div>
@@ -2925,7 +3002,7 @@
                 modal.show();
             }
 
-            // ─── POINT DETAILS ───
+            // ─── GET POINT DATA ───
             function getPointDataWithDetails(gisid, callback) {
                 $.ajax({
                     url: '/commissioner/get-point-details',
@@ -2949,6 +3026,7 @@
                 });
             }
 
+            // ─── POINT DETAILS ───
             function openPointDetails(gisid) {
                 currentPointGisid = gisid;
                 $('#pointDetailsSearch').val('');
@@ -3189,6 +3267,94 @@
                 openQcModal($(this).data('id'));
             });
 
+            // ─── CLICK HANDLERS ───
+            function buildingClickHandler(feature) {
+                const gisid = feature.get('gisid');
+                let building = polygonDatas.find(p => p.gisid == gisid);
+                if (building) {
+                    showBuildingView(building);
+                } else {
+                    showFlashMessage('No building data found for this GIS ID', 'warning');
+                }
+            }
+
+            function pointClick(feature) {
+                const gisid = feature.get('gisid');
+                let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
+                if (building) {
+                    openPointDetails(gisid);
+                } else {
+                    showFlashMessage('No building data found for this point', 'warning');
+                }
+            }
+
+            function lineClick(feature) {
+                const gisid = feature.get('gisid');
+                const roadName = feature.get('road_name') || '';
+                $('#line_gisid').val(gisid || '');
+                $('#line_road_name').val(roadName || '');
+                const modal = new bootstrap.Modal(document.getElementById('lineDetailsModal'));
+                modal.show();
+            }
+
+            function showFeatureDetails(feature) {
+                if (!feature) return;
+                const type = feature.get('type');
+                switch (type) {
+                    case 'Building':
+                        buildingClickHandler(feature);
+                        break;
+                    case 'Point':
+                        pointClick(feature);
+                        break;
+                    case 'LineString':
+                        lineClick(feature);
+                        break;
+                }
+            }
+
+            // ─── VIEW MODE ───
+            function setNoneMode() {
+                disableAllInteractions();
+                hideSplitButton();
+                hideEditControls();
+
+                const viewInter = new ol.interaction.Select({
+                    layers: [buildingLayer, lineLayer, pointLayer],
+                    style: new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: '#0066cc',
+                            width: 2,
+                            lineDash: [4, 4]
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0,102,204,0.05)'
+                        }),
+                        image: new ol.style.Circle({
+                            radius: 6,
+                            fill: new ol.style.Fill({
+                                color: '#0066cc'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 2
+                            })
+                        })
+                    })
+                });
+
+                viewInter.on('select', function(e) {
+                    if (e.selected.length > 0) {
+                        showFeatureDetails(e.selected[0]);
+                        setTimeout(() => viewInter.getFeatures().clear(), 100);
+                    }
+                });
+
+                map.addInteraction(viewInter);
+                selectInteraction = viewInter;
+                showToast('👁️ Click on features to view details', 2000);
+            }
+
             // ─── SEARCH ───
             function buildSearchIndex() {
                 searchIndex = [];
@@ -3270,6 +3436,7 @@
                 );
             }
 
+            // ─── GET COORDINATES BY GIS ID (for 2D) ───
             function getCoordsByGisId(gisid) {
                 const point = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
                 if (!point) return null;
@@ -3283,6 +3450,7 @@
                 }
             }
 
+            // ─── ZOOM TO FEATURE (2D) ───
             function zoomToFeature(gisid) {
                 const coords = getCoordsByGisId(gisid);
                 if (!coords) {
@@ -3296,9 +3464,7 @@
                 });
             }
 
-            // ─── ROUTING ───
-            let currentLocation = null;
-
+            // ─── ROUTING (2D) ───
             function getCurrentLocation(callback) {
                 if (!navigator.geolocation) {
                     Swal.fire('Error', 'Geolocation not supported', 'error');
@@ -3388,6 +3554,7 @@
                     routeLayer = null;
                     showToast('🗑️ Route cleared', 2000);
                 }
+                // Clear 3D route if exists
                 if (window.cesiumRouteEntity) {
                     if (cesiumViewer) {
                         cesiumViewer.entities.remove(window.cesiumRouteEntity);
@@ -3441,7 +3608,9 @@
             function toggleLabels() {
                 showLabels = !showLabels;
                 $('#labelToggleBtn').toggleClass('active-label', showLabels);
+                $('#labelToggleBtn i').toggleClass('bi-fonts', showLabels).toggleClass('bi-fonts', !showLabels);
                 reloadAllSources();
+                loadBuildingsWithColors(currentFilteredBuildings);
                 showToast(showLabels ? '🏷️ Labels ON' : '🏷️ Labels OFF', 1500);
             }
 
@@ -3458,7 +3627,7 @@
                 showToast(legendVisible ? '🏗️ Legend shown' : '🏗️ Legend hidden', 1500);
             }
 
-            // ─── INFRASTRUCTURE ───
+            // ─── INFRASTRUCTURE LAYERS ───
             let infraLayers = {};
             let infraGrouped = {};
 
@@ -3963,176 +4132,6 @@
             });
 
             // ─── LOCATION EVENTS ───
-            let watchId = null,
-                locationFeature = null,
-                accuracyFeature = null;
-            let liveActive = false,
-                trackActive = false;
-
-            const liveLocationSource = new ol.source.Vector();
-            const liveLocationLayer = new ol.layer.Vector({
-                source: liveLocationSource,
-                visible: true,
-                title: 'Live Location',
-                zIndex: 999
-            });
-            map.addLayer(liveLocationLayer);
-
-            function updateLiveMarker(lon, lat, accuracy) {
-                const coords = ol.proj.fromLonLat([lon, lat]);
-                currentLocation = {
-                    lon,
-                    lat
-                };
-                if (!locationFeature) {
-                    locationFeature = new ol.Feature({
-                        geometry: new ol.geom.Point(coords)
-                    });
-                    locationFeature.setStyle(new ol.style.Style({
-                        image: new ol.style.Circle({
-                            radius: 10,
-                            fill: new ol.style.Fill({
-                                color: '#3b82f6'
-                            }),
-                            stroke: new ol.style.Stroke({
-                                color: '#fff',
-                                width: 3
-                            })
-                        })
-                    }));
-                    accuracyFeature = new ol.Feature({
-                        geometry: new ol.geom.Circle(coords, accuracy || 10)
-                    });
-                    accuracyFeature.setStyle(new ol.style.Style({
-                        fill: new ol.style.Fill({
-                            color: 'rgba(59,130,246,0.10)'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: 'rgba(59,130,246,0.35)',
-                            width: 1.5
-                        })
-                    }));
-                    liveLocationSource.addFeature(accuracyFeature);
-                    liveLocationSource.addFeature(locationFeature);
-                } else {
-                    locationFeature.getGeometry().setCoordinates(coords);
-                    accuracyFeature.getGeometry().setCenter(coords);
-                    accuracyFeature.getGeometry().setRadius(accuracy || 10);
-                }
-            }
-
-            function clearLiveMarker() {
-                liveLocationSource.clear();
-                locationFeature = null;
-                accuracyFeature = null;
-                currentLocation = null;
-            }
-
-            function onPosition(position) {
-                const {
-                    longitude,
-                    latitude,
-                    accuracy
-                } = position.coords;
-                updateLiveMarker(longitude, latitude, accuracy);
-                if (trackActive) {
-                    map.getView().animate({
-                        center: ol.proj.fromLonLat([longitude, latitude]),
-                        duration: 400
-                    });
-                }
-            }
-
-            function startWatching() {
-                if (!navigator.geolocation) {
-                    showToast('⚠️ Geolocation not supported', 3000);
-                    return false;
-                }
-                if (watchId !== null) return true;
-
-                navigator.geolocation.getCurrentPosition(
-                    function(pos) {
-                        onPosition(pos);
-                        showToast('📍 Location acquired', 2000);
-                    },
-                    function(error) {
-                        let msg = 'Could not get location: ';
-                        switch (error.code) {
-                            case error.PERMISSION_DENIED:
-                                msg += 'Please allow location access';
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                msg += 'GPS signal weak';
-                                break;
-                            case error.TIMEOUT:
-                                msg += 'Request timed out';
-                                break;
-                        }
-                        showToast(msg, 3000);
-                    }, {
-                        enableHighAccuracy: true,
-                        timeout: 15000,
-                        maximumAge: 0
-                    }
-                );
-
-                watchId = navigator.geolocation.watchPosition(
-                    onPosition,
-                    function(error) {
-                        let msg = 'Location error: ';
-                        switch (error.code) {
-                            case error.PERMISSION_DENIED:
-                                msg += 'Please enable permissions.';
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                msg += 'Location unavailable.';
-                                break;
-                            case error.TIMEOUT:
-                                msg += 'Request timed out.';
-                                break;
-                            default:
-                                msg += 'Unknown error.';
-                        }
-                        showToast(msg, 3000);
-                    }, {
-                        enableHighAccuracy: true,
-                        maximumAge: 10000,
-                        timeout: 15000
-                    }
-                );
-                return true;
-            }
-
-            function stopWatching() {
-                if (watchId !== null) {
-                    navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
-                }
-            }
-
-            function syncLocationUI() {
-                const $liveItem = $('#liveLocationItem');
-                const $trackItem = $('#trackMeItem');
-                if (liveActive) {
-                    $liveItem.addClass('active');
-                    $('#liveLocationBadge').text('ON');
-                } else {
-                    $liveItem.removeClass('active');
-                    $('#liveLocationBadge').text('OFF');
-                }
-                if (trackActive) {
-                    $trackItem.addClass('active');
-                    $('#trackMeBadge').html('<span class="track-pulse"></span> ON');
-                } else {
-                    $trackItem.removeClass('active');
-                    $('#trackMeBadge').text('OFF');
-                }
-                const anyActive = liveActive || trackActive;
-                $('#locationToggleBtn').toggleClass('active-location', anyActive);
-                $('#locationToggleBtn i').toggleClass('bi-geo-alt-fill', anyActive).toggleClass('bi-geo-alt', !
-                    anyActive);
-            }
-
             $(document).on('click', '#locationToggleBtn', function(e) {
                 e.stopPropagation();
                 $('#locationDropdown').toggleClass('show');
@@ -4206,6 +4205,7 @@
                 $('#filterTab').toggle(tab === 'filter');
             });
 
+            // ─── SEARCH INPUT HANDLER ───
             $(document).on('keyup', '#gisSearchInput', function() {
                 const value = $(this).val();
                 if (!value || value.length < 1) {
@@ -4240,6 +4240,7 @@
                 $('#searchResults').html(html);
             });
 
+            // ─── ZOOM BUTTON (works in both 2D and 3D) ───
             $(document).on('click', '.zoom-btn', function(e) {
                 e.stopPropagation();
                 const id = $(this).data('id');
@@ -4247,7 +4248,9 @@
                 const item = searchIndex.find(f => f.id == id && f.type === type);
 
                 if (item) {
+                    // Check if in 3D mode
                     if (is3DActive && cesiumViewer) {
+                        // Zoom in 3D
                         const coords = getCoordsByGisId(item.id);
                         if (coords) {
                             const lonlat = ol.proj.toLonLat(coords);
@@ -4261,6 +4264,7 @@
                             showToast('⚠️ Coordinates not found for this item', 2000);
                         }
                     } else {
+                        // Zoom in 2D
                         zoomToFeature(item.id);
                     }
                     $('#searchDropdown').removeClass('show');
@@ -4270,6 +4274,7 @@
                 }
             });
 
+            // ─── DIRECTION BUTTON (works in both 2D and 3D) ───
             $(document).on('click', '.direction-btn', function(e) {
                 e.stopPropagation();
                 const id = $(this).data('id');
@@ -4278,6 +4283,7 @@
 
                 if (item) {
                     if (is3DActive && cesiumViewer) {
+                        // Direction in 3D
                         getDirectionToFeature3D(item);
                     } else {
                         getDirectionToFeature(item);
@@ -4289,6 +4295,7 @@
                 }
             });
 
+            // ─── 3D DIRECTION ───
             function getDirectionToFeature3D(feature) {
                 getCurrentLocation(function(loc) {
                     if (!loc) return;
@@ -4315,6 +4322,7 @@
                             return;
                         }
 
+                        // Remove old route
                         if (window.cesiumRouteEntity) {
                             cesiumViewer.entities.remove(window.cesiumRouteEntity);
                             window.cesiumRouteEntity = null;
@@ -4324,6 +4332,7 @@
                             Cesium.Cartesian3.fromDegrees(c[0], c[1])
                         );
 
+                        // Add route line in 3D
                         window.cesiumRouteEntity = cesiumViewer.entities.add({
                             polyline: {
                                 positions: routeCoords,
@@ -4336,6 +4345,7 @@
                             }
                         });
 
+                        // Fly to route
                         const routeExtent = data.routes[0].geometry.coordinates;
                         const centerLon = (routeExtent[0][0] + routeExtent[routeExtent.length - 1][0]) / 2;
                         const centerLat = (routeExtent[0][1] + routeExtent[routeExtent.length - 1][1]) / 2;
@@ -4354,6 +4364,7 @@
                     });
             }
 
+            // ─── FILTER SEARCH ───
             $('#applyFilterBtn').on('click', function() {
                 $.get('/point-data/filter', {
                     assessment: $('#filterAssessment').val(),
@@ -4500,6 +4511,7 @@
                 showToast('✏️ Click a polygon to edit', 2000);
             }
 
+            // ─── Edit Controls ───
             function showEditControls(feature) {
                 hideEditControls();
                 const gisid = feature.get('gisid');
@@ -4566,20 +4578,6 @@
                 const geometry = feature.getGeometry();
                 const coordinates = geometry.getCoordinates();
 
-                if (!coordinates || coordinates.length === 0) {
-                    Swal.fire('Error', 'Invalid polygon coordinates', 'error');
-                    return;
-                }
-
-                Swal.fire({
-                    title: 'Saving...',
-                    text: 'Please wait while the polygon is updated',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
                 $.ajax({
                     url: '/update-polygon',
                     type: 'POST',
@@ -4592,36 +4590,28 @@
                         sqfeet: feature.get('sqfeet') || '0'
                     },
                     success: function(response) {
-                        Swal.close();
                         Swal.fire('Success!', 'Polygon updated successfully', 'success');
-
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
                         lines = response.data.lines ?? lines;
-                        polygonDatas = response.data.polygon_datas ?? polygonDatas;
-
                         reloadAllSources();
                         disableAllInteractions();
                         clearDrawInteraction();
-
-                        if (selectedFeatureForEdit) {
-                            selectedFeatureForEdit.setStyle(null);
-                            selectedFeatureForEdit = null;
-                            originalGeometry = null;
-                        }
+                        selectedFeatureForEdit.setStyle(null);
+                        selectedFeatureForEdit = null;
+                        originalGeometry = null;
                         hideEditControls();
                         showToast('✅ Polygon updated!', 2000);
                         setNoneMode();
                     },
                     error: function(xhr) {
-                        Swal.close();
-                        Swal.fire('Error', xhr.responseJSON?.message || 'Failed to update polygon', 'error');
+                        Swal.fire('Error', 'Failed to update polygon', 'error');
                         cancelEdit();
                     }
                 });
             }
 
-            // ─── MOVE POLYGON MODE ───
+            // ─── MOVE MODE ───
             function setMovePolygonMode() {
                 disableAllInteractions();
                 hideSplitButton();
@@ -4745,20 +4735,6 @@
                 const geometry = feature.getGeometry();
                 const coordinates = geometry.getCoordinates();
 
-                if (!coordinates || coordinates.length === 0) {
-                    Swal.fire('Error', 'Invalid polygon coordinates', 'error');
-                    return;
-                }
-
-                Swal.fire({
-                    title: 'Saving...',
-                    text: 'Please wait while the polygon is moved',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
                 $.ajax({
                     url: '/update-polygon',
                     type: 'POST',
@@ -4771,23 +4747,16 @@
                         sqfeet: feature.get('sqfeet') || '0'
                     },
                     success: function(response) {
-                        Swal.close();
                         Swal.fire('Success!', 'Polygon moved successfully', 'success');
-
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
                         lines = response.data.lines ?? lines;
-                        polygonDatas = response.data.polygon_datas ?? polygonDatas;
-
                         reloadAllSources();
                         disableAllInteractions();
                         clearDrawInteraction();
-
-                        if (selectedFeatureForEdit) {
-                            selectedFeatureForEdit.setStyle(null);
-                            selectedFeatureForEdit = null;
-                            originalGeometry = null;
-                        }
+                        selectedFeatureForEdit.setStyle(null);
+                        selectedFeatureForEdit = null;
+                        originalGeometry = null;
                         hideEditControls();
                         if (translateInteraction) {
                             map.removeInteraction(translateInteraction);
@@ -4797,8 +4766,7 @@
                         setNoneMode();
                     },
                     error: function(xhr) {
-                        Swal.close();
-                        Swal.fire('Error', xhr.responseJSON?.message || 'Failed to move polygon', 'error');
+                        Swal.fire('Error', 'Failed to move polygon', 'error');
                         cancelMove();
                     }
                 });
@@ -4883,12 +4851,6 @@
                     return;
                 }
 
-                const gisid = feature.get('gisid');
-                if (!gisid) {
-                    Swal.fire('Error', 'Polygon has no GIS ID', 'error');
-                    return;
-                }
-
                 disableAllInteractions();
                 clearDrawInteraction();
                 hideSplitButton();
@@ -4896,45 +4858,15 @@
                 const splitLineSource = new ol.source.Vector();
                 const splitDraw = new ol.interaction.Draw({
                     source: splitLineSource,
-                    type: 'LineString',
-                    style: new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: '#FF0000',
-                            width: 4,
-                            lineDash: [10, 5]
-                        })
-                    })
+                    type: 'LineString'
                 });
                 map.addInteraction(splitDraw);
-                showToast('✂️ Draw a line across the polygon to split it', 3000);
+                showToast('✂️ Draw a line across the polygon', 3000);
 
                 splitDraw.on('drawend', function(e) {
                     const polygonCoords = feature.getGeometry().getCoordinates();
                     const lineCoords = e.feature.getGeometry().getCoordinates();
-
-                    try {
-                        const turfPolygon = turf.polygon(polygonCoords);
-                        const turfLine = turf.lineString(lineCoords);
-                        const intersects = turf.booleanIntersects(turfLine, turfPolygon);
-                        if (!intersects) {
-                            Swal.fire('Invalid Split', 'The drawn line must intersect the polygon',
-                            'warning');
-                            map.removeInteraction(splitDraw);
-                            splitLineSource.clear();
-                            return;
-                        }
-                    } catch (err) {
-                        console.warn('Turf validation failed, proceeding anyway:', err);
-                    }
-
-                    Swal.fire({
-                        title: 'Splitting...',
-                        text: 'Please wait while the polygon is split',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
+                    const gisid = feature.get('gisid');
 
                     $.ajax({
                         url: '/polygon-split',
@@ -4942,36 +4874,28 @@
                         data: {
                             polygon: JSON.stringify(polygonCoords),
                             splitLine: JSON.stringify(lineCoords),
-                            gisid: gisid,
+                            gisid,
                             _token: $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(response) {
-                            Swal.close();
                             Swal.fire('Success!', 'Polygon split successfully', 'success');
-
                             map.removeInteraction(splitDraw);
                             splitLineSource.clear();
-
                             if (selectedFeatureForSplit) {
                                 selectedFeatureForSplit.setStyle(null);
                                 selectedFeatureForSplit = null;
                             }
                             hideSplitButton();
-
                             polygons = response.polygons ?? polygons;
                             points = response.points ?? points;
-                            polygonDatas = response.polygon_datas ?? polygonDatas;
-
                             reloadAllSources();
                             disableAllInteractions();
                             clearDrawInteraction();
-                            showToast('✅ Split complete - two polygons created', 2000);
+                            showToast('✅ Split complete', 2000);
                             setNoneMode();
                         },
                         error: function(xhr) {
-                            Swal.close();
-                            Swal.fire('Error', xhr.responseJSON?.message || 'Failed to split polygon',
-                                'error');
+                            Swal.fire('Error', 'Failed to split polygon', 'error');
                             map.removeInteraction(splitDraw);
                             splitLineSource.clear();
                             setNoneMode();
@@ -4980,7 +4904,7 @@
                 });
             }
 
-            // ─── DRAW MODE ───
+            // ─── DRAW ───
             function startDrawing(type) {
                 disableAllInteractions();
                 clearDrawInteraction();
@@ -5023,34 +4947,6 @@
             }
 
             function saveFeature(feature, type) {
-                let coordinates;
-                const geomType = feature.getGeometry().getType();
-
-                if (geomType === 'Polygon') {
-                    coordinates = feature.getGeometry().getCoordinates();
-                } else if (geomType === 'LineString') {
-                    coordinates = feature.getGeometry().getCoordinates();
-                } else if (geomType === 'Point') {
-                    coordinates = feature.getGeometry().getCoordinates();
-                } else {
-                    Swal.fire('Error', `Unsupported geometry type: ${geomType}`, 'error');
-                    return;
-                }
-
-                if (!coordinates || coordinates.length === 0) {
-                    Swal.fire('Error', 'Invalid geometry coordinates', 'error');
-                    return;
-                }
-
-                Swal.fire({
-                    title: 'Saving...',
-                    text: `Please wait while the ${type} is saved`,
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
                 $.ajax({
                     url: '/save-feature',
                     type: 'POST',
@@ -5059,27 +4955,20 @@
                     },
                     data: {
                         layer_type: type,
-                        feature: JSON.stringify(coordinates),
-                        ward_id: {{ $ward->id }}
+                        feature: JSON.stringify(feature.getGeometry().getCoordinates())
                     },
                     success: function(response) {
-                        Swal.close();
-                        Swal.fire('Success', `${type} saved successfully`, 'success');
-
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
                         lines = response.data.lines ?? lines;
-                        polygonDatas = response.data.polygon_datas ?? polygonDatas;
-
                         reloadAllSources();
                         disableAllInteractions();
                         clearDrawInteraction();
+                        Swal.fire('Success', 'Feature saved successfully', 'success');
                         setNoneMode();
-                        showToast(`✅ ${type} saved successfully!`, 2000);
                     },
                     error: function(xhr) {
-                        Swal.close();
-                        Swal.fire('Error', xhr.responseJSON?.message || 'Error saving feature', 'error');
+                        Swal.fire('Error', 'Error saving feature', 'error');
                         setNoneMode();
                     }
                 });
@@ -5113,78 +5002,49 @@
                     return;
                 }
 
-                if (type === 'polygon' && !/^\d+$/.test(gisid)) {
-                    $('#deleteGisError').text('Polygon GIS ID must be numeric.').show();
-                    return;
-                }
-
                 const $btn = $(this);
-                $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting…').prop('disabled',
-                    true);
+                $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Deleting…').prop(
+                    'disabled', true);
 
-                Swal.fire({
-                    title: 'Confirm Delete',
-                    text: `Are you sure you want to delete this ${type} (GIS ID: ${gisid})? This action cannot be undone!`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc3545',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: '/delete-feature',
-                            type: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
-                                'content')
-                            },
-                            data: {
-                                type,
-                                gisid
-                            },
-                            success: function(response) {
-                                const deleteModal = bootstrap.Modal.getInstance(
-                                    document.getElementById('deleteFeatureModal'));
-                                if (deleteModal) deleteModal.hide();
-                                $btn.html('<i class="bi bi-trash3 me-1"></i>Delete')
-                                    .prop('disabled', false);
-
-                                if (type === 'polygon') {
-                                    polygons = response.data.polygons ?? polygons;
-                                    polygonDatas = response.data.polygon_datas ??
-                                        polygonDatas;
-                                } else if (type === 'line') {
-                                    lines = response.data.lines ?? lines;
-                                } else if (type === 'point') {
-                                    points = response.data.points ?? points;
-                                    pointDatas = response.data.point_datas ??
-                                        pointDatas;
-                                }
-
-                                reloadAllSources();
-                                disableAllInteractions();
-                                setNoneMode();
-
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Deleted!',
-                                    text: `${type.charAt(0).toUpperCase() + type.slice(1)} (GIS ID: ${gisid}) deleted successfully.`,
-                                    timer: 2500,
-                                    showConfirmButton: false
-                                });
-                            },
-                            error: function(xhr) {
-                                $btn.html('<i class="bi bi-trash3 me-1"></i>Delete')
-                                    .prop('disabled', false);
-                                const msg = xhr.responseJSON?.message ||
-                                    `Failed to delete ${type}. Please check the GIS ID and try again.`;
-                                $('#deleteGisError').text(msg).show();
-                            }
-                        });
-                    } else {
+                $.ajax({
+                    url: '/delete-feature',
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: {
+                        type,
+                        gisid
+                    },
+                    success: function(response) {
+                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById(
+                            'deleteFeatureModal'));
+                        if (deleteModal) deleteModal.hide();
                         $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
                             false);
+
+                        polygons = response.data.polygons ?? polygons;
+                        points = response.data.points ?? points;
+                        lines = response.data.lines ?? lines;
+
+                        reloadAllSources();
+                        disableAllInteractions();
+                        setNoneMode();
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: `${type.charAt(0).toUpperCase() + type.slice(1)} (GIS ID: ${gisid}) deleted.`,
+                            timer: 2500,
+                            showConfirmButton: false
+                        });
+                    },
+                    error: function(xhr) {
+                        $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
+                            false);
+                        const msg = xhr.responseJSON?.message ||
+                            `No ${type} found with GIS ID: ${gisid}`;
+                        $('#deleteGisError').text(msg).show();
                     }
                 });
             });
@@ -5206,7 +5066,7 @@
             });
 
             // ════════════════════════════════════════════════════════════
-            // 3D VIEW TOGGLE
+            // 3D VIEW TOGGLE — Fixed with proper coordinate conversion
             // ════════════════════════════════════════════════════════════
             let cesiumViewer = null;
             let cesiumBuildingEntities = [];
@@ -5219,19 +5079,24 @@
             window.is3DActive = is3DActive;
             window.cesiumViewer = cesiumViewer;
 
+            // ─── FIXED: Proper coordinate conversion for Cesium ───
             function ringToLonLatFlatArray(ringCoords) {
                 const flat = [];
                 ringCoords.forEach(c => {
+                    // OpenLayers stores coordinates in EPSG:3857 (Web Mercator)
+                    // Convert to WGS84 for Cesium
                     const lonlat = ol.proj.toLonLat(c);
                     flat.push(lonlat[0], lonlat[1]);
                 });
                 return flat;
             }
 
+            // ─── Get building data for 3D click ───
             function getBuildingDataFor3D(gisid) {
                 return polygonDatas.find(p => p.gisid == gisid);
             }
 
+            // ─── Show 3D building details panel ───
             function show3DBuildingDetails(gisid) {
                 const building = getBuildingDataFor3D(gisid);
                 if (!building) {
@@ -5265,6 +5130,7 @@
                 cesiumSelectedBuilding = building;
             }
 
+            // ─── Make functions globally accessible ───
             window.viewBuildingInModal = function(gisid) {
                 const building = getBuildingDataFor3D(gisid);
                 if (building) {
@@ -5280,6 +5146,7 @@
                 }
             };
 
+            // ─── INIT 3D VIEWER WITH FALLBACK ───
             function init3DViewerWithFallback() {
                 if (cesiumViewer) return cesiumViewer;
 
@@ -5298,6 +5165,7 @@
                     terrainProvider: new Cesium.EllipsoidTerrainProvider()
                 });
 
+                // ─── TRY DRONE IMAGE FIRST, THEN FALLBACK ───
                 let droneLoaded = false;
                 let loadAttempted = false;
 
@@ -5310,20 +5178,28 @@
 
                     try {
                         cesiumViewer.imageryLayers.removeAll();
+
+                        // Try Satellite imagery first
                         cesiumViewer.imageryLayers.addImageryProvider(
                             new Cesium.ArcGisMapServerImageryProvider({
                                 url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
                             })
                         );
+
                         showToast('🛰️ Using Satellite imagery (Drone not available)', 3000);
+                        console.log('✅ Satellite imagery loaded as fallback');
+
                         flyToWardLocation();
+
                     } catch (error) {
+                        // Final fallback: OpenStreetMap
                         cesiumViewer.imageryLayers.addImageryProvider(
                             new Cesium.OpenStreetMapImageryProvider({
                                 url: 'https://tile.openstreetmap.org/'
                             })
                         );
                         showToast('🗺️ Using OpenStreetMap (Satellite failed)', 3000);
+                        console.log('✅ OSM loaded as final fallback');
                         flyToWardLocation();
                     }
                 }
@@ -5400,6 +5276,8 @@
                                     droneImageryLayer.alpha = 1.0;
                                     droneImageryLayer.show = true;
                                     droneLoaded = true;
+
+                                    console.log('✅ Drone image loaded in 3D view');
 
                                     const west = rect.west;
                                     const south = rect.south;
@@ -5478,9 +5356,11 @@
                 return cesiumViewer;
             }
 
+            // ─── SETUP 3D INTERACTIONS (Click, Hover) ───
             function setup3DInteractions() {
                 if (!cesiumViewer) return;
 
+                // Remove old handlers
                 if (cesiumClickHandler) {
                     cesiumViewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
                     cesiumClickHandler = null;
@@ -5490,10 +5370,12 @@
                     cesiumHoverHandler = null;
                 }
 
+                // ─── CLICK HANDLER ───
                 cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(cesiumViewer.canvas);
                 cesiumClickHandler.setInputAction(function(click) {
                     const picked = cesiumViewer.scene.pick(click.position);
 
+                    // Close info panel if clicking empty space
                     if (!Cesium.defined(picked) || !Cesium.defined(picked.id)) {
                         $('#cesium3dInfoPanel').removeClass('show');
                         $('#cesium3dTooltip').removeClass('show');
@@ -5508,6 +5390,7 @@
                     }
                 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+                // ─── HOVER HANDLER ───
                 cesiumHoverHandler = new Cesium.ScreenSpaceEventHandler(cesiumViewer.canvas);
                 cesiumHoverHandler.setInputAction(function(movement) {
                     const picked = cesiumViewer.scene.pick(movement.endPosition);
@@ -5526,6 +5409,7 @@
                                 `);
                                 $tooltip.addClass('show');
 
+                                // Position tooltip near cursor
                                 const canvas = cesiumViewer.canvas;
                                 const rect = canvas.getBoundingClientRect();
                                 const x = movement.endPosition.x + rect.left + 15;
@@ -5535,6 +5419,7 @@
                                     top: Math.min(y, window.innerHeight - 100)
                                 });
 
+                                // Change cursor
                                 cesiumViewer.canvas.style.cursor = 'pointer';
                             }
                         } else {
@@ -5548,12 +5433,15 @@
                 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             }
 
+            // ─── REFRESH CESIUM BUILDINGS ───
             function refreshCesiumBuildings() {
                 if (!cesiumViewer) return;
 
+                // Remove old buildings
                 cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
                 cesiumBuildingEntities = [];
 
+                // Get filtered buildings from the map source
                 const filteredFeatures = buildingSource.getFeatures();
 
                 if (!filteredFeatures.length) {
@@ -5572,6 +5460,7 @@
                         const coords = geometry.getCoordinates()[0];
                         if (!coords || coords.length < 3) return;
 
+                        // ─── FIXED: Proper coordinate conversion ───
                         const flat = ringToLonLatFlatArray(coords);
                         if (flat.length < 6) return;
 
@@ -5582,6 +5471,7 @@
                         const color = usageColors[usage] || '#9E9E9E';
                         const isMapped = !!polygonData;
 
+                        // ─── ADD BUILDING ENTITY ───
                         const entity = cesiumViewer.entities.add({
                             name: 'Building ' + gisid,
                             polygon: {
@@ -5618,6 +5508,7 @@
                     try {
                         cesiumViewer.zoomTo(cesiumViewer.entities);
                     } catch (e) {
+                        // Fallback: fly to first building
                         if (cesiumBuildingEntities.length > 0) {
                             const first = cesiumBuildingEntities[0];
                             if (first && first.position) {
@@ -5630,11 +5521,13 @@
                     }
                 }
 
+                // Re-setup interactions after buildings are loaded
                 setTimeout(setup3DInteractions, 500);
 
                 console.log(`✅ ${cesiumBuildingEntities.length} buildings loaded in 3D`);
             }
 
+            // ─── TOGGLE 3D VIEW ───
             function toggle3DView() {
                 is3DActive = !is3DActive;
                 window.is3DActive = is3DActive;
@@ -5655,6 +5548,7 @@
 
                     showToast('🧊 3D View loaded — Click buildings for details', 2500);
 
+                    // Show info panel for 3D mode
                     const infoBox = document.createElement('div');
                     infoBox.className = 'cesium-info-box';
                     infoBox.textContent = '🏢 Click on any building to see details | Search & Direction available';
@@ -5668,6 +5562,7 @@
                     setTimeout(() => map.updateSize(), 100);
                     showToast('🗺️ Back to 2D editable view', 1500);
 
+                    // Remove info box
                     const infoBox = document.querySelector('.cesium-info-box');
                     if (infoBox) infoBox.remove();
                     $('#cesium3dInfoPanel').removeClass('show');
@@ -5675,6 +5570,7 @@
                 }
             }
 
+            // ─── Close 3D Info Panel ───
             $(document).on('click', '#close3dInfoPanel', function() {
                 $('#cesium3dInfoPanel').removeClass('show');
                 if (cesiumSelectedBuilding) {
@@ -5682,6 +5578,7 @@
                 }
             });
 
+            // ─── 3D TOGGLE EVENT ───
             $(document).on('click', '#threeDToggleBtn', function(e) {
                 e.stopPropagation();
                 toggle3DView();
@@ -5691,6 +5588,7 @@
             buildSearchIndex();
             updateLayerUI();
 
+            // Load buildings with colors
             currentFilteredBuildings = allBuildings;
             loadBuildingsWithColors(allBuildings);
             $('#buildingCountDisplay').text(`Showing: ${allBuildings.length} buildings`);
@@ -5704,16 +5602,7 @@
 
             loadInfrastructure({{ $ward->id }});
 
-            console.log('✅ Executive GIS Dashboard ready with all CRUD operations');
-            console.log('📋 Features available:');
-            console.log('  - CREATE: Draw Polygon, Line, Point');
-            console.log('  - READ: Click to view building/point/line details');
-            console.log('  - UPDATE: Edit Polygon, Move Polygon, Split Polygon');
-            console.log('  - DELETE: Delete Polygon, Line, Point');
-            console.log('  - FILTER: Usage, Area Range, Usage Variation');
-            console.log('  - STREET VIEW: Available as base layer');
-            console.log('  - 3D VIEW: Toggle with 3D button');
-            console.log('  - COLORS: Different colors for different usage types');
+            console.log('✅ Executive GIS Dashboard ready with 3D view, search, direction, and click details');
         });
     </script>
 @endpush
