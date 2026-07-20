@@ -16,8 +16,6 @@ use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Schema;
-
 class WardController extends Controller
 {
     protected $wardService;
@@ -699,37 +697,17 @@ public function missingBillExcel($ward_id)
 {
     try {
         $ward = Ward::find($ward_id);
-        if (!$ward) {
-            return response()->json(['success' => false, 'message' => 'Ward not found.'], 404);
-        }
-
         $zone = Zone::find($ward->zone_id);
-        if (!$zone) {
-            return response()->json(['success' => false, 'message' => 'Zone not found for this ward.'], 404);
-        }
 
-        $misTable = 'mis_table_' . $zone->corp_id;
+        $misTable = 'mis_' . $zone->corp_id;
         $pointDataTable = 'point_data_' . $ward_id;
-
-        if (!Schema::hasTable($misTable)) {
-            return response()->json([
-                'success' => false,
-                'message' => "MIS table '{$misTable}' does not exist for corp_id {$zone->corp_id}.",
-            ], 404);
-        }
-
-        if (!Schema::hasTable($pointDataTable)) {
-            return response()->json([
-                'success' => false,
-                'message' => "Point data table '{$pointDataTable}' does not exist for ward {$ward_id}.",
-            ], 404);
-        }
 
         $missingbill = DB::table($misTable)
             ->whereNotIn('assessment', function ($query) use ($pointDataTable) {
                 $query->select('assessment')->from($pointDataTable);
             })
             ->get();
+
         if ($missingbill->isEmpty()) {
             return response()->json([
                 'success' => false,
