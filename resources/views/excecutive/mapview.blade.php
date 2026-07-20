@@ -72,10 +72,7 @@
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
         </div>
         <div id="map"></div>
-
     </div>
-
-
 @endsection
 
 @push('scripts')
@@ -141,7 +138,7 @@
             const droneLayer = new ol.layer.Image({
                 source: new ol.source.ImageStatic({
                     url: droneImageURL,
-                    imageExtent,
+                    imageExtent: imageExtent,
                     imageSmoothing: false
                 }),
                 opacity: 0.90,
@@ -166,8 +163,6 @@
                 })
             });
 
-
-
             // ─── SOURCES ───
             const polygonSource = new ol.source.Vector();
             const lineSource = new ol.source.Vector();
@@ -183,7 +178,7 @@
                 const styles = [
                     new ol.style.Style({
                         stroke: new ol.style.Stroke({
-                            color,
+                            color: color,
                             width: 4,
                             lineJoin: 'round',
                             lineCap: 'round'
@@ -191,28 +186,27 @@
                     })
                 ];
 
-
-                    styles.push(new ol.style.Style({
-                        geometry: centerPoint,
-                        text: new ol.style.Text({
-                            text: gisid + ' GISID\n' + sqft + ' SQFT',
-                            font: 'bold 14px Arial',
-                            fill: new ol.style.Fill({
-                                color: '#000'
-                            }),
-                            backgroundFill: new ol.style.Fill({
-                                color: '#fff'
-                            }),
-                            backgroundStroke: new ol.style.Stroke({
-                                color: '#000',
-                                width: 1
-                            }),
-                            padding: [4, 6, 4, 6],
-                            overflow: true,
-                            textAlign: 'center',
-                            offsetY: 0
-                        })
-                    }));
+                styles.push(new ol.style.Style({
+                    geometry: centerPoint,
+                    text: new ol.style.Text({
+                        text: gisid + ' GISID\n' + sqft + ' SQFT',
+                        font: 'bold 14px Arial',
+                        fill: new ol.style.Fill({
+                            color: '#000'
+                        }),
+                        backgroundFill: new ol.style.Fill({
+                            color: '#fff'
+                        }),
+                        backgroundStroke: new ol.style.Stroke({
+                            color: '#000',
+                            width: 1
+                        }),
+                        padding: [4, 6, 4, 6],
+                        overflow: true,
+                        textAlign: 'center',
+                        offsetY: 0
+                    })
+                }));
 
                 return styles;
             }
@@ -233,8 +227,6 @@
                         });
 
                         feature.setId(poly.gisid);
-
-                        // ADD THIS
                         polygonSource.addFeature(feature);
 
                     } catch (e) {
@@ -243,21 +235,29 @@
                 });
             }
             loadPolygonSource();
+
             const polygonLayer = new ol.layer.Vector({
                 source: polygonSource,
                 style: createPolygonStyle,
                 visible: true,
                 title: 'Polygons'
             });
+
+            // ─── CREATE MAP ───
             const map = new ol.Map({
                 target: 'map',
-                layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer, ],
+                layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
                     zoom: 18
                 })
             });
-             $mapContainer.append(`
+
+            // ─── FIX: DEFINE MAP CONTAINER FOR UI ELEMENTS ───
+            const $mapContainer = $('#mapCard');
+
+            // ─── LAYER SWITCHER UI ───
+            $mapContainer.append(`
                 <div class="custom-layer-switcher">
                     <div class="layer-toggle-btn"><i class="bi bi-layers"></i></div>
                     <div class="layer-dropdown">
@@ -310,6 +310,7 @@
                 </div>
             `);
 
+            // ─── LABEL TOGGLE UI ───
             $mapContainer.append(`
                 <div class="custom-label-toggle">
                     <div class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
@@ -317,7 +318,9 @@
                     </div>
                 </div>
             `);
-             $mapContainer.append(`
+
+            // ─── LEGEND TOGGLE UI ───
+            $mapContainer.append(`
                 <div class="custom-legend-toggle">
                     <div class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
                         <i class="bi bi-list-ul"></i>
@@ -325,6 +328,7 @@
                 </div>
             `);
 
+            // ─── LOCATION SWITCHER UI ───
             $mapContainer.append(`
                 <div class="custom-location-switcher">
                     <div class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></div>
@@ -349,6 +353,7 @@
                 <div class="location-toast" id="locationToast"></div>
             `);
 
+            // ─── SEARCH SWITCHER UI ───
             $mapContainer.append(`
                 <div class="custom-search-switcher">
                     <div class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></div>
@@ -377,61 +382,7 @@
                 </div>
             `);
 
-            $mapContainer.append(`
-                <div class="custom-edit-toggle">
-                    <div class="edit-toggle-btn" id="editToggleBtn"><i class="bi bi-pencil-square"></i></div>
-                    <div class="edit-dropdown" id="editDropdown">
-                        <div class="dropdown-header">🔧 Modes</div>
-                        <div class="edit-dropdown-item active" data-tool="none">
-                            <div class="edit-icon"><i class="bi bi-eye"></i></div>
-                            <div class="edit-name">View Only</div>
-                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <div class="dropdown-header">✏️ Edit</div>
-                        <div class="edit-dropdown-item" data-tool="editPolygon">
-                            <div class="edit-icon"><i class="bi bi-pencil"></i></div>
-                            <div class="edit-name">Edit Polygon</div>
-                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="edit-dropdown-item" data-tool="movePolygon">
-                            <div class="edit-icon"><i class="bi bi-arrows-move"></i></div>
-                            <div class="edit-name">Move Polygon</div>
-                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="edit-dropdown-item" data-tool="split">
-                            <div class="edit-icon"><i class="bi bi-scissors"></i></div>
-                            <div class="edit-name">Split Polygon</div>
-                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <div class="dropdown-header">✏️ Drawing</div>
-                        <div class="edit-dropdown-item" data-tool="drawPolygon">
-                            <div class="edit-icon"><i class="bi bi-pentagon"></i></div>
-                            <div class="edit-name">Draw Polygon</div>
-                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="edit-dropdown-item" data-tool="drawLine">
-                            <div class="edit-icon"><i class="bi bi-vector-pen"></i></div>
-                            <div class="edit-name">Draw Line</div>
-                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="edit-dropdown-item" data-tool="drawPoint">
-                            <div class="edit-icon"><i class="bi bi-geo-alt"></i></div>
-                            <div class="edit-name">Draw Point</div>
-                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <div class="dropdown-header">🗑️ Delete</div>
-                        <div class="edit-dropdown-item" data-tool="delete">
-                            <div class="edit-icon"><i class="bi bi-trash3"></i></div>
-                            <div class="edit-name">Delete Feature</div>
-                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                    </div>
-                </div>
-            `);
-
+            // ─── 3D TOGGLE UI ───
             $mapContainer.append(`
                 <div class="custom-3d-toggle">
                     <div class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
@@ -440,9 +391,345 @@
                 </div>
             `);
 
-            $mapContainer.append(
-                `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`);
+            // ─── FULLSCREEN BUTTON ───
+            $mapContainer.append(`
+                <div class="fullscreen-btn" id="fullscreenBtn">
+                    <i class="bi bi-arrows-fullscreen"></i>
+                </div>
+            `);
 
+            // ─── ADDITIONAL CSS FOR UI ELEMENTS (Optional but recommended) ───
+            const style = document.createElement('style');
+            style.textContent = `
+                /* Layer Switcher Styles */
+                .custom-layer-switcher {
+                    position: absolute;
+                    right: 30px;
+                    top: 20px;
+                    z-index: 1000;
+                    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+                }
+                .layer-toggle-btn {
+                    background: white;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+                    font-size: 20px;
+                    transition: all 0.2s;
+                }
+                .layer-toggle-btn:hover {
+                    background: #f0f0f0;
+                    transform: scale(1.05);
+                }
+                .layer-dropdown {
+                    display: none;
+                    position: absolute;
+                    right: 0;
+                    top: 52px;
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                    width: 260px;
+                    padding: 8px 0;
+                    max-height: 500px;
+                    overflow-y: auto;
+                }
+                .layer-dropdown.active {
+                    display: block;
+                }
+                .dropdown-header {
+                    padding: 8px 16px;
+                    font-weight: 600;
+                    font-size: 12px;
+                    color: #666;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .dropdown-divider {
+                    height: 1px;
+                    background: #e9ecef;
+                    margin: 4px 0;
+                }
+                .layer-dropdown-item {
+                    display: flex;
+                    align-items: center;
+                    padding: 8px 16px;
+                    cursor: pointer;
+                    transition: background 0.15s;
+                }
+                .layer-dropdown-item:hover {
+                    background: #f5f5f5;
+                }
+                .layer-icon {
+                    width: 28px;
+                    font-size: 16px;
+                    color: #555;
+                }
+                .layer-name {
+                    flex: 1;
+                    font-size: 14px;
+                    color: #333;
+                }
+                .layer-check {
+                    color: #ccc;
+                    font-size: 14px;
+                }
+                .layer-dropdown-item.active .layer-check {
+                    color: #0d6efd;
+                }
+
+                /* Location Switcher Styles */
+                .custom-location-switcher {
+                    position: absolute;
+                    right: 30px;
+                    top: 74px;
+                    z-index: 1000;
+                }
+                .location-toggle-btn {
+                    background: white;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+                    font-size: 20px;
+                    transition: all 0.2s;
+                }
+                .location-toggle-btn:hover {
+                    background: #f0f0f0;
+                    transform: scale(1.05);
+                }
+                .location-dropdown {
+                    display: none;
+                    position: absolute;
+                    right: 0;
+                    top: 52px;
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                    width: 240px;
+                    padding: 8px 0;
+                }
+                .location-dropdown.active {
+                    display: block;
+                }
+                .location-dropdown-item {
+                    display: flex;
+                    align-items: center;
+                    padding: 10px 16px;
+                    cursor: pointer;
+                    transition: background 0.15s;
+                }
+                .location-dropdown-item:hover {
+                    background: #f5f5f5;
+                }
+                .location-item-icon {
+                    width: 28px;
+                    font-size: 16px;
+                    color: #555;
+                }
+                .location-item-name {
+                    flex: 1;
+                    font-size: 14px;
+                    color: #333;
+                }
+                .location-item-badge {
+                    font-size: 11px;
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    background: #e9ecef;
+                    color: #666;
+                }
+                .location-item-badge.active {
+                    background: #0d6efd;
+                    color: white;
+                }
+
+                /* Search Switcher Styles */
+                .custom-search-switcher {
+                    position: absolute;
+                    right: 30px;
+                    top: 128px;
+                    z-index: 1000;
+                }
+                .search-toggle-btn {
+                    background: white;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+                    font-size: 20px;
+                    transition: all 0.2s;
+                }
+                .search-toggle-btn:hover {
+                    background: #f0f0f0;
+                    transform: scale(1.05);
+                }
+                .search-dropdown {
+                    display: none;
+                    position: absolute;
+                    right: 0;
+                    top: 52px;
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                    width: 340px;
+                    max-height: 500px;
+                    overflow-y: auto;
+                }
+                .search-dropdown.active {
+                    display: block;
+                }
+                .search-tab-btn {
+                    border: none;
+                    background: transparent;
+                    padding: 10px 0;
+                    font-size: 13px;
+                    color: #666;
+                    border-bottom: 2px solid transparent;
+                    transition: all 0.2s;
+                }
+                .search-tab-btn.active {
+                    color: #0d6efd;
+                    border-bottom-color: #0d6efd;
+                }
+                .search-tab-btn:hover {
+                    background: #f5f5f5;
+                }
+                .search-results-container {
+                    max-height: 200px;
+                    overflow-y: auto;
+                }
+
+                /* Label Toggle */
+                .custom-label-toggle {
+                    position: absolute;
+                    right: 30px;
+                    top: 182px;
+                    z-index: 1000;
+                }
+                .label-toggle-btn {
+                    background: white;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+                    font-size: 18px;
+                    transition: all 0.2s;
+                }
+                .label-toggle-btn:hover {
+                    background: #f0f0f0;
+                    transform: scale(1.05);
+                }
+                .label-toggle-btn.active-label {
+                    color: #0d6efd;
+                }
+
+                /* Legend Toggle */
+                .custom-legend-toggle {
+                    position: absolute;
+                    right: 30px;
+                    top: 236px;
+                    z-index: 1000;
+                }
+                .legend-toggle-btn {
+                    background: white;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+                    font-size: 18px;
+                    transition: all 0.2s;
+                }
+                .legend-toggle-btn:hover {
+                    background: #f0f0f0;
+                    transform: scale(1.05);
+                }
+
+                /* 3D Toggle */
+                .custom-3d-toggle {
+                    position: absolute;
+                    right: 30px;
+                    top: 290px;
+                    z-index: 1000;
+                }
+                .threed-toggle-btn {
+                    background: white;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+                    font-size: 18px;
+                    transition: all 0.2s;
+                }
+                .threed-toggle-btn:hover {
+                    background: #f0f0f0;
+                    transform: scale(1.05);
+                }
+                .threed-toggle-btn.active-3d {
+                    color: #0d6efd;
+                }
+
+                /* Fullscreen Button */
+                .fullscreen-btn {
+                    position: absolute;
+                    right: 30px;
+                    bottom: 30px;
+                    z-index: 1000;
+                    background: white;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+                    font-size: 18px;
+                    transition: all 0.2s;
+                }
+                .fullscreen-btn:hover {
+                    background: #f0f0f0;
+                    transform: scale(1.05);
+                }
+            `;
+            document.head.appendChild(style);
+
+            // ─── TOGGLE DROPDOWN FUNCTIONALITY ───
+            // Layer Switcher Toggle
+            $(document).on('click', '.layer-toggle-btn', function(e) {
+                e.stopPropagation();
+                $('.layer-dropdown').toggleClass('active');
+                $('.location-dropdown').removeClass('active');
+                $('.search-dropdown').removeClass('active');
+            });
+
+            // Location Switcher Toggle
+            $(document).on('click', '.location-toggle-btn', function(e) {
+                e.stopPropagation();
+                $('.location-dropdown').toggleClass('active');
+                $('.layer-dropdown').removeClass('active');
+                $('.search-dropdown').removeClass('active');
+            });
+
+            // Search Switcher Toggle
+            $(document).on('click', '.search-toggle-btn', function(e) {
+                e.stopPropagation();
+                $('.search-dropdown').toggleClass('active');
+                $('.layer-dropdown').removeClass('active');
+                $('.location-dropdown').removeClass('active');
+            });
+
+            // Close dropdowns when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.custom-layer-switcher').length) {
+                    $('.layer-dropdown').removeClass('active');
+                }
+                if (!$(e.target).closest('.custom-location-switcher').length) {
+                    $('.location-dropdown').removeClass('active');
+                }
+                if (!$(e.target).closest('.custom-search-switcher').length) {
+                    $('.search-dropdown').removeClass('active');
+                }
+            });
+
+            console.log('GIS Dashboard initialized successfully!');
         });
     </script>
 @endpush
