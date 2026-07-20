@@ -126,29 +126,12 @@
             const lineSource = new ol.source.Vector();
             const pointSource = new ol.source.Vector();
 
-            const polygonLayer = new ol.layer.Vector({
-                source: polygonSource,
-                title: 'Building Polygons',
-                visible: true,
-                zindex: 10,
-                style: function(feature) {
-                    return new ol.style.Style({
-                        stroke: new ol.style.stroke({
-                            color: '#0000FF',
-                            width: 1.5
-                        }),
-                        fill: new ol.style.Fill({({
-                            color: 'red'
-                        })
-                    });
-                }
-            })
 
             function loadPolygonSource() {
                 polygonSource.clear();
                 polygons.forEach(poly => {
                     try {
-                        let coords = json.parse(poly.coordinates);
+                        let coords = JSON.parse(poly.coordinates);
                         const feature = new ol.Feature({
                             geometry: new ol.geom.Polygon([coords]),
                             gisid: poly.gisid,
@@ -156,12 +139,11 @@
                             sqfeet: poly.sqfeet || '0',
                             orginalData: poly
                         });
-                        feature.setid(poly.gisid);
+                        feature.setId(poly.gisid);
                     } catch (e) {
                         console.error('polygon parse error:', e);
                     }
                 })
-
             }
             loadPolygonSource();
             const polygonLayer = new ol.layer.Vector({
