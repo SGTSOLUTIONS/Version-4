@@ -148,7 +148,7 @@
                     styles.push(new ol.style.Style({
                         geometry: centerPoint,
                         text: new ol.style.Text({
-                            text: sqft + ' SQFT',
+                            text: gisid + ' GISID\n' + sqft + ' SQFT',
                             font: 'bold 14px Arial',
                             fill: new ol.style.Fill({
                                 color: '#000'
