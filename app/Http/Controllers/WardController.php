@@ -560,17 +560,25 @@ class WardController extends Controller
             ], 500);
         }
     }
-    public function missingBuiilding($ward_id)
-    {
+   use Illuminate\Support\Facades\DB;
+
+public function missingBuiilding($ward_id)
+{
+    try {
+
         $polygonDataTable = "polygon_data_" . $ward_id;
         $pointDataTable   = "point_data_" . $ward_id;
         $polygonTable     = "polygons_" . $ward_id;
 
         $missingBuildings = DB::table("$polygonDataTable as pd")
             ->leftJoin(
-                DB::raw("(SELECT gisid, COUNT(*) as point_count
-                     FROM $pointDataTable
-                     GROUP BY gisid) pc"),
+                DB::raw("
+                    (
+                        SELECT gisid, COUNT(*) AS point_count
+                        FROM {$pointDataTable}
+                        GROUP BY gisid
+                    ) pc
+                "),
                 'pd.gisid',
                 '=',
                 'pc.gisid'
@@ -580,8 +588,8 @@ class WardController extends Controller
             ->select(
                 'pd.gisid',
                 'pd.number_bill',
-                DB::raw('COALESCE(pc.point_count,0) as point_count'),
-                DB::raw('ST_AsGeoJSON(p.geom) as geometry')
+                DB::raw('COALESCE(pc.point_count,0) AS point_count'),
+                DB::raw('ST_AsGeoJSON(p.geom) AS geometry')
             )
             ->get();
 
@@ -593,10 +601,10 @@ class WardController extends Controller
                 "type" => "Feature",
                 "geometry" => json_decode($row->geometry),
                 "properties" => [
-                    "gisid" => $row->gisid,
-                    "number_bill" => $row->number_bill,
-                    "point_count" => $row->point_count,
-                    "status" => "Not Surveyed"
+                    "gisid"        => $row->gisid,
+                    "number_bill"  => (int)$row->number_bill,
+                    "point_count"  => (int)$row->point_count,
+                    "status"       => "Not Surveyed"
                 ]
             ];
         }
@@ -605,10 +613,22 @@ class WardController extends Controller
             "type" => "FeatureCollection",
             "features" => $features
         ];
-        return response(
-            json_encode($geojson, JSON_UNESCAPED_UNICODE)
-        )
-            ->header('Content-Type', 'application/geo+json')
-            ->header('Content-Disposition', 'attachment; filename=missing_buildings.geojson');
+
+        return response()->streamDownload(function () use ($geojson) {
+            echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }, "missing_buildings_{$ward_id}.geojson", [
+            "Content-Type" => "application/geo+json",
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'line'    => $e->getLine(),
+            'file'    => $e->getFile()
+        ], 500);
+
     }
+}
 }
