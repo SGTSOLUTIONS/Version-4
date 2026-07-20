@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class WardController extends Controller
 {
@@ -665,7 +667,6 @@ public function missingBuiildingExcel($ward_id)
                 'GISID',
                 'Type',
                 'SqFeet',
-                'Coordinates'
             ]);
 
             foreach ($missingBuildings as $building) {
@@ -674,7 +675,6 @@ public function missingBuiildingExcel($ward_id)
                     $building->gisid,
                     $building->type,
                     $building->sqfeet,
-                    $building->coordinates
                 ]);
             }
 
@@ -690,6 +690,81 @@ public function missingBuiildingExcel($ward_id)
             'message' => $e->getMessage(),
             'line'    => $e->getLine(),
             'file'    => $e->getFile()
+        ], 500);
+    }
+}
+public function missingBillExcel($ward_id)
+{
+    try {
+        $ward = Ward::find($ward_id);
+        $zone = Zone::find($ward->zone_id);
+
+        $misTable = 'mis_table_' . $zone->corp_id;
+        $pointDataTable = 'point_data_' . $ward_id;
+
+        $missingbill = DB::table($misTable)
+            ->whereNotIn('assessment', function ($query) use ($pointDataTable) {
+                $query->select('assessment')->from($pointDataTable);
+            })
+            ->get();
+
+        if ($missingbill->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No missing records found.',
+            ], 404);
+        }
+
+        // Get column names dynamically from the first row
+        $columns = array_keys((array) $missingbill->first());
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header row
+        foreach ($columns as $colIndex => $colName) {
+            $cellCoordinate = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1) . '1';
+            $sheet->setCellValue($cellCoordinate, $colName);
+        }
+
+        // Data rows
+        $rowNum = 2;
+        foreach ($missingbill as $row) {
+            $row = (array) $row;
+            foreach ($columns as $colIndex => $colName) {
+                $cellCoordinate = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1) . $rowNum;
+                $sheet->setCellValue($cellCoordinate, $row[$colName]);
+            }
+            $rowNum++;
+        }
+
+        // Auto-size every column that has data
+        foreach (range(1, count($columns)) as $colIndex) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+        }
+
+        // Bold header row
+        $sheet->getStyle('A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($columns)) . '1')
+            ->getFont()->setBold(true);
+
+        $fileName = "missing_buildings_{$ward_id}.xlsx";
+
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+        ]);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'line'    => $e->getLine(),
+            'file'    => $e->getFile(),
         ], 500);
     }
 }
