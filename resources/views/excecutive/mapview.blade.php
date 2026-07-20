@@ -39,6 +39,20 @@
         .map-card.fullscreen-mode #map {
             height: calc(100vh - 5px);
         }
+        .custom-layer-switcher {
+            position: absolute;
+            right: 30px;
+            top: 20px;
+            z-index: 1000;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .custom-location-switcher {
+            position: absolute;
+            right: 30px;
+            top: 74px;
+            z-index: 1000;
+        }
     </style>
 @endpush
 
@@ -52,7 +66,14 @@
             <span class="ds-pill paid"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Live</span>
         </div>
     </div>
-    <div id="map"></div>
+    <div class="map-card" id="mapCard">
+        <div class="map-header">
+            <h5 class="map-title"><i class="bi bi-geo-alt-fill text-primary me-2"></i>Executive GIS Dashboard</h5>
+            <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
+        </div>
+        <div id="map"></div>
+
+    </div>
 
 
 @endsection
@@ -236,6 +257,66 @@
                     zoom: 18
                 })
             });
+             $mapContainer.append(`
+                <div class="custom-layer-switcher">
+                    <div class="layer-toggle-btn"><i class="bi bi-layers"></i></div>
+                    <div class="layer-dropdown">
+                        <div class="dropdown-header">Base Maps</div>
+                        <div class="layer-dropdown-item active" data-layer-type="base" data-layer="OpenStreetMap">
+                            <div class="layer-icon"><i class="bi bi-map"></i></div>
+                            <div class="layer-name">OpenStreetMap</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Satellite">
+                            <div class="layer-icon"><i class="bi bi-satellite"></i></div>
+                            <div class="layer-name">Satellite</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Street View">
+                            <div class="layer-icon"><i class="bi bi-signpost-2"></i></div>
+                            <div class="layer-name">Street View</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">Overlays</div>
+                        <div class="layer-dropdown-item" data-layer-type="overlay" data-layer="Drone View">
+                            <div class="layer-icon"><i class="bi bi-camera-drone"></i></div>
+                            <div class="layer-name">Drone View</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">Vector Layers</div>
+                        <div class="layer-dropdown-item" data-layer-type="vector" data-layer="Polygons">
+                            <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
+                            <div class="layer-name">Polygons</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item" data-layer-type="vector" data-layer="Lines">
+                            <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
+                            <div class="layer-name">Lines</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item" data-layer-type="vector" data-layer="Points">
+                            <div class="layer-icon"><i class="bi bi-geo-alt"></i></div>
+                            <div class="layer-name">Points</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Buildings">
+                            <div class="layer-icon"><i class="bi bi-building"></i></div>
+                            <div class="layer-name">Buildings</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            $mapContainer.append(`
+                <div class="custom-label-toggle">
+                    <div class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
+                        <i class="bi bi-fonts"></i>
+                    </div>
+                </div>
+            `);
 
         });
     </script>
