@@ -9,9 +9,35 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
     <style>
-        #map {
-            height: 100vh;
+         #map {
             width: 100%;
+            height: 800px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        #map.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            border-radius: 0;
+        }
+
+        .map-card.fullscreen-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9998;
+            border-radius: 0;
+            margin: 0;
+        }
+
+        .map-card.fullscreen-mode #map {
+            height: calc(100vh - 5px);
         }
     </style>
 @endpush
