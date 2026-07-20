@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OpenLayers - Aerial & Street View</title>
+    <title>OpenLayers - Satellite & Google Street View</title>
 
     <!-- OpenLayers CSS & JS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css" />
@@ -54,16 +54,6 @@
             overflow: hidden;
         }
 
-        .controls button::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.1);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .controls button:hover::after { opacity: 1; }
         .controls button:hover { transform: translateY(-2px); }
         .controls button:active { transform: scale(0.95); }
 
@@ -102,8 +92,8 @@
             position: absolute;
             bottom: 30px;
             right: 30px;
-            width: 420px;
-            height: 320px;
+            width: 450px;
+            height: 350px;
             border-radius: 16px;
             overflow: hidden;
             z-index: 999;
@@ -166,7 +156,6 @@
             content: '⏳ ';
         }
 
-        /* Close button for street view */
         .close-street {
             position: absolute;
             top: 10px;
@@ -196,7 +185,40 @@
             display: flex;
         }
 
-        /* Responsive */
+        /* Google Street View specific styles */
+        .street-controls {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: none;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        #streetViewContainer.visible .street-controls {
+            display: flex;
+        }
+
+        .street-controls button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .street-controls button:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
         @media (max-width: 768px) {
             .controls {
                 top: 10px;
@@ -226,30 +248,31 @@
 <body>
 
 <div id="map">
-    <!-- Control Panel -->
     <div class="controls">
         <button class="btn-satellite active" id="btnSatellite">🛰️ Satellite</button>
         <button class="btn-street" id="btnStreet">🚶 Street View</button>
         <span class="info" id="coordInfo">📍 Click map to explore</span>
     </div>
 
-    <!-- Street View Container -->
     <div id="streetViewContainer">
         <button class="close-street" id="closeStreet">✕</button>
         <iframe id="streetIframe" src="about:blank"></iframe>
-        <div class="street-label">📍 Mapillary Street View</div>
+        <div class="street-label">📍 Google Street View</div>
+        <div class="street-controls">
+            <button id="streetZoomIn">➕</button>
+            <button id="streetZoomOut">➖</button>
+            <button id="streetRotate">🔄</button>
+        </div>
     </div>
 
-    <!-- Loading -->
-    <div class="loading" id="loading">Loading street view...</div>
+    <div class="loading" id="loading">Loading Google Street View...</div>
 </div>
 
 <script>
     // ============================================================
-    // OPENLAYERS SETUP - Using simplified approach
+    // OPENLAYERS SETUP
     // ============================================================
 
-    // Get OpenLayers classes from the global ol object
     var Map = ol.Map;
     var View = ol.View;
     var TileLayer = ol.layer.Tile;
@@ -279,29 +302,29 @@
     });
 
     // ============================================================
-    // 2. BASE LAYER (OSM for context)
+    // 2. BASE LAYER (OSM)
     // ============================================================
     var osmLayer = new TileLayer({
         source: new OSM(),
-        opacity: 0.7,
+        opacity: 1.0,
         visible: true
     });
     map.addLayer(osmLayer);
 
     // ============================================================
-    // 3. OPENAERIALMAP SATELLITE LAYER
+    // 3. SATELLITE LAYER - Esri Satellite (no CORS issues)
     // ============================================================
-    var oamLayer = new TileLayer({
+    var satelliteLayer = new TileLayer({
         source: new XYZ({
-            url: 'https://tiles.openaerialmap.org/tiles/1.0.0/global/{z}/{x}/{y}.png',
+            url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
             maxZoom: 19,
             crossOrigin: 'anonymous',
-            attributions: '© OpenAerialMap'
+            attributions: '© Esri, Maxar, Earthstar Geographics'
         }),
         visible: true,
         opacity: 1.0
     });
-    map.addLayer(oamLayer);
+    map.addLayer(satelliteLayer);
 
     // ============================================================
     // 4. VECTOR LAYER FOR MARKER
@@ -333,7 +356,6 @@
     var currentLat = 40.7128;
     var showSatellite = true;
     var showStreet = false;
-    var markerFeature = null;
 
     // ============================================================
     // 6. ADD INITIAL MARKER
@@ -341,14 +363,13 @@
     function addMarker(lon, lat) {
         markerSource.clear();
         var coord = fromLonLat([lon, lat]);
-        markerFeature = new Feature({
+        var markerFeature = new Feature({
             geometry: new Point(coord)
         });
         markerSource.addFeature(markerFeature);
         currentLon = lon;
         currentLat = lat;
 
-        // Update info
         document.getElementById('coordInfo').textContent =
             '📍 ' + lat.toFixed(5) + ', ' + lon.toFixed(5);
     }
@@ -366,38 +387,49 @@
 
         addMarker(lon, lat);
 
-        // If street view is active, update it
         if (showStreet) {
             updateStreetView(lat, lon);
         }
     });
 
     // ============================================================
-    // 8. STREET VIEW (Mapillary)
+    // 8. GOOGLE STREET VIEW
     // ============================================================
     var streetContainer = document.getElementById('streetViewContainer');
     var streetIframe = document.getElementById('streetIframe');
     var loading = document.getElementById('loading');
     var closeStreetBtn = document.getElementById('closeStreet');
 
+    // Google Street View requires an API key
+    // Get your free API key from: https://developers.google.com/maps/documentation/embed/get-api-key
+    var GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'; // Replace with your API key
+
     function updateStreetView(lat, lon) {
         loading.style.display = 'block';
         streetContainer.classList.remove('visible');
 
-        // Mapillary embed URL
-        var mapillaryUrl = 'https://www.mapillary.com/embed?map_style=Mapillary%20streets&lat=' +
-                          lat + '&lng=' + lon + '&z=18&style=classic&theme=light';
+        // Google Street View Embed URL
+        var streetViewUrl = 'https://www.google.com/maps/embed/v1/streetview' +
+            '?key=' + GOOGLE_API_KEY +
+            '&location=' + lat + ',' + lon +
+            '&heading=0' +
+            '&pitch=0' +
+            '&fov=90' +
+            '&zoom=1' +
+            '&language=en';
 
-        // Set iframe source
-        streetIframe.src = mapillaryUrl;
+        // If no API key, use the standard Google Maps embed (limited)
+        if (GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
+            streetViewUrl = 'https://www.google.com/maps?q=' + lat + ',' + lon + '&layer=c&cbll=' + lat + ',' + lon + '&cbp=11,0,0,0,0';
+        }
 
-        // Show after load
+        streetIframe.src = streetViewUrl;
+
         streetIframe.onload = function() {
             loading.style.display = 'none';
             streetContainer.classList.add('visible');
         };
 
-        // Timeout fallback
         setTimeout(function() {
             if (loading.style.display !== 'none') {
                 loading.style.display = 'none';
@@ -415,10 +447,38 @@
         document.getElementById('btnStreet').textContent = '🚶 Street View';
         document.getElementById('btnSatellite').classList.add('active');
         document.getElementById('btnSatellite').textContent = '🛰️ Satellite (ON)';
-        oamLayer.setVisible(true);
+        satelliteLayer.setVisible(true);
         document.getElementById('coordInfo').textContent =
             '🛰️ ' + currentLat.toFixed(5) + ', ' + currentLon.toFixed(5);
         showSatellite = true;
+    });
+
+    // Street view controls
+    document.getElementById('streetZoomIn').addEventListener('click', function() {
+        var currentSrc = streetIframe.src;
+        if (currentSrc.includes('fov=')) {
+            var newFov = parseInt(currentSrc.match(/fov=(\d+)/)[1]) - 10;
+            if (newFov < 30) newFov = 30;
+            streetIframe.src = currentSrc.replace(/fov=\d+/, 'fov=' + newFov);
+        }
+    });
+
+    document.getElementById('streetZoomOut').addEventListener('click', function() {
+        var currentSrc = streetIframe.src;
+        if (currentSrc.includes('fov=')) {
+            var newFov = parseInt(currentSrc.match(/fov=(\d+)/)[1]) + 10;
+            if (newFov > 120) newFov = 120;
+            streetIframe.src = currentSrc.replace(/fov=\d+/, 'fov=' + newFov);
+        }
+    });
+
+    document.getElementById('streetRotate').addEventListener('click', function() {
+        var currentSrc = streetIframe.src;
+        if (currentSrc.includes('heading=')) {
+            var currentHeading = parseInt(currentSrc.match(/heading=(\d+)/)[1]);
+            var newHeading = (currentHeading + 45) % 360;
+            streetIframe.src = currentSrc.replace(/heading=\d+/, 'heading=' + newHeading);
+        }
     });
 
     // ============================================================
@@ -432,18 +492,15 @@
         showSatellite = true;
         showStreet = false;
 
-        // Update UI
         btnSat.classList.add('active');
         btnStreet.classList.remove('active');
         btnSat.textContent = '🛰️ Satellite (ON)';
         btnStreet.textContent = '🚶 Street View';
 
-        // Show satellite layer, hide street view
-        oamLayer.setVisible(true);
+        satelliteLayer.setVisible(true);
         streetContainer.classList.remove('visible');
         streetIframe.src = 'about:blank';
 
-        // Update info
         document.getElementById('coordInfo').textContent =
             '🛰️ ' + currentLat.toFixed(5) + ', ' + currentLon.toFixed(5);
     });
@@ -453,19 +510,15 @@
         showSatellite = false;
         showStreet = true;
 
-        // Update UI
         btnStreet.classList.add('active');
         btnSat.classList.remove('active');
         btnStreet.textContent = '🚶 Street (ON)';
         btnSat.textContent = '🛰️ Satellite';
 
-        // Hide satellite layer
-        oamLayer.setVisible(false);
+        satelliteLayer.setVisible(false);
 
-        // Update street view at current location
         updateStreetView(currentLat, currentLon);
 
-        // Update info
         document.getElementById('coordInfo').textContent =
             '🚶 ' + currentLat.toFixed(5) + ', ' + currentLon.toFixed(5);
     });
@@ -493,11 +546,11 @@
     });
 
     // ============================================================
-    // 12. LOAD STREET VIEW INITIALLY (but hidden)
+    // 12. INITIAL LOAD
     // ============================================================
     setTimeout(function() {
         // Preload street view in background
-        var preloadUrl = 'https://www.mapillary.com/embed?map_style=Mapillary%20streets&lat=40.7128&lng=-74.0060&z=18&style=classic&theme=light';
+        var preloadUrl = 'https://www.google.com/maps?q=40.7128,-74.0060&layer=c&cbll=40.7128,-74.0060&cbp=11,0,0,0,0';
         var preloadIframe = document.createElement('iframe');
         preloadIframe.src = preloadUrl;
         preloadIframe.style.display = 'none';
@@ -507,9 +560,11 @@
         }, 5000);
     }, 2000);
 
-    console.log('🚀 OpenLayers Aerial & Street View Viewer loaded!');
+    console.log('🚀 OpenLayers Satellite & Google Street View Viewer loaded!');
     console.log('💡 Click map to change location');
     console.log('⌨️  S = Satellite, V = Street View, ESC = Close street view');
+    console.log('📌 Note: For best results, get a free Google Street View API key');
+    console.log('🔑 https://developers.google.com/maps/documentation/embed/get-api-key');
 </script>
 
 </body>
