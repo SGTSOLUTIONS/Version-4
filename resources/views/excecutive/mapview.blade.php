@@ -144,7 +144,7 @@
                     })
                 ];
 
-                if (showLabels) {
+
                     styles.push(new ol.style.Style({
                         geometry: centerPoint,
                         text: new ol.style.Text({
@@ -166,7 +166,7 @@
                             offsetY: 0
                         })
                     }));
-                }
+
                 return styles;
             }
 
