@@ -587,7 +587,7 @@ public function missingBuiilding($ward_id)
                 'pd.gisid',
                 'pd.number_bill',
                 DB::raw('COALESCE(pc.point_count,0) AS point_count'),
-                DB::raw('ST_AsGeoJSON(p.geom) AS geometry')
+                'p.coordinates'
             )
             ->get();
 
