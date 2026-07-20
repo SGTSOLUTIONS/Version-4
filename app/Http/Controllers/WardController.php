@@ -560,8 +560,6 @@ class WardController extends Controller
             ], 500);
         }
     }
-   use Illuminate\Support\Facades\DB;
-
 public function missingBuiilding($ward_id)
 {
     try {
