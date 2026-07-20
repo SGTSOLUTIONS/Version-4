@@ -525,21 +525,21 @@
                                     Ward ${escapeHtml(ward.ward_no)}
                                 </h3>
                                 ${ward.contact_person ? `
-                                            <p class="acard-desc small mb-1">
-                                                <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
-                                                ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
-                                            </p>
-                                        ` : ''}
+                                        <p class="acard-desc small mb-1">
+                                            <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
+                                            ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
+                                        </p>
+                                    ` : ''}
                                 ${ward.phone ? `
-                                            <p class="acard-desc small mb-1">
-                                                <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
-                                            </p>
-                                        ` : ''}
+                                        <p class="acard-desc small mb-1">
+                                            <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
+                                        </p>
+                                    ` : ''}
                                 ${ward.email ? `
-                                            <p class="acard-desc small mb-1">
-                                                <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
-                                            </p>
-                                        ` : ''}
+                                        <p class="acard-desc small mb-1">
+                                            <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
+                                        </p>
+                                    ` : ''}
                                 <div class="acard-footer">
                                     <span class="acard-author">
                                         ${escapeHtml(ward.contact_person || 'No contact')}
@@ -548,27 +548,45 @@
                                         ${ward.status}
                                     </span>
                                 </div>
-                               <div class="d-flex gap-1 mt-3 flex-wrap">
-    <button class="btn btn-sm btn-outline-info view-btn" data-id="${ward.id}" title="View Details">
-        <i class="bi bi-eye"></i>
+                               <div class="d-flex gap-2 mt-3">
+    <button class="btn btn-sm btn-info flex-fill view-btn" data-id="${ward.id}">
+        <i class="bi bi-eye"></i> View
     </button>
-    <button class="btn btn-sm btn-outline-warning edit-btn" data-id="${ward.id}" title="Edit Ward">
-        <i class="bi bi-pencil"></i>
-    </button>
-    <button class="btn btn-sm btn-outline-primary missing-building-btn" data-id="${ward.id}" title="Missing Building GeoJSON">
-        <i class="bi bi-geo-alt"></i>
-    </button>
-    <button class="btn btn-sm btn-outline-success missing-building-excel-btn" data-id="${ward.id}" title="Missing Building Excel">
-        <i class="bi bi-file-earmark-excel"></i>
-    </button>
-    <button class="btn btn-sm btn-outline-danger missing-bill-btn" data-id="${ward.id}" title="Missing Bill">
-        <i class="bi bi-receipt"></i>
-    </button>
-    ${userRole === 'admin' ? `
-            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}" title="Delete Ward">
-                <i class="bi bi-trash"></i>
-            </button>
-        ` : ''}
+    <div class="dropdown flex-fill">
+        <button class="btn btn-sm btn-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-three-dots-vertical"></i> Actions
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item edit-btn" data-id="${ward.id}" href="#">
+                    <i class="bi bi-pencil me-2"></i> Edit Ward
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item missing-building-btn" data-id="${ward.id}" href="#">
+                    <i class="bi bi-geo-alt me-2"></i> Missing Building GeoJSON
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item missing-building-excel-btn" data-id="${ward.id}" href="#">
+                    <i class="bi bi-file-earmark-excel me-2"></i> Missing Building Excel
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item missing-bill-btn" data-id="${ward.id}" href="#">
+                    <i class="bi bi-receipt me-2"></i> Missing Bill
+                </a>
+            </li>
+            ${userRole === 'admin' ? `
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item text-danger delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}" href="#">
+                        <i class="bi bi-trash me-2"></i> Delete
+                    </a>
+                </li>
+            ` : ''}
+        </ul>
+    </div>
 </div>
                             </div>
                         </div>
@@ -962,8 +980,8 @@
                                 <div class="col-12 text-center mb-3">
                                     ${imageUrl ? `<img src="${imageUrl}" alt="${escapeHtml(ward.ward_no)}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 10px;">` :
                                         `<div style="width: 150px; height: 150px; background: #e9ecef; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;">
-                                                    <i class="bi bi-building fs-1 text-muted"></i>
-                                                </div>`}
+                                                <i class="bi bi-building fs-1 text-muted"></i>
+                                            </div>`}
                                 </div>
                                 <div class="col-md-6"><strong>Corporation:</strong><br><p>${escapeHtml(corporationName)}</p></div>
                                 <div class="col-md-6"><strong>Zone:</strong><br><p>${escapeHtml(zoneName)}</p></div>
@@ -986,20 +1004,19 @@
                 });
             });
 
-            $(document).on('click', '.missing-building-btn', function() {
+             $(document).on('click', '.missing-building-btn', function () {
 
-                let id = $(this).data('id');
+    let id = $(this).data('id');
 
-                window.location.href = "/wards/" + id;
+    window.location.href = "/wards/" + id;
 
-            });
-            $(document).on('click', '.missing-building-excel-btn', function() {
+});$(document).on('click', '.missing-building-excel-btn', function () {
 
-                let id = $(this).data('id');
+    let id = $(this).data('id');
 
-                window.location.href = "/wards/" + id + "/missing-building-excel";
+    window.location.href = "/wards/" + id + "/missing-building-excel";
 
-            });
+});
 
             // Initial load
             loadWards(1);
