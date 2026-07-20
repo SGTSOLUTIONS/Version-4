@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 class WardController extends Controller
 {
     protected $wardService;
@@ -758,6 +758,49 @@ public function missingBillExcel($ward_id)
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => "attachment; filename={$fileName}",
         ]);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'line'    => $e->getLine(),
+            'file'    => $e->getFile(),
+        ], 500);
+    }
+}
+
+
+public function missingBillPdf($ward_id)
+{
+    try {
+        $ward = Ward::find($ward_id);
+        $zone = Zone::find($ward->zone_id);
+
+        $misTable = 'mis_table_' . $zone->corp_id;
+        $pointDataTable = 'point_data_' . $ward_id;
+
+        $missingbill = DB::table($misTable)
+            ->whereNotIn('assessment', function ($query) use ($pointDataTable) {
+                $query->select('assessment')->from($pointDataTable);
+            })
+            ->get();
+
+        if ($missingbill->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No missing records found.',
+            ], 404);
+        }
+
+        $pdf = Pdf::loadView('exports.missing_bill_pdf', [
+                'missingbill' => $missingbill,
+                'ward'        => $ward,
+            ])
+            ->setPaper('a4', 'landscape');
+
+        $fileName = "missing_buildings_{$ward_id}.pdf";
+
+        return $pdf->download($fileName);
 
     } catch (\Throwable $e) {
         return response()->json([
