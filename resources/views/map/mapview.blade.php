@@ -1966,7 +1966,7 @@
 
                 const satelliteLayer = new ol.layer.Tile({
                     title: 'Satellite',
-                    type: 'base',
+                      type: 'base',
                     visible: false,
                     source: new ol.source.XYZ({
                         url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',

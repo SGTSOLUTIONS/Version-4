@@ -14,11 +14,14 @@ use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
-    public function showLogin()
-    {
-        return view('auth.login');
+   public function showLogin()
+{
+    if (Auth::check()) {
+        return redirect($this->getDashboardRoute(Auth::user()->role));
     }
-    public function submitLogin(Request $request)
+
+    return view('auth.login');
+}    public function submitLogin(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
@@ -58,6 +61,7 @@ class AuthController extends Controller
             RoleEnum::ADMIN->value        => route('admin.dashboard'),
             RoleEnum::COMMISSIONER->value => route('commissioner.dashboard'),
             RoleEnum::DC->value           => route('dc.dashboard'),
+            RoleEnum::ACR->value           => route('acr.dashboard'),
             RoleEnum::AC->value           => route('ac.dashboard'),
             RoleEnum::ARO->value          => route('aro.dashboard'),
             RoleEnum::BC->value           => route('bc.dashboard'),
