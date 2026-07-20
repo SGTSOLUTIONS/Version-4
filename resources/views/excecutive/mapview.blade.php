@@ -246,7 +246,7 @@
 
 <script>
     // ============================================================
-    // OPENLAYERS SETUP - Using ol object from CDN
+    // OPENLAYERS SETUP - Using simplified approach
     // ============================================================
 
     // Get OpenLayers classes from the global ol object
@@ -263,9 +263,6 @@
     var Icon = ol.style.Icon;
     var fromLonLat = ol.proj.fromLonLat;
     var toLonLat = ol.proj.toLonLat;
-    var defaults = ol.interaction.defaults;
-    var DragPan = ol.interaction.DragPan;
-    var MouseWheelZoom = ol.interaction.MouseWheelZoom;
 
     // ============================================================
     // 1. CREATE MAP
@@ -278,11 +275,7 @@
             zoom: 15,
             maxZoom: 20,
             minZoom: 3
-        }),
-        interactions: defaults().extend([
-            new DragPan(),
-            new MouseWheelZoom()
-        ])
+        })
     });
 
     // ============================================================
