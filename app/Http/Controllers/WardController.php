@@ -579,7 +579,7 @@ public function missingBuiilding($ward_id)
                 "),
                 'pd.gisid',
                 '=',
-                'pc.gisid'
+                'pc.point_gisid'
             )
             ->join("$polygonTable as p", 'pd.gisid', '=', 'p.gisid')
             ->whereRaw('COALESCE(pc.point_count,0) <> pd.number_bill')
