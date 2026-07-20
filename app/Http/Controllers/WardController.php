@@ -779,7 +779,7 @@ public function missingBillPdf($ward_id)
         $misTable = 'mis_' . $zone->corp_id;
         $pointDataTable = 'point_data_' . $ward_id;
 
-        $missingbill = DB::table($misTable)
+        $missingbill = DB::table($misTable)->where('ward_no',$ward->ward_no)
             ->whereNotIn('assessment', function ($query) use ($pointDataTable) {
                 $query->select('assessment')->from($pointDataTable);
             })
