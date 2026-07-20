@@ -561,57 +561,78 @@ class WardController extends Controller
         }
     }
 
-    public function missingBuiilding($ward_id)
-    {
-        try {
+   public function missingBuiilding($ward_id)
+{
+    try {
 
-            $polygonDataTable = "polygon_data_" . $ward_id;
-            $polygonTable     = "polygons_" . $ward_id;
+        $polygonDataTable = "polygon_data_" . $ward_id;
+        $polygonTable     = "polygons_" . $ward_id;
 
-            $missingBuildings = DB::table($polygonTable)
-                ->whereNotIn('gisid', function ($query) use ($polygonDataTable) {
-                    $query->select('gisid')
-                        ->from($polygonDataTable);
-                })
-                ->get();
+        $missingBuildings = DB::table($polygonTable)
+            ->whereNotIn('gisid', function ($query) use ($polygonDataTable) {
+                $query->select('gisid')
+                    ->from($polygonDataTable);
+            })
+            ->get();
 
-            $features = [];
+        $features = [];
 
-            foreach ($missingBuildings as $building) {
+        foreach ($missingBuildings as $building) {
 
-                $features[] = [
-                    "type" => "Feature",
-                    "geometry" => [
-                        "type" => $building->type,
-                        "coordinates" => json_decode($building->coordinates, true)
-                    ],
-                    "properties" => [
-                        "gisid" => $building->gisid,
-                        "sqfeet" => $building->sqfeet,
-                    ]
-                ];
+            $coordinates = json_decode($building->coordinates, true);
+
+            if (!$coordinates) {
+                continue;
             }
 
-            $geojson = [
-                "type" => "FeatureCollection",
-                "features" => $features
+            // Convert to valid GeoJSON Polygon
+            if ($building->type == 'Polygon') {
+
+                // If coordinates are stored as [[x,y],[x,y],...]
+                if (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
+                    $coordinates = [$coordinates];
+                }
+
+                // Close polygon if not closed
+                $ring = &$coordinates[0];
+
+                if ($ring[0] != end($ring)) {
+                    $ring[] = $ring[0];
+                }
+            }
+
+            $features[] = [
+                "type" => "Feature",
+                "properties" => [
+                    "gisid"  => $building->gisid,
+                    "sqfeet" => $building->sqfeet,
+                ],
+                "geometry" => [
+                    "type" => $building->type,
+                    "coordinates" => $coordinates
+                ]
             ];
-
-            $filename = "missing_buildings_{$ward_id}.geojson";
-
-            return response()->streamDownload(function () use ($geojson) {
-                echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-            }, $filename, [
-                'Content-Type' => 'application/geo+json',
-            ]);
-        } catch (\Throwable $e) {
-
-            return response()->json([
-                "success" => false,
-                "message" => $e->getMessage(),
-                "line" => $e->getLine(),
-                "file" => $e->getFile(),
-            ], 500);
         }
+
+        $geojson = [
+            "type" => "FeatureCollection",
+            "features" => $features
+        ];
+
+        return response()->streamDownload(function () use ($geojson) {
+            echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        }, "missing_buildings_{$ward_id}.geojson", [
+            'Content-Type' => 'application/geo+json',
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            "success" => false,
+            "message" => $e->getMessage(),
+            "line"    => $e->getLine(),
+            "file"    => $e->getFile(),
+        ], 500);
     }
+}
 }
