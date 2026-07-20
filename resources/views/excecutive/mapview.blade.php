@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple Aerial & Street View Viewer</title>
+    <title>OpenLayers - Aerial & Street View</title>
 
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- OpenLayers CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css" />
+    <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.min.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #1a1a2e; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; overflow: hidden; }
 
         #map {
-            width: 100%;
+            width: 100vw;
             height: 100vh;
             position: relative;
         }
@@ -28,78 +27,100 @@
             transform: translateX(-50%);
             z-index: 1000;
             background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            padding: 15px 25px;
-            border-radius: 12px;
+            backdrop-filter: blur(12px);
+            padding: 12px 20px;
+            border-radius: 14px;
             display: flex;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
             flex-wrap: wrap;
             justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
             pointer-events: auto;
         }
 
         .controls button {
-            padding: 10px 22px;
+            padding: 10px 24px;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
         }
+
+        .controls button::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .controls button:hover::after { opacity: 1; }
+        .controls button:hover { transform: translateY(-2px); }
+        .controls button:active { transform: scale(0.95); }
 
         .btn-satellite {
             background: #4a9eff;
             color: white;
         }
-        .btn-satellite:hover { background: #3a7fd4; transform: scale(1.05); }
-        .btn-satellite.active { background: #ff6b6b; box-shadow: 0 0 20px rgba(255, 107, 107, 0.4); }
+        .btn-satellite.active {
+            background: #ff6b6b;
+            box-shadow: 0 0 25px rgba(255, 107, 107, 0.3);
+        }
 
         .btn-street {
             background: #ff6b6b;
             color: white;
         }
-        .btn-street:hover { background: #e05555; transform: scale(1.05); }
-        .btn-street.active { background: #4a9eff; box-shadow: 0 0 20px rgba(74, 158, 255, 0.4); }
-
-        .controls .info {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 12px;
-            padding: 5px 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            border-left: 2px solid #4a9eff;
+        .btn-street.active {
+            background: #4a9eff;
+            box-shadow: 0 0 25px rgba(74, 158, 255, 0.3);
         }
 
-        /* Street View Container (hidden by default) */
+        .controls .info {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            border-left: 2px solid #4a9eff;
+            font-family: 'Courier New', monospace;
+            min-width: 180px;
+            text-align: center;
+        }
+
+        /* Street View Container */
         #streetViewContainer {
             position: absolute;
             bottom: 30px;
             right: 30px;
-            width: 400px;
-            height: 300px;
+            width: 420px;
+            height: 320px;
             border-radius: 16px;
             overflow: hidden;
             z-index: 999;
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.15);
             display: none;
             background: #000;
-            transition: all 0.4s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #streetViewContainer.visible {
             display: block;
-            animation: slideUp 0.4s ease;
+            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            from { opacity: 0; transform: translateY(40px) scale(0.9); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
@@ -111,21 +132,21 @@
 
         .street-label {
             position: absolute;
-            bottom: 10px;
+            bottom: 12px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
             color: white;
             font-size: 11px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 4px 14px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 5px 16px;
             border-radius: 20px;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             pointer-events: none;
             white-space: nowrap;
+            backdrop-filter: blur(4px);
         }
 
-        /* Loading indicator */
         .loading {
             position: absolute;
             top: 50%;
@@ -133,31 +154,71 @@
             transform: translate(-50%, -50%);
             color: white;
             font-size: 14px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px 24px;
+            border-radius: 10px;
             z-index: 1001;
             display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .loading::before {
+            content: '⏳ ';
+        }
+
+        /* Close button for street view */
+        .close-street {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            backdrop-filter: blur(4px);
+        }
+
+        .close-street:hover {
+            background: rgba(255, 70, 70, 0.8);
+            transform: rotate(90deg);
+        }
+
+        #streetViewContainer.visible .close-street {
+            display: flex;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
             .controls {
                 top: 10px;
-                padding: 10px 15px;
-                gap: 8px;
+                padding: 10px 12px;
+                gap: 6px;
                 width: 95%;
             }
             .controls button {
-                padding: 8px 14px;
+                padding: 7px 14px;
                 font-size: 11px;
             }
+            .controls .info {
+                font-size: 10px;
+                min-width: 120px;
+                padding: 4px 10px;
+            }
             #streetViewContainer {
-                width: 90%;
+                width: 92%;
                 height: 200px;
                 bottom: 15px;
-                right: 5%;
-                left: 5%;
+                right: 4%;
+                left: 4%;
             }
         }
     </style>
@@ -166,14 +227,15 @@
 
 <div id="map">
     <!-- Control Panel -->
-    <div class="controls" id="controls">
+    <div class="controls">
         <button class="btn-satellite active" id="btnSatellite">🛰️ Satellite</button>
         <button class="btn-street" id="btnStreet">🚶 Street View</button>
-        <span class="info" id="coordInfo">Click map to see location</span>
+        <span class="info" id="coordInfo">📍 Click map to explore</span>
     </div>
 
     <!-- Street View Container -->
     <div id="streetViewContainer">
+        <button class="close-street" id="closeStreet">✕</button>
         <iframe id="streetIframe" src="about:blank"></iframe>
         <div class="street-label">📍 Mapillary Street View</div>
     </div>
@@ -184,98 +246,157 @@
 
 <script>
     // ============================================================
-    // 1. INITIALIZE MAP
+    // OPENLAYERS SETUP
     // ============================================================
-    const map = L.map('map', {
-        center: [40.7128, -74.0060], // New York
-        zoom: 15,
-        zoomControl: true
+
+    // Import OpenLayers modules from CDN
+    const { Map, View } = ol;
+    const { TileLayer, VectorLayer } = ol.layer;
+    const { OSM, XYZ } = ol.source;
+    const { Vector } = ol.source;
+    const { Feature } = ol;
+    const { Point } = ol.geom;
+    const { Style, Icon, Fill, Stroke, Circle } = ol.style;
+    const { fromLonLat, toLonLat } = ol.proj;
+    const { defaults as defaultInteractions, DragPan, MouseWheelZoom } = ol.interaction;
+
+    // ============================================================
+    // 1. CREATE MAP
+    // ============================================================
+    const map = new Map({
+        target: 'map',
+        layers: [],
+        view: new View({
+            center: fromLonLat([-74.0060, 40.7128]),
+            zoom: 15,
+            maxZoom: 20,
+            minZoom: 3
+        }),
+        interactions: defaultInteractions().extend([
+            new DragPan(),
+            new MouseWheelZoom()
+        ])
     });
 
-    // OpenStreetMap base layer (for context)
-    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
+    // ============================================================
+    // 2. BASE LAYER (OSM for context)
+    // ============================================================
+    const osmLayer = new TileLayer({
+        source: new OSM(),
+        opacity: 0.7,
+        visible: true
     });
+    map.addLayer(osmLayer);
 
     // ============================================================
-    // 2. OPENAERIALMAP SATELLITE LAYER (using OAM public tiles)
+    // 3. OPENAERIALMAP SATELLITE LAYER
     // ============================================================
-    // Using OAM's public tile endpoint
-    const oamLayer = L.tileLayer(
-        'https://tiles.openaerialmap.org/tiles/1.0.0/global/{z}/{x}/{y}.png',
-        {
+    const oamLayer = new TileLayer({
+        source: new XYZ({
+            url: 'https://tiles.openaerialmap.org/tiles/1.0.0/global/{z}/{x}/{y}.png',
             maxZoom: 19,
-            attribution: '© OpenAerialMap',
-            subdomains: ['a', 'b', 'c']
-        }
-    );
+            crossOrigin: 'anonymous',
+            attributions: '© OpenAerialMap'
+        }),
+        visible: true,
+        opacity: 1.0
+    });
+    map.addLayer(oamLayer);
 
-    // Also try alternative OAM tile source if needed
-    const oamLayerAlt = L.tileLayer(
-        'https://tiles.openaerialmap.org/tiles/1.0.0/global/{z}/{x}/{y}.png',
-        {
+    // Alternative OAM source (sometimes more stable)
+    const oamLayerBackup = new TileLayer({
+        source: new XYZ({
+            url: 'https://tiles.openaerialmap.org/tiles/1.0.0/global/{z}/{x}/{y}.png',
             maxZoom: 19,
-            attribution: '© OpenAerialMap'
-        }
-    );
+            crossOrigin: 'anonymous'
+        }),
+        visible: false
+    });
+    // map.addLayer(oamLayerBackup);
 
-    // Add layers to map
-    osmLayer.addTo(map);
-    oamLayer.addTo(map);
+    // ============================================================
+    // 4. VECTOR LAYER FOR MARKER
+    // ============================================================
+    const markerSource = new Vector();
+    const markerLayer = new VectorLayer({
+        source: markerSource,
+        style: new Style({
+            image: new Icon({
+                anchor: [0.5, 1],
+                src: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
+                        <path d="M16 0 C7.16 0 0 7.16 0 16 C0 28 16 42 16 42 C16 42 32 28 32 16 C32 7.16 24.84 0 16 0 Z"
+                              fill="#ff4444" stroke="#ffffff" stroke-width="2"/>
+                        <circle cx="16" cy="16" r="6" fill="#ffffff" stroke="#ff4444" stroke-width="2"/>
+                    </svg>
+                `),
+                scale: 0.8,
+                crossOrigin: 'anonymous'
+            })
+        })
+    });
+    map.addLayer(markerLayer);
 
-    // Track which layers are visible
+    // ============================================================
+    // 5. STATE
+    // ============================================================
+    let currentLon = -74.0060;
+    let currentLat = 40.7128;
     let showSatellite = true;
     let showStreet = false;
+    let markerFeature = null;
 
     // ============================================================
-    // 3. MARKER & POPUP
+    // 6. ADD INITIAL MARKER
     // ============================================================
-    let currentMarker = null;
-    let currentLat = 40.7128;
-    let currentLng = -74.0060;
-
-    // Click handler: place marker and update street view
-    map.on('click', function(e) {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
+    function addMarker(lon, lat) {
+        markerSource.clear();
+        const coord = fromLonLat([lon, lat]);
+        markerFeature = new Feature({
+            geometry: new Point(coord)
+        });
+        markerSource.addFeature(markerFeature);
+        currentLon = lon;
         currentLat = lat;
-        currentLng = lng;
 
-        // Update marker
-        if (currentMarker) {
-            map.removeLayer(currentMarker);
-        }
-        currentMarker = L.marker([lat, lng]).addTo(map);
-        currentMarker.bindPopup(`📍 <b>${lat.toFixed(5)}, ${lng.toFixed(5)}</b>`).openPopup();
-
-        // Update coordinates display
+        // Update info
         document.getElementById('coordInfo').textContent =
-            `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            `📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+    }
+
+    addMarker(-74.0060, 40.7128);
+
+    // ============================================================
+    // 7. MAP CLICK - Update marker and street view
+    // ============================================================
+    map.on('click', function(evt) {
+        const coord = evt.coordinate;
+        const lonLat = toLonLat(coord);
+        const lon = lonLat[0];
+        const lat = lonLat[1];
+
+        addMarker(lon, lat);
 
         // If street view is active, update it
         if (showStreet) {
-            updateStreetView(lat, lng);
+            updateStreetView(lat, lon);
         }
     });
 
     // ============================================================
-    // 4. STREET VIEW (Mapillary)
+    // 8. STREET VIEW (Mapillary)
     // ============================================================
     const streetContainer = document.getElementById('streetViewContainer');
     const streetIframe = document.getElementById('streetIframe');
     const loading = document.getElementById('loading');
+    const closeStreetBtn = document.getElementById('closeStreet');
 
-    function updateStreetView(lat, lng) {
+    function updateStreetView(lat, lon) {
         loading.style.display = 'block';
         streetContainer.classList.remove('visible');
 
-        // Use Mapillary's embed API
-        // Mapillary provides street-level imagery from crowdsourced photos
-        const mapillaryUrl = `https://www.mapillary.com/embed?map_style=Mapillary%20streets&lat=${lat}&lng=${lng}&z=18&style=classic&theme=light`;
-
-        // Alternative: Mapillary image API for static street view
-        // const mapillaryImg = `https://api.mapillary.com/v3/images?client_id=YOUR_CLIENT_ID&lat=${lat}&lon=${lng}&radius=50`;
+        // Mapillary embed URL - more reliable version
+        const mapillaryUrl = `https://www.mapillary.com/embed?map_style=Mapillary%20streets&lat=${lat}&lng=${lon}&z=18&style=classic&theme=light`;
 
         // Set iframe source
         streetIframe.src = mapillaryUrl;
@@ -295,8 +416,23 @@
         }, 8000);
     }
 
+    // Close street view
+    closeStreetBtn.addEventListener('click', function() {
+        streetContainer.classList.remove('visible');
+        streetIframe.src = 'about:blank';
+        showStreet = false;
+        document.getElementById('btnStreet').classList.remove('active');
+        document.getElementById('btnStreet').textContent = '🚶 Street View';
+        document.getElementById('btnSatellite').classList.add('active');
+        document.getElementById('btnSatellite').textContent = '🛰️ Satellite (ON)';
+        oamLayer.setVisible(true);
+        document.getElementById('coordInfo').textContent =
+            `🛰️ ${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}`;
+        showSatellite = true;
+    });
+
     // ============================================================
-    // 5. BUTTON CONTROLS
+    // 9. BUTTON CONTROLS
     // ============================================================
     const btnSat = document.getElementById('btnSatellite');
     const btnStreet = document.getElementById('btnStreet');
@@ -313,13 +449,13 @@
         btnStreet.textContent = '🚶 Street View';
 
         // Show satellite layer, hide street view
-        oamLayer.addTo(map);
+        oamLayer.setVisible(true);
         streetContainer.classList.remove('visible');
         streetIframe.src = 'about:blank';
 
         // Update info
         document.getElementById('coordInfo').textContent =
-            `🛰️ Satellite view • ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+            `🛰️ ${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}`;
     });
 
     // Street View button
@@ -333,56 +469,57 @@
         btnStreet.textContent = '🚶 Street (ON)';
         btnSat.textContent = '🛰️ Satellite';
 
-        // Hide satellite layer to see OSM background better
-        map.removeLayer(oamLayer);
+        // Hide satellite layer
+        oamLayer.setVisible(false);
 
         // Update street view at current location
-        updateStreetView(currentLat, currentLng);
+        updateStreetView(currentLat, currentLon);
 
         // Update info
         document.getElementById('coordInfo').textContent =
-            `🚶 Street view • ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+            `🚶 ${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}`;
     });
 
     // ============================================================
-    // 6. KEYBOARD SHORTCUTS
+    // 10. KEYBOARD SHORTCUTS
     // ============================================================
     document.addEventListener('keydown', function(e) {
         if (e.key === 's' || e.key === 'S') {
             btnSat.click();
+            e.preventDefault();
         } else if (e.key === 'v' || e.key === 'V') {
             btnStreet.click();
+            e.preventDefault();
+        } else if (e.key === 'Escape') {
+            closeStreetBtn.click();
         }
     });
 
     // ============================================================
-    // 7. INITIAL LOAD - Place initial marker & street view
-    // ============================================================
-    setTimeout(() => {
-        // Place initial marker
-        if (currentMarker) map.removeLayer(currentMarker);
-        currentMarker = L.marker([currentLat, currentLng]).addTo(map);
-        currentMarker.bindPopup('📍 New York City').openPopup();
-
-        // Load street view initially (but hidden)
-        updateStreetView(currentLat, currentLng);
-        // Hide it initially since satellite is active
-        setTimeout(() => {
-            streetContainer.classList.remove('visible');
-            streetIframe.src = 'about:blank';
-        }, 500);
-    }, 1000);
-
-    // ============================================================
-    // 8. HANDLE WINDOW RESIZE
+    // 11. HANDLE WINDOW RESIZE
     // ============================================================
     window.addEventListener('resize', function() {
-        map.invalidateSize();
+        map.updateSize();
     });
 
-    console.log('🚀 Simple Aerial & Street View Viewer loaded!');
+    // ============================================================
+    // 12. LOAD STREET VIEW INITIALLY (but hidden)
+    // ============================================================
+    setTimeout(() => {
+        // Preload street view in background
+        const preloadUrl = `https://www.mapillary.com/embed?map_style=Mapillary%20streets&lat=40.7128&lng=-74.0060&z=18&style=classic&theme=light`;
+        const preloadIframe = document.createElement('iframe');
+        preloadIframe.src = preloadUrl;
+        preloadIframe.style.display = 'none';
+        document.body.appendChild(preloadIframe);
+        setTimeout(() => {
+            document.body.removeChild(preloadIframe);
+        }, 5000);
+    }, 2000);
+
+    console.log('🚀 OpenLayers Aerial & Street View Viewer loaded!');
     console.log('💡 Click map to change location');
-    console.log('⌨️  Press S for Satellite, V for Street View');
+    console.log('⌨️  S = Satellite, V = Street View, ESC = Close street view');
 </script>
 
 </body>
