@@ -556,7 +556,10 @@
                                         <i class="bi bi-pencil"></i> Edit
                                     </button>
                                     <button class="btn btn-warning btn-sm flex-fill missing-building-btn" data-id="${ward.id}">
-                                        <i class="bi bi-pencil"></i> Edit
+                                        <i class="bi bi-pencil"></i> missing Building geojson
+                                    </button>
+                                    <button class="btn btn-warning btn-sm flex-fill missing-building-excel-btn" data-id="${ward.id}">
+                                        <i class="bi bi-pencil"></i> Missing Building Excel
                                     </button>
                                     <button class="btn btn-warning btn-sm flex-fill missing-bill-btn" data-id="${ward.id}">
                                         <i class="bi bi-pencil"></i> Edit
@@ -992,6 +995,12 @@
     let id = $(this).data('id');
 
     window.location.href = "/wards/" + id;
+
+});$(document).on('click', '.missing-building-excel-btn', function () {
+
+    let id = $(this).data('id');
+
+    window.location.href = "/wards/" + id + "/missing-building-excel";
 
 });
 

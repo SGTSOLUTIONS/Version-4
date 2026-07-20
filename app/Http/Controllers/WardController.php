@@ -635,4 +635,62 @@ class WardController extends Controller
         ], 500);
     }
 }
+public function missingBuiildingExcel($ward_id)
+{
+    try {
+
+        $polygonDataTable = "polygon_data_" . $ward_id;
+        $polygonTable     = "polygons_" . $ward_id;
+
+        $missingBuildings = DB::table($polygonTable)
+            ->whereNotIn('gisid', function ($query) use ($polygonDataTable) {
+                $query->select('gisid')
+                      ->from($polygonDataTable);
+            })
+            ->get();
+
+        $fileName = "missing_buildings_{$ward_id}.csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+        ];
+
+        $callback = function () use ($missingBuildings) {
+
+            $file = fopen('php://output', 'w');
+
+            // Header Row
+            fputcsv($file, [
+                'GISID',
+                'Type',
+                'SqFeet',
+                'Coordinates'
+            ]);
+
+            foreach ($missingBuildings as $building) {
+
+                fputcsv($file, [
+                    $building->gisid,
+                    $building->type,
+                    $building->sqfeet,
+                    $building->coordinates
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'line'    => $e->getLine(),
+            'file'    => $e->getFile()
+        ], 500);
+    }
+}
 }

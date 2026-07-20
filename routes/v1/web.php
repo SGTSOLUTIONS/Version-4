@@ -64,6 +64,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])->name('variation.usage');
     Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])->name('variation.area');
     Route::get('/wards/{wardId}', [WardController::class, 'missingBuiilding'])->name('missing-building');
+    Route::get('/wards/{ward_id}/missing-building-excel', [WardController::class, 'missingBuiildingExcel'])
+    ->name('wards.missing-building-excel');
 });
 
 
