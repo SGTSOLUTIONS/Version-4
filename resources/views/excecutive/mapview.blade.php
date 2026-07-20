@@ -317,6 +317,131 @@
                     </div>
                 </div>
             `);
+             $mapContainer.append(`
+                <div class="custom-legend-toggle">
+                    <div class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
+                        <i class="bi bi-list-ul"></i>
+                    </div>
+                </div>
+            `);
+
+            $mapContainer.append(`
+                <div class="custom-location-switcher">
+                    <div class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></div>
+                    <div class="location-dropdown" id="locationDropdown">
+                        <div class="dropdown-header">Location Tools</div>
+                        <div class="location-dropdown-item" id="liveLocationItem" data-action="live">
+                            <div class="location-item-icon"><i class="bi bi-crosshair2"></i></div>
+                            <div class="location-item-name">Live Location</div>
+                            <div class="location-item-badge" id="liveLocationBadge">OFF</div>
+                        </div>
+                        <div class="location-dropdown-item" id="trackMeItem" data-action="track">
+                            <div class="location-item-icon"><i class="bi bi-broadcast"></i></div>
+                            <div class="location-item-name">Track Me</div>
+                            <div class="location-item-badge" id="trackMeBadge">OFF</div>
+                        </div>
+                        <div class="location-dropdown-item" id="clearRouteItem">
+                            <div class="location-item-icon"><i class="bi bi-x-circle"></i></div>
+                            <div class="location-item-name">Clear Route</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="location-toast" id="locationToast"></div>
+            `);
+
+            $mapContainer.append(`
+                <div class="custom-search-switcher">
+                    <div class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></div>
+                    <div class="search-dropdown" id="searchDropdown">
+                        <div class="d-flex border-bottom">
+                            <button type="button" class="btn btn-sm flex-fill search-tab-btn active" data-tab="quick">Quick Search</button>
+                            <button type="button" class="btn btn-sm flex-fill search-tab-btn" data-tab="filter">Filter</button>
+                        </div>
+                        <div class="search-tab-pane" id="quickSearchTab">
+                            <div class="p-3">
+                                <input type="text" id="gisSearchInput" class="form-control" placeholder="Search by GIS ID or Assessment...">
+                            </div>
+                            <div id="searchResults" class="search-results-container"></div>
+                        </div>
+                        <div class="search-tab-pane" id="filterTab" style="display:none;">
+                            <div class="p-3 pb-2">
+                                <input type="text" id="filterAssessment" class="form-control mb-2" placeholder="Assessment">
+                                <input type="text" id="filterOldAssessment" class="form-control mb-2" placeholder="Old Assessment">
+                                <input type="text" id="filterOwnerName" class="form-control mb-2" placeholder="Owner Name">
+                                <input type="text" id="filterPhoneNumber" class="form-control mb-2" placeholder="Phone Number">
+                                <button class="btn btn-primary btn-sm w-100" id="applyFilterBtn">Search</button>
+                            </div>
+                            <div id="filterResults" class="search-results-container"></div>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            $mapContainer.append(`
+                <div class="custom-edit-toggle">
+                    <div class="edit-toggle-btn" id="editToggleBtn"><i class="bi bi-pencil-square"></i></div>
+                    <div class="edit-dropdown" id="editDropdown">
+                        <div class="dropdown-header">🔧 Modes</div>
+                        <div class="edit-dropdown-item active" data-tool="none">
+                            <div class="edit-icon"><i class="bi bi-eye"></i></div>
+                            <div class="edit-name">View Only</div>
+                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">✏️ Edit</div>
+                        <div class="edit-dropdown-item" data-tool="editPolygon">
+                            <div class="edit-icon"><i class="bi bi-pencil"></i></div>
+                            <div class="edit-name">Edit Polygon</div>
+                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="edit-dropdown-item" data-tool="movePolygon">
+                            <div class="edit-icon"><i class="bi bi-arrows-move"></i></div>
+                            <div class="edit-name">Move Polygon</div>
+                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="edit-dropdown-item" data-tool="split">
+                            <div class="edit-icon"><i class="bi bi-scissors"></i></div>
+                            <div class="edit-name">Split Polygon</div>
+                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">✏️ Drawing</div>
+                        <div class="edit-dropdown-item" data-tool="drawPolygon">
+                            <div class="edit-icon"><i class="bi bi-pentagon"></i></div>
+                            <div class="edit-name">Draw Polygon</div>
+                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="edit-dropdown-item" data-tool="drawLine">
+                            <div class="edit-icon"><i class="bi bi-vector-pen"></i></div>
+                            <div class="edit-name">Draw Line</div>
+                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="edit-dropdown-item" data-tool="drawPoint">
+                            <div class="edit-icon"><i class="bi bi-geo-alt"></i></div>
+                            <div class="edit-name">Draw Point</div>
+                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">🗑️ Delete</div>
+                        <div class="edit-dropdown-item" data-tool="delete">
+                            <div class="edit-icon"><i class="bi bi-trash3"></i></div>
+                            <div class="edit-name">Delete Feature</div>
+                            <div class="edit-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            $mapContainer.append(`
+                <div class="custom-3d-toggle">
+                    <div class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
+                        <i class="bi bi-box"></i>
+                    </div>
+                </div>
+            `);
+
+            $mapContainer.append(
+                `<div class="fullscreen-btn" id="fullscreenBtn"><i class="bi bi-arrows-fullscreen"></i></div>`);
 
         });
     </script>
