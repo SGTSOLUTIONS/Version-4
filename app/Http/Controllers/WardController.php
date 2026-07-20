@@ -574,7 +574,7 @@ public function missingBuiilding($ward_id)
                     (
                         SELECT gisid, COUNT(*) AS point_count
                         FROM {$pointDataTable}
-                        GROUP BY gisid
+                        GROUP BY point_gisid
                     ) pc
                 "),
                 'pd.gisid',
