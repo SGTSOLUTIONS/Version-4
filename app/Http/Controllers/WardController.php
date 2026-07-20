@@ -561,17 +561,17 @@ class WardController extends Controller
         }
     }
 
-public function missingBuiilding($ward_id)
-{
-    try {
+    public function missingBuiilding($ward_id)
+    {
+        try {
 
-        $polygonDataTable = "polygon_data_" . $ward_id;
-        $pointDataTable   = "point_data_" . $ward_id;
-        $polygonTable     = "polygons_" . $ward_id;
+            $polygonDataTable = "polygon_data_" . $ward_id;
+            $pointDataTable   = "point_data_" . $ward_id;
+            $polygonTable     = "polygons_" . $ward_id;
 
-        $missingBuildings = DB::table("$polygonDataTable as pd")
-            ->leftJoin(
-                DB::raw("
+            $missingBuildings = DB::table("$polygonDataTable as pd")
+                ->leftJoin(
+                    DB::raw("
                     (
                         SELECT
                             point_gisid,
@@ -580,59 +580,63 @@ public function missingBuiilding($ward_id)
                         GROUP BY point_gisid
                     ) pc
                 "),
-                'pd.gisid',
-                '=',
-                'pc.point_gisid'
-            )
-            ->join("$polygonTable as p", 'pd.gisid', '=', 'p.gisid')
-            ->whereRaw('COALESCE(pc.point_count,0) <> pd.number_bill')
-            ->select(
-                'pd.gisid',
-                'pd.number_bill',
-                DB::raw('COALESCE(pc.point_count,0) AS point_count'),
-                'p.coordinates'
-            )
-            ->get();
+                    'pd.gisid',
+                    '=',
+                    'pc.point_gisid'
+                )
+                ->join("$polygonTable as p", 'pd.gisid', '=', 'p.gisid')
+                ->whereRaw('COALESCE(pc.point_count,0) <> pd.number_bill')
+                ->select(
+                    'pd.gisid',
+                    'pd.number_bill',
+                    DB::raw('COALESCE(pc.point_count,0) AS point_count'),
+                    'p.coordinates'
+                )
+                ->get();
 
-        $features = [];
+            $features = [];
 
-        foreach ($missingBuildings as $row) {
+            foreach ($missingBuildings as $row) {
 
-            $geometry = json_decode($row->coordinates, true);
+                $geometry = json_decode($row->coordinates, true);
 
-            $features[] = [
-                "type" => "Feature",
-                "geometry" => $geometry,
-                "properties" => [
-                    "gisid"       => $row->gisid,
-                    "number_bill" => (int)$row->number_bill,
-                    "point_count" => (int)$row->point_count,
-                    "status"      => "Not Surveyed"
-                ]
+                $features[] = [
+                    "type" => "Feature",
+                    "geometry" => $geometry,
+                    "properties" => [
+                        "gisid"       => $row->gisid,
+                        "number_bill" => (int)$row->number_bill,
+                        "point_count" => (int)$row->point_count,
+                        "status"      => "Not Surveyed"
+                    ]
+                ];
+            }
+            $geojson = [
+                "type" => "FeatureCollection",
+                "crs" => [
+                    "type" => "name",
+                    "properties" => [
+                        "name" => "urn:ogc:def:crs:EPSG::3857"
+                    ]
+                ],
+                "features" => $features
             ];
+
+
+            return response()->streamDownload(function () use ($geojson) {
+                echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            }, "missing_buildings_{$ward_id}.geojson", [
+                "Content-Type" => "application/geo+json",
+                "Content-Disposition" => "attachment; filename=missing_buildings_{$ward_id}.geojson",
+            ]);
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "line" => $e->getLine(),
+                "file" => $e->getFile(),
+            ], 500);
         }
-
-        $geojson = [
-            "type" => "FeatureCollection",
-            "features" => $features
-        ];
-
-        return response()->streamDownload(function () use ($geojson) {
-            echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        }, "missing_buildings_{$ward_id}.geojson", [
-            "Content-Type" => "application/geo+json",
-            "Content-Disposition" => "attachment; filename=missing_buildings_{$ward_id}.geojson",
-        ]);
-
-    } catch (\Throwable $e) {
-
-        return response()->json([
-            "success" => false,
-            "message" => $e->getMessage(),
-            "line" => $e->getLine(),
-            "file" => $e->getFile(),
-        ], 500);
-
     }
-}
 }
