@@ -63,7 +63,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/variation/export', [VariationController::class, 'exportVariations'])->name('variation.export');
     Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])->name('variation.usage');
     Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])->name('variation.area');
-    Route::get('/ward/{wardId}', [WardController::class, 'missingBuiilding'])->name('missing-building');
+    Route::get('/wards/{wardId}', [WardController::class, 'missingBuiilding'])->name('missing-building');
 });
 
 
