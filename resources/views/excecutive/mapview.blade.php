@@ -6,8 +6,8 @@
     <title>OpenLayers - Aerial & Street View</title>
 
     <!-- OpenLayers CSS & JS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css" />
-    <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css" />
+    <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.min.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -246,24 +246,31 @@
 
 <script>
     // ============================================================
-    // OPENLAYERS SETUP
+    // OPENLAYERS SETUP - Using ol object from CDN
     // ============================================================
 
-    // Import OpenLayers modules from CDN
-    const { Map, View } = ol;
-    const { TileLayer, VectorLayer } = ol.layer;
-    const { OSM, XYZ } = ol.source;
-    const { Vector } = ol.source;
-    const { Feature } = ol;
-    const { Point } = ol.geom;
-    const { Style, Icon, Fill, Stroke, Circle } = ol.style;
-    const { fromLonLat, toLonLat } = ol.proj;
-    const { defaults as defaultInteractions, DragPan, MouseWheelZoom } = ol.interaction;
+    // Get OpenLayers classes from the global ol object
+    var Map = ol.Map;
+    var View = ol.View;
+    var TileLayer = ol.layer.Tile;
+    var VectorLayer = ol.layer.Vector;
+    var OSM = ol.source.OSM;
+    var XYZ = ol.source.XYZ;
+    var Vector = ol.source.Vector;
+    var Feature = ol.Feature;
+    var Point = ol.geom.Point;
+    var Style = ol.style.Style;
+    var Icon = ol.style.Icon;
+    var fromLonLat = ol.proj.fromLonLat;
+    var toLonLat = ol.proj.toLonLat;
+    var defaults = ol.interaction.defaults;
+    var DragPan = ol.interaction.DragPan;
+    var MouseWheelZoom = ol.interaction.MouseWheelZoom;
 
     // ============================================================
     // 1. CREATE MAP
     // ============================================================
-    const map = new Map({
+    var map = new Map({
         target: 'map',
         layers: [],
         view: new View({
@@ -272,7 +279,7 @@
             maxZoom: 20,
             minZoom: 3
         }),
-        interactions: defaultInteractions().extend([
+        interactions: defaults().extend([
             new DragPan(),
             new MouseWheelZoom()
         ])
@@ -281,7 +288,7 @@
     // ============================================================
     // 2. BASE LAYER (OSM for context)
     // ============================================================
-    const osmLayer = new TileLayer({
+    var osmLayer = new TileLayer({
         source: new OSM(),
         opacity: 0.7,
         visible: true
@@ -291,7 +298,7 @@
     // ============================================================
     // 3. OPENAERIALMAP SATELLITE LAYER
     // ============================================================
-    const oamLayer = new TileLayer({
+    var oamLayer = new TileLayer({
         source: new XYZ({
             url: 'https://tiles.openaerialmap.org/tiles/1.0.0/global/{z}/{x}/{y}.png',
             maxZoom: 19,
@@ -303,33 +310,22 @@
     });
     map.addLayer(oamLayer);
 
-    // Alternative OAM source (sometimes more stable)
-    const oamLayerBackup = new TileLayer({
-        source: new XYZ({
-            url: 'https://tiles.openaerialmap.org/tiles/1.0.0/global/{z}/{x}/{y}.png',
-            maxZoom: 19,
-            crossOrigin: 'anonymous'
-        }),
-        visible: false
-    });
-    // map.addLayer(oamLayerBackup);
-
     // ============================================================
     // 4. VECTOR LAYER FOR MARKER
     // ============================================================
-    const markerSource = new Vector();
-    const markerLayer = new VectorLayer({
+    var markerSource = new Vector();
+    var markerLayer = new VectorLayer({
         source: markerSource,
         style: new Style({
             image: new Icon({
                 anchor: [0.5, 1],
-                src: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
-                        <path d="M16 0 C7.16 0 0 7.16 0 16 C0 28 16 42 16 42 C16 42 32 28 32 16 C32 7.16 24.84 0 16 0 Z"
-                              fill="#ff4444" stroke="#ffffff" stroke-width="2"/>
-                        <circle cx="16" cy="16" r="6" fill="#ffffff" stroke="#ff4444" stroke-width="2"/>
-                    </svg>
-                `),
+                src: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">' +
+                        '<path d="M16 0 C7.16 0 0 7.16 0 16 C0 28 16 42 16 42 C16 42 32 28 32 16 C32 7.16 24.84 0 16 0 Z" ' +
+                              'fill="#ff4444" stroke="#ffffff" stroke-width="2"/>' +
+                        '<circle cx="16" cy="16" r="6" fill="#ffffff" stroke="#ff4444" stroke-width="2"/>' +
+                    '</svg>'
+                ),
                 scale: 0.8,
                 crossOrigin: 'anonymous'
             })
@@ -340,18 +336,18 @@
     // ============================================================
     // 5. STATE
     // ============================================================
-    let currentLon = -74.0060;
-    let currentLat = 40.7128;
-    let showSatellite = true;
-    let showStreet = false;
-    let markerFeature = null;
+    var currentLon = -74.0060;
+    var currentLat = 40.7128;
+    var showSatellite = true;
+    var showStreet = false;
+    var markerFeature = null;
 
     // ============================================================
     // 6. ADD INITIAL MARKER
     // ============================================================
     function addMarker(lon, lat) {
         markerSource.clear();
-        const coord = fromLonLat([lon, lat]);
+        var coord = fromLonLat([lon, lat]);
         markerFeature = new Feature({
             geometry: new Point(coord)
         });
@@ -361,7 +357,7 @@
 
         // Update info
         document.getElementById('coordInfo').textContent =
-            `📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+            '📍 ' + lat.toFixed(5) + ', ' + lon.toFixed(5);
     }
 
     addMarker(-74.0060, 40.7128);
@@ -370,10 +366,10 @@
     // 7. MAP CLICK - Update marker and street view
     // ============================================================
     map.on('click', function(evt) {
-        const coord = evt.coordinate;
-        const lonLat = toLonLat(coord);
-        const lon = lonLat[0];
-        const lat = lonLat[1];
+        var coord = evt.coordinate;
+        var lonLat = toLonLat(coord);
+        var lon = lonLat[0];
+        var lat = lonLat[1];
 
         addMarker(lon, lat);
 
@@ -386,17 +382,18 @@
     // ============================================================
     // 8. STREET VIEW (Mapillary)
     // ============================================================
-    const streetContainer = document.getElementById('streetViewContainer');
-    const streetIframe = document.getElementById('streetIframe');
-    const loading = document.getElementById('loading');
-    const closeStreetBtn = document.getElementById('closeStreet');
+    var streetContainer = document.getElementById('streetViewContainer');
+    var streetIframe = document.getElementById('streetIframe');
+    var loading = document.getElementById('loading');
+    var closeStreetBtn = document.getElementById('closeStreet');
 
     function updateStreetView(lat, lon) {
         loading.style.display = 'block';
         streetContainer.classList.remove('visible');
 
-        // Mapillary embed URL - more reliable version
-        const mapillaryUrl = `https://www.mapillary.com/embed?map_style=Mapillary%20streets&lat=${lat}&lng=${lon}&z=18&style=classic&theme=light`;
+        // Mapillary embed URL
+        var mapillaryUrl = 'https://www.mapillary.com/embed?map_style=Mapillary%20streets&lat=' +
+                          lat + '&lng=' + lon + '&z=18&style=classic&theme=light';
 
         // Set iframe source
         streetIframe.src = mapillaryUrl;
@@ -408,7 +405,7 @@
         };
 
         // Timeout fallback
-        setTimeout(() => {
+        setTimeout(function() {
             if (loading.style.display !== 'none') {
                 loading.style.display = 'none';
                 streetContainer.classList.add('visible');
@@ -427,15 +424,15 @@
         document.getElementById('btnSatellite').textContent = '🛰️ Satellite (ON)';
         oamLayer.setVisible(true);
         document.getElementById('coordInfo').textContent =
-            `🛰️ ${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}`;
+            '🛰️ ' + currentLat.toFixed(5) + ', ' + currentLon.toFixed(5);
         showSatellite = true;
     });
 
     // ============================================================
     // 9. BUTTON CONTROLS
     // ============================================================
-    const btnSat = document.getElementById('btnSatellite');
-    const btnStreet = document.getElementById('btnStreet');
+    var btnSat = document.getElementById('btnSatellite');
+    var btnStreet = document.getElementById('btnStreet');
 
     // Satellite button
     btnSat.addEventListener('click', function() {
@@ -455,7 +452,7 @@
 
         // Update info
         document.getElementById('coordInfo').textContent =
-            `🛰️ ${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}`;
+            '🛰️ ' + currentLat.toFixed(5) + ', ' + currentLon.toFixed(5);
     });
 
     // Street View button
@@ -477,7 +474,7 @@
 
         // Update info
         document.getElementById('coordInfo').textContent =
-            `🚶 ${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}`;
+            '🚶 ' + currentLat.toFixed(5) + ', ' + currentLon.toFixed(5);
     });
 
     // ============================================================
@@ -505,14 +502,14 @@
     // ============================================================
     // 12. LOAD STREET VIEW INITIALLY (but hidden)
     // ============================================================
-    setTimeout(() => {
+    setTimeout(function() {
         // Preload street view in background
-        const preloadUrl = `https://www.mapillary.com/embed?map_style=Mapillary%20streets&lat=40.7128&lng=-74.0060&z=18&style=classic&theme=light`;
-        const preloadIframe = document.createElement('iframe');
+        var preloadUrl = 'https://www.mapillary.com/embed?map_style=Mapillary%20streets&lat=40.7128&lng=-74.0060&z=18&style=classic&theme=light';
+        var preloadIframe = document.createElement('iframe');
         preloadIframe.src = preloadUrl;
         preloadIframe.style.display = 'none';
         document.body.appendChild(preloadIframe);
-        setTimeout(() => {
+        setTimeout(function() {
             document.body.removeChild(preloadIframe);
         }, 5000);
     }, 2000);
