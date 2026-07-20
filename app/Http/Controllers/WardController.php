@@ -776,7 +776,7 @@ public function missingBillPdf($ward_id)
         $ward = Ward::find($ward_id);
         $zone = Zone::find($ward->zone_id);
 
-        $misTable = 'mis_table_' . $zone->corp_id;
+        $misTable = 'mis_' . $zone->corp_id;
         $pointDataTable = 'point_data_' . $ward_id;
 
         $missingbill = DB::table($misTable)
