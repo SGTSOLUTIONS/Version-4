@@ -577,6 +577,11 @@
                                                 <i class="bi bi-receipt me-2"></i> Missing Bill
                                             </a>
                                         </li>
+                                        <li>
+                                            <a class="dropdown-item missing-bill-pdf-btn" data-id="${ward.id}" href="#">
+                                                <i class="bi bi-receipt me-2"></i> Missing Bill pdf
+                                            </a>
+                                        </li>
                                         ${userRole === 'admin' ? `
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li>
@@ -1026,6 +1031,14 @@
                 window.location.href = "/wards/" + id + "/missing-bill-excel";
 
             });
+            $(document).on('click', '.missing-bill-pdf-btn', function() {
+
+                let id = $(this).data('id');
+
+                window.location.href = "/wards/" + id + "/missing-bill-pdf";
+
+            });
+
 
             // Initial load
             loadWards(1);

@@ -68,6 +68,8 @@ Route::middleware(['auth'])->group(function () {
     ->name('wards.missing-building-excel');
     Route::get('/wards/{ward_id}/missing-bill-excel', [WardController::class, 'missingBillExcel'])
     ->name('wards.missing-bill-excel');
+    Route::get('/wards/{ward_id}/missing-bill-pdf', [WardController::class, 'missingBillPdf'])
+    ->name('wards.missing-bill-pdf');
 });
 
 
