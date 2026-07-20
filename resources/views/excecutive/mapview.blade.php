@@ -132,13 +132,13 @@
                 visible: true,
                 zindex: 10,
                 style: function(feature) {
-                    retuen new ol.Style({
-                        stoke: new ol.style.stroke({
-                            color: '#000BFFF',
+                    return new ol.style.Style({
+                        stroke: new ol.style.stroke({
+                            color: '#0000FF',
                             width: 1.5
                         }),
-                        fill: new ol.styleFill({
-                            color: red
+                        fill: new ol.style.Fill({({
+                            color: 'red'
                         })
                     });
                 }
@@ -146,11 +146,11 @@
 
             function loadPolygonSource() {
                 polygonSource.clear();
-                polygons, forEach(poly => {
+                polygons.forEach(poly => {
                     try {
-                        let coords = json.pharse(poly.coordinates);
-                        const feature = new ol.feature({
-                            geomentry: new ol.geom.polygon([coords]),
+                        let coords = json.parse(poly.coordinates);
+                        const feature = new ol.Feature({
+                            geometry: new ol.geom.Polygon([coords]),
                             gisid: poly.gisid,
                             type: 'polygon',
                             sqfeet: poly.sqfeet || '0',
@@ -172,8 +172,7 @@
             });
             const map = new ol.Map({
                 target: 'map',
-                layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer,
-                ],
+                layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer, ],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
                     zoom: 18
