@@ -560,6 +560,7 @@ class WardController extends Controller
             ], 500);
         }
     }
+
 public function missingBuiilding($ward_id)
 {
     try {
@@ -572,7 +573,9 @@ public function missingBuiilding($ward_id)
             ->leftJoin(
                 DB::raw("
                     (
-                        SELECT point_gisid, COUNT(*) AS point_count
+                        SELECT
+                            point_gisid,
+                            COUNT(*) AS point_count
                         FROM {$pointDataTable}
                         GROUP BY point_gisid
                     ) pc
@@ -595,14 +598,16 @@ public function missingBuiilding($ward_id)
 
         foreach ($missingBuildings as $row) {
 
+            $geometry = json_decode($row->coordinates, true);
+
             $features[] = [
                 "type" => "Feature",
-                "geometry" => json_decode($row->geometry),
+                "geometry" => $geometry,
                 "properties" => [
-                    "gisid"        => $row->gisid,
-                    "number_bill"  => (int)$row->number_bill,
-                    "point_count"  => (int)$row->point_count,
-                    "status"       => "Not Surveyed"
+                    "gisid"       => $row->gisid,
+                    "number_bill" => (int)$row->number_bill,
+                    "point_count" => (int)$row->point_count,
+                    "status"      => "Not Surveyed"
                 ]
             ];
         }
@@ -616,15 +621,16 @@ public function missingBuiilding($ward_id)
             echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         }, "missing_buildings_{$ward_id}.geojson", [
             "Content-Type" => "application/geo+json",
+            "Content-Disposition" => "attachment; filename=missing_buildings_{$ward_id}.geojson",
         ]);
 
     } catch (\Throwable $e) {
 
         return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-            'line'    => $e->getLine(),
-            'file'    => $e->getFile()
+            "success" => false,
+            "message" => $e->getMessage(),
+            "line" => $e->getLine(),
+            "file" => $e->getFile(),
         ], 500);
 
     }
