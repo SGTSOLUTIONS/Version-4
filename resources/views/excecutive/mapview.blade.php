@@ -767,24 +767,7 @@
               "  }
             });
 
-            $(document).on('click', '#fullscreenBtn', function() {
-                const $icon = $(this).find('i');
-                const $card = $('#mapCard');
-                const $container = $('#map');
 
-                if (!isFullscreen) {
-                    $card.addClass('fullscreen-mode');
-                    $container.addClass('fullscreen');
-                    $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
-                    isFullscreen = true;
-                } else {
-                    $card.removeClass('fullscreen-mode');
-                    $container.removeClass('fullscreen');
-                    $icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
-                    isFullscreen = false;
-                }
-
-            });
 
             console.log('GIS Dashboard initialized successfully!');
         });
