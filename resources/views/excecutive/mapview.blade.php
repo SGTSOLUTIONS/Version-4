@@ -49,7 +49,7 @@
         }
 
         /* Hide all controls in fullscreen mode */
-        .map-card.fullscreen-mode .custom-layer-switcher,
+        /* .map-card.fullscreen-mode .custom-layer-switcher,
         .map-card.fullscreen-mode .custom-location-switcher,
         .map-card.fullscreen-mode .custom-search-switcher,
         .map-card.fullscreen-mode .custom-label-toggle,
@@ -57,7 +57,7 @@
         .map-card.fullscreen-mode .custom-3d-toggle,
         .map-card.fullscreen-mode .fullscreen-btn {
             display: none !important;
-        }
+        } */
 
         /* Show only fullscreen exit button in fullscreen mode */
         .map-card.fullscreen-mode .fullscreen-btn-exit {
