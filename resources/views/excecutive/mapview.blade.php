@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
     <style>
+        /* Map Container Styles */
         #map {
             width: 100%;
             height: 800px;
@@ -16,6 +17,12 @@
             position: relative;
         }
 
+        /* Map Card Styles */
+        .map-card {
+            position: relative;
+        }
+
+        /* Fullscreen Styles */
         #map.fullscreen {
             position: fixed;
             top: 0;
@@ -41,6 +48,23 @@
             height: calc(100vh - 5px);
         }
 
+        /* Hide all controls in fullscreen mode */
+        .map-card.fullscreen-mode .custom-layer-switcher,
+        .map-card.fullscreen-mode .custom-location-switcher,
+        .map-card.fullscreen-mode .custom-search-switcher,
+        .map-card.fullscreen-mode .custom-label-toggle,
+        .map-card.fullscreen-mode .custom-legend-toggle,
+        .map-card.fullscreen-mode .custom-3d-toggle,
+        .map-card.fullscreen-mode .fullscreen-btn {
+            display: none !important;
+        }
+
+        /* Show only fullscreen exit button in fullscreen mode */
+        .map-card.fullscreen-mode .fullscreen-btn-exit {
+            display: block !important;
+        }
+
+        /* Common Control Styles - All inside map */
         .custom-layer-switcher {
             position: absolute;
             right: 30px;
@@ -56,7 +80,82 @@
             z-index: 1000;
         }
 
-        .layer-toggle-btn {
+        .custom-search-switcher {
+            position: absolute;
+            right: 30px;
+            top: 128px;
+            z-index: 1000;
+        }
+
+        .custom-label-toggle {
+            position: absolute;
+            right: 30px;
+            top: 182px;
+            z-index: 1000;
+        }
+
+        .custom-legend-toggle {
+            position: absolute;
+            right: 30px;
+            top: 236px;
+            z-index: 1000;
+        }
+
+        .custom-3d-toggle {
+            position: absolute;
+            right: 30px;
+            top: 290px;
+            z-index: 1000;
+        }
+
+        /* Fullscreen Button - Inside map */
+        .fullscreen-btn {
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .fullscreen-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        /* Fullscreen Exit Button - Hidden by default */
+        .fullscreen-btn-exit {
+            display: none;
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .fullscreen-btn-exit:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        /* Toggle Button Styles */
+        .layer-toggle-btn,
+        .location-toggle-btn,
+        .search-toggle-btn,
+        .label-toggle-btn,
+        .legend-toggle-btn,
+        .threed-toggle-btn {
             background: white;
             border-radius: 8px;
             padding: 10px 12px;
@@ -66,12 +165,28 @@
             transition: all 0.2s;
         }
 
-        .layer-toggle-btn:hover {
+        .layer-toggle-btn:hover,
+        .location-toggle-btn:hover,
+        .search-toggle-btn:hover,
+        .label-toggle-btn:hover,
+        .legend-toggle-btn:hover,
+        .threed-toggle-btn:hover {
             background: #f0f0f0;
             transform: scale(1.05);
         }
 
-        .layer-dropdown {
+        .label-toggle-btn.active-label {
+            color: #0d6efd;
+        }
+
+        .threed-toggle-btn.active-3d {
+            color: #0d6efd;
+        }
+
+        /* Dropdown Styles */
+        .layer-dropdown,
+        .location-dropdown,
+        .search-dropdown {
             display: none;
             position: absolute;
             right: 0;
@@ -79,13 +194,26 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            width: 260px;
             padding: 8px 0;
             max-height: 500px;
             overflow-y: auto;
         }
 
-        .layer-dropdown.active {
+        .layer-dropdown {
+            width: 260px;
+        }
+
+        .location-dropdown {
+            width: 240px;
+        }
+
+        .search-dropdown {
+            width: 340px;
+        }
+
+        .layer-dropdown.active,
+        .location-dropdown.active,
+        .search-dropdown.active {
             display: block;
         }
 
@@ -104,7 +232,8 @@
             margin: 4px 0;
         }
 
-        .layer-dropdown-item {
+        .layer-dropdown-item,
+        .location-dropdown-item {
             display: flex;
             align-items: center;
             padding: 8px 16px;
@@ -112,17 +241,20 @@
             transition: background 0.15s;
         }
 
-        .layer-dropdown-item:hover {
+        .layer-dropdown-item:hover,
+        .location-dropdown-item:hover {
             background: #f5f5f5;
         }
 
-        .layer-icon {
+        .layer-icon,
+        .location-item-icon {
             width: 28px;
             font-size: 16px;
             color: #555;
         }
 
-        .layer-name {
+        .layer-name,
+        .location-item-name {
             flex: 1;
             font-size: 14px;
             color: #333;
@@ -137,69 +269,6 @@
             color: #0d6efd;
         }
 
-        /* Location Switcher Styles */
-        .custom-location-switcher {
-            position: absolute;
-            right: 30px;
-            top: 74px;
-            z-index: 1000;
-        }
-
-        .location-toggle-btn {
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 20px;
-            transition: all 0.2s;
-        }
-
-        .location-toggle-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-
-        .location-dropdown {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 52px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            width: 240px;
-            padding: 8px 0;
-        }
-
-        .location-dropdown.active {
-            display: block;
-        }
-
-        .location-dropdown-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 16px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-
-        .location-dropdown-item:hover {
-            background: #f5f5f5;
-        }
-
-        .location-item-icon {
-            width: 28px;
-            font-size: 16px;
-            color: #555;
-        }
-
-        .location-item-name {
-            flex: 1;
-            font-size: 14px;
-            color: #333;
-        }
-
         .location-item-badge {
             font-size: 11px;
             padding: 2px 8px;
@@ -211,46 +280,6 @@
         .location-item-badge.active {
             background: #0d6efd;
             color: white;
-        }
-
-        /* Search Switcher Styles */
-        .custom-search-switcher {
-            position: absolute;
-            right: 30px;
-            top: 128px;
-            z-index: 1000;
-        }
-
-        .search-toggle-btn {
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 20px;
-            transition: all 0.2s;
-        }
-
-        .search-toggle-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-
-        .search-dropdown {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 52px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            width: 340px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .search-dropdown.active {
-            display: block;
         }
 
         .search-tab-btn {
@@ -277,101 +306,18 @@
             overflow-y: auto;
         }
 
-        /* Label Toggle */
-        .custom-label-toggle {
+        .location-toast {
+            display: none;
             position: absolute;
-            right: 30px;
-            top: 182px;
-            z-index: 1000;
-        }
-
-        .label-toggle-btn {
-            background: white;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
             border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
-            transition: all 0.2s;
-        }
-
-        .label-toggle-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-
-        .label-toggle-btn.active-label {
-            color: #0d6efd;
-        }
-
-        /* Legend Toggle */
-        .custom-legend-toggle {
-            position: absolute;
-            right: 30px;
-            top: 236px;
+            font-size: 14px;
             z-index: 1000;
-        }
-
-        .legend-toggle-btn {
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
-            transition: all 0.2s;
-        }
-
-        .legend-toggle-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-
-        /* 3D Toggle */
-        .custom-3d-toggle {
-            position: absolute;
-            right: 30px;
-            top: 290px;
-            z-index: 1000;
-        }
-
-        .threed-toggle-btn {
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
-            transition: all 0.2s;
-        }
-
-        .threed-toggle-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-
-        .threed-toggle-btn.active-3d {
-            color: #0d6efd;
-        }
-
-        /* Fullscreen Button */
-        .fullscreen-btn {
-            position: absolute;
-            right: 30px;
-            bottom: 30px;
-            z-index: 1000;
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
-            transition: all 0.2s;
-        }
-
-        .fullscreen-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
         }
     </style>
 @endpush
@@ -573,10 +519,12 @@
                 })
             });
 
-            // ─── FIX: DEFINE MAP CONTAINER FOR UI ELEMENTS ───
-            const $mapContainer = $('#mapCard');
+            // ─── GET MAP CONTAINER ───
+            const $mapContainer = $('#map');
 
-            // ─── LAYER SWITCHER UI ───
+            // ─── ADD ALL CONTROLS INSIDE MAP ───
+
+            // 1. LAYER SWITCHER
             $mapContainer.append(`
                 <div class="custom-layer-switcher">
                     <div class="layer-toggle-btn"><i class="bi bi-layers"></i></div>
@@ -630,7 +578,7 @@
                 </div>
             `);
 
-            // ─── LABEL TOGGLE UI ───
+            // 2. LABEL TOGGLE
             $mapContainer.append(`
                 <div class="custom-label-toggle">
                     <div class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
@@ -639,7 +587,7 @@
                 </div>
             `);
 
-            // ─── LEGEND TOGGLE UI ───
+            // 3. LEGEND TOGGLE
             $mapContainer.append(`
                 <div class="custom-legend-toggle">
                     <div class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
@@ -648,7 +596,7 @@
                 </div>
             `);
 
-            // ─── LOCATION SWITCHER UI ───
+            // 4. LOCATION SWITCHER
             $mapContainer.append(`
                 <div class="custom-location-switcher">
                     <div class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></div>
@@ -673,7 +621,7 @@
                 <div class="location-toast" id="locationToast"></div>
             `);
 
-            // ─── SEARCH SWITCHER UI ───
+            // 5. SEARCH SWITCHER
             $mapContainer.append(`
                 <div class="custom-search-switcher">
                     <div class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></div>
@@ -702,7 +650,7 @@
                 </div>
             `);
 
-            // ─── 3D TOGGLE UI ───
+            // 6. 3D TOGGLE
             $mapContainer.append(`
                 <div class="custom-3d-toggle">
                     <div class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
@@ -711,15 +659,17 @@
                 </div>
             `);
 
-            // ─── FULLSCREEN BUTTON ───
+            // 7. FULLSCREEN BUTTON (Inside map)
             $mapContainer.append(`
                 <div class="fullscreen-btn" id="fullscreenBtn">
                     <i class="bi bi-arrows-fullscreen"></i>
                 </div>
+                <div class="fullscreen-btn-exit" id="fullscreenExitBtn" style="display:none;">
+                    <i class="bi bi-fullscreen-exit"></i>
+                </div>
             `);
 
             // ─── TOGGLE DROPDOWN FUNCTIONALITY ───
-            // Layer Switcher Toggle
             $(document).on('click', '.layer-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.layer-dropdown').toggleClass('active');
@@ -727,7 +677,6 @@
                 $('.search-dropdown').removeClass('active');
             });
 
-            // Location Switcher Toggle
             $(document).on('click', '.location-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.location-dropdown').toggleClass('active');
@@ -735,7 +684,6 @@
                 $('.search-dropdown').removeClass('active');
             });
 
-            // Search Switcher Toggle
             $(document).on('click', '.search-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.search-dropdown').toggleClass('active');
@@ -758,22 +706,19 @@
 
             // ─── FULLSCREEN TOGGLE ───
             let isFullscreen = false;
+
+            // Enter Fullscreen
             $(document).on('click', '#fullscreenBtn', function() {
-                const $icon = $(this).find('i');
                 const $card = $('#mapCard');
                 const $container = $('#map');
+                const $btn = $(this);
+                const $exitBtn = $('#fullscreenExitBtn');
 
-                if (!isFullscreen) {
-                    $card.addClass('fullscreen-mode');
-                    $container.addClass('fullscreen');
-                    $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
-                    isFullscreen = true;
-                } else {
-                    $card.removeClass('fullscreen-mode');
-                    $container.removeClass('fullscreen');
-                    $icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
-                    isFullscreen = false;
-                }
+                $card.addClass('fullscreen-mode');
+                $container.addClass('fullscreen');
+                $btn.hide();
+                $exitBtn.show();
+                isFullscreen = true;
 
                 setTimeout(function() {
                     map.updateSize();
@@ -783,7 +728,36 @@
                 }, 150);
             });
 
+            // Exit Fullscreen
+            $(document).on('click', '#fullscreenExitBtn', function() {
+                const $card = $('#mapCard');
+                const $container = $('#map');
+                const $btn = $('#fullscreenBtn');
+                const $exitBtn = $(this);
+
+                $card.removeClass('fullscreen-mode');
+                $container.removeClass('fullscreen');
+                $exitBtn.hide();
+                $btn.show();
+                isFullscreen = false;
+
+                setTimeout(function() {
+                    map.updateSize();
+                    if (window.is3DActive && window.cesiumViewer) {
+                        window.cesiumViewer.resize();
+                    }
+                }, 150);
+            });
+
+            // Escape key to exit fullscreen
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape' && isFullscreen) {
+                    $('#fullscreenExitBtn').click();
+                }
+            });
+
             console.log('GIS Dashboard initialized successfully!');
+            console.log('All controls are inside the map container');
         });
     </script>
 @endpush
