@@ -131,6 +131,11 @@
             transition: all 0.2s;
             border: none;
             color: #333;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .fullscreen-btn:hover {
@@ -153,6 +158,11 @@
             transition: all 0.2s;
             border: none;
             color: #333;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .fullscreen-btn-exit:hover {
@@ -705,6 +715,38 @@
                 });
             }
 
+            function createDestinationStyle() {
+                return new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 10,
+                        fill: new ol.style.Fill({
+                            color: '#dc3545'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#ffffff',
+                            width: 3
+                        })
+                    }),
+                    text: new ol.style.Text({
+                        text: '📍 Destination',
+                        font: 'bold 12px Arial',
+                        fill: new ol.style.Fill({
+                            color: '#000'
+                        }),
+                        backgroundFill: new ol.style.Fill({
+                            color: '#fff'
+                        }),
+                        backgroundStroke: new ol.style.Stroke({
+                            color: '#ccc',
+                            width: 1
+                        }),
+                        padding: [2, 6, 2, 6],
+                        offsetY: -18,
+                        textAlign: 'center'
+                    })
+                });
+            }
+
             // ─── BUILD SEARCH INDEX ───
             function buildSearchIndex() {
                 searchIndex = [];
@@ -713,7 +755,8 @@
                 polygons.forEach(poly => {
                     try {
                         const coords = JSON.parse(poly.coordinates);
-                        const center = ol.extent.getCenter(ol.extent.boundingExtent(coords));
+                        const extent = ol.extent.boundingExtent(coords);
+                        const center = ol.extent.getCenter(extent);
                         searchIndex.push({
                             id: poly.gisid,
                             type: 'polygon',
@@ -739,8 +782,11 @@
                         const coords = JSON.parse(line.coordinates);
                         let center = null;
                         try {
-                            const extent = ol.extent.boundingExtent(coords.flat(2));
-                            center = ol.extent.getCenter(extent);
+                            const flatCoords = coords.flat(2);
+                            if (flatCoords && flatCoords.length > 0) {
+                                const extent = ol.extent.boundingExtent(flatCoords);
+                                center = ol.extent.getCenter(extent);
+                            }
                         } catch (e) {
                             // Skip center calculation for lines
                         }
@@ -763,24 +809,34 @@
                 // Add point data
                 pointDatas.forEach(pd => {
                     try {
-                        const coords = JSON.parse(pd.coordinates || '[]');
+                        let coords = [];
                         let center = null;
-                        if (coords.length === 2) {
-                            center = ol.proj.fromLonLat([coords[0], coords[1]]);
+
+                        // Parse coordinates from the stored JSON string
+                        if (pd.coordinates) {
+                            coords = JSON.parse(pd.coordinates);
+                            if (Array.isArray(coords) && coords.length === 2) {
+                                // Store as [longitude, latitude]
+                                // Convert to projected coordinates for center
+                                center = ol.proj.fromLonLat([coords[0], coords[1]]);
+                            }
                         }
+
+                        let pointGisid = pd.point_gisid || '';
+
                         searchIndex.push({
                             id: pd.id,
                             type: 'pointdata',
                             title: `Assessment: ${pd.assessment || 'N/A'}`,
-                            subtitle: `GIS ID: ${pd.point_gisid || 'N/A'} | Owner: ${pd.owner_name || 'N/A'}`,
+                            subtitle: `GIS ID: ${pointGisid} | Owner: ${pd.owner_name || 'N/A'}`,
                             assessment: pd.assessment || '',
-                            point_gisid: pd.point_gisid || '',
+                            point_gisid: pointGisid,
                             owner_name: pd.owner_name || '',
                             phone_number: pd.phone_number || '',
-                            coordinates: coords,
-                            center: center,
+                            coordinates: coords, // [longitude, latitude]
+                            center: center, // Projected coordinates for map
                             geometryType: 'point',
-                            searchText: `${pd.point_gisid || ''} ${pd.assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`.toLowerCase()
+                            searchText: `${pointGisid} ${pd.assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`.toLowerCase()
                         });
                     } catch (e) {
                         console.error('Error indexing point data:', e);
@@ -1143,39 +1199,126 @@
                 }
             }
 
-            // Zoom to Feature
+            // ─── ZOOM TO FEATURE ───
             function zoomToFeature(item) {
-                if (item.center) {
-                    map.getView().animate({
-                        center: item.center,
-                        zoom: 20,
-                        duration: 1000
-                    });
-                    showToast('📍 Zoomed to: ' + item.title);
-                    return true;
-                } else if (item.coordinates && item.coordinates.length > 0) {
-                    try {
-                        let extent;
-                        if (item.type === 'polygon') {
-                            extent = ol.extent.boundingExtent(item.coordinates);
-                        } else if (item.type === 'line') {
-                            const flatCoords = item.coordinates.flat(2);
-                            extent = ol.extent.boundingExtent(flatCoords);
-                        } else if (item.type === 'pointdata' && item.coordinates.length === 2) {
-                            const center = ol.proj.fromLonLat([item.coordinates[0], item.coordinates[1]]);
-                            extent = ol.extent.buffer(ol.extent.createEmpty(), 100);
-                            ol.extent.extend(extent, center);
-                        }
-                        if (extent) {
-                            map.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 20 });
-                            showToast('📍 Zoomed to: ' + item.title);
-                            return true;
-                        }
-                    } catch (e) {
-                        console.error('Error zooming:', e);
+                try {
+                    let center = null;
+                    let zoomLevel = 20;
+                    let found = false;
+
+                    // Case 1: Item has center property (from search index)
+                    if (item.center) {
+                        center = item.center;
+                        found = true;
                     }
+                    // Case 2: Item is polygon with coordinates
+                    else if (item.type === 'polygon' && item.coordinates && Array.isArray(item.coordinates)) {
+                        try {
+                            const extent = ol.extent.boundingExtent(item.coordinates);
+                            center = ol.extent.getCenter(extent);
+                            found = true;
+                        } catch (e) {
+                            console.error('Error getting polygon center:', e);
+                        }
+                    }
+                    // Case 3: Item is line with coordinates
+                    else if (item.type === 'line' && item.coordinates) {
+                        try {
+                            const flatCoords = item.coordinates.flat(2);
+                            if (flatCoords && flatCoords.length > 0) {
+                                const extent = ol.extent.boundingExtent(flatCoords);
+                                center = ol.extent.getCenter(extent);
+                                found = true;
+                            }
+                        } catch (e) {
+                            console.error('Error getting line center:', e);
+                        }
+                    }
+                    // Case 4: Item is point data with lat/lon coordinates
+                    else if (item.type === 'pointdata' && item.coordinates && item.coordinates.length === 2) {
+                        try {
+                            // Convert from [longitude, latitude] to projected coordinates
+                            center = ol.proj.fromLonLat([item.coordinates[0], item.coordinates[1]]);
+                            found = true;
+                            zoomLevel = 21; // Zoom in closer for points
+                        } catch (e) {
+                            console.error('Error converting point coordinates:', e);
+                        }
+                    }
+                    // Case 5: Try to find by GISID in polygonSource
+                    else if (item.id) {
+                        const features = polygonSource.getFeatures();
+                        for (let f of features) {
+                            if (f.get('gisid') == item.id) {
+                                try {
+                                    const geom = f.getGeometry();
+                                    if (geom) {
+                                        const extent = geom.getExtent();
+                                        center = ol.extent.getCenter(extent);
+                                        found = true;
+                                        break;
+                                    }
+                                } catch (e) {
+                                    console.error('Error getting feature geometry:', e);
+                                }
+                            }
+                        }
+                    }
+
+                    // If we found a center, zoom to it
+                    if (found && center) {
+                        // Validate center coordinates
+                        if (Array.isArray(center) && center.length === 2 &&
+                            !isNaN(center[0]) && !isNaN(center[1])) {
+
+                            map.getView().animate({
+                                center: center,
+                                zoom: zoomLevel,
+                                duration: 1000
+                            });
+
+                            // Show success message with details
+                            let displayName = item.title || `GISID: ${item.id}`;
+                            showToast(`📍 Zoomed to: ${displayName}`);
+                            return true;
+                        } else {
+                            console.error('Invalid center coordinates:', center);
+                            showToast('❌ Invalid coordinates for this item');
+                            return false;
+                        }
+                    } else {
+                        // Try to find by searching polygons array directly
+                        if (item.id) {
+                            const polygon = polygons.find(p => p.gisid == item.id);
+                            if (polygon) {
+                                try {
+                                    const coords = JSON.parse(polygon.coordinates);
+                                    const extent = ol.extent.boundingExtent(coords);
+                                    center = ol.extent.getCenter(extent);
+                                    if (center) {
+                                        map.getView().animate({
+                                            center: center,
+                                            zoom: 20,
+                                            duration: 1000
+                                        });
+                                        showToast(`📍 Zoomed to: GISID ${item.id}`);
+                                        return true;
+                                    }
+                                } catch (e) {
+                                    console.error('Error parsing polygon coordinates:', e);
+                                }
+                            }
+                        }
+
+                        showToast('❌ Cannot zoom to this item - no coordinates found');
+                        console.log('Item details:', item);
+                        return false;
+                    }
+                } catch (e) {
+                    console.error('Error in zoomToFeature:', e);
+                    showToast('❌ Error zooming to item');
+                    return false;
                 }
-                return false;
             }
 
             // ─── EVENT HANDLERS ───
@@ -1489,13 +1632,9 @@
                 const type = $(this).data('type');
                 const item = searchIndex.find(i => i.id == id && i.type === type);
                 if (item) {
-                    if (zoomToFeature(item)) {
-                        $('.search-dropdown').removeClass('active');
-                        $('#gisSearchInput').val('');
-                        $('#searchResults').html('');
-                    } else {
-                        showToast('❌ Cannot zoom to this item');
-                    }
+                    zoomToFeature(item);
+                } else {
+                    showToast('❌ Item not found in search index');
                 }
             });
 
