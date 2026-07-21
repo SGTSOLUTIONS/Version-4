@@ -1924,7 +1924,6 @@
                 const misData = @json($misData);
                 // pt Dynamic add
                 let ptIndex = 0;
-                console.log(misData);
                 let searchIndex = [];
 
                 let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
@@ -2513,7 +2512,6 @@
 
                 function populateLineForm(gisid, roadName) {
                     // Set basic form fields
-                    console.log(roadName)
                     $('#line_gisid').val(gisid || '');
                     $('#line_road_name').val(roadName || '');
                     // Clear any existing validation errors
@@ -3641,7 +3639,7 @@
                         }
                     });
                 }
-                console.log(buildSearchIndex);
+                console.log(searchIndex);
 
                 function searchGIS(value) {
                     const v = value.toString().toLowerCase().trim();
