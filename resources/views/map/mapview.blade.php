@@ -3641,13 +3641,14 @@
                         }
                     });
                 }
+                console.log(buildSearchIndex);
 
                 function searchGIS(value) {
                     const v = value.toString().toLowerCase().trim();
                     if (!v) return [];
                     return searchIndex.filter(item =>
                         (item.id && item.id.toString().toLowerCase().includes(v)) ||
-                        (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
+                       (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
                         (item.old_assessment && item.old_assessment.toString().toLowerCase().includes(v)) ||
                         (item.owner_name && item.owner_name.toString().toLowerCase().includes(v)) ||
                         (item.phone_number && item.phone_number.toString().toLowerCase().includes(v)) ||
