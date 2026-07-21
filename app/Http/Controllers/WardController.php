@@ -16,6 +16,7 @@ use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Barryvdh\DomPDF\Facade\Pdf;
+
 class WardController extends Controller
 {
     protected $wardService;
@@ -230,11 +231,18 @@ class WardController extends Controller
                 if ($createTable) {
                     $polygonTable = $createTable['polygon'];
                     $pointTable = $createTable['point'];
+                    $lineTable = $createTable['line'];
                     if ($request->hasFile('polygon_file')) {
                         $result = $this->wardService->createPolygonUpdate(
                             $polygonTable,
                             $pointTable,
                             $request->file('polygon_file')
+                        );
+                    }
+                    if ($request->hasFile('road_file')) {
+                        $result = $this->wardService->storeSingleLine(
+                            $lineTable,
+                            $request->file('road_file')
                         );
                     }
                 }
@@ -422,11 +430,18 @@ class WardController extends Controller
                 if ($createTable) {
                     $polygonTable = $createTable['polygon'];
                     $pointTable = $createTable['point'];
+                    $lineTable = $createTable['line'];
                     if ($request->hasFile('polygon_file')) {
                         $result = $this->wardService->createPolygonUpdate(
                             $polygonTable,
                             $pointTable,
                             $request->file('polygon_file')
+                        );
+                    }
+                     if ($request->hasFile('road_file')) {
+                        $result = $this->wardService->storeSingleLine(
+                            $lineTable,
+                            $request->file('road_file')
                         );
                     }
                 }
@@ -563,252 +578,248 @@ class WardController extends Controller
         }
     }
 
-   public function missingBuiilding($ward_id)
-{
-    try {
+    public function missingBuiilding($ward_id)
+    {
+        try {
 
-        $polygonDataTable = "polygon_data_" . $ward_id;
-        $polygonTable     = "polygons_" . $ward_id;
+            $polygonDataTable = "polygon_data_" . $ward_id;
+            $polygonTable     = "polygons_" . $ward_id;
 
-        $missingBuildings = DB::table($polygonTable)
-            ->whereNotIn('gisid', function ($query) use ($polygonDataTable) {
-                $query->select('gisid')
-                    ->from($polygonDataTable);
-            })
-            ->get();
+            $missingBuildings = DB::table($polygonTable)
+                ->whereNotIn('gisid', function ($query) use ($polygonDataTable) {
+                    $query->select('gisid')
+                        ->from($polygonDataTable);
+                })
+                ->get();
 
-        $features = [];
-
-        foreach ($missingBuildings as $building) {
-
-            $coordinates = json_decode($building->coordinates, true);
-
-            if (!$coordinates) {
-                continue;
-            }
-
-            // Convert to valid GeoJSON Polygon
-            if ($building->type == 'Polygon') {
-
-                // If coordinates are stored as [[x,y],[x,y],...]
-                if (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
-                    $coordinates = [$coordinates];
-                }
-
-                // Close polygon if not closed
-                $ring = &$coordinates[0];
-
-                if ($ring[0] != end($ring)) {
-                    $ring[] = $ring[0];
-                }
-            }
-
-            $features[] = [
-                "type" => "Feature",
-                "properties" => [
-                    "gisid"  => $building->gisid,
-                    "sqfeet" => $building->sqfeet,
-                ],
-                "geometry" => [
-                    "type" => $building->type,
-                    "coordinates" => $coordinates
-                ]
-            ];
-        }
-
-        $geojson = [
-            "type" => "FeatureCollection",
-            "features" => $features
-        ];
-
-        return response()->streamDownload(function () use ($geojson) {
-            echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        }, "missing_buildings_{$ward_id}.geojson", [
-            'Content-Type' => 'application/geo+json',
-        ]);
-
-    } catch (\Throwable $e) {
-
-        return response()->json([
-            "success" => false,
-            "message" => $e->getMessage(),
-            "line"    => $e->getLine(),
-            "file"    => $e->getFile(),
-        ], 500);
-    }
-}
-public function missingBuiildingExcel($ward_id)
-{
-    try {
-
-        $polygonDataTable = "polygon_data_" . $ward_id;
-        $polygonTable     = "polygons_" . $ward_id;
-
-        $missingBuildings = DB::table($polygonTable)
-            ->whereNotIn('gisid', function ($query) use ($polygonDataTable) {
-                $query->select('gisid')
-                      ->from($polygonDataTable);
-            })
-            ->get();
-
-        $fileName = "missing_buildings_{$ward_id}.csv";
-
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename={$fileName}",
-        ];
-
-        $callback = function () use ($missingBuildings) {
-
-            $file = fopen('php://output', 'w');
-
-            // Header Row
-            fputcsv($file, [
-                'GISID',
-                'Type',
-                'SqFeet',
-            ]);
+            $features = [];
 
             foreach ($missingBuildings as $building) {
 
+                $coordinates = json_decode($building->coordinates, true);
+
+                if (!$coordinates) {
+                    continue;
+                }
+
+                // Convert to valid GeoJSON Polygon
+                if ($building->type == 'Polygon') {
+
+                    // If coordinates are stored as [[x,y],[x,y],...]
+                    if (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
+                        $coordinates = [$coordinates];
+                    }
+
+                    // Close polygon if not closed
+                    $ring = &$coordinates[0];
+
+                    if ($ring[0] != end($ring)) {
+                        $ring[] = $ring[0];
+                    }
+                }
+
+                $features[] = [
+                    "type" => "Feature",
+                    "properties" => [
+                        "gisid"  => $building->gisid,
+                        "sqfeet" => $building->sqfeet,
+                    ],
+                    "geometry" => [
+                        "type" => $building->type,
+                        "coordinates" => $coordinates
+                    ]
+                ];
+            }
+
+            $geojson = [
+                "type" => "FeatureCollection",
+                "features" => $features
+            ];
+
+            return response()->streamDownload(function () use ($geojson) {
+                echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            }, "missing_buildings_{$ward_id}.geojson", [
+                'Content-Type' => 'application/geo+json',
+            ]);
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "line"    => $e->getLine(),
+                "file"    => $e->getFile(),
+            ], 500);
+        }
+    }
+    public function missingBuiildingExcel($ward_id)
+    {
+        try {
+
+            $polygonDataTable = "polygon_data_" . $ward_id;
+            $polygonTable     = "polygons_" . $ward_id;
+
+            $missingBuildings = DB::table($polygonTable)
+                ->whereNotIn('gisid', function ($query) use ($polygonDataTable) {
+                    $query->select('gisid')
+                        ->from($polygonDataTable);
+                })
+                ->get();
+
+            $fileName = "missing_buildings_{$ward_id}.csv";
+
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename={$fileName}",
+            ];
+
+            $callback = function () use ($missingBuildings) {
+
+                $file = fopen('php://output', 'w');
+
+                // Header Row
                 fputcsv($file, [
-                    $building->gisid,
-                    $building->type,
-                    $building->sqfeet,
+                    'GISID',
+                    'Type',
+                    'SqFeet',
                 ]);
-            }
 
-            fclose($file);
-        };
+                foreach ($missingBuildings as $building) {
 
-        return response()->stream($callback, 200, $headers);
+                    fputcsv($file, [
+                        $building->gisid,
+                        $building->type,
+                        $building->sqfeet,
+                    ]);
+                }
 
-    } catch (\Throwable $e) {
+                fclose($file);
+            };
 
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-            'line'    => $e->getLine(),
-            'file'    => $e->getFile()
-        ], 500);
-    }
-}
-public function missingBillExcel($ward_id)
-{
-    try {
-        $ward = Ward::find($ward_id);
-        $zone = Zone::find($ward->zone_id);
+            return response()->stream($callback, 200, $headers);
+        } catch (\Throwable $e) {
 
-        $misTable = 'mis_' . $zone->corp_id;
-        $pointDataTable = 'point_data_' . $ward_id;
-
-        $missingbill = DB::table($misTable)
-            ->whereNotIn('assessment', function ($query) use ($pointDataTable) {
-                $query->select('assessment')->from($pointDataTable);
-            })
-            ->get();
-
-        if ($missingbill->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No missing records found.',
-            ], 404);
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+                'file'    => $e->getFile()
+            ], 500);
         }
+    }
+    public function missingBillExcel($ward_id)
+    {
+        try {
+            $ward = Ward::find($ward_id);
+            $zone = Zone::find($ward->zone_id);
 
-        // Get column names dynamically from the first row
-        $columns = array_keys((array) $missingbill->first());
+            $misTable = 'mis_' . $zone->corp_id;
+            $pointDataTable = 'point_data_' . $ward_id;
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+            $missingbill = DB::table($misTable)
+                ->whereNotIn('assessment', function ($query) use ($pointDataTable) {
+                    $query->select('assessment')->from($pointDataTable);
+                })
+                ->get();
 
-        // Header row
-        foreach ($columns as $colIndex => $colName) {
-            $cellCoordinate = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1) . '1';
-            $sheet->setCellValue($cellCoordinate, $colName);
-        }
+            if ($missingbill->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No missing records found.',
+                ], 404);
+            }
 
-        // Data rows
-        $rowNum = 2;
-        foreach ($missingbill as $row) {
-            $row = (array) $row;
+            // Get column names dynamically from the first row
+            $columns = array_keys((array) $missingbill->first());
+
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Header row
             foreach ($columns as $colIndex => $colName) {
-                $cellCoordinate = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1) . $rowNum;
-                $sheet->setCellValue($cellCoordinate, $row[$colName]);
+                $cellCoordinate = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1) . '1';
+                $sheet->setCellValue($cellCoordinate, $colName);
             }
-            $rowNum++;
-        }
 
-        // Auto-size every column that has data
-        foreach (range(1, count($columns)) as $colIndex) {
-            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
-            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
-        }
+            // Data rows
+            $rowNum = 2;
+            foreach ($missingbill as $row) {
+                $row = (array) $row;
+                foreach ($columns as $colIndex => $colName) {
+                    $cellCoordinate = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1) . $rowNum;
+                    $sheet->setCellValue($cellCoordinate, $row[$colName]);
+                }
+                $rowNum++;
+            }
 
-        // Bold header row
-        $sheet->getStyle('A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($columns)) . '1')
-            ->getFont()->setBold(true);
+            // Auto-size every column that has data
+            foreach (range(1, count($columns)) as $colIndex) {
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
+                $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+            }
 
-        $fileName = "missing_buildings_{$ward_id}.xlsx";
+            // Bold header row
+            $sheet->getStyle('A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($columns)) . '1')
+                ->getFont()->setBold(true);
 
-        $writer = new Xlsx($spreadsheet);
+            $fileName = "missing_buildings_{$ward_id}.xlsx";
 
-        return response()->streamDownload(function () use ($writer) {
-            $writer->save('php://output');
-        }, $fileName, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => "attachment; filename={$fileName}",
-        ]);
+            $writer = new Xlsx($spreadsheet);
 
-    } catch (\Throwable $e) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-            'line'    => $e->getLine(),
-            'file'    => $e->getFile(),
-        ], 500);
-    }
-}
-
-
-public function missingBillPdf($ward_id)
-{
-    try {
-        $ward = Ward::find($ward_id);
-        $zone = Zone::find($ward->zone_id);
-
-        $misTable = 'mis_' . $zone->corp_id;
-        $pointDataTable = 'point_data_' . $ward_id;
-
-        $missingbill = DB::table($misTable)->where('ward_no',$ward->ward_no)
-            ->whereNotIn('assessment', function ($query) use ($pointDataTable) {
-                $query->select('assessment')->from($pointDataTable);
-            })
-            ->get();
-
-        if ($missingbill->isEmpty()) {
+            return response()->streamDownload(function () use ($writer) {
+                $writer->save('php://output');
+            }, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => "attachment; filename={$fileName}",
+            ]);
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'No missing records found.',
-            ], 404);
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+                'file'    => $e->getFile(),
+            ], 500);
         }
+    }
 
-        $pdf = Pdf::loadView('exports.missing_bill_pdf', [
+
+    public function missingBillPdf($ward_id)
+    {
+        try {
+            $ward = Ward::find($ward_id);
+            $zone = Zone::find($ward->zone_id);
+
+            $misTable = 'mis_' . $zone->corp_id;
+            $pointDataTable = 'point_data_' . $ward_id;
+
+            $missingbill = DB::table($misTable)->where('ward_no', $ward->ward_no)
+                ->whereNotIn('assessment', function ($query) use ($pointDataTable) {
+                    $query->select('assessment')->from($pointDataTable);
+                })
+                ->get();
+
+            if ($missingbill->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No missing records found.',
+                ], 404);
+            }
+
+            $pdf = Pdf::loadView('exports.missing_bill_pdf', [
                 'missingbill' => $missingbill,
                 'ward'        => $ward,
             ])
-            ->setPaper('a4', 'landscape');
+                ->setPaper('a4', 'landscape');
 
-        $fileName = "missing_buildings_{$ward_id}.pdf";
+            $fileName = "missing_buildings_{$ward_id}.pdf";
 
-        return $pdf->download($fileName);
-
-    } catch (\Throwable $e) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-            'line'    => $e->getLine(),
-            'file'    => $e->getFile(),
-        ], 500);
+            return $pdf->download($fileName);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+                'file'    => $e->getFile(),
+            ], 500);
+        }
     }
-}
 }

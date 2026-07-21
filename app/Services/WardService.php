@@ -574,7 +574,7 @@ class WardService
         }
     }
 
-    public function storeSingleLine($data, $useTransaction = true)
+    public function storeSingleLine($tableName, $file, $useTransaction = true)
     {
         try {
             // Only start transaction if requested and not already in one
@@ -585,33 +585,154 @@ class WardService
                 $startedTransaction = false;
             }
 
-            $tableName = $this->createLineTable($data['ward_id']);
+            // ─── READ AND PARSE GEOJSON FILE ───
+            if (is_string($file)) {
+                // If file is a path string
+                $geoJsonContent = file_get_contents($file);
+            } elseif (is_object($file) && method_exists($file, 'getRealPath')) {
+                // If file is uploaded file object (Illuminate\Http\UploadedFile)
+                $geoJsonContent = file_get_contents($file->getRealPath());
+            } else {
+                throw new \Exception('Invalid file parameter');
+            }
 
-            $feature = json_decode($data['feature'], true);
+            $geoJson = json_decode($geoJsonContent, true);
 
-            // Generate GIS ID
-            $gisid = $this->checkGISID($tableName) ?? uniqid('GIS_');
+            if (!$geoJson || !isset($geoJson['type'])) {
+                throw new \Exception('Invalid GeoJSON file format');
+            }
 
-            // Store Polygon
-            DB::table($tableName)->insert([
-                'gisid'       => $gisid,
-                'coordinates' => json_encode($feature),
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ]);
+            // Check if table exists, if not create it
+            if (!Schema::hasTable($tableName)) {
+                // Extract ward_id from table name (lines_1 -> 1)
+                $wardId = (int) str_replace('lines_', '', $tableName);
+                $this->createLineTable($wardId);
+            }
+
+            // ─── PROCESS EACH FEATURE ───
+            $processedCount = 0;
+            $updatedCount = 0;
+            $insertedCount = 0;
+            $skippedCount = 0;
+            $errors = [];
+
+            // Get features from GeoJSON
+            if ($geoJson['type'] === 'FeatureCollection') {
+                $features = $geoJson['features'];
+            } elseif ($geoJson['type'] === 'Feature') {
+                $features = [$geoJson];
+            } else {
+                throw new \Exception('Unsupported GeoJSON type: ' . $geoJson['type']);
+            }
+
+            if (empty($features)) {
+                throw new \Exception('No features found in GeoJSON file');
+            }
+
+            foreach ($features as $index => $feature) {
+                try {
+                    // Validate feature
+                    if (!isset($feature['geometry']) || !isset($feature['geometry']['type'])) {
+                        $skippedCount++;
+                        continue;
+                    }
+
+                    $geometryType = $feature['geometry']['type'];
+
+                    // Only process LineString and MultiLineString
+                    if ($geometryType !== 'LineString' && $geometryType !== 'MultiLineString') {
+                        $skippedCount++;
+                        continue;
+                    }
+
+                    // Get properties
+                    $properties = $feature['properties'] ?? [];
+
+                    // Get GIS ID from properties or generate new
+                    $gisid = $properties['gisid'] ??
+                        $properties['GIS_ID'] ??
+                        $properties['id'] ??
+                        $properties['ID'] ??
+                        null;
+
+                    $isUpdate = false;
+
+                    // If GIS ID exists, check if it exists in database
+                    if ($gisid) {
+                        $existing = DB::table($tableName)->where('gisid', $gisid)->first();
+                        if ($existing) {
+                            $isUpdate = true;
+                        }
+                    }
+
+                    // Prepare coordinates
+                    $coordinates = $feature['geometry']['coordinates'];
+
+                    // Prepare road_name - check various possible field names
+                    $roadName = $properties['road_name'] ??
+                        $properties['name'] ??
+                        $properties['ROAD_NAME'] ??
+                        $properties['road'] ??
+                        $properties['RoadName'] ??
+                        $properties['ROAD'] ??
+                        null;
+
+                    if ($isUpdate) {
+                        // ─── UPDATE EXISTING LINE ───
+                        DB::table($tableName)
+                            ->where('gisid', $gisid)
+                            ->update([
+                                'type'        => $geometryType,
+                                'coordinates' => json_encode($coordinates),
+                                'road_name'   => $roadName ?? $existing->road_name,
+                                'updated_at'  => now(),
+                            ]);
+
+                        $updatedCount++;
+                    } else {
+                        // ─── INSERT NEW LINE ───
+                        // Generate new GIS ID if not provided
+                        if (!$gisid) {
+                            $gisid = $this->generateLineGISID($tableName);
+                        }
+
+                        DB::table($tableName)->insert([
+                            'gisid'       => $gisid,
+                            'type'        => $geometryType,
+                            'coordinates' => json_encode($coordinates),
+                            'road_name'   => $roadName,
+                            'created_at'  => now(),
+                            'updated_at'  => now(),
+                        ]);
+
+                        $insertedCount++;
+                    }
+
+                    $processedCount++;
+                } catch (\Exception $e) {
+                    $errors[] = "Feature #$index error: " . $e->getMessage();
+                    Log::error('Feature processing error: ' . $e->getMessage());
+                }
+            }
 
             // Only commit if we started the transaction
             if ($startedTransaction) {
                 DB::commit();
             }
 
+            // Get all lines for return
             $lines = DB::table($tableName)->get();
 
             return [
-                'status'  => true,
-                'gisid'   => $gisid,
-                'message' => 'Line stored successfully',
-                'lines' => $lines
+                'status'         => true,
+                'message'        => "Processed $processedCount features successfully",
+                'processed'      => $processedCount,
+                'inserted'       => $insertedCount,
+                'updated'        => $updatedCount,
+                'skipped'        => $skippedCount,
+                'errors'         => $errors,
+                'lines'          => $lines,
+                'table'          => $tableName
             ];
         } catch (\Exception $e) {
             // Only rollback if we started the transaction
@@ -626,6 +747,26 @@ class WardService
                 'trace'   => $e->getTraceAsString()
             ];
         }
+    }
+
+    /**
+     * Generate unique GIS ID for line
+     */
+    private function generateLineGISID($tableName): string
+    {
+        $prefix = 'LINE_';
+        $timestamp = time();
+        $random = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6);
+        $gisid = $prefix . $timestamp . '_' . $random;
+
+        // Check if exists
+        $exists = DB::table($tableName)->where('gisid', $gisid)->exists();
+
+        if ($exists) {
+            return $this->generateLineGISID($tableName);
+        }
+
+        return $gisid;
     }
 
     // ─────────────────────────────────────────────────────────────

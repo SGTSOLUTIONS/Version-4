@@ -514,20 +514,7 @@
                 });
             }
 
-            function createPointStyle(feature) {
-                return new ol.style.Style({
-                    image: new ol.style.Circle({
-                        radius: 8,
-                        fill: new ol.style.Fill({
-                            color: '#ff0000'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: '#ffffff',
-                            width: 2
-                        })
-                    })
-                });
-            }
+
 
             function loadPolygonSource() {
                 polygonSource.clear();
@@ -577,34 +564,11 @@
                 });
             }
 
-            function loadPointSource() {
-                pointSource.clear();
 
-                points.forEach(point => {
-                    try {
-                        let coords = JSON.parse(point.coordinates);
-                        const lonLat = [coords[0], coords[1]];
-                        const projected = ol.proj.fromLonLat(lonLat);
-
-                        const feature = new ol.Feature({
-                            geometry: new ol.geom.Point(projected),
-                            gisid: point.gisid,
-                            type: 'point',
-                            orginalData: point
-                        });
-
-                        feature.setId(point.gisid);
-                        pointSource.addFeature(feature);
-
-                    } catch (e) {
-                        console.error('point parse error:', e);
-                    }
-                });
-            }
 
             loadPolygonSource();
             loadLineSource();
-            loadPointSource();
+
 
             const polygonLayer = new ol.layer.Vector({
                 source: polygonSource,
@@ -620,17 +584,12 @@
                 title: 'Lines'
             });
 
-            const pointLayer = new ol.layer.Vector({
-                source: pointSource,
-                style: createPointStyle,
-                visible: true,
-                title: 'Points'
-            });
+
 
             // ─── CREATE MAP ───
             const map = new ol.Map({
                 target: 'map',
-                layers: [osmLayer, satelliteLayer, streetViewLayer, droneLayer, polygonLayer, lineLayer, pointLayer],
+                layers: [osmLayer, satelliteLayer, streetViewLayer, droneLayer, polygonLayer, lineLayer],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
                     zoom: 18
@@ -682,11 +641,7 @@
                             <div class="layer-name">Lines</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
-                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Points">
-                            <div class="layer-icon"><i class="bi bi-geo-alt"></i></div>
-                            <div class="layer-name">Points</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
+
                     </div>
                 </div>
             `);
@@ -860,7 +815,6 @@
                     let layer;
                     if (layerTitle === 'Polygons') layer = polygonLayer;
                     else if (layerTitle === 'Lines') layer = lineLayer;
-                    else if (layerTitle === 'Points') layer = pointLayer;
 
                     if (layer) {
                         const visible = !layer.getVisible();
