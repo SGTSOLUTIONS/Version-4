@@ -444,15 +444,7 @@
                 })
             });
 
-            const streetViewLayer = new ol.layer.Tile({
-                title: 'Street View',
-                type: 'base',
-                visible: false,
-                source: new ol.source.XYZ({
-                    url: 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    attributions: '&copy; OpenStreetMap contributors'
-                })
-            });
+
 
             // ─── SOURCES ───
             const polygonSource = new ol.source.Vector();
@@ -589,7 +581,7 @@
             // ─── CREATE MAP ───
             const map = new ol.Map({
                 target: 'map',
-                layers: [osmLayer, satelliteLayer, streetViewLayer, droneLayer, polygonLayer, lineLayer],
+                layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer, lineLayer],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
                     zoom: 18
@@ -741,7 +733,7 @@
 
             // Switch Base Layer
             function switchBaseLayer(layer) {
-                [osmLayer, satelliteLayer, streetViewLayer].forEach(l => {
+                [osmLayer, satelliteLayer].forEach(l => {
                     l.setVisible(l === layer);
                 });
                 $('#activeLayerBadge').text(layer.get('title') || 'Layer');
@@ -801,7 +793,6 @@
                     let layer;
                     if (layerTitle === 'OpenStreetMap') layer = osmLayer;
                     else if (layerTitle === 'Satellite') layer = satelliteLayer;
-                    else if (layerTitle === 'Street View') layer = streetViewLayer;
 
                     if (layer) {
                         switchBaseLayer(layer);
