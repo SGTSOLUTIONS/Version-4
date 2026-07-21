@@ -500,11 +500,41 @@
                     }
                 });
             }
+            function loadLineSource() {
+                lineSource.clear();
+
+                lines.forEach(line => {
+                    try {
+                        let coords = JSON.parse(line.coordinates);
+
+                        const feature = new ol.Feature({
+                            geometry: new ol.geom.Polygon([coords]),
+                            gisid: line.gisid,
+                            type: 'multLineString',
+                            road_name: line.road_name || '0',
+                            orginalData: line
+                        });
+
+                        feature.setId(line.gisid);
+                        polygonSource.addFeature(feature);
+
+                    } catch (e) {
+                        console.error('polygon parse error:', e);
+                    }
+                });
+            }
             loadPolygonSource();
+            loadLineSource();
 
             const polygonLayer = new ol.layer.Vector({
                 source: polygonSource,
                 style: createPolygonStyle,
+                visible: true,
+                title: 'Polygons'
+            });
+             const lineLayer = new ol.layer.Vector({
+                source: lineSource,
+                style: createLineStyle,
                 visible: true,
                 title: 'Polygons'
             });
@@ -721,7 +751,6 @@
                     let layer;
                     if (layerTitle === 'Polygons') layer = polygonLayer;
                     else if (layerTitle === 'Lines') layer = lineLayer;
-                    else if (layerTitle === 'Points') layer = pointLayer;
                     if (layer) {
                         const visible = !layer.getVisible();
                         layer.setVisible(visible);
