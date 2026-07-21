@@ -430,7 +430,6 @@
             let buildingData = @json($buildingData ?? [], JSON_HEX_TAG);
             let allBuildings = buildingData.buildings || [];
             let usageCounts = buildingData.usage_counts || {};
-             let isFullscreen = false;
 
             // ─── USAGE COLOR MAP ───
             const usageColors = {
@@ -766,8 +765,34 @@
                     $('.search-dropdown').removeClass('active');
               "  }
             });
+             let isFullscreen = false;
+            $(document).on('click', '#fullscreenBtn', function() {
+                const $icon = $(this).find('i');
+                const $card = $('#mapCard');
+                const $container = $('#map');
 
+                if (!isFullscreen) {
+                    $card.addClass('fullscreen-mode');
+                    $container.addClass('fullscreen');
+                    $('.custom-3d-toggle').css('display', 'block !important');
+                    $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
+                    isFullscreen = true;
+                } else {
+                    $card.removeClass('fullscreen-mode');
+                    $container.removeClass('fullscreen');
+                    $icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
+                    isFullscreen = false;
+                }
 
+                setTimeout(function() {
+                    map.updateSize();
+                    if (window.is3DActive && window.cesiumViewer) {
+                        window.cesiumViewer.resize();
+                    }
+                    $('.custom-3d-toggle').css('display', isFullscreen ? 'block !important' :
+                        'block');
+                }, 150);
+            });
 
             console.log('GIS Dashboard initialized successfully!');
         });
