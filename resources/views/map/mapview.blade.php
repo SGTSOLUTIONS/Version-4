@@ -1,4 +1,4 @@
-    @extends('layouts.office')
+@extends('layouts.office')
 
     @section('title', 'Dashboard — Revenue Department')
     @section('page_title', 'Dashboard')
@@ -1975,15 +1975,6 @@
                         crossOrigin: 'anonymous'
                     })
                 });
-                const streetLayer = new ol.layer.Tile({
-                    title: 'Street View',
-                    type: 'base',
-                    visible: false,
-                    source: new ol.source.XYZ({
-                        url: 'https://{a-c}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
-                        attributions: '&copy; OpenStreetMap Contributors'
-                    })
-                });
 
                 // ─── STYLES ───
                 function createPolygonStyle(feature) {
@@ -2398,7 +2389,7 @@
                 // ─── MAP ───
                 const map = new ol.Map({
                     target: 'map',
-                    layers: [osmLayer, satelliteLayer, streetLayer, droneLayer, polygonLayer, pointLayer,
+                    layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer, pointLayer,
                         lineLayer, liveLocationLayer
                     ],
                     view: new ol.View({
@@ -3640,7 +3631,10 @@
                                 coordinates: JSON.parse(pd.coordinates),
                                 geometryType: 'point',
                                 assessment: pd.assessment,
-                                searchText: `${pd.gisid} ${pd.assessment} ${pd.point_gisid} assessment point`
+                                old_assessment: pd.old_assessment,
+                                owner_name: pd.owner_name,
+                                phone_number: pd.phone_number,
+                                searchText: `${pd.gisid} ${pd.assessment} ${pd.old_assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''} ${pd.point_gisid} assessment point`
                             });
                         } catch (e) {
                             console.error('Error parsing pointData:', e);
@@ -3654,16 +3648,31 @@
                     return searchIndex.filter(item =>
                         (item.id && item.id.toString().toLowerCase().includes(v)) ||
                         (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
+                        (item.old_assessment && item.old_assessment.toString().toLowerCase().includes(v)) ||
+                        (item.owner_name && item.owner_name.toString().toLowerCase().includes(v)) ||
+                        (item.phone_number && item.phone_number.toString().toLowerCase().includes(v)) ||
                         (item.title && item.title.toLowerCase().includes(v)) ||
                         (item.subtitle && item.subtitle.toLowerCase().includes(v)) ||
                         (item.point_gisid && item.point_gisid.toString().toLowerCase().includes(v))
                     );
                 }
 
-                function zoomToFeature(gisid) {
-                    const coords = getCoordsByGisId(gisid);
+                function zoomToFeature(gisid, type) {
+                    let coords = null;
+
+                    if (type === 'polygon') {
+                        const feature = polygonSource.getFeatureById(gisid);
+                        if (feature) coords = ol.extent.getCenter(feature.getGeometry().getExtent());
+                    } else if (type === 'line') {
+                        const feature = lineSource.getFeatureById(gisid);
+                        if (feature) coords = ol.extent.getCenter(feature.getGeometry().getExtent());
+                    } else {
+                        // point, pointdata (id here is either a point gisid or a point_gisid)
+                        coords = getCoordsByGisId(gisid);
+                    }
+
                     if (!coords) {
-                        showToast(`⚠️ No point found for GIS ID: ${gisid}`, 3000);
+                        showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000);
                         return;
                     }
                     map.getView().animate({
@@ -3850,7 +3859,7 @@
                 const $activeLayerBadge = $('#activeLayerBadge');
 
                 function getActiveBaseLayerTitle() {
-                    return [osmLayer, satelliteLayer, streetLayer].find(l => l.getVisible())?.get('title') ||
+                    return [osmLayer, satelliteLayer].find(l => l.getVisible())?.get('title') ||
                         'OpenStreetMap';
                 }
 
@@ -3865,13 +3874,19 @@
                 }
 
                 function switchBaseLayer(selectedLayer) {
-                    [osmLayer, satelliteLayer, streetLayer].forEach(l => l.setVisible(l === selectedLayer));
+                    [osmLayer, satelliteLayer].forEach(l => l.setVisible(l === selectedLayer));
                     updateLayerUI();
                 }
 
                 function toggleDroneLayer() {
                     droneLayer.setVisible(!droneLayer.getVisible());
                     updateLayerUI();
+                }
+
+                function toggleOverlayLayer(layer, $item) {
+                    const visible = !layer.getVisible();
+                    layer.setVisible(visible);
+                    $item.toggleClass('active', visible);
                 }
 
                 // ─── UI INJECTION ───
@@ -3890,16 +3905,26 @@
                             <div class="layer-name">Satellite</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
-                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Street View">
-                            <div class="layer-icon"><i class="bi bi-signpost-2"></i></div>
-                            <div class="layer-name">Street View</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
                         <div class="dropdown-divider"></div>
                         <div class="dropdown-header">Overlays</div>
                         <div class="layer-dropdown-item" data-layer-type="overlay" data-layer="Drone View">
                             <div class="layer-icon"><i class="bi bi-camera-drone"></i></div>
                             <div class="layer-name">Drone View</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Polygons">
+                            <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
+                            <div class="layer-name">Polygons</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Lines">
+                            <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
+                            <div class="layer-name">Lines</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Points">
+                            <div class="layer-icon"><i class="bi bi-geo-alt"></i></div>
+                            <div class="layer-name">Points</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
                     </div>
@@ -4105,12 +4130,17 @@
                     const layerTitle = $(this).data('layer');
                     if (layerType === 'base') {
                         switchBaseLayer(
-                            layerTitle === 'Satellite' ? satelliteLayer :
-                            layerTitle === 'Street View' ? streetLayer : osmLayer
+                            layerTitle === 'Satellite' ? satelliteLayer : osmLayer
                         );
                         $('.layer-dropdown').removeClass('show');
                     } else if (layerTitle === 'Drone View') {
                         toggleDroneLayer();
+                    } else if (layerTitle === 'Polygons') {
+                        toggleOverlayLayer(polygonLayer, $(this));
+                    } else if (layerTitle === 'Lines') {
+                        toggleOverlayLayer(lineLayer, $(this));
+                    } else if (layerTitle === 'Points') {
+                        toggleOverlayLayer(pointLayer, $(this));
                     }
                 });
 
@@ -4195,7 +4225,8 @@
                             const displayTitle = item.type === 'pointdata' ?
                                 `${item.title} | Assessment: ${item.assessment}` : item.title;
                             const displaySubtitle = item.type === 'pointdata' ?
-                                `Point GIS ID: ${item.point_gisid || 'N/A'}` : item.subtitle;
+                                `Point GIS ID: ${item.point_gisid || 'N/A'}${item.owner_name ? ' | Owner: ' + item.owner_name : ''}` :
+                                item.subtitle;
                             const icon = item.geometryType === 'point' ? 'geo-alt' :
                                 item.geometryType === 'polygon' ? 'pentagon' : 'vector-pen';
 
@@ -4208,7 +4239,7 @@
                                 <div class="search-result-title"><i class="bi bi-${icon} me-2"></i>${displayTitle}</div>
                                 <div class="search-result-subtitle">${displaySubtitle}</div>
                                 <div class="mt-2 d-flex gap-2">
-                                    <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
+                                    <button class="btn btn-sm btn-success zoom-btn" data-id="${item.type === 'pointdata' ? item.point_gisid : item.id}" data-type="${item.type}">Zoom</button>
                                     <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
                                     ${editBtn}
                                 </div>
@@ -4222,13 +4253,11 @@
                     e.stopPropagation();
                     const id = $(this).data('id'),
                         type = $(this).data('type');
-                    if (searchIndex.find(f => f.id == id && f.type === type)) {
-                        zoomToFeature(id);
-                        $('#searchDropdown').removeClass('show');
-                        $('#searchToggleBtn').removeClass('active-search');
-                        $('#gisSearchInput').val('');
-                        $('#searchResults').html('');
-                    }
+                    zoomToFeature(id, type);
+                    $('#searchDropdown').removeClass('show');
+                    $('#searchToggleBtn').removeClass('active-search');
+                    $('#gisSearchInput').val('');
+                    $('#searchResults').html('');
                 });
 
                 $(document).on('click', '.direction-btn', function(e) {
@@ -4651,10 +4680,13 @@
                             html += `
                 <div class="search-result-item">
                     <div class="search-result-title">${pd.owner_name} — ${pd.assessment}</div>
-                    <div class="search-result-subtitle">GIS ID: ${pd.point_gisid}</div>
-                    <button class="btn btn-sm btn-warning edit-btn mt-1" data-id="${pd.id}">
-                        <i class="bi bi-pencil"></i> Edit
-                    </button>
+                    <div class="search-result-subtitle">GIS ID: ${pd.point_gisid}${pd.old_assessment ? ' | Old Assessment: ' + pd.old_assessment : ''}</div>
+                    <div class="mt-2 d-flex gap-2">
+                        <button class="btn btn-sm btn-success zoom-btn" data-id="${pd.point_gisid}" data-type="pointdata">Zoom</button>
+                        <button class="btn btn-sm btn-warning edit-btn" data-id="${pd.id}">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                    </div>
                 </div>`;
                         });
                         $('#filterResults').html(html ||
