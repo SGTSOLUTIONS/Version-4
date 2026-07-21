@@ -758,14 +758,16 @@
                 if (!$(e.target).closest('.custom-layer-switcher').length) {
                     $('.layer-dropdown').removeClass('active');
                 }
+
                 if (!$(e.target).closest('.custom-location-switcher').length) {
                     $('.location-dropdown').removeClass('active');
                 }
+
                 if (!$(e.target).closest('.custom-search-switcher').length) {
                     $('.search-dropdown').removeClass('active');
-              "  }
+                }
             });
-             let isFullscreen = false;
+            let isFullscreen = false;
             $(document).on('click', '#fullscreenBtn', function() {
                 const $icon = $(this).find('i');
                 const $card = $('#mapCard');
