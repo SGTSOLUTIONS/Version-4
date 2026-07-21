@@ -56,14 +56,6 @@
             z-index: 1000;
         }
 
-        .custom-layer-switcher {
-            position: absolute;
-            right: 30px;
-            top: 20px;
-            z-index: 1000;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-        }
-
         .layer-toggle-btn {
             background: white;
             border-radius: 8px;
@@ -726,8 +718,6 @@
                 </div>
             `);
 
-
-
             // ─── TOGGLE DROPDOWN FUNCTIONALITY ───
             // Layer Switcher Toggle
             $(document).on('click', '.layer-toggle-btn', function(e) {
@@ -758,15 +748,15 @@
                 if (!$(e.target).closest('.custom-layer-switcher').length) {
                     $('.layer-dropdown').removeClass('active');
                 }
-
                 if (!$(e.target).closest('.custom-location-switcher').length) {
                     $('.location-dropdown').removeClass('active');
                 }
-
                 if (!$(e.target).closest('.custom-search-switcher').length) {
                     $('.search-dropdown').removeClass('active');
                 }
             });
+
+            // ─── FULLSCREEN TOGGLE ───
             let isFullscreen = false;
             $(document).on('click', '#fullscreenBtn', function() {
                 const $icon = $(this).find('i');
@@ -776,7 +766,6 @@
                 if (!isFullscreen) {
                     $card.addClass('fullscreen-mode');
                     $container.addClass('fullscreen');
-                    $('.custom-3d-toggle').css('display', 'block !important');
                     $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
                     isFullscreen = true;
                 } else {
@@ -791,8 +780,6 @@
                     if (window.is3DActive && window.cesiumViewer) {
                         window.cesiumViewer.resize();
                     }
-                    $('.custom-3d-toggle').css('display', isFullscreen ? 'block !important' :
-                        'block');
                 }, 150);
             });
 
