@@ -50,14 +50,14 @@
 
         /* Hide all controls in fullscreen mode */
         /* .map-card.fullscreen-mode .custom-layer-switcher,
-        .map-card.fullscreen-mode .custom-location-switcher,
-        .map-card.fullscreen-mode .custom-search-switcher,
-        .map-card.fullscreen-mode .custom-label-toggle,
-        .map-card.fullscreen-mode .custom-legend-toggle,
-        .map-card.fullscreen-mode .custom-3d-toggle,
-        .map-card.fullscreen-mode .fullscreen-btn {
-            display: none !important;
-        } */
+                .map-card.fullscreen-mode .custom-location-switcher,
+                .map-card.fullscreen-mode .custom-search-switcher,
+                .map-card.fullscreen-mode .custom-label-toggle,
+                .map-card.fullscreen-mode .custom-legend-toggle,
+                .map-card.fullscreen-mode .custom-3d-toggle,
+                .map-card.fullscreen-mode .fullscreen-btn {
+                    display: none !important;
+                } */
 
         /* Show only fullscreen exit button in fullscreen mode */
         .map-card.fullscreen-mode .fullscreen-btn-exit {
@@ -477,6 +477,15 @@
                 return styles;
             }
 
+            function createLineStyle(feature) {
+                return new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#ff0000',
+                        width: 3
+                    })
+                });
+            }
+
             function loadPolygonSource() {
                 polygonSource.clear();
 
@@ -500,6 +509,7 @@
                     }
                 });
             }
+
             function loadLineSource() {
                 lineSource.clear();
 
@@ -508,7 +518,7 @@
                         let coords = JSON.parse(line.coordinates);
 
                         const feature = new ol.Feature({
-                            geometry: new ol.geom.Polygon([coords]),
+                            geometry: new ol.geom.MultiLineString(coords),
                             gisid: line.gisid,
                             type: 'multLineString',
                             road_name: line.road_name || '0',
@@ -516,7 +526,7 @@
                         });
 
                         feature.setId(line.gisid);
-                        polygonSource.addFeature(feature);
+                        const lineSource = new ol.source.Vector();
 
                     } catch (e) {
                         console.error('polygon parse error:', e);
@@ -532,7 +542,7 @@
                 visible: true,
                 title: 'Polygons'
             });
-             const lineLayer = new ol.layer.Vector({
+            const lineLayer = new ol.layer.Vector({
                 source: lineSource,
                 style: createLineStyle,
                 visible: true,
@@ -734,7 +744,7 @@
                 }
             });
 
-              $(document).on('click', '.layer-dropdown-item', function(e) {
+            $(document).on('click', '.layer-dropdown-item', function(e) {
                 e.stopPropagation();
                 const layerType = $(this).data('layer-type');
                 const layerTitle = $(this).data('layer');
@@ -742,7 +752,7 @@
                 if (layerType === 'base') {
                     switchBaseLayer(
                         layerTitle === 'Satellite' ? satelliteLayer :
-                        layerTitle === 'OSM' ?  osmLayer
+                        layerTitle === 'OSM' ? osmLayer
                     );
                     $('.layer-dropdown').removeClass('show');
                 } else if (layerTitle === 'Drone View') {
