@@ -2186,6 +2186,8 @@
                     loadLinesToSource();
                     loadPointsToSource();
                     buildSearchIndex();
+
+                console.log(searchIndex);
                 }
 
                 loadPolygonsToSource();
@@ -3639,7 +3641,6 @@
                         }
                     });
                 }
-                console.log(searchIndex);
 
                 function searchGIS(value) {
                     const v = value.toString().toLowerCase().trim();
