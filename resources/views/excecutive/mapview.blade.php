@@ -20,6 +20,26 @@
         /* Map Card Styles */
         .map-card {
             position: relative;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .map-header {
+            padding: 16px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .map-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a2e;
         }
 
         /* Fullscreen Styles */
@@ -44,24 +64,12 @@
             margin: 0;
         }
 
-        .map-card.fullscreen-mode #map {
-            height: calc(100vh - 5px);
+        .map-card.fullscreen-mode .map-header {
+            display: none;
         }
 
-        /* Hide all controls in fullscreen mode */
-        /* .map-card.fullscreen-mode .custom-layer-switcher,
-                .map-card.fullscreen-mode .custom-location-switcher,
-                .map-card.fullscreen-mode .custom-search-switcher,
-                .map-card.fullscreen-mode .custom-label-toggle,
-                .map-card.fullscreen-mode .custom-legend-toggle,
-                .map-card.fullscreen-mode .custom-3d-toggle,
-                .map-card.fullscreen-mode .fullscreen-btn {
-                    display: none !important;
-                } */
-
-        /* Show only fullscreen exit button in fullscreen mode */
-        .map-card.fullscreen-mode .fullscreen-btn-exit {
-            display: block !important;
+        .map-card.fullscreen-mode #map {
+            height: calc(100vh - 5px);
         }
 
         /* Common Control Styles - All inside map */
@@ -128,7 +136,6 @@
             transform: scale(1.05);
         }
 
-        /* Fullscreen Exit Button - Hidden by default */
         .fullscreen-btn-exit {
             display: none;
             position: absolute;
@@ -163,6 +170,8 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
             font-size: 20px;
             transition: all 0.2s;
+            border: none;
+            color: #333;
         }
 
         .layer-toggle-btn:hover,
@@ -197,6 +206,7 @@
             padding: 8px 0;
             max-height: 500px;
             overflow-y: auto;
+            min-width: 200px;
         }
 
         .layer-dropdown {
@@ -319,6 +329,11 @@
             font-size: 14px;
             z-index: 1000;
         }
+
+        /* OL Override */
+        .ol-viewport {
+            border-radius: 0 0 12px 12px;
+        }
     </style>
 @endpush
 
@@ -429,6 +444,16 @@
                 })
             });
 
+            const streetViewLayer = new ol.layer.Tile({
+                title: 'Street View',
+                type: 'base',
+                visible: false,
+                source: new ol.source.XYZ({
+                    url: 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    attributions: '&copy; OpenStreetMap contributors'
+                })
+            });
+
             // ─── SOURCES ───
             const polygonSource = new ol.source.Vector();
             const lineSource = new ol.source.Vector();
@@ -449,6 +474,9 @@
                             lineJoin: 'round',
                             lineCap: 'round'
                         }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(255, 0, 0, 0.1)'
+                        })
                     })
                 ];
 
@@ -482,6 +510,21 @@
                     stroke: new ol.style.Stroke({
                         color: '#ff0000',
                         width: 3
+                    })
+                });
+            }
+
+            function createPointStyle(feature) {
+                return new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 8,
+                        fill: new ol.style.Fill({
+                            color: '#ff0000'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#ffffff',
+                            width: 2
+                        })
                     })
                 });
             }
@@ -526,15 +569,42 @@
                         });
 
                         feature.setId(line.gisid);
-                        const lineSource = new ol.source.Vector();
+                        lineSource.addFeature(feature);
 
                     } catch (e) {
-                        console.error('polygon parse error:', e);
+                        console.error('line parse error:', e);
                     }
                 });
             }
+
+            function loadPointSource() {
+                pointSource.clear();
+
+                points.forEach(point => {
+                    try {
+                        let coords = JSON.parse(point.coordinates);
+                        const lonLat = [coords[0], coords[1]];
+                        const projected = ol.proj.fromLonLat(lonLat);
+
+                        const feature = new ol.Feature({
+                            geometry: new ol.geom.Point(projected),
+                            gisid: point.gisid,
+                            type: 'point',
+                            orginalData: point
+                        });
+
+                        feature.setId(point.gisid);
+                        pointSource.addFeature(feature);
+
+                    } catch (e) {
+                        console.error('point parse error:', e);
+                    }
+                });
+            }
+
             loadPolygonSource();
             loadLineSource();
+            loadPointSource();
 
             const polygonLayer = new ol.layer.Vector({
                 source: polygonSource,
@@ -542,17 +612,25 @@
                 visible: true,
                 title: 'Polygons'
             });
+
             const lineLayer = new ol.layer.Vector({
                 source: lineSource,
                 style: createLineStyle,
                 visible: true,
-                title: 'Polygons'
+                title: 'Lines'
+            });
+
+            const pointLayer = new ol.layer.Vector({
+                source: pointSource,
+                style: createPointStyle,
+                visible: true,
+                title: 'Points'
             });
 
             // ─── CREATE MAP ───
             const map = new ol.Map({
                 target: 'map',
-                layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer],
+                layers: [osmLayer, satelliteLayer, streetViewLayer, droneLayer, polygonLayer, lineLayer, pointLayer],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
                     zoom: 18
@@ -567,7 +645,7 @@
             // 1. LAYER SWITCHER
             $mapContainer.append(`
                 <div class="custom-layer-switcher">
-                    <div class="layer-toggle-btn"><i class="bi bi-layers"></i></div>
+                    <button class="layer-toggle-btn"><i class="bi bi-layers"></i></button>
                     <div class="layer-dropdown">
                         <div class="dropdown-header">Base Maps</div>
                         <div class="layer-dropdown-item active" data-layer-type="base" data-layer="OpenStreetMap">
@@ -587,31 +665,26 @@
                         </div>
                         <div class="dropdown-divider"></div>
                         <div class="dropdown-header">Overlays</div>
-                        <div class="layer-dropdown-item" data-layer-type="overlay" data-layer="Drone View">
+                        <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Drone View">
                             <div class="layer-icon"><i class="bi bi-camera-drone"></i></div>
                             <div class="layer-name">Drone View</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
                         <div class="dropdown-divider"></div>
                         <div class="dropdown-header">Vector Layers</div>
-                        <div class="layer-dropdown-item" data-layer-type="vector" data-layer="Polygons">
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Polygons">
                             <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
                             <div class="layer-name">Polygons</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
-                        <div class="layer-dropdown-item" data-layer-type="vector" data-layer="Lines">
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Lines">
                             <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
                             <div class="layer-name">Lines</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
-                        <div class="layer-dropdown-item" data-layer-type="vector" data-layer="Points">
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Points">
                             <div class="layer-icon"><i class="bi bi-geo-alt"></i></div>
                             <div class="layer-name">Points</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Buildings">
-                            <div class="layer-icon"><i class="bi bi-building"></i></div>
-                            <div class="layer-name">Buildings</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
                     </div>
@@ -621,25 +694,25 @@
             // 2. LABEL TOGGLE
             $mapContainer.append(`
                 <div class="custom-label-toggle">
-                    <div class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
+                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
                         <i class="bi bi-fonts"></i>
-                    </div>
+                    </button>
                 </div>
             `);
 
             // 3. LEGEND TOGGLE
             $mapContainer.append(`
                 <div class="custom-legend-toggle">
-                    <div class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
+                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
                         <i class="bi bi-list-ul"></i>
-                    </div>
+                    </button>
                 </div>
             `);
 
             // 4. LOCATION SWITCHER
             $mapContainer.append(`
                 <div class="custom-location-switcher">
-                    <div class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></div>
+                    <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
                     <div class="location-dropdown" id="locationDropdown">
                         <div class="dropdown-header">Location Tools</div>
                         <div class="location-dropdown-item" id="liveLocationItem" data-action="live">
@@ -664,7 +737,7 @@
             // 5. SEARCH SWITCHER
             $mapContainer.append(`
                 <div class="custom-search-switcher">
-                    <div class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></div>
+                    <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
                     <div class="search-dropdown" id="searchDropdown">
                         <div class="d-flex border-bottom">
                             <button type="button" class="btn btn-sm flex-fill search-tab-btn active" data-tab="quick">Quick Search</button>
@@ -693,23 +766,42 @@
             // 6. 3D TOGGLE
             $mapContainer.append(`
                 <div class="custom-3d-toggle">
-                    <div class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
+                    <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
                         <i class="bi bi-box"></i>
-                    </div>
+                    </button>
                 </div>
             `);
 
             // 7. FULLSCREEN BUTTON (Inside map)
             $mapContainer.append(`
-                <div class="fullscreen-btn" id="fullscreenBtn">
+                <button class="fullscreen-btn" id="fullscreenBtn">
                     <i class="bi bi-arrows-fullscreen"></i>
-                </div>
-                <div class="fullscreen-btn-exit" id="fullscreenExitBtn" style="display:none;">
+                </button>
+                <button class="fullscreen-btn-exit" id="fullscreenExitBtn" style="display:none;">
                     <i class="bi bi-fullscreen-exit"></i>
-                </div>
+                </button>
             `);
 
-            // ─── TOGGLE DROPDOWN FUNCTIONALITY ───
+            // ─── FUNCTIONS ───
+
+            // Switch Base Layer
+            function switchBaseLayer(layer) {
+                [osmLayer, satelliteLayer, streetViewLayer].forEach(l => {
+                    l.setVisible(l === layer);
+                });
+                $('#activeLayerBadge').text(layer.get('title') || 'Layer');
+            }
+
+            // Toggle Drone Layer
+            function toggleDroneLayer() {
+                const visible = !droneLayer.getVisible();
+                droneLayer.setVisible(visible);
+                return visible;
+            }
+
+            // ─── EVENT HANDLERS ───
+
+            // Toggle Dropdowns
             $(document).on('click', '.layer-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.layer-dropdown').toggleClass('active');
@@ -744,23 +836,32 @@
                 }
             });
 
+            // Layer Dropdown Items
             $(document).on('click', '.layer-dropdown-item', function(e) {
                 e.stopPropagation();
                 const layerType = $(this).data('layer-type');
                 const layerTitle = $(this).data('layer');
 
                 if (layerType === 'base') {
-                    switchBaseLayer(
-                        layerTitle === 'Satellite' ? satelliteLayer :
-                        layerTitle === 'OSM' ? osmLayer
-                    );
-                    $('.layer-dropdown').removeClass('show');
+                    let layer;
+                    if (layerTitle === 'OpenStreetMap') layer = osmLayer;
+                    else if (layerTitle === 'Satellite') layer = satelliteLayer;
+                    else if (layerTitle === 'Street View') layer = streetViewLayer;
+
+                    if (layer) {
+                        switchBaseLayer(layer);
+                        $('.layer-dropdown-item[data-layer-type="base"]').removeClass('active');
+                        $(this).addClass('active');
+                    }
                 } else if (layerTitle === 'Drone View') {
-                    toggleDroneLayer();
+                    const visible = toggleDroneLayer();
+                    $(this).toggleClass('active', visible);
                 } else if (layerType === 'vector') {
                     let layer;
                     if (layerTitle === 'Polygons') layer = polygonLayer;
                     else if (layerTitle === 'Lines') layer = lineLayer;
+                    else if (layerTitle === 'Points') layer = pointLayer;
+
                     if (layer) {
                         const visible = !layer.getVisible();
                         layer.setVisible(visible);
@@ -769,11 +870,48 @@
                 }
             });
 
-            // ─── FULLSCREEN TOGGLE ───
+            // Label Toggle
+            $('#labelToggleBtn').on('click', function() {
+                $(this).toggleClass('active-label');
+                // Toggle labels on polygon layer
+                polygonLayer.setStyle(createPolygonStyle);
+                // Force refresh
+                polygonLayer.changed();
+            });
+
+            // Legend Toggle
+            $('#legendToggleBtn').on('click', function() {
+                // Add legend functionality here
+                Swal.fire({
+                    title: 'Infrastructure Legend',
+                    html: `
+                        <div style="text-align:left;">
+                            <div><span style="display:inline-block;width:20px;height:20px;background:red;border:2px solid red;margin-right:10px;"></span> Polygons</div>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:#ff0000;border:2px solid #ff0000;margin-right:10px;"></span> Lines</div>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:#ff0000;border-radius:50%;margin-right:10px;"></span> Points</div>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(255,0,0,0.1);border:2px solid blue;margin-right:10px;"></span> Drone View</div>
+                        </div>
+                    `,
+                    icon: 'info',
+                    confirmButtonText: 'Close'
+                });
+            });
+
+            // 3D Toggle
+            $('#threeDToggleBtn').on('click', function() {
+                $(this).toggleClass('active-3d');
+                Swal.fire({
+                    title: '3D View',
+                    text: '3D functionality requires Cesium integration. This is a placeholder.',
+                    icon: 'info',
+                    confirmButtonText: 'OK'
+                });
+            });
+
+            // Fullscreen Toggle
             let isFullscreen = false;
 
-            // Enter Fullscreen
-            $(document).on('click', '#fullscreenBtn', function() {
+            $('#fullscreenBtn').on('click', function() {
                 const $card = $('#mapCard');
                 const $container = $('#map');
                 const $btn = $(this);
@@ -787,14 +925,10 @@
 
                 setTimeout(function() {
                     map.updateSize();
-                    if (window.is3DActive && window.cesiumViewer) {
-                        window.cesiumViewer.resize();
-                    }
                 }, 150);
             });
 
-            // Exit Fullscreen
-            $(document).on('click', '#fullscreenExitBtn', function() {
+            $('#fullscreenExitBtn').on('click', function() {
                 const $card = $('#mapCard');
                 const $container = $('#map');
                 const $btn = $('#fullscreenBtn');
@@ -808,9 +942,6 @@
 
                 setTimeout(function() {
                     map.updateSize();
-                    if (window.is3DActive && window.cesiumViewer) {
-                        window.cesiumViewer.resize();
-                    }
                 }, 150);
             });
 
@@ -821,8 +952,108 @@
                 }
             });
 
+            // Search functionality
+            $('#gisSearchInput').on('input', function() {
+                const query = $(this).val().toLowerCase();
+                const results = $('#searchResults');
+
+                if (query.length < 2) {
+                    results.empty();
+                    return;
+                }
+
+                // Search in polygons
+                const matches = polygons.filter(p =>
+                    p.gisid && p.gisid.toString().toLowerCase().includes(query)
+                );
+
+                if (matches.length > 0) {
+                    let html = '<div class="dropdown-header">Results</div>';
+                    matches.slice(0, 10).forEach(m => {
+                        html += `
+                            <div class="layer-dropdown-item search-result-item" data-gisid="${m.gisid}">
+                                <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
+                                <div class="layer-name">GISID: ${m.gisid}</div>
+                            </div>
+                        `;
+                    });
+                    results.html(html);
+                } else {
+                    results.html('<div class="p-3 text-muted text-center">No results found</div>');
+                }
+            });
+
+            // Search result click
+            $(document).on('click', '.search-result-item', function() {
+                const gisid = $(this).data('gisid');
+                const polygon = polygons.find(p => p.gisid == gisid);
+                if (polygon) {
+                    try {
+                        const coords = JSON.parse(polygon.coordinates);
+                        const center = ol.extent.getCenter(new ol.extent.boundingExtent(coords));
+                        map.getView().animate({
+                            center: center,
+                            zoom: 20,
+                            duration: 1000
+                        });
+                        $('.search-dropdown').removeClass('active');
+                        $('#gisSearchInput').val('');
+                        $('#searchResults').empty();
+                    } catch (e) {
+                        console.error('Error zooming to polygon:', e);
+                    }
+                }
+            });
+
+            // Search tabs
+            $('.search-tab-btn').on('click', function() {
+                const tab = $(this).data('tab');
+                $('.search-tab-btn').removeClass('active');
+                $(this).addClass('active');
+
+                if (tab === 'quick') {
+                    $('#quickSearchTab').show();
+                    $('#filterTab').hide();
+                } else {
+                    $('#quickSearchTab').hide();
+                    $('#filterTab').show();
+                }
+            });
+
+            // Filter search
+            $('#applyFilterBtn').on('click', function() {
+                const assessment = $('#filterAssessment').val().toLowerCase();
+                const oldAssessment = $('#filterOldAssessment').val().toLowerCase();
+                const ownerName = $('#filterOwnerName').val().toLowerCase();
+                const phoneNumber = $('#filterPhoneNumber').val().toLowerCase();
+
+                let matches = polygons.filter(p => {
+                    let match = true;
+                    if (assessment) match = match && (p.assessment || '').toString().toLowerCase().includes(assessment);
+                    if (oldAssessment) match = match && (p.old_assessment || '').toString().toLowerCase().includes(oldAssessment);
+                    if (ownerName) match = match && (p.owner_name || '').toLowerCase().includes(ownerName);
+                    if (phoneNumber) match = match && (p.phone_number || '').includes(phoneNumber);
+                    return match;
+                });
+
+                const results = $('#filterResults');
+                if (matches.length > 0) {
+                    let html = '<div class="dropdown-header">Results (' + matches.length + ')</div>';
+                    matches.slice(0, 10).forEach(m => {
+                        html += `
+                            <div class="layer-dropdown-item search-result-item" data-gisid="${m.gisid}">
+                                <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
+                                <div class="layer-name">GISID: ${m.gisid}</div>
+                            </div>
+                        `;
+                    });
+                    results.html(html);
+                } else {
+                    results.html('<div class="p-3 text-muted text-center">No results found</div>');
+                }
+            });
+
             console.log('GIS Dashboard initialized successfully!');
-            console.log('All controls are inside the map container');
         });
     </script>
 @endpush
