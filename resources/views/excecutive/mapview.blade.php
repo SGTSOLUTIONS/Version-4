@@ -9,12 +9,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
     <style>
-         #map {
+        #map {
             width: 100%;
             height: 800px;
             transition: all 0.3s ease;
             position: relative;
         }
+
         #map.fullscreen {
             position: fixed;
             top: 0;
@@ -39,6 +40,7 @@
         .map-card.fullscreen-mode #map {
             height: calc(100vh - 5px);
         }
+
         .custom-layer-switcher {
             position: absolute;
             right: 30px;
@@ -53,292 +55,332 @@
             top: 74px;
             z-index: 1000;
         }
-         .custom-layer-switcher {
-                    position: absolute;
-                    right: 30px;
-                    top: 20px;
-                    z-index: 1000;
-                    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-                }
-                .layer-toggle-btn {
-                    background: white;
-                    border-radius: 8px;
-                    padding: 10px 12px;
-                    cursor: pointer;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-                    font-size: 20px;
-                    transition: all 0.2s;
-                }
-                .layer-toggle-btn:hover {
-                    background: #f0f0f0;
-                    transform: scale(1.05);
-                }
-                .layer-dropdown {
-                    display: none;
-                    position: absolute;
-                    right: 0;
-                    top: 52px;
-                    background: white;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-                    width: 260px;
-                    padding: 8px 0;
-                    max-height: 500px;
-                    overflow-y: auto;
-                }
-                .layer-dropdown.active {
-                    display: block;
-                }
-                .dropdown-header {
-                    padding: 8px 16px;
-                    font-weight: 600;
-                    font-size: 12px;
-                    color: #666;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                }
-                .dropdown-divider {
-                    height: 1px;
-                    background: #e9ecef;
-                    margin: 4px 0;
-                }
-                .layer-dropdown-item {
-                    display: flex;
-                    align-items: center;
-                    padding: 8px 16px;
-                    cursor: pointer;
-                    transition: background 0.15s;
-                }
-                .layer-dropdown-item:hover {
-                    background: #f5f5f5;
-                }
-                .layer-icon {
-                    width: 28px;
-                    font-size: 16px;
-                    color: #555;
-                }
-                .layer-name {
-                    flex: 1;
-                    font-size: 14px;
-                    color: #333;
-                }
-                .layer-check {
-                    color: #ccc;
-                    font-size: 14px;
-                }
-                .layer-dropdown-item.active .layer-check {
-                    color: #0d6efd;
-                }
 
-                /* Location Switcher Styles */
-                .custom-location-switcher {
-                    position: absolute;
-                    right: 30px;
-                    top: 74px;
-                    z-index: 1000;
-                }
-                .location-toggle-btn {
-                    background: white;
-                    border-radius: 8px;
-                    padding: 10px 12px;
-                    cursor: pointer;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-                    font-size: 20px;
-                    transition: all 0.2s;
-                }
-                .location-toggle-btn:hover {
-                    background: #f0f0f0;
-                    transform: scale(1.05);
-                }
-                .location-dropdown {
-                    display: none;
-                    position: absolute;
-                    right: 0;
-                    top: 52px;
-                    background: white;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-                    width: 240px;
-                    padding: 8px 0;
-                }
-                .location-dropdown.active {
-                    display: block;
-                }
-                .location-dropdown-item {
-                    display: flex;
-                    align-items: center;
-                    padding: 10px 16px;
-                    cursor: pointer;
-                    transition: background 0.15s;
-                }
-                .location-dropdown-item:hover {
-                    background: #f5f5f5;
-                }
-                .location-item-icon {
-                    width: 28px;
-                    font-size: 16px;
-                    color: #555;
-                }
-                .location-item-name {
-                    flex: 1;
-                    font-size: 14px;
-                    color: #333;
-                }
-                .location-item-badge {
-                    font-size: 11px;
-                    padding: 2px 8px;
-                    border-radius: 12px;
-                    background: #e9ecef;
-                    color: #666;
-                }
-                .location-item-badge.active {
-                    background: #0d6efd;
-                    color: white;
-                }
+        .custom-layer-switcher {
+            position: absolute;
+            right: 30px;
+            top: 20px;
+            z-index: 1000;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
 
-                /* Search Switcher Styles */
-                .custom-search-switcher {
-                    position: absolute;
-                    right: 30px;
-                    top: 128px;
-                    z-index: 1000;
-                }
-                .search-toggle-btn {
-                    background: white;
-                    border-radius: 8px;
-                    padding: 10px 12px;
-                    cursor: pointer;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-                    font-size: 20px;
-                    transition: all 0.2s;
-                }
-                .search-toggle-btn:hover {
-                    background: #f0f0f0;
-                    transform: scale(1.05);
-                }
-                .search-dropdown {
-                    display: none;
-                    position: absolute;
-                    right: 0;
-                    top: 52px;
-                    background: white;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-                    width: 340px;
-                    max-height: 500px;
-                    overflow-y: auto;
-                }
-                .search-dropdown.active {
-                    display: block;
-                }
-                .search-tab-btn {
-                    border: none;
-                    background: transparent;
-                    padding: 10px 0;
-                    font-size: 13px;
-                    color: #666;
-                    border-bottom: 2px solid transparent;
-                    transition: all 0.2s;
-                }
-                .search-tab-btn.active {
-                    color: #0d6efd;
-                    border-bottom-color: #0d6efd;
-                }
-                .search-tab-btn:hover {
-                    background: #f5f5f5;
-                }
-                .search-results-container {
-                    max-height: 200px;
-                    overflow-y: auto;
-                }
+        .layer-toggle-btn {
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 20px;
+            transition: all 0.2s;
+        }
 
-                /* Label Toggle */
-                .custom-label-toggle {
-                    position: absolute;
-                    right: 30px;
-                    top: 182px;
-                    z-index: 1000;
-                }
-                .label-toggle-btn {
-                    background: white;
-                    border-radius: 8px;
-                    padding: 10px 12px;
-                    cursor: pointer;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-                    font-size: 18px;
-                    transition: all 0.2s;
-                }
-                .label-toggle-btn:hover {
-                    background: #f0f0f0;
-                    transform: scale(1.05);
-                }
-                .label-toggle-btn.active-label {
-                    color: #0d6efd;
-                }
+        .layer-toggle-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
 
-                /* Legend Toggle */
-                .custom-legend-toggle {
-                    position: absolute;
-                    right: 30px;
-                    top: 236px;
-                    z-index: 1000;
-                }
-                .legend-toggle-btn {
-                    background: white;
-                    border-radius: 8px;
-                    padding: 10px 12px;
-                    cursor: pointer;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-                    font-size: 18px;
-                    transition: all 0.2s;
-                }
-                .legend-toggle-btn:hover {
-                    background: #f0f0f0;
-                    transform: scale(1.05);
-                }
+        .layer-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 52px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            width: 260px;
+            padding: 8px 0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
 
-                /* 3D Toggle */
-                .custom-3d-toggle {
-                    position: absolute;
-                    right: 30px;
-                    top: 290px;
-                    z-index: 1000;
-                }
-                .threed-toggle-btn {
-                    background: white;
-                    border-radius: 8px;
-                    padding: 10px 12px;
-                    cursor: pointer;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-                    font-size: 18px;
-                    transition: all 0.2s;
-                }
-                .threed-toggle-btn:hover {
-                    background: #f0f0f0;
-                    transform: scale(1.05);
-                }
-                .threed-toggle-btn.active-3d {
-                    color: #0d6efd;
-                }
+        .layer-dropdown.active {
+            display: block;
+        }
 
-                /* Fullscreen Button */
-                .fullscreen-btn {
-                    position: absolute;
-                    right: 30px;
-                    bottom: 30px;
-                    z-index: 1000;
-                    background: white;
-                    border-radius: 8px;
-                    padding: 10px 12px;
-                    cursor: pointer;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-                    font-size: 18px;
-                    transition: all 0.2s;
-                }
-                .fullscreen-btn:hover {
-                    background: #f0f0f0;
-                    transform: scale(1.05);
-                }
+        .dropdown-header {
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #e9ecef;
+            margin: 4px 0;
+        }
+
+        .layer-dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .layer-dropdown-item:hover {
+            background: #f5f5f5;
+        }
+
+        .layer-icon {
+            width: 28px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .layer-name {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .layer-check {
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .layer-dropdown-item.active .layer-check {
+            color: #0d6efd;
+        }
+
+        /* Location Switcher Styles */
+        .custom-location-switcher {
+            position: absolute;
+            right: 30px;
+            top: 74px;
+            z-index: 1000;
+        }
+
+        .location-toggle-btn {
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .location-toggle-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        .location-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 52px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            width: 240px;
+            padding: 8px 0;
+        }
+
+        .location-dropdown.active {
+            display: block;
+        }
+
+        .location-dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .location-dropdown-item:hover {
+            background: #f5f5f5;
+        }
+
+        .location-item-icon {
+            width: 28px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .location-item-name {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .location-item-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #e9ecef;
+            color: #666;
+        }
+
+        .location-item-badge.active {
+            background: #0d6efd;
+            color: white;
+        }
+
+        /* Search Switcher Styles */
+        .custom-search-switcher {
+            position: absolute;
+            right: 30px;
+            top: 128px;
+            z-index: 1000;
+        }
+
+        .search-toggle-btn {
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .search-toggle-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        .search-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 52px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            width: 340px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .search-dropdown.active {
+            display: block;
+        }
+
+        .search-tab-btn {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 13px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .search-tab-btn.active {
+            color: #0d6efd;
+            border-bottom-color: #0d6efd;
+        }
+
+        .search-tab-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .search-results-container {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Label Toggle */
+        .custom-label-toggle {
+            position: absolute;
+            right: 30px;
+            top: 182px;
+            z-index: 1000;
+        }
+
+        .label-toggle-btn {
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .label-toggle-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        .label-toggle-btn.active-label {
+            color: #0d6efd;
+        }
+
+        /* Legend Toggle */
+        .custom-legend-toggle {
+            position: absolute;
+            right: 30px;
+            top: 236px;
+            z-index: 1000;
+        }
+
+        .legend-toggle-btn {
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .legend-toggle-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        /* 3D Toggle */
+        .custom-3d-toggle {
+            position: absolute;
+            right: 30px;
+            top: 290px;
+            z-index: 1000;
+        }
+
+        .threed-toggle-btn {
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .threed-toggle-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        .threed-toggle-btn.active-3d {
+            color: #0d6efd;
+        }
+
+        /* Fullscreen Button */
+        .fullscreen-btn {
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .fullscreen-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
     </style>
 @endpush
 
@@ -388,6 +430,7 @@
             let buildingData = @json($buildingData ?? [], JSON_HEX_TAG);
             let allBuildings = buildingData.buildings || [];
             let usageCounts = buildingData.usage_counts || {};
+             let isFullscreen = false;
 
             // ─── USAGE COLOR MAP ───
             const usageColors = {
@@ -721,7 +764,35 @@
                 }
                 if (!$(e.target).closest('.custom-search-switcher').length) {
                     $('.search-dropdown').removeClass('active');
+              "  }
+            });
+
+            $(document).on('click', '#fullscreenBtn', function() {
+                const $icon = $(this).find('i');
+                const $card = $('#mapCard');
+                const $container = $('#map');
+
+                if (!isFullscreen) {
+                    $card.addClass('fullscreen-mode');
+                    $container.addClass('fullscreen');
+                    $('.custom-3d-toggle').css('display', 'block !important');
+                    $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
+                    isFullscreen = true;
+                } else {
+                    $card.removeClass('fullscreen-mode');
+                    $container.removeClass('fullscreen');
+                    $icon.removeClass('bi-fullscreen-exit').addClass('bi-arrows-fullscreen');
+                    isFullscreen = false;
                 }
+
+                setTimeout(function() {
+                    map.updateSize();
+                    if (window.is3DActive && window.cesiumViewer) {
+                        window.cesiumViewer.resize();
+                    }
+                    $('.custom-3d-toggle').css('display', isFullscreen ? 'block !important' :
+                        'block');
+                }, 150);
             });
 
             console.log('GIS Dashboard initialized successfully!');
