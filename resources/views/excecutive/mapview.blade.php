@@ -704,6 +704,32 @@
                 }
             });
 
+              $(document).on('click', '.layer-dropdown-item', function(e) {
+                e.stopPropagation();
+                const layerType = $(this).data('layer-type');
+                const layerTitle = $(this).data('layer');
+
+                if (layerType === 'base') {
+                    switchBaseLayer(
+                        layerTitle === 'Satellite' ? satelliteLayer :
+                        layerTitle === 'OSM' ?  osmLayer
+                    );
+                    $('.layer-dropdown').removeClass('show');
+                } else if (layerTitle === 'Drone View') {
+                    toggleDroneLayer();
+                } else if (layerType === 'vector') {
+                    let layer;
+                    if (layerTitle === 'Polygons') layer = polygonLayer;
+                    else if (layerTitle === 'Lines') layer = lineLayer;
+                    else if (layerTitle === 'Points') layer = pointLayer;
+                    if (layer) {
+                        const visible = !layer.getVisible();
+                        layer.setVisible(visible);
+                        $(this).toggleClass('active', visible);
+                    }
+                }
+            });
+
             // ─── FULLSCREEN TOGGLE ───
             let isFullscreen = false;
 
