@@ -775,7 +775,6 @@
                 if (!isFullscreen) {
                     $card.addClass('fullscreen-mode');
                     $container.addClass('fullscreen');
-                    $('.custom-3d-toggle').css('display', 'block !important');
                     $icon.removeClass('bi-arrows-fullscreen').addClass('bi-fullscreen-exit');
                     isFullscreen = true;
                 } else {
@@ -785,14 +784,6 @@
                     isFullscreen = false;
                 }
 
-                setTimeout(function() {
-                    map.updateSize();
-                    if (window.is3DActive && window.cesiumViewer) {
-                        window.cesiumViewer.resize();
-                    }
-                    $('.custom-3d-toggle').css('display', isFullscreen ? 'block !important' :
-                        'block');
-                }, 150);
             });
 
             console.log('GIS Dashboard initialized successfully!');
