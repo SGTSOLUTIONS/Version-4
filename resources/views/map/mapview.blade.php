@@ -3620,7 +3620,7 @@
                                 .coordinates;
                         } catch (parseErr) {
                             console.warn('Skipping pointData with invalid coordinates:', pd.gisid,
-                            parseErr);
+                                parseErr);
                             return;
                         }
                         searchIndex.push({

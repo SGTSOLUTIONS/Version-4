@@ -58,7 +58,6 @@
                 <i class="bi bi-building-check"></i>
             </div>
             <div class="ol-brand-text">
-                <div class="ol-brand-name">Revenue Dept.</div>
                 <div class="ol-brand-sub">Tamil Nadu Gov.</div>
             </div>
         </div>
