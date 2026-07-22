@@ -528,1568 +528,1694 @@
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Cesium.js"></script>
 
     <script>
+
        $(document).ready(function () {
+    // =========================================================
+    // DATA
+    // =========================================================
+    let polygons = @json($polygons ?? [], JSON_HEX_TAG);
+    let lines = @json($lines ?? [], JSON_HEX_TAG);
+    let points = @json($points ?? [], JSON_HEX_TAG);
+    let pointDatas = @json($pointDatas ?? [], JSON_HEX_TAG);
+    let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
+    let ward = @json($ward ?? [], JSON_HEX_TAG);
+    let analytics = @json($analytics ?? [], JSON_HEX_TAG);
+    let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
+    let buildingData = @json($buildingData ?? [], JSON_HEX_TAG);
 
-            // ─────────────────────────────────────────────
-            // DATA
-            // ─────────────────────────────────────────────
-            let polygons = @json($polygons ?? [], JSON_HEX_TAG);
-            let lines = @json($lines ?? [], JSON_HEX_TAG);
-            let points = @json($points ?? [], JSON_HEX_TAG);
-            let pointDatas = @json($pointDatas ?? [], JSON_HEX_TAG);
-            let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
-            let ward = @json($ward ?? [], JSON_HEX_TAG);
-            let analytics = @json($analytics ?? [], JSON_HEX_TAG);
-            let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
-            let buildingData = @json($buildingData ?? [], JSON_HEX_TAG);
+    let allBuildings = buildingData.buildings || [];
+    let usageCounts = buildingData.usage_counts || {};
 
-            let allBuildings = buildingData.buildings || [];
-            let usageCounts = buildingData.usage_counts || {};
+    // =========================================================
+    // STATE
+    // =========================================================
+    let searchIndex = [];
+    let watchId = null;
+    let isTracking = false;
+    let isLiveLocation = false;
+    let currentPosition = null;
+    let positionFeature = null;
+    let positionLayer = null;
+    let routeLine = null;
+    let routeLayer = null;
+    let routePoints = [];
+    let destinationMarker = null;
+    let destinationLayer = null;
+    let directionRouteFeature = null;
+    let highlightLayer = null;
+    let highlightSource = new ol.source.Vector();
 
-            let searchIndex = [];
-            let watchId = null;
-            let isTracking = false;
-            let isLiveLocation = false;
-            let currentPosition = null;
-            let positionFeature = null;
-            let positionLayer = null;
-            let routeLine = null;
-            let routeLayer = null;
-            let routePoints = [];
-            let destinationMarker = null;
-            let destinationLayer = null;
-            let highlightedFeature = null;
-            let directionRouteFeature = null;
+    // =========================================================
+    // EXTENT / PROJECTION
+    // =========================================================
+    let imageExtentRaw = [
+        {{ $ward->extent_left ?? 0 }},
+        {{ $ward->extent_bottom ?? 0 }},
+        {{ $ward->extent_right ?? 0 }},
+        {{ $ward->extent_top ?? 0 }}
+    ];
 
-            // ─────────────────────────────────────────────
-            // EXTENT / PROJECTION
-            // ─────────────────────────────────────────────
-            let imageExtentRaw = [
-                {{ $ward->extent_left ?? 0 }},
-                {{ $ward->extent_bottom ?? 0 }},
-                {{ $ward->extent_right ?? 0 }},
-                {{ $ward->extent_top ?? 0 }}
-            ];
+    const isLatLon =
+        imageExtentRaw[0] > -180 && imageExtentRaw[0] < 180 &&
+        imageExtentRaw[1] > -90 && imageExtentRaw[1] < 90;
 
-            const isLatLon = imageExtentRaw[0] > -180 && imageExtentRaw[0] < 180 &&
-                imageExtentRaw[1] > -90 && imageExtentRaw[1] < 90;
+    let imageExtent;
+    if (isLatLon) {
+        const bl = ol.proj.fromLonLat([imageExtentRaw[0], imageExtentRaw[1]]);
+        const tr = ol.proj.fromLonLat([imageExtentRaw[2], imageExtentRaw[3]]);
+        imageExtent = [bl[0], bl[1], tr[0], tr[1]];
+    } else {
+        imageExtent = imageExtentRaw;
+    }
 
-            let imageExtent;
-            if (isLatLon) {
-                const bl = ol.proj.fromLonLat([imageExtentRaw[0], imageExtentRaw[1]]);
-                const tr = ol.proj.fromLonLat([imageExtentRaw[2], imageExtentRaw[3]]);
-                imageExtent = [bl[0], bl[1], tr[0], tr[1]];
-            } else {
-                imageExtent = imageExtentRaw;
-            }
+    let droneImageURL = "{{ asset($ward->drone_image ?? '') }}";
 
-            let droneImageURL = "{{ asset($ward->drone_image ?? '') }}";
+    // =========================================================
+    // HELPERS
+    // =========================================================
+    function safeJsonParse(value, fallback = null) {
+        try {
+            if (typeof value === 'string') return JSON.parse(value);
+            return value;
+        } catch (e) {
+            return fallback;
+        }
+    }
 
-            // ─────────────────────────────────────────────
-            // LAYERS
-            // ─────────────────────────────────────────────
-            const droneLayer = new ol.layer.Image({
-                source: new ol.source.ImageStatic({
-                    url: droneImageURL,
-                    imageExtent: imageExtent,
-                    imageSmoothing: false
+    function isValidNumber(n) {
+        return typeof n === 'number' && !isNaN(n) && isFinite(n);
+    }
+
+    function normalizeLonLat(coords) {
+        if (!Array.isArray(coords) || coords.length < 2) return null;
+
+        let a = Number(coords[0]);
+        let b = Number(coords[1]);
+
+        if (!isValidNumber(a) || !isValidNumber(b)) return null;
+
+        // lon,lat
+        if (a >= -180 && a <= 180 && b >= -90 && b <= 90) {
+            return [a, b];
+        }
+
+        // lat,lon
+        if (a >= -90 && a <= 90 && b >= -180 && b <= 180) {
+            return [b, a];
+        }
+
+        return null;
+    }
+
+    function toProjectedPoint(coords) {
+        const lonLat = normalizeLonLat(coords);
+        if (!lonLat) return null;
+        return ol.proj.fromLonLat(lonLat);
+    }
+
+    function getPointExtent(projectedPoint) {
+        if (!projectedPoint) return null;
+        return [projectedPoint[0], projectedPoint[1], projectedPoint[0], projectedPoint[1]];
+    }
+
+    function escapeHtml(text) {
+        return String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function showToast(message, duration = 3000) {
+        const $toast = $('#locationToast');
+        $toast.stop(true, true).text(message).fadeIn(200);
+
+        const oldTimeout = $toast.data('timeout');
+        if (oldTimeout) clearTimeout(oldTimeout);
+
+        const newTimeout = setTimeout(() => {
+            $toast.fadeOut(300);
+        }, duration);
+
+        $toast.data('timeout', newTimeout);
+    }
+
+    function formatDistance(meters) {
+        if (!isValidNumber(meters)) return '-';
+        if (meters < 1000) return `${Math.round(meters)} m`;
+        return `${(meters / 1000).toFixed(2)} km`;
+    }
+
+    function formatDuration(seconds) {
+        if (!isValidNumber(seconds)) return '-';
+        const minutes = Math.round(seconds / 60);
+
+        if (minutes < 60) return `${minutes} mins`;
+
+        const hours = Math.floor(minutes / 60);
+        const remaining = minutes % 60;
+        return `${hours} hr ${remaining} mins`;
+    }
+
+    function uniqBy(arr, key) {
+        const seen = new Set();
+        return arr.filter(item => {
+            const v = item[key];
+            if (seen.has(v)) return false;
+            seen.add(v);
+            return true;
+        });
+    }
+
+    // =========================================================
+    // STYLES
+    // =========================================================
+    function createPolygonStyle(feature) {
+        const gisid = feature.get('gisid') || '';
+        const sqft = feature.get('sqfeet') || '0';
+        const polygonData = polygonDatas.find(d => String(d.gisid) === String(gisid));
+        const color = polygonData ? 'red' : 'blue';
+        const showLabels = $('#labelToggleBtn').hasClass('active-label');
+
+        const styles = [
+            new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: color,
+                    width: 4,
+                    lineJoin: 'round',
+                    lineCap: 'round'
                 }),
-                opacity: 0.90,
-                visible: true,
-                title: 'Drone View'
-            });
-
-            const osmLayer = new ol.layer.Tile({
-                title: 'OpenStreetMap',
-                type: 'base',
-                visible: true,
-                source: new ol.source.OSM()
-            });
-
-            const satelliteLayer = new ol.layer.Tile({
-                title: 'Satellite',
-                type: 'base',
-                visible: false,
-                source: new ol.source.XYZ({
-                    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                    attributions: 'Tiles © Esri'
+                fill: new ol.style.Fill({
+                    color: color === 'red' ? 'rgba(255,0,0,0.10)' : 'rgba(0,123,255,0.10)'
                 })
-            });
+            })
+        ];
 
-            const streetViewLayer = new ol.layer.Tile({
-                title: 'Street View',
-                type: 'base',
-                visible: false,
-                source: new ol.source.XYZ({
-                    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    attributions: '© OpenStreetMap'
-                })
-            });
+        if (showLabels) {
+            try {
+                const centerPoint = feature.getGeometry().getInteriorPoint();
 
-            const polygonSource = new ol.source.Vector();
-            const lineSource = new ol.source.Vector();
-            const pointSource = new ol.source.Vector();
-            const highlightSource = new ol.source.Vector();
-
-            // ─────────────────────────────────────────────
-            // STYLES
-            // ─────────────────────────────────────────────
-            function createPolygonStyle(feature) {
-                const gisid = feature.get('gisid') || '';
-                const sqft = feature.get('sqfeet') || '0';
-                const polygonData = polygonDatas.find(d => String(d.gisid) === String(gisid));
-                const color = polygonData ? 'red' : 'blue';
-                const showLabels = $('#labelToggleBtn').hasClass('active-label');
-
-                const styles = [
-                    new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: color,
-                            width: 3
-                        }),
-                        fill: new ol.style.Fill({
-                            color: color === 'red' ? 'rgba(255,0,0,0.08)' : 'rgba(0,123,255,0.08)'
-                        })
-                    })
-                ];
-
-                if (showLabels) {
-                    try {
-                        const centerPoint = feature.getGeometry().getInteriorPoint();
-                        styles.push(new ol.style.Style({
-                            geometry: centerPoint,
-                            text: new ol.style.Text({
-                                text: `${gisid}\n${sqft} SQFT`,
-                                font: 'bold 12px Arial',
-                                fill: new ol.style.Fill({ color: '#000' }),
-                                backgroundFill: new ol.style.Fill({ color: '#fff' }),
-                                backgroundStroke: new ol.style.Stroke({ color: '#333', width: 1 }),
-                                padding: [4, 6, 4, 6],
-                                overflow: true,
-                                textAlign: 'center'
-                            })
-                        }));
-                    } catch (e) {}
-                }
-
-                return styles;
-            }
-
-            function createLineStyle() {
-                return new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: '#ff0000',
-                        width: 3
-                    })
-                });
-            }
-
-            function createPointStyle(label = 'Point') {
-                return new ol.style.Style({
-                    image: new ol.style.Circle({
-                        radius: 7,
-                        fill: new ol.style.Fill({ color: '#198754' }),
-                        stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
-                    }),
+                styles.push(new ol.style.Style({
+                    geometry: centerPoint,
                     text: new ol.style.Text({
-                        text: label,
-                        font: 'bold 11px Arial',
-                        fill: new ol.style.Fill({ color: '#111' }),
-                        backgroundFill: new ol.style.Fill({ color: '#fff' }),
-                        backgroundStroke: new ol.style.Stroke({ color: '#ccc', width: 1 }),
-                        padding: [2, 4, 2, 4],
-                        offsetY: -16
-                    })
-                });
-            }
-
-            function createHighlightStyle() {
-                return new ol.style.Style({
-                    image: new ol.style.Circle({
-                        radius: 10,
-                        fill: new ol.style.Fill({ color: '#ffc107' }),
-                        stroke: new ol.style.Stroke({ color: '#000', width: 2 })
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: '#ffc107',
-                        width: 5
-                    }),
-                    fill: new ol.style.Fill({
-                        color: 'rgba(255,193,7,0.18)'
-                    })
-                });
-            }
-
-            function createPositionStyle() {
-                return new ol.style.Style({
-                    image: new ol.style.Circle({
-                        radius: 12,
-                        fill: new ol.style.Fill({ color: '#0d6efd' }),
-                        stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 })
-                    }),
-                    text: new ol.style.Text({
-                        text: '📍 You',
-                        font: 'bold 12px Arial',
+                        text: `${gisid}\n${sqft} SQFT`,
+                        font: 'bold 13px Arial',
                         fill: new ol.style.Fill({ color: '#000' }),
                         backgroundFill: new ol.style.Fill({ color: '#fff' }),
-                        backgroundStroke: new ol.style.Stroke({ color: '#ccc', width: 1 }),
-                        padding: [2, 6, 2, 6],
-                        offsetY: -18,
+                        backgroundStroke: new ol.style.Stroke({ color: '#000', width: 1 }),
+                        padding: [4, 6, 4, 6],
+                        overflow: true,
                         textAlign: 'center'
                     })
-                });
-            }
+                }));
+            } catch (e) {}
+        }
 
-            function createDestinationStyle(label = 'Destination') {
-                return new ol.style.Style({
-                    image: new ol.style.Circle({
-                        radius: 10,
-                        fill: new ol.style.Fill({ color: '#dc3545' }),
-                        stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 })
-                    }),
-                    text: new ol.style.Text({
-                        text: `📍 ${label}`,
-                        font: 'bold 12px Arial',
-                        fill: new ol.style.Fill({ color: '#000' }),
-                        backgroundFill: new ol.style.Fill({ color: '#fff' }),
-                        backgroundStroke: new ol.style.Stroke({ color: '#ccc', width: 1 }),
-                        padding: [2, 6, 2, 6],
-                        offsetY: -18,
-                        textAlign: 'center'
-                    })
-                });
-            }
+        return styles;
+    }
 
-            // ─────────────────────────────────────────────
-            // HELPERS
-            // ─────────────────────────────────────────────
-            function safeJsonParse(val, fallback = null) {
-                try {
-                    if (typeof val === 'string') return JSON.parse(val);
-                    return val;
-                } catch (e) {
-                    return fallback;
-                }
-            }
+    function createLineStyle() {
+        return new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#ff0000',
+                width: 3
+            })
+        });
+    }
 
-            function normalizeLonLat(rawCoords) {
-                if (!Array.isArray(rawCoords) || rawCoords.length < 2) return null;
+    function createPointStyle(label = 'Point') {
+        return new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 7,
+                fill: new ol.style.Fill({ color: '#198754' }),
+                stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+            }),
+            text: new ol.style.Text({
+                text: String(label),
+                font: 'bold 11px Arial',
+                fill: new ol.style.Fill({ color: '#111' }),
+                backgroundFill: new ol.style.Fill({ color: '#fff' }),
+                backgroundStroke: new ol.style.Stroke({ color: '#ccc', width: 1 }),
+                padding: [2, 4, 2, 4],
+                offsetY: -16
+            })
+        });
+    }
 
-                let a = Number(rawCoords[0]);
-                let b = Number(rawCoords[1]);
+    function createPositionStyle() {
+        return new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 12,
+                fill: new ol.style.Fill({ color: '#0d6efd' }),
+                stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 })
+            }),
+            text: new ol.style.Text({
+                text: 'You',
+                font: 'bold 12px Arial',
+                fill: new ol.style.Fill({ color: '#000' }),
+                backgroundFill: new ol.style.Fill({ color: '#fff' }),
+                backgroundStroke: new ol.style.Stroke({ color: '#ccc', width: 1 }),
+                padding: [2, 6, 2, 6],
+                offsetY: -18,
+                textAlign: 'center'
+            })
+        });
+    }
 
-                if (isNaN(a) || isNaN(b)) return null;
+    function createDestinationStyle(label = 'Destination') {
+        return new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 10,
+                fill: new ol.style.Fill({ color: '#dc3545' }),
+                stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 })
+            }),
+            text: new ol.style.Text({
+                text: String(label),
+                font: 'bold 12px Arial',
+                fill: new ol.style.Fill({ color: '#000' }),
+                backgroundFill: new ol.style.Fill({ color: '#fff' }),
+                backgroundStroke: new ol.style.Stroke({ color: '#ccc', width: 1 }),
+                padding: [2, 6, 2, 6],
+                offsetY: -18,
+                textAlign: 'center'
+            })
+        });
+    }
 
-                // Already lon/lat
-                if (a >= -180 && a <= 180 && b >= -90 && b <= 90) {
-                    return [a, b];
-                }
-
-                // Possibly lat/lon
-                if (a >= -90 && a <= 90 && b >= -180 && b <= 180) {
-                    return [b, a];
-                }
-
-                return null;
-            }
-
-            function toMapCoord(rawCoords) {
-                const lonLat = normalizeLonLat(rawCoords);
-                if (!lonLat) return null;
-                return ol.proj.fromLonLat(lonLat);
-            }
-
-            function formatDistance(meters) {
-                if (meters < 1000) return `${Math.round(meters)} m`;
-                return `${(meters / 1000).toFixed(2)} km`;
-            }
-
-            function formatDuration(seconds) {
-                const mins = Math.round(seconds / 60);
-                if (mins < 60) return `${mins} mins`;
-                const hrs = Math.floor(mins / 60);
-                const rem = mins % 60;
-                return `${hrs} hr ${rem} mins`;
-            }
-
-            function escapeHtml(text) {
-                return String(text || '')
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-            }
-
-            function showToast(message, duration = 2500) {
-                const $toast = $('#locationToast');
-                $toast.stop(true, true).text(message).fadeIn(200);
-                clearTimeout($toast.data('timeout'));
-                $toast.data('timeout', setTimeout(() => $toast.fadeOut(300), duration));
-            }
-
-            // ─────────────────────────────────────────────
-            // LOAD SOURCES
-            // ─────────────────────────────────────────────
-            function loadPolygonSource() {
-                polygonSource.clear();
-
-                polygons.forEach(poly => {
-                    try {
-                        let coords = safeJsonParse(poly.coordinates, []);
-                        if (!Array.isArray(coords) || !coords.length) return;
-
-                        const feature = new ol.Feature({
-                            geometry: new ol.geom.Polygon([coords]),
-                            gisid: poly.gisid,
-                            type: 'polygon',
-                            sqfeet: poly.sqfeet || '0',
-                            assessment: poly.assessment || '',
-                            old_assessment: poly.old_assessment || '',
-                            owner_name: poly.owner_name || '',
-                            phone_number: poly.phone_number || '',
-                            originalData: poly
-                        });
-
-                        feature.setId(String(poly.gisid));
-                        polygonSource.addFeature(feature);
-                    } catch (e) {
-                        console.error('polygon parse error:', e);
-                    }
-                });
-            }
-
-            function loadLineSource() {
-                lineSource.clear();
-
-                lines.forEach(line => {
-                    try {
-                        let coords = safeJsonParse(line.coordinates, []);
-                        let geometry = null;
-
-                        if (Array.isArray(coords) && coords.length > 0) {
-                            if (Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
-                                geometry = new ol.geom.MultiLineString(coords);
-                            } else if (Array.isArray(coords[0]) && typeof coords[0][0] === 'number') {
-                                geometry = new ol.geom.LineString(coords);
-                            }
-                        }
-
-                        if (!geometry) return;
-
-                        const feature = new ol.Feature({
-                            geometry: geometry,
-                            gisid: line.gisid,
-                            type: 'line',
-                            road_name: line.road_name || '',
-                            originalData: line
-                        });
-
-                        feature.setId(String(line.gisid));
-                        lineSource.addFeature(feature);
-                    } catch (e) {
-                        console.error('line parse error:', e);
-                    }
-                });
-            }
-
-            function loadPointSource() {
-                pointSource.clear();
-
-                points.forEach(point => {
-                    try {
-                        let coords = safeJsonParse(point.coordinates, null);
-                        let projected = toMapCoord(coords);
-                        if (!projected) return;
-
-                        const feature = new ol.Feature({
-                            geometry: new ol.geom.Point(projected),
-                            gisid: point.gisid,
-                            type: 'point',
-                            originalData: point
-                        });
-
-                        feature.setId(`point-${point.gisid}`);
-                        feature.setStyle(createPointStyle(String(point.gisid)));
-                        pointSource.addFeature(feature);
-                    } catch (e) {
-                        console.error('point parse error:', e);
-                    }
-                });
-
-                pointDatas.forEach(pd => {
-                    try {
-                        let coords = safeJsonParse(pd.coordinates, null);
-                        let projected = toMapCoord(coords);
-                        if (!projected) return;
-
-                        const pointGisid = pd.point_gisid || pd.gisid || pd.id;
-
-                        const feature = new ol.Feature({
-                            geometry: new ol.geom.Point(projected),
-                            gisid: pointGisid,
-                            type: 'pointdata',
-                            assessment: pd.assessment || '',
-                            owner_name: pd.owner_name || '',
-                            phone_number: pd.phone_number || '',
-                            originalData: pd
-                        });
-
-                        feature.setId(`pointdata-${pointGisid}`);
-                        feature.setStyle(createPointStyle(String(pointGisid)));
-                        pointSource.addFeature(feature);
-                    } catch (e) {
-                        console.error('pointData parse error:', e);
-                    }
-                });
-            }
-
-            loadPolygonSource();
-            loadLineSource();
-            loadPointSource();
-
-            // ─────────────────────────────────────────────
-            // VECTOR LAYERS
-            // ─────────────────────────────────────────────
-            const polygonLayer = new ol.layer.Vector({
-                source: polygonSource,
-                style: createPolygonStyle,
-                visible: true,
-                title: 'Polygons'
-            });
-
-            const lineLayer = new ol.layer.Vector({
-                source: lineSource,
-                style: createLineStyle,
-                visible: true,
-                title: 'Lines'
-            });
-
-            const pointLayer = new ol.layer.Vector({
-                source: pointSource,
-                visible: true,
-                title: 'Points'
-            });
-
-            const highlightLayer = new ol.layer.Vector({
-                source: highlightSource,
-                zIndex: 110
-            });
-
-            positionLayer = new ol.layer.Vector({
-                source: new ol.source.Vector(),
-                visible: true,
-                zIndex: 120
-            });
-
-            routeLayer = new ol.layer.Vector({
-                source: new ol.source.Vector(),
-                visible: true,
-                zIndex: 119
-            });
-
-            destinationLayer = new ol.layer.Vector({
-                source: new ol.source.Vector(),
-                visible: true,
-                zIndex: 121
-            });
-
-            // ─────────────────────────────────────────────
-            // MAP
-            // ─────────────────────────────────────────────
-            const map = new ol.Map({
-                target: 'map',
-                layers: [
-                    osmLayer,
-                    satelliteLayer,
-                    streetViewLayer,
-                    droneLayer,
-                    polygonLayer,
-                    lineLayer,
-                    pointLayer,
-                    highlightLayer,
-                    routeLayer,
-                    positionLayer,
-                    destinationLayer
-                ],
-                view: new ol.View({
-                    center: ol.extent.getCenter(imageExtent),
-                    zoom: 18
+    function createHighlightStyle(geometryType = 'point') {
+        if (geometryType === 'polygon') {
+            return new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#ffc107',
+                    width: 5
+                }),
+                fill: new ol.style.Fill({
+                    color: 'rgba(255,193,7,0.18)'
                 })
             });
+        }
 
-            const $mapContainer = $('#map');
+        if (geometryType === 'line') {
+            return new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#ffc107',
+                    width: 6
+                })
+            });
+        }
 
-            // ─────────────────────────────────────────────
-            // UI CONTROLS
-            // ─────────────────────────────────────────────
-            $mapContainer.append(`
-                <div class="custom-layer-switcher">
-                    <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
-                    <div class="layer-dropdown" id="layerDropdown">
-                        <div class="dropdown-header">Base Maps</div>
-                        <div class="layer-dropdown-item active" data-layer-type="base" data-layer="OpenStreetMap">
-                            <div class="layer-icon"><i class="bi bi-map"></i></div>
-                            <div class="layer-name">OpenStreetMap</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+        return new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 10,
+                fill: new ol.style.Fill({ color: '#ffc107' }),
+                stroke: new ol.style.Stroke({ color: '#000', width: 2 })
+            })
+        });
+    }
+
+    // =========================================================
+    // SOURCES
+    // =========================================================
+    const polygonSource = new ol.source.Vector();
+    const lineSource = new ol.source.Vector();
+    const pointSource = new ol.source.Vector();
+
+    function loadPolygonSource() {
+        polygonSource.clear();
+
+        polygons.forEach(poly => {
+            try {
+                let coords = safeJsonParse(poly.coordinates, []);
+                if (!Array.isArray(coords) || !coords.length) return;
+
+                const feature = new ol.Feature({
+                    geometry: new ol.geom.Polygon(coords),
+                    gisid: poly.gisid,
+                    type: 'polygon',
+                    sqfeet: poly.sqfeet || 0,
+                    assessment: poly.assessment || '',
+                    old_assessment: poly.old_assessment || '',
+                    owner_name: poly.owner_name || '',
+                    phone_number: poly.phone_number || '',
+                    originalData: poly
+                });
+
+                feature.setId(String(poly.gisid));
+                polygonSource.addFeature(feature);
+            } catch (e) {
+                console.error('polygon parse error', e);
+            }
+        });
+    }
+
+    function loadLineSource() {
+        lineSource.clear();
+
+        lines.forEach(line => {
+            try {
+                let coords = safeJsonParse(line.coordinates, []);
+                let geometry = null;
+
+                if (Array.isArray(coords) && coords.length > 0) {
+                    if (Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
+                        geometry = new ol.geom.MultiLineString(coords);
+                    } else if (Array.isArray(coords[0]) && typeof coords[0][0] === 'number') {
+                        geometry = new ol.geom.LineString(coords);
+                    }
+                }
+
+                if (!geometry) return;
+
+                const feature = new ol.Feature({
+                    geometry: geometry,
+                    gisid: line.gisid,
+                    type: 'line',
+                    road_name: line.road_name || '',
+                    originalData: line
+                });
+
+                feature.setId(String(line.gisid));
+                lineSource.addFeature(feature);
+            } catch (e) {
+                console.error('line parse error', e);
+            }
+        });
+    }
+
+    function loadPointSource() {
+        pointSource.clear();
+
+        points.forEach(point => {
+            try {
+                const rawCoords = safeJsonParse(point.coordinates, null);
+                const projected = toProjectedPoint(rawCoords);
+                if (!projected) return;
+
+                const feature = new ol.Feature({
+                    geometry: new ol.geom.Point(projected),
+                    gisid: point.gisid,
+                    type: 'point',
+                    originalData: point
+                });
+
+                feature.setId(`point-${point.gisid}`);
+                feature.setStyle(createPointStyle(point.gisid));
+                pointSource.addFeature(feature);
+            } catch (e) {
+                console.error('point parse error', e);
+            }
+        });
+
+        pointDatas.forEach(pd => {
+            try {
+                const rawCoords = safeJsonParse(pd.coordinates, null);
+                const projected = toProjectedPoint(rawCoords);
+                if (!projected) return;
+
+                const pointGisid = pd.point_gisid || pd.gisid || pd.id;
+
+                const feature = new ol.Feature({
+                    geometry: new ol.geom.Point(projected),
+                    gisid: pointGisid,
+                    point_data_id: pd.id,
+                    type: 'pointdata',
+                    assessment: pd.assessment || '',
+                    old_assessment: pd.old_assessment || '',
+                    owner_name: pd.owner_name || '',
+                    phone_number: pd.phone_number || '',
+                    originalData: pd
+                });
+
+                feature.setId(`pointdata-${pointGisid}-${pd.id}`);
+                feature.setStyle(createPointStyle(pointGisid));
+                pointSource.addFeature(feature);
+            } catch (e) {
+                console.error('pointdata parse error', e);
+            }
+        });
+    }
+
+    loadPolygonSource();
+    loadLineSource();
+    loadPointSource();
+
+    // =========================================================
+    // LAYERS
+    // =========================================================
+    const droneLayer = new ol.layer.Image({
+        source: new ol.source.ImageStatic({
+            url: droneImageURL,
+            imageExtent: imageExtent,
+            imageSmoothing: false
+        }),
+        opacity: 0.90,
+        visible: true,
+        title: 'Drone View'
+    });
+
+    const osmLayer = new ol.layer.Tile({
+        title: 'OpenStreetMap',
+        type: 'base',
+        visible: true,
+        source: new ol.source.OSM()
+    });
+
+    const satelliteLayer = new ol.layer.Tile({
+        title: 'Satellite',
+        type: 'base',
+        visible: false,
+        source: new ol.source.XYZ({
+            url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            attributions: 'Tiles © Esri'
+        })
+    });
+
+    const streetViewLayer = new ol.layer.Tile({
+        title: 'Street View',
+        type: 'base',
+        visible: false,
+        source: new ol.source.XYZ({
+            url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            attributions: '© OpenStreetMap'
+        })
+    });
+
+    const polygonLayer = new ol.layer.Vector({
+        source: polygonSource,
+        style: createPolygonStyle,
+        visible: true,
+        title: 'Polygons'
+    });
+
+    const lineLayer = new ol.layer.Vector({
+        source: lineSource,
+        style: createLineStyle,
+        visible: true,
+        title: 'Lines'
+    });
+
+    const pointLayer = new ol.layer.Vector({
+        source: pointSource,
+        visible: true,
+        title: 'Points'
+    });
+
+    highlightLayer = new ol.layer.Vector({
+        source: highlightSource,
+        visible: true,
+        zIndex: 110
+    });
+
+    positionLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: true,
+        zIndex: 120
+    });
+
+    routeLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: true,
+        zIndex: 119
+    });
+
+    destinationLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: true,
+        zIndex: 121
+    });
+
+    // =========================================================
+    // MAP
+    // =========================================================
+    const map = new ol.Map({
+        target: 'map',
+        layers: [
+            osmLayer,
+            satelliteLayer,
+            streetViewLayer,
+            droneLayer,
+            polygonLayer,
+            lineLayer,
+            pointLayer,
+            highlightLayer,
+            routeLayer,
+            positionLayer,
+            destinationLayer
+        ],
+        view: new ol.View({
+            center: ol.extent.getCenter(imageExtent),
+            zoom: 18
+        })
+    });
+
+    const $mapContainer = $('#map');
+
+    // =========================================================
+    // UI APPEND
+    // =========================================================
+    $mapContainer.append(`
+        <div class="custom-layer-switcher">
+            <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
+            <div class="layer-dropdown" id="layerDropdown">
+                <div class="dropdown-header">Base Maps</div>
+                <div class="layer-dropdown-item active" data-layer-type="base" data-layer="OpenStreetMap">
+                    <div class="layer-icon"><i class="bi bi-map"></i></div>
+                    <div class="layer-name">OpenStreetMap</div>
+                    <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+                <div class="layer-dropdown-item" data-layer-type="base" data-layer="Satellite">
+                    <div class="layer-icon"><i class="bi bi-satellite"></i></div>
+                    <div class="layer-name">Satellite</div>
+                    <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+                <div class="layer-dropdown-item" data-layer-type="base" data-layer="Street View">
+                    <div class="layer-icon"><i class="bi bi-signpost-2"></i></div>
+                    <div class="layer-name">Street View</div>
+                    <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-header">Overlays</div>
+                <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Drone View">
+                    <div class="layer-icon"><i class="bi bi-camera-drone"></i></div>
+                    <div class="layer-name">Drone View</div>
+                    <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-header">Vector Layers</div>
+                <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Polygons">
+                    <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
+                    <div class="layer-name">Polygons</div>
+                    <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+                <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Lines">
+                    <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
+                    <div class="layer-name">Lines</div>
+                    <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+                <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Points">
+                    <div class="layer-icon"><i class="bi bi-geo-alt"></i></div>
+                    <div class="layer-name">Points</div>
+                    <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                </div>
+            </div>
+        </div>
+    `);
+
+    $mapContainer.append(`
+        <div class="custom-label-toggle">
+            <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
+                <i class="bi bi-fonts"></i>
+            </button>
+        </div>
+    `);
+
+    $mapContainer.append(`
+        <div class="custom-legend-toggle">
+            <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
+                <i class="bi bi-list-ul"></i>
+            </button>
+        </div>
+    `);
+
+    $mapContainer.append(`
+        <div class="custom-location-switcher">
+            <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
+            <div class="location-dropdown" id="locationDropdown">
+                <div class="dropdown-header">Location Tools</div>
+                <div class="location-dropdown-item" id="liveLocationItem">
+                    <div class="location-item-icon"><i class="bi bi-crosshair2"></i></div>
+                    <div class="location-item-name">Live Location</div>
+                    <div class="location-item-badge" id="liveLocationBadge">OFF</div>
+                </div>
+                <div class="location-dropdown-item" id="trackMeItem">
+                    <div class="location-item-icon"><i class="bi bi-broadcast"></i></div>
+                    <div class="location-item-name">Track Me</div>
+                    <div class="location-item-badge" id="trackMeBadge">OFF</div>
+                </div>
+                <div class="location-dropdown-item" id="clearRouteItem">
+                    <div class="location-item-icon"><i class="bi bi-x-circle"></i></div>
+                    <div class="location-item-name">Clear Route</div>
+                </div>
+            </div>
+        </div>
+        <div class="location-toast" id="locationToast"></div>
+    `);
+
+    $mapContainer.append(`
+        <div class="custom-search-switcher">
+            <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
+            <div class="search-dropdown" id="searchDropdown">
+                <div class="d-flex border-bottom">
+                    <button type="button" class="btn btn-sm flex-fill search-tab-btn active" data-tab="quick">Quick Search</button>
+                    <button type="button" class="btn btn-sm flex-fill search-tab-btn" data-tab="filter">Filter</button>
+                </div>
+
+                <div class="search-tab-pane" id="quickSearchTab">
+                    <div class="p-3">
+                        <input type="text" id="gisSearchInput" class="form-control" placeholder="Search by GIS ID, Assessment, Owner...">
+                    </div>
+                    <div id="searchSuggestions" class="search-results-container"></div>
+                    <div id="searchResults" class="search-results-container"></div>
+                </div>
+
+                <div class="search-tab-pane" id="filterTab" style="display:none;">
+                    <div class="p-3">
+                        <div class="filter-field-group">
+                            <label>Assessment Number</label>
+                            <input type="text" id="filterAssessment" class="form-control" placeholder="Enter assessment number...">
                         </div>
-                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Satellite">
-                            <div class="layer-icon"><i class="bi bi-satellite"></i></div>
-                            <div class="layer-name">Satellite</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        <div class="filter-field-group">
+                            <label>Old Assessment</label>
+                            <input type="text" id="filterOldAssessment" class="form-control" placeholder="Enter old assessment...">
                         </div>
-                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Street View">
-                            <div class="layer-icon"><i class="bi bi-signpost-2"></i></div>
-                            <div class="layer-name">Street View</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        <div class="filter-field-group">
+                            <label>Owner Name</label>
+                            <input type="text" id="filterOwnerName" class="form-control" placeholder="Enter owner name...">
                         </div>
-                        <div class="dropdown-divider"></div>
-                        <div class="dropdown-header">Overlays</div>
-                        <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Drone View">
-                            <div class="layer-icon"><i class="bi bi-camera-drone"></i></div>
-                            <div class="layer-name">Drone View</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        <div class="filter-field-group">
+                            <label>Phone Number</label>
+                            <input type="text" id="filterPhoneNumber" class="form-control" placeholder="Enter phone number...">
                         </div>
-                        <div class="dropdown-divider"></div>
-                        <div class="dropdown-header">Vector Layers</div>
-                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Polygons">
-                            <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
-                            <div class="layer-name">Polygons</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Lines">
-                            <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
-                            <div class="layer-name">Lines</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Points">
-                            <div class="layer-icon"><i class="bi bi-geo-alt"></i></div>
-                            <div class="layer-name">Points</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
+                        <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn">
+                            <i class="bi bi-search me-1"></i>Search
+                        </button>
+                    </div>
+                    <div id="filterResults" class="search-results-container"></div>
+                </div>
+            </div>
+        </div>
+    `);
+
+    $mapContainer.append(`
+        <div class="custom-3d-toggle">
+            <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
+                <i class="bi bi-box"></i>
+            </button>
+        </div>
+    `);
+
+    $mapContainer.append(`
+        <button class="fullscreen-btn" id="fullscreenBtn">
+            <i class="bi bi-arrows-fullscreen"></i>
+        </button>
+        <button class="fullscreen-btn-exit" id="fullscreenExitBtn" style="display:none;">
+            <i class="bi bi-fullscreen-exit"></i>
+        </button>
+    `);
+
+    $mapContainer.append(`
+        <div class="direction-controls" id="directionControls">
+            <button class="btn-close-route" id="closeRouteBtn">&times;</button>
+            <div class="route-info" id="routeInfo">Getting directions...</div>
+            <div id="routeSteps"></div>
+        </div>
+    `);
+
+    // =========================================================
+    // BUILD SEARCH INDEX
+    // =========================================================
+    function buildSearchIndex() {
+        searchIndex = [];
+
+        polygons.forEach(poly => {
+            try {
+                const feature = polygonSource.getFeatureById(String(poly.gisid));
+                const extent = feature ? feature.getGeometry().getExtent() : null;
+                const center = extent ? ol.extent.getCenter(extent) : null;
+
+                searchIndex.push({
+                    uid: `polygon-${poly.gisid}`,
+                    id: String(poly.gisid),
+                    gisid: String(poly.gisid),
+                    point_gisid: '',
+                    type: 'polygon',
+                    geometryType: 'polygon',
+                    title: `GIS ID: ${poly.gisid}`,
+                    subtitle: `Area: ${poly.sqfeet || 0} sqft`,
+                    assessment: poly.assessment || '',
+                    old_assessment: poly.old_assessment || '',
+                    owner_name: poly.owner_name || '',
+                    phone_number: poly.phone_number || '',
+                    sqfeet: poly.sqfeet || '',
+                    center: center,
+                    extent: extent,
+                    coordinates: safeJsonParse(poly.coordinates, []),
+                    searchText: `${poly.gisid} ${poly.assessment || ''} ${poly.old_assessment || ''} ${poly.owner_name || ''} ${poly.phone_number || ''} ${poly.sqfeet || ''}`.toLowerCase()
+                });
+            } catch (e) {
+                console.error('polygon index error', e);
+            }
+        });
+
+        lines.forEach(line => {
+            try {
+                const feature = lineSource.getFeatureById(String(line.gisid));
+                const extent = feature ? feature.getGeometry().getExtent() : null;
+                const center = extent ? ol.extent.getCenter(extent) : null;
+
+                searchIndex.push({
+                    uid: `line-${line.gisid}`,
+                    id: String(line.gisid),
+                    gisid: String(line.gisid),
+                    point_gisid: '',
+                    type: 'line',
+                    geometryType: 'line',
+                    title: `Road: ${line.road_name || line.gisid}`,
+                    subtitle: `GIS ID: ${line.gisid}`,
+                    assessment: '',
+                    old_assessment: '',
+                    owner_name: '',
+                    phone_number: '',
+                    road_name: line.road_name || '',
+                    center: center,
+                    extent: extent,
+                    coordinates: safeJsonParse(line.coordinates, []),
+                    searchText: `${line.gisid} ${line.road_name || ''}`.toLowerCase()
+                });
+            } catch (e) {
+                console.error('line index error', e);
+            }
+        });
+
+        points.forEach(point => {
+            try {
+                const rawCoords = safeJsonParse(point.coordinates, null);
+                const projected = toProjectedPoint(rawCoords);
+
+                searchIndex.push({
+                    uid: `point-${point.gisid}`,
+                    id: String(point.gisid),
+                    gisid: String(point.gisid),
+                    point_gisid: String(point.gisid),
+                    type: 'point',
+                    geometryType: 'point',
+                    title: `GIS ID: ${point.gisid}`,
+                    subtitle: 'Point Location',
+                    assessment: '',
+                    old_assessment: '',
+                    owner_name: '',
+                    phone_number: '',
+                    center: projected,
+                    extent: getPointExtent(projected),
+                    coordinates: rawCoords,
+                    searchText: `${point.gisid} point`.toLowerCase()
+                });
+            } catch (e) {
+                console.error('point index error', e);
+            }
+        });
+
+        pointDatas.forEach(pd => {
+            try {
+                const pointGisid = pd.point_gisid || pd.gisid || pd.id || '';
+                const rawCoords = safeJsonParse(pd.coordinates, null);
+                const projected = toProjectedPoint(rawCoords);
+
+                searchIndex.push({
+                    uid: `pointdata-${pointGisid}-${pd.id}`,
+                    id: String(pd.id),
+                    gisid: String(pointGisid),
+                    point_gisid: String(pointGisid),
+                    type: 'pointdata',
+                    geometryType: 'point',
+                    title: `GIS ID: ${pointGisid}`,
+                    subtitle: `Assessment: ${pd.assessment || 'N/A'} | Owner: ${pd.owner_name || 'N/A'}`,
+                    assessment: pd.assessment || '',
+                    old_assessment: pd.old_assessment || '',
+                    owner_name: pd.owner_name || '',
+                    phone_number: pd.phone_number || '',
+                    center: projected,
+                    extent: getPointExtent(projected),
+                    coordinates: rawCoords,
+                    searchText: `${pointGisid} ${pd.assessment || ''} ${pd.old_assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`.toLowerCase()
+                });
+            } catch (e) {
+                console.error('pointdata index error', e);
+            }
+        });
+
+        searchIndex = uniqBy(searchIndex, 'uid');
+        console.log('Search Index Built:', searchIndex.length);
+    }
+
+    buildSearchIndex();
+
+    // =========================================================
+    // SEARCH UTILS
+    // =========================================================
+    function getItemByUid(uid) {
+        return searchIndex.find(item => item.uid === uid) || null;
+    }
+
+    function getSearchMatches(value) {
+        const v = String(value || '').toLowerCase().trim();
+        if (!v) return [];
+
+        const exact = searchIndex.filter(item =>
+            String(item.gisid || '').toLowerCase() === v ||
+            String(item.id || '').toLowerCase() === v ||
+            String(item.point_gisid || '').toLowerCase() === v ||
+            String(item.assessment || '').toLowerCase() === v
+        );
+
+        const partial = searchIndex.filter(item =>
+            item.searchText && item.searchText.includes(v)
+        );
+
+        return uniqBy([...exact, ...partial], 'uid');
+    }
+
+    function findBestSearchMatch(value) {
+        const matches = getSearchMatches(value);
+        if (!matches.length) return null;
+
+        const exactGis = matches.find(item => String(item.gisid).toLowerCase() === String(value).toLowerCase());
+        if (exactGis) return exactGis;
+
+        const exactPointGis = matches.find(item => String(item.point_gisid).toLowerCase() === String(value).toLowerCase());
+        if (exactPointGis) return exactPointGis;
+
+        const exactAssessment = matches.find(item => String(item.assessment).toLowerCase() === String(value).toLowerCase());
+        if (exactAssessment) return exactAssessment;
+
+        return matches[0];
+    }
+
+    function renderSuggestions(matches) {
+        const $target = $('#searchSuggestions');
+
+        if (!matches || !matches.length) {
+            $target.html('');
+            return;
+        }
+
+        let html = `<div class="dropdown-header">Suggestions</div>`;
+
+        matches.slice(0, 8).forEach(item => {
+            html += `
+                <div class="search-result-item suggestion-item" data-uid="${escapeHtml(item.uid)}" style="cursor:pointer;">
+                    <div class="search-result-title">${escapeHtml(item.title)}</div>
+                    <div class="search-result-subtitle">${escapeHtml(item.subtitle || '')}</div>
+                </div>
+            `;
+        });
+
+        $target.html(html);
+    }
+
+    function renderSearchResults(matches, selector, heading = 'Results') {
+        const $container = $(selector);
+
+        if (!matches || !matches.length) {
+            $container.html('<div class="p-3 text-center text-muted">No results found</div>');
+            return;
+        }
+
+        let html = `<div class="dropdown-header">${heading} (${matches.length})</div>`;
+
+        matches.slice(0, 20).forEach(item => {
+            const icon = item.geometryType === 'polygon'
+                ? 'pentagon'
+                : item.geometryType === 'line'
+                    ? 'vector-pen'
+                    : 'geo-alt';
+
+            const details = [];
+            if (item.assessment) details.push(`Assess: ${escapeHtml(item.assessment)}`);
+            if (item.owner_name) details.push(`Owner: ${escapeHtml(item.owner_name)}`);
+            if (item.phone_number) details.push(`Phone: ${escapeHtml(item.phone_number)}`);
+
+            html += `
+                <div class="search-result-item" data-uid="${escapeHtml(item.uid)}">
+                    <div class="search-result-title">
+                        <i class="bi bi-${icon} me-2"></i>${escapeHtml(item.title)}
+                    </div>
+                    <div class="search-result-subtitle">${escapeHtml(item.subtitle || '')}</div>
+                    ${details.length ? `<div class="search-result-subtitle" style="color:#666;">${details.join(' | ')}</div>` : ''}
+                    <div class="search-result-actions">
+                        <button class="btn btn-sm btn-success zoom-btn" data-uid="${escapeHtml(item.uid)}">Zoom</button>
+                        <button class="btn btn-sm btn-primary direction-btn" data-uid="${escapeHtml(item.uid)}">Direction</button>
                     </div>
                 </div>
-            `);
+            `;
+        });
 
-            $mapContainer.append(`
-                <div class="custom-location-switcher">
-                    <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
-                    <div class="location-dropdown" id="locationDropdown">
-                        <div class="dropdown-header">Location Tools</div>
-                        <div class="location-dropdown-item" id="liveLocationItem">
-                            <div class="location-item-icon"><i class="bi bi-crosshair2"></i></div>
-                            <div class="location-item-name">Live Location</div>
-                            <div class="location-item-badge" id="liveLocationBadge">OFF</div>
-                        </div>
-                        <div class="location-dropdown-item" id="trackMeItem">
-                            <div class="location-item-icon"><i class="bi bi-broadcast"></i></div>
-                            <div class="location-item-name">Track Me</div>
-                            <div class="location-item-badge" id="trackMeBadge">OFF</div>
-                        </div>
-                        <div class="location-dropdown-item" id="clearRouteItem">
-                            <div class="location-item-icon"><i class="bi bi-x-circle"></i></div>
-                            <div class="location-item-name">Clear Route</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="location-toast" id="locationToast"></div>
-            `);
+        $container.html(html);
+    }
 
-            $mapContainer.append(`
-                <div class="custom-search-switcher">
-                    <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
-                    <div class="search-dropdown" id="searchDropdown">
-                        <div class="d-flex border-bottom">
-                            <button type="button" class="btn btn-sm flex-fill search-tab-btn active" data-tab="quick">Quick Search</button>
-                            <button type="button" class="btn btn-sm flex-fill search-tab-btn" data-tab="filter">Filter</button>
-                        </div>
-                        <div class="search-tab-pane" id="quickSearchTab">
-                            <div class="p-3">
-                                <input type="text" id="gisSearchInput" class="form-control" placeholder="Search by GIS ID, Assessment, Owner...">
-                            </div>
-                            <div id="searchSuggestions" class="search-results-container"></div>
-                            <div id="searchResults" class="search-results-container"></div>
-                        </div>
-                        <div class="search-tab-pane" id="filterTab" style="display:none;">
-                            <div class="p-3">
-                                <div class="filter-field-group">
-                                    <label>Assessment Number</label>
-                                    <input type="text" id="filterAssessment" class="form-control" placeholder="Enter assessment number...">
-                                </div>
-                                <div class="filter-field-group">
-                                    <label>Old Assessment</label>
-                                    <input type="text" id="filterOldAssessment" class="form-control" placeholder="Enter old assessment...">
-                                </div>
-                                <div class="filter-field-group">
-                                    <label>Owner Name</label>
-                                    <input type="text" id="filterOwnerName" class="form-control" placeholder="Enter owner name...">
-                                </div>
-                                <div class="filter-field-group">
-                                    <label>Phone Number</label>
-                                    <input type="text" id="filterPhoneNumber" class="form-control" placeholder="Enter phone number...">
-                                </div>
-                                <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn">
-                                    <i class="bi bi-search me-1"></i>Search
-                                </button>
-                            </div>
-                            <div id="filterResults" class="search-results-container"></div>
-                        </div>
-                    </div>
-                </div>
-            `);
+    // =========================================================
+    // HIGHLIGHT / ZOOM
+    // =========================================================
+    function clearHighlight() {
+        highlightSource.clear();
+    }
 
-            $mapContainer.append(`
-                <div class="custom-label-toggle">
-                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
-                        <i class="bi bi-fonts"></i>
-                    </button>
-                </div>
-            `);
+    function highlightSearchItem(item) {
+        clearHighlight();
+        if (!item) return;
 
-            $mapContainer.append(`
-                <div class="custom-legend-toggle">
-                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
-                        <i class="bi bi-list-ul"></i>
-                    </button>
-                </div>
-            `);
+        try {
+            let featureToHighlight = null;
 
-            $mapContainer.append(`
-                <div class="custom-3d-toggle">
-                    <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
-                        <i class="bi bi-box"></i>
-                    </button>
-                </div>
-            `);
-
-            $mapContainer.append(`
-                <button class="fullscreen-btn" id="fullscreenBtn">
-                    <i class="bi bi-arrows-fullscreen"></i>
-                </button>
-                <button class="fullscreen-btn-exit" id="fullscreenExitBtn" style="display:none;">
-                    <i class="bi bi-fullscreen-exit"></i>
-                </button>
-            `);
-
-            $mapContainer.append(`
-                <div class="direction-controls" id="directionControls">
-                    <button class="btn-close-route" id="closeRouteBtn">&times;</button>
-                    <div class="route-info" id="routeInfo">Getting directions...</div>
-                    <div id="routeSteps"></div>
-                </div>
-            `);
-
-            // ─────────────────────────────────────────────
-            // SEARCH INDEX
-            // ─────────────────────────────────────────────
-            function buildSearchIndex() {
-                searchIndex = [];
-
-                polygons.forEach(poly => {
-                    try {
-                        const feature = polygonSource.getFeatureById(String(poly.gisid));
-                        let center = null;
-                        let extent = null;
-
-                        if (feature) {
-                            extent = feature.getGeometry().getExtent();
-                            center = ol.extent.getCenter(extent);
-                        }
-
-                        searchIndex.push({
-                            uid: `polygon-${poly.gisid}`,
-                            id: String(poly.gisid),
-                            gisid: String(poly.gisid),
-                            type: 'polygon',
-                            geometryType: 'polygon',
-                            title: `GIS ID: ${poly.gisid}`,
-                            subtitle: `Area: ${poly.sqfeet || 0} sqft`,
-                            assessment: poly.assessment || '',
-                            old_assessment: poly.old_assessment || '',
-                            owner_name: poly.owner_name || '',
-                            phone_number: poly.phone_number || '',
-                            sqfeet: poly.sqfeet || '',
-                            center: center,
-                            extent: extent,
-                            coordinates: safeJsonParse(poly.coordinates, []),
-                            searchText: `${poly.gisid} ${poly.assessment || ''} ${poly.old_assessment || ''} ${poly.owner_name || ''} ${poly.phone_number || ''} ${poly.sqfeet || ''}`.toLowerCase()
-                        });
-                    } catch (e) {
-                        console.error('Error indexing polygon:', e);
-                    }
-                });
-
-                lines.forEach(line => {
-                    try {
-                        const feature = lineSource.getFeatureById(String(line.gisid));
-                        let center = null;
-                        let extent = null;
-
-                        if (feature) {
-                            extent = feature.getGeometry().getExtent();
-                            center = ol.extent.getCenter(extent);
-                        }
-
-                        searchIndex.push({
-                            uid: `line-${line.gisid}`,
-                            id: String(line.gisid),
-                            gisid: String(line.gisid),
-                            type: 'line',
-                            geometryType: 'line',
-                            title: `Road: ${line.road_name || line.gisid}`,
-                            subtitle: `GIS ID: ${line.gisid}`,
-                            road_name: line.road_name || '',
-                            center: center,
-                            extent: extent,
-                            coordinates: safeJsonParse(line.coordinates, []),
-                            searchText: `${line.gisid} ${line.road_name || ''}`.toLowerCase()
-                        });
-                    } catch (e) {
-                        console.error('Error indexing line:', e);
-                    }
-                });
-
-                points.forEach(point => {
-                    try {
-                        const rawCoords = safeJsonParse(point.coordinates, null);
-                        const projected = toMapCoord(rawCoords);
-
-                        searchIndex.push({
-                            uid: `point-${point.gisid}`,
-                            id: String(point.gisid),
-                            gisid: String(point.gisid),
-                            type: 'point',
-                            geometryType: 'point',
-                            title: `GIS ID: ${point.gisid}`,
-                            subtitle: 'Point Location',
-                            center: projected,
-                            extent: projected ? [projected[0], projected[1], projected[0], projected[1]] : null,
-                            coordinates: rawCoords,
-                            searchText: `${point.gisid} point`.toLowerCase()
-                        });
-                    } catch (e) {
-                        console.error('Error indexing point:', e);
-                    }
-                });
-
-                pointDatas.forEach(pd => {
-                    try {
-                        const rawCoords = safeJsonParse(pd.coordinates, null);
-                        const projected = toMapCoord(rawCoords);
-                        const pointGisid = pd.point_gisid || pd.gisid || pd.id || '';
-
-                        searchIndex.push({
-                            uid: `pointdata-${pointGisid}-${pd.id}`,
-                            id: String(pd.id),
-                            gisid: String(pointGisid),
-                            point_gisid: String(pointGisid),
-                            type: 'pointdata',
-                            geometryType: 'point',
-                            title: `GIS ID: ${pointGisid}`,
-                            subtitle: `Assessment: ${pd.assessment || 'N/A'} | Owner: ${pd.owner_name || 'N/A'}`,
-                            assessment: pd.assessment || '',
-                            old_assessment: pd.old_assessment || '',
-                            owner_name: pd.owner_name || '',
-                            phone_number: pd.phone_number || '',
-                            center: projected,
-                            extent: projected ? [projected[0], projected[1], projected[0], projected[1]] : null,
-                            coordinates: rawCoords,
-                            searchText: `${pointGisid} ${pd.assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`.toLowerCase()
-                        });
-                    } catch (e) {
-                        console.error('Error indexing point data:', e);
-                    }
-                });
-
-                console.log('Search Index Built:', searchIndex.length);
-            }
-
-            buildSearchIndex();
-
-            // ─────────────────────────────────────────────
-            // SEARCH / LOOKUP CORE
-            // ─────────────────────────────────────────────
-            function findBestSearchMatch(value) {
-                const v = String(value || '').toLowerCase().trim();
-                if (!v) return null;
-
-                let exact = searchIndex.find(item =>
-                    String(item.gisid || '').toLowerCase() === v ||
-                    String(item.id || '').toLowerCase() === v ||
-                    String(item.point_gisid || '').toLowerCase() === v
-                );
-
-                if (exact) return exact;
-
-                return searchIndex.find(item => item.searchText && item.searchText.includes(v)) || null;
-            }
-
-            function getResultByUid(uid) {
-                return searchIndex.find(item => item.uid === uid) || null;
-            }
-
-            function clearHighlight() {
-                highlightSource.clear();
-                highlightedFeature = null;
-            }
-
-            function highlightItem(item) {
-                clearHighlight();
-                if (!item) return;
-
-                try {
-                    let feature = null;
-
-                    if (item.type === 'polygon') {
-                        feature = polygonSource.getFeatureById(String(item.gisid));
-                    } else if (item.type === 'line') {
-                        feature = lineSource.getFeatureById(String(item.gisid));
-                    } else {
-                        const center = item.center || toMapCoord(item.coordinates);
-                        if (center) {
-                            feature = new ol.Feature({
-                                geometry: new ol.geom.Point(center)
-                            });
-                        }
-                    }
-
-                    if (!feature) return;
-
-                    const clone = feature.clone();
-                    clone.setStyle(createHighlightStyle());
-                    highlightSource.addFeature(clone);
-                    highlightedFeature = clone;
-                } catch (e) {
-                    console.error('Highlight error:', e);
+            if (item.type === 'polygon') {
+                const feature = polygonSource.getFeatureById(String(item.gisid));
+                if (feature) {
+                    featureToHighlight = feature.clone();
+                    featureToHighlight.setStyle(createHighlightStyle('polygon'));
+                }
+            } else if (item.type === 'line') {
+                const feature = lineSource.getFeatureById(String(item.gisid));
+                if (feature) {
+                    featureToHighlight = feature.clone();
+                    featureToHighlight.setStyle(createHighlightStyle('line'));
+                }
+            } else {
+                const center = item.center || toProjectedPoint(item.coordinates);
+                if (center) {
+                    featureToHighlight = new ol.Feature({
+                        geometry: new ol.geom.Point(center)
+                    });
+                    featureToHighlight.setStyle(createHighlightStyle('point'));
                 }
             }
 
-            function zoomToSearchItem(item) {
-                if (!item) {
-                    showToast('⚠️ Item not found');
-                    return false;
-                }
+            if (featureToHighlight) {
+                highlightSource.addFeature(featureToHighlight);
+            }
+        } catch (e) {
+            console.error('highlight error', e);
+        }
+    }
 
-                try {
-                    highlightItem(item);
+    function zoomToSearchItem(item) {
+        if (!item) {
+            showToast('No matching GISID found');
+            return false;
+        }
 
-                    if (item.extent && item.geometryType !== 'point') {
-                        map.getView().fit(item.extent, {
-                            padding: [80, 80, 80, 80],
-                            duration: 1000,
-                            maxZoom: 21
-                        });
-                        showToast(`📍 Zoomed to GIS ID: ${item.gisid || item.id}`);
-                        return true;
-                    }
+        try {
+            highlightSearchItem(item);
 
-                    let center = item.center || toMapCoord(item.coordinates);
-                    if (center) {
-                        map.getView().animate({
-                            center: center,
-                            zoom: 21,
-                            duration: 1000
-                        });
-                        showToast(`📍 Zoomed to GIS ID: ${item.gisid || item.id}`);
-                        return true;
-                    }
-
-                    showToast(`⚠️ No location found for ${item.gisid || item.id}`);
-                    return false;
-                } catch (e) {
-                    console.error('zoomToSearchItem error:', e);
-                    showToast('❌ Zoom failed');
-                    return false;
-                }
+            if ((item.type === 'polygon' || item.type === 'line') && item.extent) {
+                map.getView().fit(item.extent, {
+                    padding: [80, 80, 80, 80],
+                    duration: 1000,
+                    maxZoom: 21
+                });
+                showToast(`Zoomed to GIS ID ${item.gisid}`);
+                return true;
             }
 
-            function zoomToFeature(gisid) {
-                const item = findBestSearchMatch(gisid);
-                return zoomToSearchItem(item);
+            const center = item.center || toProjectedPoint(item.coordinates);
+            if (center) {
+                map.getView().animate({
+                    center: center,
+                    zoom: 21,
+                    duration: 1000
+                });
+                showToast(`Zoomed to GIS ID ${item.gisid}`);
+                return true;
             }
 
-            // ─────────────────────────────────────────────
-            // RESULT RENDER
-            // ─────────────────────────────────────────────
-            function renderSearchResults(matches, targetSelector, heading = 'Results') {
-                const $target = $(targetSelector);
+            showToast(`No coordinates found for GIS ID ${item.gisid}`);
+            return false;
+        } catch (e) {
+            console.error('zoom error', e);
+            showToast('Zoom failed');
+            return false;
+        }
+    }
 
-                if (!matches || !matches.length) {
-                    $target.html('<div class="p-3 text-center text-muted">No results found</div>');
+    function zoomToFeature(gisid) {
+        const item = findBestSearchMatch(gisid);
+        return zoomToSearchItem(item);
+    }
+
+    // =========================================================
+    // LOCATION / ROUTE
+    // =========================================================
+    function updateTrackLine() {
+        if (routePoints.length < 2) return;
+
+        if (!routeLine) {
+            routeLine = new ol.Feature({
+                geometry: new ol.geom.LineString(routePoints)
+            });
+
+            routeLine.setStyle(new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#dc3545',
+                    width: 4,
+                    lineDash: [8, 6]
+                })
+            }));
+
+            routeLayer.getSource().addFeature(routeLine);
+        } else {
+            routeLine.getGeometry().setCoordinates(routePoints);
+        }
+    }
+
+    function updatePosition(position) {
+        const coords = [position.coords.longitude, position.coords.latitude];
+        const projected = ol.proj.fromLonLat(coords);
+        currentPosition = projected;
+
+        if (!positionFeature) {
+            positionFeature = new ol.Feature({
+                geometry: new ol.geom.Point(projected)
+            });
+            positionFeature.setStyle(createPositionStyle());
+            positionLayer.getSource().addFeature(positionFeature);
+        } else {
+            positionFeature.getGeometry().setCoordinates(projected);
+        }
+
+        if (isLiveLocation) {
+            map.getView().animate({
+                center: projected,
+                zoom: 19,
+                duration: 1000
+            });
+        }
+
+        if (isTracking) {
+            routePoints.push(projected);
+            updateTrackLine();
+        }
+    }
+
+    function ensureCurrentLocation(callback) {
+        if (currentPosition) {
+            callback(currentPosition);
+            return;
+        }
+
+        if (!navigator.geolocation) {
+            showToast('Geolocation not supported');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function (pos) {
+                updatePosition(pos);
+                callback(currentPosition);
+            },
+            function (error) {
+                showToast('Error getting location: ' + error.message);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    function getItemLonLat(item) {
+        if (!item) return null;
+        const center = item.center || toProjectedPoint(item.coordinates);
+        if (!center) return null;
+        return ol.proj.toLonLat(center);
+    }
+
+    function showDestinationMarker(item) {
+        if (destinationMarker) {
+            destinationLayer.getSource().removeFeature(destinationMarker);
+            destinationMarker = null;
+        }
+
+        const center = item.center || toProjectedPoint(item.coordinates);
+        if (!center) return;
+
+        destinationMarker = new ol.Feature({
+            geometry: new ol.geom.Point(center)
+        });
+
+        destinationMarker.setStyle(createDestinationStyle(item.gisid || 'Destination'));
+        destinationLayer.getSource().addFeature(destinationMarker);
+    }
+
+    function clearDirectionRoute() {
+        if (directionRouteFeature) {
+            routeLayer.getSource().removeFeature(directionRouteFeature);
+            directionRouteFeature = null;
+        }
+
+        if (destinationMarker) {
+            destinationLayer.getSource().removeFeature(destinationMarker);
+            destinationMarker = null;
+        }
+
+        $('#directionControls').removeClass('active');
+        $('#routeInfo').html('');
+        $('#routeSteps').html('');
+    }
+
+    async function getDirectionsToItem(item) {
+        if (!item) {
+            showToast('Destination not found');
+            return;
+        }
+
+        ensureCurrentLocation(async function (fromProjected) {
+            try {
+                const fromLonLat = ol.proj.toLonLat(fromProjected);
+                const toLonLat = getItemLonLat(item);
+
+                if (!toLonLat) {
+                    showToast('Destination coordinates not found');
                     return;
                 }
 
-                let html = `<div class="dropdown-header">${heading} (${matches.length})</div>`;
+                showDestinationMarker(item);
 
-                matches.slice(0, 20).forEach(item => {
-                    const icon = item.geometryType === 'polygon'
-                        ? 'pentagon'
-                        : item.geometryType === 'line'
-                            ? 'vector-pen'
-                            : 'geo-alt';
+                $('#directionControls').addClass('active');
+                $('#routeInfo').html('Getting directions...');
+                $('#routeSteps').html('');
 
-                    const details = [];
-                    if (item.assessment) details.push(`Assess: ${escapeHtml(item.assessment)}`);
-                    if (item.owner_name) details.push(`Owner: ${escapeHtml(item.owner_name)}`);
-                    if (item.phone_number) details.push(`Phone: ${escapeHtml(item.phone_number)}`);
+                const url = `https://router.project-osrm.org/route/v1/driving/${fromLonLat[0]},${fromLonLat[1]};${toLonLat[0]},${toLonLat[1]}?overview=full&geometries=geojson&steps=true`;
+                const response = await fetch(url);
+                const data = await response.json();
 
-                    html += `
-                        <div class="search-result-item" data-uid="${escapeHtml(item.uid)}">
-                            <div class="search-result-title">
-                                <i class="bi bi-${icon} me-2"></i>${escapeHtml(item.title)}
-                            </div>
-                            <div class="search-result-subtitle">${escapeHtml(item.subtitle || '')}</div>
-                            ${details.length ? `<div class="search-result-subtitle" style="color:#666;">${details.join(' | ')}</div>` : ''}
-                            <div class="search-result-actions">
-                                <button class="btn btn-sm btn-success zoom-btn" data-uid="${escapeHtml(item.uid)}">Zoom</button>
-                                <button class="btn btn-sm btn-primary direction-btn" data-uid="${escapeHtml(item.uid)}">Direction</button>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                $target.html(html);
-            }
-
-            function renderSuggestions(matches) {
-                const $target = $('#searchSuggestions');
-
-                if (!matches || !matches.length) {
-                    $target.html('');
+                if (!data.routes || !data.routes.length) {
+                    $('#routeInfo').html('Route not found');
+                    showToast('Route not found');
                     return;
                 }
 
-                let html = `<div class="dropdown-header">Suggestions</div>`;
-                matches.slice(0, 8).forEach(item => {
-                    html += `
-                        <div class="search-result-item suggestion-item" data-uid="${escapeHtml(item.uid)}" style="cursor:pointer;">
-                            <div class="search-result-title">${escapeHtml(item.title)}</div>
-                            <div class="search-result-subtitle">${escapeHtml(item.subtitle || '')}</div>
-                        </div>
-                    `;
-                });
+                const route = data.routes[0];
+                const routeCoords = route.geometry.coordinates.map(coord => ol.proj.fromLonLat(coord));
 
-                $target.html(html);
-            }
-
-            // ─────────────────────────────────────────────
-            // DIRECTION
-            // ─────────────────────────────────────────────
-            function clearDirectionRoute() {
                 if (directionRouteFeature) {
                     routeLayer.getSource().removeFeature(directionRouteFeature);
-                    directionRouteFeature = null;
                 }
 
-                if (destinationMarker) {
-                    destinationLayer.getSource().removeFeature(destinationMarker);
-                    destinationMarker = null;
+                directionRouteFeature = new ol.Feature({
+                    geometry: new ol.geom.LineString(routeCoords)
+                });
+
+                directionRouteFeature.setStyle(new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#0d6efd',
+                        width: 5
+                    })
+                }));
+
+                routeLayer.getSource().addFeature(directionRouteFeature);
+
+                map.getView().fit(directionRouteFeature.getGeometry().getExtent(), {
+                    padding: [80, 80, 120, 80],
+                    duration: 1200,
+                    maxZoom: 20
+                });
+
+                $('#routeInfo').html(`
+                    <strong>To:</strong> ${escapeHtml(item.gisid || item.id)}<br>
+                    <strong>Distance:</strong> ${formatDistance(route.distance)}<br>
+                    <strong>Duration:</strong> ${formatDuration(route.duration)}
+                `);
+
+                const steps = route.legs?.[0]?.steps || [];
+                if (!steps.length) {
+                    $('#routeSteps').html('<div class="step-item">Route ready</div>');
+                } else {
+                    let stepsHtml = '';
+                    steps.forEach((step, index) => {
+                        const instruction =
+                            step.maneuver?.instruction ||
+                            step.name ||
+                            'Continue';
+
+                        stepsHtml += `
+                            <div class="step-item">
+                                ${index + 1}. ${escapeHtml(instruction)} (${formatDistance(step.distance)})
+                            </div>
+                        `;
+                    });
+                    $('#routeSteps').html(stepsHtml);
                 }
 
-                $('#directionControls').removeClass('active');
-                $('#routeInfo').html('');
-                $('#routeSteps').html('');
+                showToast('Directions loaded');
+            } catch (e) {
+                console.error('direction error', e);
+                $('#routeInfo').html('Direction fetch failed');
+                showToast('Direction fetch failed');
             }
+        });
+    }
 
-            function ensureCurrentLocation(callback) {
-                if (currentPosition) {
-                    callback(currentPosition);
-                    return;
-                }
+    // =========================================================
+    // LAYER CONTROL
+    // =========================================================
+    function switchBaseLayer(layer) {
+        [osmLayer, satelliteLayer, streetViewLayer].forEach(l => l.setVisible(l === layer));
 
-                if (!navigator.geolocation) {
-                    showToast('❌ Geolocation not supported');
-                    return;
-                }
+        const layerName = layer.get('title') || 'Layer';
+        $('#activeLayerBadge').text(layerName);
 
-                navigator.geolocation.getCurrentPosition(function (pos) {
+        $('.layer-dropdown-item[data-layer-type="base"]').removeClass('active');
+        $('.layer-dropdown-item[data-layer="' + layerName + '"]').addClass('active');
+    }
+
+    function toggleDroneLayer() {
+        const visible = !droneLayer.getVisible();
+        droneLayer.setVisible(visible);
+        return visible;
+    }
+
+    // =========================================================
+    // EVENTS - DROPDOWNS
+    // =========================================================
+    $(document).on('click', '.layer-toggle-btn', function (e) {
+        e.stopPropagation();
+        $('.layer-dropdown').toggleClass('active');
+        $('.location-dropdown').removeClass('active');
+        $('.search-dropdown').removeClass('active');
+    });
+
+    $(document).on('click', '.location-toggle-btn', function (e) {
+        e.stopPropagation();
+        $('.location-dropdown').toggleClass('active');
+        $('.layer-dropdown').removeClass('active');
+        $('.search-dropdown').removeClass('active');
+    });
+
+    $(document).on('click', '.search-toggle-btn', function (e) {
+        e.stopPropagation();
+        $('.search-dropdown').toggleClass('active');
+        $('.layer-dropdown').removeClass('active');
+        $('.location-dropdown').removeClass('active');
+        setTimeout(() => $('#gisSearchInput').trigger('focus'), 100);
+    });
+
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass('active');
+        if (!$(e.target).closest('.custom-location-switcher').length) $('.location-dropdown').removeClass('active');
+        if (!$(e.target).closest('.custom-search-switcher').length) $('.search-dropdown').removeClass('active');
+    });
+
+    // =========================================================
+    // EVENTS - LAYERS
+    // =========================================================
+    $(document).on('click', '.layer-dropdown-item', function (e) {
+        e.stopPropagation();
+
+        const layerType = $(this).data('layer-type');
+        const layerTitle = $(this).data('layer');
+
+        if (layerType === 'base') {
+            let layer = null;
+            if (layerTitle === 'OpenStreetMap') layer = osmLayer;
+            else if (layerTitle === 'Satellite') layer = satelliteLayer;
+            else if (layerTitle === 'Street View') layer = streetViewLayer;
+
+            if (layer) switchBaseLayer(layer);
+            return;
+        }
+
+        if (layerTitle === 'Drone View') {
+            const visible = toggleDroneLayer();
+            $(this).toggleClass('active', visible);
+            return;
+        }
+
+        if (layerType === 'vector') {
+            let layer = null;
+
+            if (layerTitle === 'Polygons') layer = polygonLayer;
+            else if (layerTitle === 'Lines') layer = lineLayer;
+            else if (layerTitle === 'Points') layer = pointLayer;
+
+            if (layer) {
+                const visible = !layer.getVisible();
+                layer.setVisible(visible);
+                $(this).toggleClass('active', visible);
+            }
+        }
+    });
+
+    $('#labelToggleBtn').on('click', function () {
+        $(this).toggleClass('active-label');
+        polygonLayer.setStyle(createPolygonStyle);
+        polygonLayer.changed();
+    });
+
+    $('#legendToggleBtn').on('click', function () {
+        Swal.fire({
+            title: 'Infrastructure Legend',
+            html: `
+                <div style="text-align:left;">
+                    <div><span style="display:inline-block;width:20px;height:20px;background:rgba(255,0,0,0.10);border:2px solid blue;margin-right:10px;"></span> Polygons</div>
+                    <div><span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span> Lines</div>
+                    <div><span style="display:inline-block;width:20px;height:20px;background:#198754;border-radius:50%;margin-right:10px;"></span> Points</div>
+                    <div><span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;margin-right:10px;"></span> Current Location</div>
+                    <div><span style="display:inline-block;width:20px;height:4px;background:#0d6efd;border-radius:2px;margin-right:10px;"></span> Direction Route</div>
+                </div>
+            `,
+            icon: 'info',
+            confirmButtonText: 'Close'
+        });
+    });
+
+    $('#threeDToggleBtn').on('click', function () {
+        $(this).toggleClass('active-3d');
+        Swal.fire({
+            title: '3D View',
+            text: '3D functionality requires Cesium integration.',
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+    });
+
+    // =========================================================
+    // EVENTS - LOCATION
+    // =========================================================
+    $('#liveLocationItem').on('click', function () {
+        if (!navigator.geolocation) {
+            showToast('Geolocation not supported');
+            return;
+        }
+
+        isLiveLocation = !isLiveLocation;
+        const $badge = $('#liveLocationBadge');
+        const $btn = $('#locationToggleBtn');
+
+        if (isLiveLocation) {
+            $badge.text('ON').addClass('active');
+            $btn.addClass('active-location');
+            showToast('Live location activated');
+
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
                     updatePosition(pos);
-                    callback(currentPosition);
-                }, function (error) {
-                    showToast('❌ Could not get current location: ' + error.message);
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                });
-            }
 
-            function getItemCenterLonLat(item) {
-                if (!item) return null;
-
-                let center = item.center || toMapCoord(item.coordinates);
-                if (!center) return null;
-
-                return ol.proj.toLonLat(center);
-            }
-
-            function showDestinationMarker(item) {
-                if (destinationMarker) {
-                    destinationLayer.getSource().removeFeature(destinationMarker);
-                    destinationMarker = null;
-                }
-
-                const center = item.center || toMapCoord(item.coordinates);
-                if (!center) return;
-
-                destinationMarker = new ol.Feature({
-                    geometry: new ol.geom.Point(center)
-                });
-                destinationMarker.setStyle(createDestinationStyle(item.gisid || item.id || 'Destination'));
-                destinationLayer.getSource().addFeature(destinationMarker);
-            }
-
-            async function getDirectionsToItem(item) {
-                if (!item) {
-                    showToast('⚠️ Destination not found');
-                    return;
-                }
-
-                ensureCurrentLocation(async function (fromProjected) {
-                    try {
-                        const fromLonLat = ol.proj.toLonLat(fromProjected);
-                        const toLonLat = getItemCenterLonLat(item);
-
-                        if (!toLonLat) {
-                            showToast('⚠️ Destination coordinates not found');
-                            return;
-                        }
-
-                        showDestinationMarker(item);
-
-                        const url = `https://router.project-osrm.org/route/v1/driving/${fromLonLat[0]},${fromLonLat[1]};${toLonLat[0]},${toLonLat[1]}?overview=full&geometries=geojson&steps=true`;
-
-                        $('#directionControls').addClass('active');
-                        $('#routeInfo').html('Getting directions...');
-                        $('#routeSteps').html('');
-
-                        const response = await fetch(url);
-                        const data = await response.json();
-
-                        if (!data.routes || !data.routes.length) {
-                            showToast('❌ Route not found');
-                            $('#routeInfo').html('Route not found');
-                            return;
-                        }
-
-                        const route = data.routes[0];
-                        const routeCoords = route.geometry.coordinates.map(c => ol.proj.fromLonLat(c));
-
-                        if (directionRouteFeature) {
-                            routeLayer.getSource().removeFeature(directionRouteFeature);
-                        }
-
-                        directionRouteFeature = new ol.Feature({
-                            geometry: new ol.geom.LineString(routeCoords)
-                        });
-
-                        directionRouteFeature.setStyle(new ol.style.Style({
-                            stroke: new ol.style.Stroke({
-                                color: '#0d6efd',
-                                width: 5
-                            })
-                        }));
-
-                        routeLayer.getSource().addFeature(directionRouteFeature);
-
-                        const extent = directionRouteFeature.getGeometry().getExtent();
-                        map.getView().fit(extent, {
-                            padding: [80, 80, 120, 80],
-                            duration: 1200,
-                            maxZoom: 20
-                        });
-
-                        $('#routeInfo').html(`
-                            <strong>To:</strong> ${escapeHtml(item.gisid || item.id)}<br>
-                            <strong>Distance:</strong> ${formatDistance(route.distance)}<br>
-                            <strong>Duration:</strong> ${formatDuration(route.duration)}
-                        `);
-
-                        let stepsHtml = '';
-                        const steps = route.legs?.[0]?.steps || [];
-                        if (steps.length) {
-                            steps.forEach((step, index) => {
-                                stepsHtml += `
-                                    <div class="step-item">
-                                        ${index + 1}. ${escapeHtml(step.maneuver.instruction || step.name || 'Continue')}
-                                        (${formatDistance(step.distance)})
-                                    </div>
-                                `;
-                            });
-                        } else {
-                            stepsHtml = '<div class="step-item">Route ready</div>';
-                        }
-
-                        $('#routeSteps').html(stepsHtml);
-                        showToast('✅ Directions loaded');
-                    } catch (e) {
-                        console.error('Direction error:', e);
-                        showToast('❌ Direction fetch failed');
-                        $('#routeInfo').html('Direction fetch failed');
-                    }
-                });
-            }
-
-            // ─────────────────────────────────────────────
-            // LOCATION
-            // ─────────────────────────────────────────────
-            function updatePosition(position) {
-                const coords = [position.coords.longitude, position.coords.latitude];
-                const projected = ol.proj.fromLonLat(coords);
-                currentPosition = projected;
-
-                if (!positionFeature) {
-                    positionFeature = new ol.Feature({
-                        geometry: new ol.geom.Point(projected)
-                    });
-                    positionFeature.setStyle(createPositionStyle());
-                    positionLayer.getSource().addFeature(positionFeature);
-                } else {
-                    positionFeature.getGeometry().setCoordinates(projected);
-                }
-
-                if (isLiveLocation) {
-                    map.getView().animate({
-                        center: projected,
-                        zoom: 19,
-                        duration: 1000
-                    });
-                }
-
-                if (isTracking) {
-                    routePoints.push(projected);
-                    updateTrackLine();
-                }
-            }
-
-            function updateTrackLine() {
-                if (routePoints.length < 2) return;
-
-                if (!routeLine) {
-                    routeLine = new ol.Feature({
-                        geometry: new ol.geom.LineString(routePoints)
-                    });
-                    routeLine.setStyle(new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: '#dc3545',
-                            width: 4,
-                            lineDash: [8, 6]
-                        })
-                    }));
-                    routeLayer.getSource().addFeature(routeLine);
-                } else {
-                    routeLine.getGeometry().setCoordinates(routePoints);
-                }
-            }
-
-            // ─────────────────────────────────────────────
-            // LAYER SWITCH
-            // ─────────────────────────────────────────────
-            function switchBaseLayer(layer) {
-                [osmLayer, satelliteLayer, streetViewLayer].forEach(l => l.setVisible(l === layer));
-                const layerName = layer.get('title') || 'Layer';
-
-                $('#activeLayerBadge').text(layerName);
-                $('.layer-dropdown-item[data-layer-type="base"]').removeClass('active');
-                $('.layer-dropdown-item[data-layer="' + layerName + '"]').addClass('active');
-            }
-
-            function toggleDroneLayer() {
-                const visible = !droneLayer.getVisible();
-                droneLayer.setVisible(visible);
-                return visible;
-            }
-
-            // ─────────────────────────────────────────────
-            // EVENTS
-            // ─────────────────────────────────────────────
-            $(document).on('click', '.layer-toggle-btn', function (e) {
-                e.stopPropagation();
-                $('.layer-dropdown').toggleClass('active');
-                $('.location-dropdown, .search-dropdown').removeClass('active');
-            });
-
-            $(document).on('click', '.location-toggle-btn', function (e) {
-                e.stopPropagation();
-                $('.location-dropdown').toggleClass('active');
-                $('.layer-dropdown, .search-dropdown').removeClass('active');
-            });
-
-            $(document).on('click', '.search-toggle-btn', function (e) {
-                e.stopPropagation();
-                $('.search-dropdown').toggleClass('active');
-                $('.layer-dropdown, .location-dropdown').removeClass('active');
-                $('#gisSearchInput').trigger('focus');
-            });
-
-            $(document).on('click', function (e) {
-                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass('active');
-                if (!$(e.target).closest('.custom-location-switcher').length) $('.location-dropdown').removeClass('active');
-                if (!$(e.target).closest('.custom-search-switcher').length) $('.search-dropdown').removeClass('active');
-            });
-
-            $(document).on('click', '.layer-dropdown-item', function (e) {
-                e.stopPropagation();
-                const layerType = $(this).data('layer-type');
-                const layerTitle = $(this).data('layer');
-
-                if (layerType === 'base') {
-                    let layer = null;
-                    if (layerTitle === 'OpenStreetMap') layer = osmLayer;
-                    if (layerTitle === 'Satellite') layer = satelliteLayer;
-                    if (layerTitle === 'Street View') layer = streetViewLayer;
-                    if (layer) switchBaseLayer(layer);
-                } else if (layerTitle === 'Drone View') {
-                    const visible = toggleDroneLayer();
-                    $(this).toggleClass('active', visible);
-                } else if (layerType === 'vector') {
-                    let layer = null;
-                    if (layerTitle === 'Polygons') layer = polygonLayer;
-                    if (layerTitle === 'Lines') layer = lineLayer;
-                    if (layerTitle === 'Points') layer = pointLayer;
-
-                    if (layer) {
-                        const visible = !layer.getVisible();
-                        layer.setVisible(visible);
-                        $(this).toggleClass('active', visible);
-                    }
-                }
-            });
-
-            $('#labelToggleBtn').on('click', function () {
-                $(this).toggleClass('active-label');
-                polygonLayer.setStyle(createPolygonStyle);
-                polygonLayer.changed();
-            });
-
-            $('#legendToggleBtn').on('click', function () {
-                Swal.fire({
-                    title: 'Infrastructure Legend',
-                    html: `
-                        <div style="text-align:left;">
-                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(255,0,0,0.1);border:2px solid blue;margin-right:10px;"></span> Polygons</div>
-                            <div><span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span> Lines</div>
-                            <div><span style="display:inline-block;width:20px;height:20px;background:#198754;border-radius:50%;margin-right:10px;"></span> Points</div>
-                            <div><span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;margin-right:10px;"></span> Current Location</div>
-                            <div><span style="display:inline-block;width:20px;height:4px;background:#0d6efd;border-radius:2px;margin-right:10px;"></span> Direction Route</div>
-                        </div>
-                    `,
-                    icon: 'info',
-                    confirmButtonText: 'Close'
-                });
-            });
-
-            $('#threeDToggleBtn').on('click', function () {
-                $(this).toggleClass('active-3d');
-                Swal.fire({
-                    title: '3D View',
-                    text: '3D functionality requires Cesium integration.',
-                    icon: 'info',
-                    confirmButtonText: 'OK'
-                });
-            });
-
-            $('#liveLocationItem').on('click', function () {
-                if (!navigator.geolocation) {
-                    showToast('❌ Geolocation not supported');
-                    return;
-                }
-
-                isLiveLocation = !isLiveLocation;
-                const $badge = $('#liveLocationBadge');
-                const $btn = $('#locationToggleBtn');
-
-                if (isLiveLocation) {
-                    $badge.text('ON').addClass('active');
-                    $btn.addClass('active-location');
-                    showToast('📍 Live location activated');
-
-                    navigator.geolocation.getCurrentPosition(function (pos) {
-                        updatePosition(pos);
-                        if (!watchId) {
-                            watchId = navigator.geolocation.watchPosition(updatePosition, function (error) {
-                                showToast('❌ Location error: ' + error.message);
-                            }, {
+                    if (!watchId) {
+                        watchId = navigator.geolocation.watchPosition(
+                            updatePosition,
+                            function (error) {
+                                showToast('Location error: ' + error.message);
+                            },
+                            {
                                 enableHighAccuracy: true,
                                 timeout: 10000,
                                 maximumAge: 0
-                            });
-                        }
-                    }, function (error) {
-                        showToast('❌ Error getting location: ' + error.message);
-                    }, {
-                        enableHighAccuracy: true,
-                        timeout: 10000
-                    });
-                } else {
+                            }
+                        );
+                    }
+                },
+                function (error) {
+                    isLiveLocation = false;
                     $badge.text('OFF').removeClass('active');
                     $btn.removeClass('active-location');
-                    showToast('📍 Live location deactivated');
-
-                    if (watchId && !isTracking) {
-                        navigator.geolocation.clearWatch(watchId);
-                        watchId = null;
-                    }
+                    showToast('Error getting location: ' + error.message);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000
                 }
+            );
+        } else {
+            $badge.text('OFF').removeClass('active');
+            $btn.removeClass('active-location');
+            showToast('Live location deactivated');
 
-                $('.location-dropdown').removeClass('active');
-            });
+            if (watchId && !isTracking) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+        }
 
-            $('#trackMeItem').on('click', function () {
-                if (!navigator.geolocation) {
-                    showToast('❌ Geolocation not supported');
-                    return;
-                }
+        $('.location-dropdown').removeClass('active');
+    });
 
-                if (!isTracking) {
-                    isTracking = true;
-                    routePoints = [];
-                    $('#trackMeBadge').text('ON').addClass('tracking');
-                    $('#locationToggleBtn').addClass('tracking');
-                    showToast('📍 Tracking started');
+    $('#trackMeItem').on('click', function () {
+        if (!navigator.geolocation) {
+            showToast('Geolocation not supported');
+            return;
+        }
 
-                    navigator.geolocation.getCurrentPosition(function (pos) {
-                        updatePosition(pos);
-                        if (!watchId) {
-                            watchId = navigator.geolocation.watchPosition(updatePosition, function (error) {
-                                showToast('❌ Tracking error: ' + error.message);
-                            }, {
+        const $badge = $('#trackMeBadge');
+        const $btn = $('#locationToggleBtn');
+
+        if (!isTracking) {
+            isTracking = true;
+            routePoints = [];
+            $badge.text('ON').addClass('tracking');
+            $btn.addClass('tracking');
+            showToast('Tracking started');
+
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
+                    updatePosition(pos);
+
+                    if (!watchId) {
+                        watchId = navigator.geolocation.watchPosition(
+                            updatePosition,
+                            function (error) {
+                                showToast('Tracking error: ' + error.message);
+                            },
+                            {
                                 enableHighAccuracy: true,
                                 timeout: 10000,
                                 maximumAge: 0
-                            });
-                        }
-                    }, function (error) {
-                        isTracking = false;
-                        $('#trackMeBadge').text('OFF').removeClass('tracking');
-                        $('#locationToggleBtn').removeClass('tracking');
-                        showToast('❌ Error starting tracking: ' + error.message);
-                    }, {
-                        enableHighAccuracy: true,
-                        timeout: 10000
-                    });
-                } else {
+                            }
+                        );
+                    }
+                },
+                function (error) {
                     isTracking = false;
-                    $('#trackMeBadge').text('OFF').removeClass('tracking');
-                    $('#locationToggleBtn').removeClass('tracking');
-                    showToast('⏹️ Tracking stopped');
-
-                    if (watchId && !isLiveLocation) {
-                        navigator.geolocation.clearWatch(watchId);
-                        watchId = null;
-                    }
+                    $badge.text('OFF').removeClass('tracking');
+                    $btn.removeClass('tracking');
+                    showToast('Error starting tracking: ' + error.message);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000
                 }
+            );
+        } else {
+            isTracking = false;
+            $badge.text('OFF').removeClass('tracking');
+            $btn.removeClass('tracking');
+            showToast('Tracking stopped');
 
-                $('.location-dropdown').removeClass('active');
-            });
+            if (watchId && !isLiveLocation) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+        }
 
-            $('#clearRouteItem, #closeRouteBtn').on('click', function () {
-                if (watchId && !isLiveLocation && !isTracking) {
-                    navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
-                }
+        $('.location-dropdown').removeClass('active');
+    });
 
-                if (routeLine) {
-                    routeLayer.getSource().removeFeature(routeLine);
-                    routeLine = null;
-                }
+    $('#clearRouteItem, #closeRouteBtn').on('click', function () {
+        clearDirectionRoute();
 
-                routePoints = [];
-                clearDirectionRoute();
+        if (routeLine) {
+            routeLayer.getSource().removeFeature(routeLine);
+            routeLine = null;
+        }
 
-                $('#directionControls').removeClass('active');
+        routePoints = [];
 
-                if (!isTracking && !isLiveLocation && positionFeature) {
-                    positionLayer.getSource().removeFeature(positionFeature);
-                    positionFeature = null;
-                    currentPosition = null;
-                }
+        if (!isTracking && !isLiveLocation && positionFeature) {
+            positionLayer.getSource().removeFeature(positionFeature);
+            positionFeature = null;
+            currentPosition = null;
+        }
 
-                showToast('🧹 Route cleared');
-                $('.location-dropdown').removeClass('active');
-            });
+        showToast('Route cleared');
+        $('.location-dropdown').removeClass('active');
+    });
 
-            // Quick search with suggestions
-            $('#gisSearchInput').on('input keyup', function () {
-                const value = $(this).val().toLowerCase().trim();
+    // =========================================================
+    // EVENTS - SEARCH
+    // =========================================================
+    $('#gisSearchInput').on('input keyup', function () {
+        const value = $(this).val().trim();
 
-                if (!value) {
-                    $('#searchSuggestions').html('');
-                    $('#searchResults').html('');
-                    return;
-                }
+        if (!value) {
+            $('#searchSuggestions').html('');
+            $('#searchResults').html('');
+            return;
+        }
 
-                const exactMatches = searchIndex.filter(item =>
-                    String(item.gisid || '').toLowerCase() === value ||
-                    String(item.id || '').toLowerCase() === value ||
-                    String(item.point_gisid || '').toLowerCase() === value
-                );
+        const matches = getSearchMatches(value);
+        renderSuggestions(matches.slice(0, 8));
+        renderSearchResults(matches, '#searchResults', 'Results');
+    });
 
-                const partialMatches = searchIndex.filter(item =>
-                    item.searchText && item.searchText.includes(value)
-                );
+    $('#gisSearchInput').on('keypress', function (e) {
+        if (e.which === 13) {
+            e.preventDefault();
 
-                const uniqueMap = new Map();
-                [...exactMatches, ...partialMatches].forEach(item => {
-                    if (!uniqueMap.has(item.uid)) uniqueMap.set(item.uid, item);
-                });
+            const value = $(this).val().trim();
+            const bestMatch = findBestSearchMatch(value);
 
-                const matches = Array.from(uniqueMap.values());
-
-                renderSuggestions(matches.slice(0, 8));
-                renderSearchResults(matches, '#searchResults', 'Results');
-            });
-
-            $(document).on('click', '.suggestion-item', function () {
-                const uid = $(this).data('uid');
-                const item = getResultByUid(uid);
-                if (!item) return;
-
-                $('#gisSearchInput').val(item.gisid || item.id);
+            if (bestMatch) {
+                zoomToSearchItem(bestMatch);
                 renderSuggestions([]);
-                renderSearchResults([item], '#searchResults', 'Selected');
-            });
+                renderSearchResults([bestMatch], '#searchResults', 'Selected');
+            } else {
+                showToast('No matching GISID found');
+            }
+        }
+    });
 
-            $(document).on('click', '.zoom-btn', function (e) {
-                e.stopPropagation();
-                const uid = $(this).data('uid');
-                const item = getResultByUid(uid);
-                zoomToSearchItem(item);
-            });
+    $(document).on('click', '.suggestion-item', function () {
+        const uid = $(this).data('uid');
+        const item = getItemByUid(uid);
+        if (!item) return;
 
-            $(document).on('click', '.direction-btn', function (e) {
-                e.stopPropagation();
-                const uid = $(this).data('uid');
-                const item = getResultByUid(uid);
-                getDirectionsToItem(item);
-            });
+        $('#gisSearchInput').val(item.gisid || item.id);
+        renderSuggestions([]);
+        renderSearchResults([item], '#searchResults', 'Selected');
+        zoomToSearchItem(item);
+    });
 
-            $(document).on('click', '.search-result-item', function () {
-                const uid = $(this).data('uid');
-                const item = getResultByUid(uid);
-                if (!item) return;
+    $(document).on('click', '.search-result-item', function (e) {
+        if ($(e.target).closest('.zoom-btn, .direction-btn').length) return;
 
-                zoomToSearchItem(item);
-            });
+        const uid = $(this).data('uid');
+        const item = getItemByUid(uid);
+        if (!item) return;
 
-            $('.search-tab-btn').on('click', function () {
-                const tab = $(this).data('tab');
-                $('.search-tab-btn').removeClass('active');
-                $(this).addClass('active');
+        zoomToSearchItem(item);
+    });
 
-                if (tab === 'quick') {
-                    $('#quickSearchTab').show();
-                    $('#filterTab').hide();
-                } else {
-                    $('#quickSearchTab').hide();
-                    $('#filterTab').show();
-                }
-            });
+    $(document).on('click', '.zoom-btn', function (e) {
+        e.stopPropagation();
+        const uid = $(this).data('uid');
+        const item = getItemByUid(uid);
+        zoomToSearchItem(item);
+    });
 
-            $('#applyFilterBtn').on('click', function () {
-                const assessment = $('#filterAssessment').val().toLowerCase().trim();
-                const oldAssessment = $('#filterOldAssessment').val().toLowerCase().trim();
-                const ownerName = $('#filterOwnerName').val().toLowerCase().trim();
-                const phoneNumber = $('#filterPhoneNumber').val().toLowerCase().trim();
+    $(document).on('click', '.direction-btn', function (e) {
+        e.stopPropagation();
+        const uid = $(this).data('uid');
+        const item = getItemByUid(uid);
+        getDirectionsToItem(item);
+    });
 
-                if (!assessment && !oldAssessment && !ownerName && !phoneNumber) {
-                    showToast('⚠️ Please enter at least one filter criteria');
-                    return;
-                }
+    // =========================================================
+    // EVENTS - FILTER
+    // =========================================================
+    $('.search-tab-btn').on('click', function () {
+        const tab = $(this).data('tab');
 
-                const matches = searchIndex.filter(item => {
-                    let match = true;
+        $('.search-tab-btn').removeClass('active');
+        $(this).addClass('active');
 
-                    if (assessment) match = match && String(item.assessment || '').toLowerCase().includes(assessment);
-                    if (oldAssessment) match = match && String(item.old_assessment || '').toLowerCase().includes(oldAssessment);
-                    if (ownerName) match = match && String(item.owner_name || '').toLowerCase().includes(ownerName);
-                    if (phoneNumber) match = match && String(item.phone_number || '').toLowerCase().includes(phoneNumber);
+        if (tab === 'quick') {
+            $('#quickSearchTab').show();
+            $('#filterTab').hide();
+        } else {
+            $('#quickSearchTab').hide();
+            $('#filterTab').show();
+        }
+    });
 
-                    return match;
-                });
+    $('#applyFilterBtn').on('click', function () {
+        const assessment = $('#filterAssessment').val().toLowerCase().trim();
+        const oldAssessment = $('#filterOldAssessment').val().toLowerCase().trim();
+        const ownerName = $('#filterOwnerName').val().toLowerCase().trim();
+        const phoneNumber = $('#filterPhoneNumber').val().toLowerCase().trim();
 
-                renderSearchResults(matches, '#filterResults', 'Filtered Results');
+        if (!assessment && !oldAssessment && !ownerName && !phoneNumber) {
+            showToast('Please enter at least one filter criteria');
+            return;
+        }
 
-                if (!matches.length) {
-                    showToast('❌ No results found');
-                } else {
-                    showToast(`✅ Found ${matches.length} results`);
-                }
-            });
+        const matches = searchIndex.filter(item => {
+            let ok = true;
 
-            $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress', function (e) {
-                if (e.which === 13) $('#applyFilterBtn').click();
-            });
+            if (assessment) ok = ok && String(item.assessment || '').toLowerCase().includes(assessment);
+            if (oldAssessment) ok = ok && String(item.old_assessment || '').toLowerCase().includes(oldAssessment);
+            if (ownerName) ok = ok && String(item.owner_name || '').toLowerCase().includes(ownerName);
+            if (phoneNumber) ok = ok && String(item.phone_number || '').toLowerCase().includes(phoneNumber);
 
-            $('#gisSearchInput').on('keypress', function (e) {
-                if (e.which === 13) {
-                    e.preventDefault();
-                    const first = $('#searchResults .search-result-item').first();
-                    if (first.length) first.click();
-                    else {
-                        const item = findBestSearchMatch($(this).val());
-                        if (item) zoomToSearchItem(item);
-                        else showToast('❌ No matching GISID found');
-                    }
-                }
-            });
-
-            // Fullscreen
-            let isFullscreen = false;
-
-            $('#fullscreenBtn').on('click', function () {
-                $('#mapCard').addClass('fullscreen-mode');
-                $('#map').addClass('fullscreen');
-                $('#fullscreenBtn').hide();
-                $('#fullscreenExitBtn').show();
-                isFullscreen = true;
-
-                setTimeout(() => map.updateSize(), 150);
-            });
-
-            $('#fullscreenExitBtn').on('click', function () {
-                $('#mapCard').removeClass('fullscreen-mode');
-                $('#map').removeClass('fullscreen');
-                $('#fullscreenExitBtn').hide();
-                $('#fullscreenBtn').show();
-                isFullscreen = false;
-
-                setTimeout(() => map.updateSize(), 150);
-            });
-
-            $(document).on('keydown', function (e) {
-                if (e.key === 'Escape' && isFullscreen) {
-                    $('#fullscreenExitBtn').click();
-                }
-            });
-
-            // Map click to inspect feature
-            map.on('singleclick', function (evt) {
-                let foundFeature = null;
-
-                map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
-                    foundFeature = feature;
-                    return true;
-                });
-
-                if (foundFeature) {
-                    const gisid = foundFeature.get('gisid');
-                    if (gisid) {
-                        const item = findBestSearchMatch(gisid);
-                        if (item) {
-                            highlightItem(item);
-                            showToast(`Selected GIS ID: ${gisid}`);
-                        }
-                    }
-                }
-            });
-
-            console.log('✅ GIS Dashboard initialized successfully');
-            console.log('📊 Search Index Size:', searchIndex.length);
-            console.log('📊 Polygons:', polygons.length);
-            console.log('📊 Lines:', lines.length);
-            console.log('📊 Points:', points.length);
-            console.log('📊 Point Data:', pointDatas.length);
+            return ok;
         });
-    </script>
+
+        renderSearchResults(matches, '#filterResults', 'Filtered Results');
+
+        if (!matches.length) showToast('No results found');
+        else showToast(`Found ${matches.length} result(s)`);
+    });
+
+    $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress', function (e) {
+        if (e.which === 13) $('#applyFilterBtn').click();
+    });
+
+    // =========================================================
+    // EVENTS - FULLSCREEN
+    // =========================================================
+    let isFullscreen = false;
+
+    $('#fullscreenBtn').on('click', function () {
+        $('#mapCard').addClass('fullscreen-mode');
+        $('#map').addClass('fullscreen');
+        $('#fullscreenBtn').hide();
+        $('#fullscreenExitBtn').show();
+        isFullscreen = true;
+
+        setTimeout(() => map.updateSize(), 150);
+    });
+
+    $('#fullscreenExitBtn').on('click', function () {
+        $('#mapCard').removeClass('fullscreen-mode');
+        $('#map').removeClass('fullscreen');
+        $('#fullscreenExitBtn').hide();
+        $('#fullscreenBtn').show();
+        isFullscreen = false;
+
+        setTimeout(() => map.updateSize(), 150);
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape' && isFullscreen) {
+            $('#fullscreenExitBtn').click();
+        }
+    });
+
+    // =========================================================
+    // MAP CLICK
+    // =========================================================
+    map.on('singleclick', function (evt) {
+        let clickedFeature = null;
+
+        map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+            if (layer === highlightLayer || layer === routeLayer || layer === positionLayer || layer === destinationLayer) {
+                return false;
+            }
+            clickedFeature = feature;
+            return true;
+        });
+
+        if (!clickedFeature) return;
+
+        const gisid = clickedFeature.get('gisid');
+        if (!gisid) return;
+
+        const item = findBestSearchMatch(gisid);
+        if (item) {
+            highlightSearchItem(item);
+            showToast(`Selected GIS ID ${gisid}`);
+        }
+    });
+
+    // =========================================================
+    // INIT
+    // =========================================================
+    console.log('GIS Dashboard initialized successfully');
+    console.log('Search Index Size:', searchIndex.length);
+    console.log('Polygons:', polygons.length);
+    console.log('Lines:', lines.length);
+    console.log('Points:', points.length);
+    console.log('Point Data:', pointDatas.length);
+});</script>
 @endpush
