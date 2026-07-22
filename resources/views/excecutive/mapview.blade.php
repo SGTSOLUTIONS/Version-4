@@ -1247,18 +1247,7 @@
                 let coords = null;
                 const gisid = item.id || item.point_gisid;
 
-                // Handle based on type - prioritize the exact type
-                if (item.type === 'polygon') {
-                    const feature = polygonSource.getFeatureById(gisid);
-                    if (feature) {
-                        coords = ol.extent.getCenter(feature.getGeometry().getExtent());
-                    } else {
-                        const features = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                        if (features.length > 0) {
-                            coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
-                        }
-                    }
-                } else if (item.type === 'line') {
+              if (item.type === 'line') {
                     // For lines, ONLY look in lineSource first
                     const feature = lineSource.getFeatureById(gisid);
                     if (feature) {
@@ -1277,10 +1266,12 @@
                             coords = ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
                         }
                     }
-                } else {
-                    // point, pointdata
-                    coords = getCoordsByGisId(gisid);
-                }
+                } else{
+                        const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                        if (polyFeatures.length > 0) {
+                            coords = ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
+                        }
+                    }
 
                 if (!coords) {
                     showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000);
