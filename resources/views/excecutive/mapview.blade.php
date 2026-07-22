@@ -819,7 +819,7 @@
                         let pointGisid = pd.point_gisid || '';
 
                         searchIndex.push({
-                            id: pd.id,
+                            id:pointGisid,
                             type: 'pointdata',
                             title: `Assessment: ${pd.assessment || 'N/A'}`,
                             subtitle: `GIS ID: ${pointGisid} | Owner: ${pd.owner_name || 'N/A'}`,
