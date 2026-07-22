@@ -778,7 +778,7 @@
                     }
                 });
 
-                // Add points - FIXED to properly handle coordinates
+                // Add points
                 points.forEach(point => {
                     try {
                         let coords = JSON.parse(point.coordinates);
@@ -862,6 +862,7 @@
 
                 console.log('📊 Search Index Built:', searchIndex.length, 'items');
             }
+
             // ─── LOAD SOURCES ───
             function loadPolygonSource() {
                 polygonSource.clear();
@@ -977,12 +978,6 @@
             const $mapContainer = $('#map');
 
             // ─── ADD ALL CONTROLS INSIDE MAP ───
-            // FIX: every toggle button now lives in a single flex-column
-            // "stack" container instead of each having its own absolutely
-            // positioned wrapper with a manually guessed `top` offset. That
-            // manual-offset approach is what caused controls to drift out
-            // of alignment / overlap once toggled. The stack lays them out
-            // automatically, in this exact order, always evenly spaced.
             $mapContainer.append(`<div class="map-controls-stack" id="mapControlsStack"></div>`);
             const $stack = $('#mapControlsStack');
 
@@ -1125,7 +1120,7 @@
                 </div>
             `);
 
-            // 7. FULLSCREEN BUTTON (kept separate — bottom-right anchor, not part of the top stack)
+            // 7. FULLSCREEN BUTTON
             $mapContainer.append(`
                 <button class="fullscreen-btn" id="fullscreenBtn">
                     <i class="bi bi-arrows-fullscreen"></i>
@@ -1173,94 +1168,12 @@
                 return visible;
             }
 
-            // Update Position
-            function updatePosition(position) {
-                const lon = position.coords.longitude;
-                const lat = position.coords.latitude;
-                const projected = ol.proj.fromLonLat([lon, lat]);
-                currentPosition = projected;
-                currentLocation = { lon, lat };
+            // ─── FIXED FUNCTIONS ───
 
-                if (!positionFeature) {
-                    positionFeature = new ol.Feature({
-                        geometry: new ol.geom.Point(projected)
-                    });
-                    positionFeature.setStyle(createPositionStyle());
-                    positionLayer.getSource().addFeature(positionFeature);
-                } else {
-                    positionFeature.getGeometry().setCoordinates(projected);
-                }
-
-                if (isLiveLocation) {
-                    map.getView().animate({
-                        center: projected,
-                        zoom: 19,
-                        duration: 1000
-                    });
-                }
-
-                if (isTracking) {
-                    routePoints.push(projected);
-                    updateRouteLine();
-                }
-            }
-
-            // Update Route Line (live "Track Me" trail)
-            function updateRouteLine() {
-                if (routePoints.length < 2) return;
-
-                if (!routeLine) {
-                    routeLine = new ol.Feature({
-                        geometry: new ol.geom.LineString(routePoints)
-                    });
-                    routeLine.setStyle(new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: '#dc3545',
-                            width: 4,
-                            lineDash: [8, 6]
-                        })
-                    }));
-                    routeLayer.getSource().addFeature(routeLine);
-                } else {
-                    routeLine.getGeometry().setCoordinates(routePoints);
-                }
-            }
-
-            // ─── FIX: getCurrentLocation was called but never defined.
-            // Resolves the user's current WGS84 {lon, lat} — from the cached
-            // currentLocation if we already have a GPS fix, otherwise it asks
-            // the browser for one directly.
-            function getCurrentLocation(callback) {
-                if (currentLocation) {
-                    callback(currentLocation);
-                    return;
-                }
-                if (!navigator.geolocation) {
-                    callback(null);
-                    return;
-                }
-                navigator.geolocation.getCurrentPosition(
-                    function(pos) {
-                        currentLocation = {
-                            lon: pos.coords.longitude,
-                            lat: pos.coords.latitude
-                        };
-                        callback(currentLocation);
-                    },
-                    function() {
-                        callback(null);
-                    }, {
-                        enableHighAccuracy: true,
-                        timeout: 10000
-                    }
-                );
-            }
-
-            // ─── FIX: getCoordsByGisId was called but never defined.
-            // Looks up a feature's projected (EPSG:3857) point coordinates by
-            // GIS ID, checking the points array, then pointDatas, then the
-            // polygon source as a fallback.
+            // ─── GET COORDS BY GIS ID - FIXED ───
             function getCoordsByGisId(gisid) {
+                if (!gisid) return null;
+
                 // 1. Raw points array
                 const point = points.find(p => p.gisid == gisid);
                 if (point) {
@@ -1297,22 +1210,211 @@
                     }
                 }
 
-                // 3. Fallback — centroid of a polygon feature with this GIS ID
-                const feature = polygonSource.getFeatures().find(f => f.get('gisid') == gisid);
-                if (feature) {
+                // 3. Polygon features
+                const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                if (polyFeatures.length > 0) {
                     try {
-                        return ol.extent.getCenter(feature.getGeometry().getExtent());
+                        return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
                     } catch (e) {
                         console.error('getCoordsByGisId: polygon extent error', e);
+                    }
+                }
+
+                // 4. Line features
+                const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                if (lineFeatures.length > 0) {
+                    try {
+                        return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
+                    } catch (e) {
+                        console.error('getCoordsByGisId: line extent error', e);
                     }
                 }
 
                 return null;
             }
 
-            // ─── FIX: getRoute was called but never defined. Fetches a
-            // driving route from the public OSRM demo server and renders it,
-            // plus turn-by-turn steps in the direction panel.
+            // ─── ZOOM TO FEATURE - FIXED ───
+            function zoomToFeature(item) {
+                if (!item) {
+                    showToast('❌ Invalid item', 3000);
+                    return;
+                }
+
+                let coords = null;
+                const gisid = item.id || item.point_gisid;
+
+                if (item.type === 'polygon') {
+                    const feature = polygonSource.getFeatureById(gisid);
+                    if (feature) {
+                        coords = ol.extent.getCenter(feature.getGeometry().getExtent());
+                    } else {
+                        // Try to find by gisid property
+                        const features = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                        if (features.length > 0) {
+                            coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
+                        }
+                    }
+                } else if (item.type === 'line') {
+                    const feature = lineSource.getFeatureById(gisid);
+                    if (feature) {
+                        coords = ol.extent.getCenter(feature.getGeometry().getExtent());
+                    } else {
+                        const features = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                        if (features.length > 0) {
+                            coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
+                        }
+                    }
+                } else {
+                    // point, pointdata
+                    coords = getCoordsByGisId(gisid);
+                }
+
+                if (!coords) {
+                    showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000);
+                    return;
+                }
+
+                map.getView().animate({
+                    center: coords,
+                    zoom: 20,
+                    duration: 1000
+                });
+            }
+
+            // ─── UPDATE POSITION ───
+            function updatePosition(position) {
+                const lon = position.coords.longitude;
+                const lat = position.coords.latitude;
+                const projected = ol.proj.fromLonLat([lon, lat]);
+                currentPosition = projected;
+                currentLocation = { lon, lat };
+
+                if (!positionFeature) {
+                    positionFeature = new ol.Feature({
+                        geometry: new ol.geom.Point(projected)
+                    });
+                    positionFeature.setStyle(createPositionStyle());
+                    positionLayer.getSource().addFeature(positionFeature);
+                } else {
+                    positionFeature.getGeometry().setCoordinates(projected);
+                }
+
+                if (isLiveLocation) {
+                    map.getView().animate({
+                        center: projected,
+                        zoom: 19,
+                        duration: 1000
+                    });
+                }
+
+                if (isTracking) {
+                    routePoints.push(projected);
+                    updateRouteLine();
+                }
+            }
+
+            // ─── UPDATE ROUTE LINE ───
+            function updateRouteLine() {
+                if (routePoints.length < 2) return;
+
+                if (!routeLine) {
+                    routeLine = new ol.Feature({
+                        geometry: new ol.geom.LineString(routePoints)
+                    });
+                    routeLine.setStyle(new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: '#dc3545',
+                            width: 4,
+                            lineDash: [8, 6]
+                        })
+                    }));
+                    routeLayer.getSource().addFeature(routeLine);
+                } else {
+                    routeLine.getGeometry().setCoordinates(routePoints);
+                }
+            }
+
+            // ─── GET CURRENT LOCATION ───
+            function getCurrentLocation(callback) {
+                if (currentLocation) {
+                    callback(currentLocation);
+                    return;
+                }
+                if (!navigator.geolocation) {
+                    callback(null);
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        currentLocation = {
+                            lon: pos.coords.longitude,
+                            lat: pos.coords.latitude
+                        };
+                        callback(currentLocation);
+                    },
+                    function() {
+                        callback(null);
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 10000
+                    }
+                );
+            }
+
+            // ─── GET DIRECTION TO FEATURE - FIXED ───
+            function getDirectionToFeature(feature) {
+                if (!feature) {
+                    showToast('❌ Invalid feature for directions', 3000);
+                    return;
+                }
+
+                getCurrentLocation(function(loc) {
+                    if (!loc) {
+                        Swal.fire('Location Error',
+                            'Could not get your location. Please enable GPS and try again.',
+                            'error');
+                        return;
+                    }
+                    calculateDirection(loc, feature);
+                });
+            }
+
+            // ─── CALCULATE DIRECTION - FIXED ───
+            function calculateDirection(loc, feature) {
+                if (!loc || !feature) {
+                    showToast('❌ Missing location or feature data', 3000);
+                    return;
+                }
+
+                // Get coordinates using the feature's ID
+                const gisid = feature.id || feature.point_gisid;
+                if (!gisid) {
+                    Swal.fire('Error', 'No GIS ID found for this feature', 'error');
+                    return;
+                }
+
+                const coords = getCoordsByGisId(gisid);
+                if (!coords) {
+                    Swal.fire('Error', `No coordinates found for GIS ID: ${gisid}`, 'error');
+                    return;
+                }
+
+                // coords are in EPSG:3857 — convert to WGS84 lon/lat for OSRM
+                const lonLat = ol.proj.toLonLat(coords);
+                const destLon = lonLat[0];
+                const destLat = lonLat[1];
+
+                if (destLon < -180 || destLon > 180 || destLat < -90 || destLat > 90) {
+                    Swal.fire('Error', 'Converted coordinates are out of valid range. Check your data projection.',
+                        'error');
+                    return;
+                }
+
+                console.log(`Routing to GIS ID ${gisid}: lon=${destLon}, lat=${destLat}`);
+                getRoute(loc.lon, loc.lat, destLon, destLat);
+            }
+
+            // ─── GET ROUTE - FIXED ───
             function getRoute(startLon, startLat, endLon, endLat) {
                 $('#directionControls').addClass('active');
                 $('#routeInfo').text('Getting directions...');
@@ -1323,7 +1425,12 @@
                     `?overview=full&geometries=geojson&steps=true`;
 
                 fetch(url)
-                    .then(res => res.json())
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error(`HTTP error! status: ${res.status}`);
+                        }
+                        return res.json();
+                    })
                     .then(data => {
                         if (!data.routes || !data.routes.length) {
                             $('#routeInfo').text('No route could be found.');
@@ -1335,8 +1442,11 @@
                         const mins = Math.round(route.duration / 60);
                         $('#routeInfo').html(`<strong>${km} km</strong> · about ${mins} min`);
 
-                        // Draw the route line
+                        // Clear previous route and destination
                         routeLayer.getSource().clear();
+                        destinationLayer.getSource().clear();
+
+                        // Draw the route line
                         const lineCoords = route.geometry.coordinates.map(c => ol.proj.fromLonLat(c));
                         const routeFeature = new ol.Feature({
                             geometry: new ol.geom.LineString(lineCoords)
@@ -1350,12 +1460,11 @@
                         routeLayer.getSource().addFeature(routeFeature);
 
                         // Drop a destination marker
-                        destinationLayer.getSource().clear();
-                        destinationMarker = new ol.Feature({
+                        const destMarker = new ol.Feature({
                             geometry: new ol.geom.Point(ol.proj.fromLonLat([endLon, endLat]))
                         });
-                        destinationMarker.setStyle(createDestinationStyle());
-                        destinationLayer.getSource().addFeature(destinationMarker);
+                        destMarker.setStyle(createDestinationStyle());
+                        destinationLayer.getSource().addFeature(destMarker);
 
                         // Fit view to the route
                         map.getView().fit(new ol.geom.LineString(lineCoords).getExtent(), {
@@ -1380,34 +1489,58 @@
                     })
                     .catch(err => {
                         console.error('getRoute error:', err);
-                        $('#routeInfo').text('Error getting directions.');
+                        $('#routeInfo').text('Error getting directions. Please try again.');
+                        showToast('❌ Route error: ' + err.message, 4000);
                     });
             }
 
-            // ─── ZOOM TO FEATURE - FIXED FOR ALL COORDINATE TYPES ───
-            function zoomToFeature(item,type) {
-                let coords = null;
+            // ─── CLEAR ALL ROUTE STATE ───
+            function clearAllRouteState() {
+                if (watchId && !isLiveLocation && !isTracking) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
 
-                    if (type === 'polygon') {
-                        const feature = polygonSource.getFeatureById(gisid);
-                        if (feature) coords = ol.extent.getCenter(feature.getGeometry().getExtent());
-                    } else if (type === 'line') {
-                        const feature = lineSource.getFeatureById(gisid);
-                        if (feature) coords = ol.extent.getCenter(feature.getGeometry().getExtent());
-                    } else {
-                        // point, pointdata (id here is either a point gisid or a point_gisid)
-                        coords = getCoordsByGisId(gisid);
-                    }
+                if (routeLine) {
+                    routeLayer.getSource().removeFeature(routeLine);
+                    routeLine = null;
+                }
+                routeLayer.getSource().clear();
+                routePoints = [];
 
-                    if (!coords) {
-                        showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000);
-                        return;
-                    }
-                    map.getView().animate({
-                        center: coords,
-                        zoom: 22,
-                        duration: 1000
-                    });
+                if (positionFeature) {
+                    positionLayer.getSource().removeFeature(positionFeature);
+                    positionFeature = null;
+                }
+
+                isLiveLocation = false;
+                isTracking = false;
+                $('#liveLocationBadge').text('OFF').removeClass('active');
+                $('#trackMeBadge').text('OFF').removeClass('tracking');
+                $('#locationToggleBtn').removeClass('active-location tracking');
+
+                if (destinationMarker) {
+                    destinationLayer.getSource().removeFeature(destinationMarker);
+                    destinationMarker = null;
+                }
+
+                $('#directionControls').removeClass('active');
+            }
+
+            // ─── SEARCH FUNCTIONALITY ───
+            function searchGIS(value) {
+                const v = value.toString().toLowerCase().trim();
+                if (!v) return [];
+                return searchIndex.filter(item =>
+                    (item.id && item.id.toString().toLowerCase().includes(v)) ||
+                    (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
+                    (item.old_assessment && item.old_assessment.toString().toLowerCase().includes(v)) ||
+                    (item.owner_name && item.owner_name.toString().toLowerCase().includes(v)) ||
+                    (item.phone_number && item.phone_number.toString().toLowerCase().includes(v)) ||
+                    (item.title && item.title.toLowerCase().includes(v)) ||
+                    (item.subtitle && item.subtitle.toLowerCase().includes(v)) ||
+                    (item.point_gisid && item.point_gisid.toString().toLowerCase().includes(v))
+                );
             }
 
             // ─── EVENT HANDLERS ───
@@ -1637,48 +1770,14 @@
                 $('.location-dropdown').removeClass('active');
             });
 
-            // Clear Route — FIX: unified with the direction-panel close button
-            // and the OSRM route drawn by getRoute(), instead of two separate
-            // half-implemented clear paths.
-            function clearAllRouteState() {
-                if (watchId && !isLiveLocation && !isTracking) {
-                    navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
-                }
-
-                if (routeLine) {
-                    routeLayer.getSource().removeFeature(routeLine);
-                    routeLine = null;
-                }
-                routeLayer.getSource().clear();
-                routePoints = [];
-
-                if (positionFeature) {
-                    positionLayer.getSource().removeFeature(positionFeature);
-                    positionFeature = null;
-                }
-
-                isLiveLocation = false;
-                isTracking = false;
-                $('#liveLocationBadge').text('OFF').removeClass('active');
-                $('#trackMeBadge').text('OFF').removeClass('tracking');
-                $('#locationToggleBtn').removeClass('active-location tracking');
-
-                if (destinationMarker) {
-                    destinationLayer.getSource().removeFeature(destinationMarker);
-                    destinationMarker = null;
-                }
-
-                $('#directionControls').removeClass('active');
-            }
-
+            // Clear Route
             $('#clearRouteItem').on('click', function() {
                 clearAllRouteState();
                 showToast('🧹 Cleared all location data');
                 $('.location-dropdown').removeClass('active');
             });
 
-            // FIX: the close (×) button on the direction panel had no handler at all.
+            // Close route (×) button
             $(document).on('click', '#closeRouteBtn', function() {
                 routeLayer.getSource().clear();
                 if (destinationMarker) {
@@ -1688,22 +1787,7 @@
                 $('#directionControls').removeClass('active');
             });
 
-            // ─── SEARCH FUNCTIONALITY ───
-            function searchGIS(value) {
-                const v = value.toString().toLowerCase().trim();
-                if (!v) return [];
-                return searchIndex.filter(item =>
-                    (item.id && item.id.toString().toLowerCase().includes(v)) ||
-                    (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
-                    (item.old_assessment && item.old_assessment.toString().toLowerCase().includes(v)) ||
-                    (item.owner_name && item.owner_name.toString().toLowerCase().includes(v)) ||
-                    (item.phone_number && item.phone_number.toString().toLowerCase().includes(v)) ||
-                    (item.title && item.title.toLowerCase().includes(v)) ||
-                    (item.subtitle && item.subtitle.toLowerCase().includes(v)) ||
-                    (item.point_gisid && item.point_gisid.toString().toLowerCase().includes(v))
-                );
-            }
-            // Quick Search
+            // ─── QUICK SEARCH ───
             $('#gisSearchInput').on('keyup', function() {
                 const value = $(this).val();
                 if (!value || value.length < 1) {
@@ -1733,7 +1817,7 @@
                                 <div class="search-result-title"><i class="bi bi-${icon} me-2"></i>${displayTitle}</div>
                                 <div class="search-result-subtitle">${displaySubtitle}</div>
                                 <div class="mt-2 d-flex gap-2">
-                                    <button class="btn btn-sm btn-success zoom-btn" data-id="${item.type === 'pointdata' ? item.point_gisid : item.id}" data-type="${item.type}">Zoom</button>
+                                    <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
                                     <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
                                     ${editBtn}
                                 </div>
@@ -1743,90 +1827,76 @@
                 $('#searchResults').html(html);
             });
 
-            // FIX: this handler used to call zoomToFeature(id, type) — but
-            // zoomToFeature() only ever accepts a single search-index item
-            // object. Passing two raw strings meant every "Zoom" button
-            // silently failed. Now it looks the item up first.
+            // ─── SEARCH RESULT ITEM CLICK - FIXED ───
+            $(document).on('click', '.search-result-item', function() {
+                const id = $(this).data('id');
+                const type = $(this).data('type');
+                const item = searchIndex.find(i => i.id == id && i.type === type);
+                if (item) {
+                    zoomToFeature(item);
+                    $('.search-dropdown').removeClass('active');
+                    $('#gisSearchInput').val('');
+                    $('#searchResults').html('');
+                } else {
+                    showToast('❌ Could not find item to zoom to', 3000);
+                }
+            });
+
+            // ─── ZOOM BUTTON - FIXED ───
             $(document).on('click', '.zoom-btn', function(e) {
                 e.stopPropagation();
                 const id = $(this).data('id');
                 const type = $(this).data('type');
-                const item = searchIndex.find(i => i.id == id && i.type === type) ||
-                    searchIndex.find(i => i.id == id || i.point_gisid == id);
+
+                // Find the item by ID and type
+                let item = searchIndex.find(i => i.id == id && i.type === type);
+
+                // If not found, try to find by point_gisid
+                if (!item) {
+                    item = searchIndex.find(i => i.point_gisid == id);
+                }
+
+                // If still not found, try to find by ID only
+                if (!item) {
+                    item = searchIndex.find(i => i.id == id);
+                }
+
                 if (item) {
                     zoomToFeature(item);
                 } else {
-                    showToast('❌ Could not find that item to zoom to');
+                    showToast(`❌ Could not find feature with ID: ${id}`, 3000);
                 }
                 $('.search-dropdown').removeClass('active');
                 $('#gisSearchInput').val('');
                 $('#searchResults').html('');
             });
 
+            // ─── DIRECTION BUTTON - FIXED ───
             $(document).on('click', '.direction-btn', function(e) {
                 e.stopPropagation();
-                const id = $(this).data('id'),
-                    type = $(this).data('type');
-                const feature = searchIndex.find(f => f.id == id && f.type === type);
-                if (feature) {
-                    getDirectionToFeature(feature);
+                const id = $(this).data('id');
+                const type = $(this).data('type');
+
+                // Find the item by ID and type
+                let item = searchIndex.find(i => i.id == id && i.type === type);
+
+                // If not found, try to find by point_gisid
+                if (!item) {
+                    item = searchIndex.find(i => i.point_gisid == id);
+                }
+
+                // If still not found, try to find by ID only
+                if (!item) {
+                    item = searchIndex.find(i => i.id == id);
+                }
+
+                if (item) {
+                    getDirectionToFeature(item);
                     $('.search-dropdown').removeClass('active');
                     $('#gisSearchInput').val('');
                     $('#searchResults').html('');
                 } else {
-                    showToast('❌ Could not find that item for directions');
-                }
-            });
-
-            function getDirectionToFeature(feature) {
-                getCurrentLocation(function(loc) {
-                    if (!loc) {
-                        Swal.fire('Location Error',
-                            'Could not get your location. Please enable GPS and try again.',
-                            'error');
-                        return;
-                    }
-                    calculateDirection(loc, feature);
-                });
-            }
-
-            // ─── calculateDirection — always resolves the destination point
-            // by GIS ID rather than trusting whatever the search item happens
-            // to carry, so directions stay correct even for polygons/lines.
-            function calculateDirection(loc, feature) {
-                if (!loc) return;
-
-                const coords = getCoordsByGisId(feature.id);
-                if (!coords) {
-                    Swal.fire('Error', `No point coordinates found for GIS ID: ${feature.id}`, 'error');
-                    return;
-                }
-
-                // coords are in EPSG:3857 — convert to WGS84 lon/lat for OSRM
-                const lonLat = ol.proj.toLonLat(coords);
-                const destLon = lonLat[0];
-                const destLat = lonLat[1];
-
-                if (destLon < -180 || destLon > 180 || destLat < -90 || destLat > 90) {
-                    Swal.fire('Error', 'Converted coordinates are out of valid range. Check your data projection.',
-                        'error');
-                    return;
-                }
-
-                console.log(`Routing to GIS ID ${feature.id}: lon=${destLon}, lat=${destLat}`);
-                getRoute(loc.lon, loc.lat, destLon, destLat);
-            }
-
-            // Search result item click
-            $(document).on('click', '.search-result-item', function() {
-                const id = $(this).data('id');
-                const type = $(this).data('type');
-                const item = searchIndex.find(i => i.id == id && i.type === type);
-                if (item) {
-                    zoomToFeature(item,type);
-                    $('.search-dropdown').removeClass('active');
-                    $('#gisSearchInput').val('');
-                    $('#searchResults').html('');
+                    showToast(`❌ Could not find feature with ID: ${id} for directions`, 3000);
                 }
             });
 
