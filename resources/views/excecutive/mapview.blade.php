@@ -528,9 +528,11 @@
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Cesium.js"></script>
 
     <script>
-        $(document).ready(function() {
+       $(document).ready(function () {
 
-            // ─── DATA ───
+            // ─────────────────────────────────────────────
+            // DATA
+            // ─────────────────────────────────────────────
             let polygons = @json($polygons ?? [], JSON_HEX_TAG);
             let lines = @json($lines ?? [], JSON_HEX_TAG);
             let points = @json($points ?? [], JSON_HEX_TAG);
@@ -539,17 +541,36 @@
             let ward = @json($ward ?? [], JSON_HEX_TAG);
             let analytics = @json($analytics ?? [], JSON_HEX_TAG);
             let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
-
-            // ─── BUILDING DATA ───
             let buildingData = @json($buildingData ?? [], JSON_HEX_TAG);
+
             let allBuildings = buildingData.buildings || [];
             let usageCounts = buildingData.usage_counts || {};
 
-            let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
-                {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
+            let searchIndex = [];
+            let watchId = null;
+            let isTracking = false;
+            let isLiveLocation = false;
+            let currentPosition = null;
+            let positionFeature = null;
+            let positionLayer = null;
+            let routeLine = null;
+            let routeLayer = null;
+            let routePoints = [];
+            let destinationMarker = null;
+            let destinationLayer = null;
+            let highlightedFeature = null;
+            let directionRouteFeature = null;
+
+            // ─────────────────────────────────────────────
+            // EXTENT / PROJECTION
+            // ─────────────────────────────────────────────
+            let imageExtentRaw = [
+                {{ $ward->extent_left ?? 0 }},
+                {{ $ward->extent_bottom ?? 0 }},
+                {{ $ward->extent_right ?? 0 }},
+                {{ $ward->extent_top ?? 0 }}
             ];
 
-            // ─── CHECK COORDINATE SYSTEM ───
             const isLatLon = imageExtentRaw[0] > -180 && imageExtentRaw[0] < 180 &&
                 imageExtentRaw[1] > -90 && imageExtentRaw[1] < 90;
 
@@ -564,7 +585,9 @@
 
             let droneImageURL = "{{ asset($ward->drone_image ?? '') }}";
 
-            // ─── LAYERS ───
+            // ─────────────────────────────────────────────
+            // LAYERS
+            // ─────────────────────────────────────────────
             const droneLayer = new ol.layer.Image({
                 source: new ol.source.ImageStatic({
                     url: droneImageURL,
@@ -589,7 +612,7 @@
                 visible: false,
                 source: new ol.source.XYZ({
                     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                    attributions: 'Tiles &copy; Esri'
+                    attributions: 'Tiles © Esri'
                 })
             });
 
@@ -599,90 +622,60 @@
                 visible: false,
                 source: new ol.source.XYZ({
                     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    attributions: '&copy; OpenStreetMap'
+                    attributions: '© OpenStreetMap'
                 })
             });
 
-            // ─── SOURCES ───
             const polygonSource = new ol.source.Vector();
             const lineSource = new ol.source.Vector();
+            const pointSource = new ol.source.Vector();
+            const highlightSource = new ol.source.Vector();
 
-            // ─── SEARCH INDEX ───
-            let searchIndex = [];
-
-            // ─── LOCATION TRACKING VARIABLES ───
-            let watchId = null;
-            let isTracking = false;
-            let isLiveLocation = false;
-            let currentPosition = null;
-            let positionFeature = null;
-            let positionLayer = null;
-            let routeLine = null;
-            let routeLayer = null;
-            let routePoints = [];
-            let destinationMarker = null;
-            let destinationLayer = null;
-
-            // ─── STYLES ───
+            // ─────────────────────────────────────────────
+            // STYLES
+            // ─────────────────────────────────────────────
             function createPolygonStyle(feature) {
-                const gisid = feature.get('gisid');
+                const gisid = feature.get('gisid') || '';
                 const sqft = feature.get('sqfeet') || '0';
-                const polygonData = polygonDatas.find(d => d.gisid == gisid);
+                const polygonData = polygonDatas.find(d => String(d.gisid) === String(gisid));
                 const color = polygonData ? 'red' : 'blue';
                 const showLabels = $('#labelToggleBtn').hasClass('active-label');
 
-                try {
-                    const styles = [
-                        new ol.style.Style({
-                            stroke: new ol.style.Stroke({
-                                color: color,
-                                width: 4,
-                                lineJoin: 'round',
-                                lineCap: 'round'
-                            }),
-                            fill: new ol.style.Fill({
-                                color: 'rgba(255, 0, 0, 0.1)'
-                            })
+                const styles = [
+                    new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: color,
+                            width: 3
+                        }),
+                        fill: new ol.style.Fill({
+                            color: color === 'red' ? 'rgba(255,0,0,0.08)' : 'rgba(0,123,255,0.08)'
                         })
-                    ];
+                    })
+                ];
 
-                    if (showLabels) {
+                if (showLabels) {
+                    try {
                         const centerPoint = feature.getGeometry().getInteriorPoint();
                         styles.push(new ol.style.Style({
                             geometry: centerPoint,
                             text: new ol.style.Text({
-                                text: gisid + ' GISID\n' + sqft + ' SQFT',
-                                font: 'bold 13px Arial',
-                                fill: new ol.style.Fill({
-                                    color: '#000'
-                                }),
-                                backgroundFill: new ol.style.Fill({
-                                    color: '#fff'
-                                }),
-                                backgroundStroke: new ol.style.Stroke({
-                                    color: '#000',
-                                    width: 1
-                                }),
+                                text: `${gisid}\n${sqft} SQFT`,
+                                font: 'bold 12px Arial',
+                                fill: new ol.style.Fill({ color: '#000' }),
+                                backgroundFill: new ol.style.Fill({ color: '#fff' }),
+                                backgroundStroke: new ol.style.Stroke({ color: '#333', width: 1 }),
                                 padding: [4, 6, 4, 6],
                                 overflow: true,
-                                textAlign: 'center',
-                                offsetY: 0
+                                textAlign: 'center'
                             })
                         }));
-                    }
-
-                    return styles;
-                } catch (e) {
-                    return new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: 'blue',
-                            width: 4
-                        })
-                    });
+                    } catch (e) {}
                 }
+
+                return styles;
             }
 
-            function createLineStyle(feature) {
+            function createLineStyle() {
                 return new ol.style.Style({
                     stroke: new ol.style.Stroke({
                         color: '#ff0000',
@@ -691,31 +684,55 @@
                 });
             }
 
+            function createPointStyle(label = 'Point') {
+                return new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 7,
+                        fill: new ol.style.Fill({ color: '#198754' }),
+                        stroke: new ol.style.Stroke({ color: '#fff', width: 2 })
+                    }),
+                    text: new ol.style.Text({
+                        text: label,
+                        font: 'bold 11px Arial',
+                        fill: new ol.style.Fill({ color: '#111' }),
+                        backgroundFill: new ol.style.Fill({ color: '#fff' }),
+                        backgroundStroke: new ol.style.Stroke({ color: '#ccc', width: 1 }),
+                        padding: [2, 4, 2, 4],
+                        offsetY: -16
+                    })
+                });
+            }
+
+            function createHighlightStyle() {
+                return new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 10,
+                        fill: new ol.style.Fill({ color: '#ffc107' }),
+                        stroke: new ol.style.Stroke({ color: '#000', width: 2 })
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: '#ffc107',
+                        width: 5
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255,193,7,0.18)'
+                    })
+                });
+            }
+
             function createPositionStyle() {
                 return new ol.style.Style({
                     image: new ol.style.Circle({
                         radius: 12,
-                        fill: new ol.style.Fill({
-                            color: '#0d6efd'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: '#ffffff',
-                            width: 3
-                        })
+                        fill: new ol.style.Fill({ color: '#0d6efd' }),
+                        stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 })
                     }),
                     text: new ol.style.Text({
                         text: '📍 You',
                         font: 'bold 12px Arial',
-                        fill: new ol.style.Fill({
-                            color: '#000'
-                        }),
-                        backgroundFill: new ol.style.Fill({
-                            color: '#fff'
-                        }),
-                        backgroundStroke: new ol.style.Stroke({
-                            color: '#ccc',
-                            width: 1
-                        }),
+                        fill: new ol.style.Fill({ color: '#000' }),
+                        backgroundFill: new ol.style.Fill({ color: '#fff' }),
+                        backgroundStroke: new ol.style.Stroke({ color: '#ccc', width: 1 }),
                         padding: [2, 6, 2, 6],
                         offsetY: -18,
                         textAlign: 'center'
@@ -723,31 +740,19 @@
                 });
             }
 
-            function createDestinationStyle() {
+            function createDestinationStyle(label = 'Destination') {
                 return new ol.style.Style({
                     image: new ol.style.Circle({
                         radius: 10,
-                        fill: new ol.style.Fill({
-                            color: '#dc3545'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: '#ffffff',
-                            width: 3
-                        })
+                        fill: new ol.style.Fill({ color: '#dc3545' }),
+                        stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 })
                     }),
                     text: new ol.style.Text({
-                        text: '📍 Destination',
+                        text: `📍 ${label}`,
                         font: 'bold 12px Arial',
-                        fill: new ol.style.Fill({
-                            color: '#000'
-                        }),
-                        backgroundFill: new ol.style.Fill({
-                            color: '#fff'
-                        }),
-                        backgroundStroke: new ol.style.Stroke({
-                            color: '#ccc',
-                            width: 1
-                        }),
+                        fill: new ol.style.Fill({ color: '#000' }),
+                        backgroundFill: new ol.style.Fill({ color: '#fff' }),
+                        backgroundStroke: new ol.style.Stroke({ color: '#ccc', width: 1 }),
                         padding: [2, 6, 2, 6],
                         offsetY: -18,
                         textAlign: 'center'
@@ -755,157 +760,85 @@
                 });
             }
 
-            // ─── BUILD SEARCH INDEX ───
-            function buildSearchIndex() {
-                searchIndex = [];
-
-                // Add polygons
-                polygons.forEach(poly => {
-                    try {
-                        const coords = JSON.parse(poly.coordinates);
-                        const extent = ol.extent.boundingExtent(coords);
-                        const center = ol.extent.getCenter(extent);
-                        searchIndex.push({
-                            id: poly.gisid,
-                            type: 'polygon',
-                            title: `GIS ID: ${poly.gisid}`,
-                            subtitle: `Area: ${poly.sqfeet || 0} sqft`,
-                            assessment: poly.assessment || '',
-                            old_assessment: poly.old_assessment || '',
-                            owner_name: poly.owner_name || '',
-                            phone_number: poly.phone_number || '',
-                            coordinates: coords,
-                            center: center,
-                            geometryType: 'polygon',
-                            searchText: `${poly.gisid} ${poly.assessment || ''} ${poly.old_assessment || ''} ${poly.owner_name || ''} ${poly.phone_number || ''} ${poly.sqfeet || ''}`
-                                .toLowerCase()
-                        });
-                    } catch (e) {
-                        console.error('Error indexing polygon:', e);
-                    }
-                });
-
-                // Add lines
-                lines.forEach(line => {
-                    try {
-                        const coords = JSON.parse(line.coordinates);
-                        let center = null;
-                        try {
-                            const flatCoords = coords.flat(2);
-                            if (flatCoords && flatCoords.length > 0) {
-                                const extent = ol.extent.boundingExtent(flatCoords);
-                                center = ol.extent.getCenter(extent);
-                            }
-                        } catch (e) {
-                            // Skip center calculation for lines
-                        }
-                        searchIndex.push({
-                            id: line.gisid,
-                            type: 'line',
-                            title: `Road: ${line.road_name || line.gisid}`,
-                            subtitle: `GIS ID: ${line.gisid}`,
-                            road_name: line.road_name || '',
-                            coordinates: coords,
-                            center: center,
-                            geometryType: 'line',
-                            searchText: `${line.gisid} ${line.road_name || ''}`.toLowerCase()
-                        });
-                    } catch (e) {
-                        console.error('Error indexing line:', e);
-                    }
-                });
-
-                // Add points - FIXED to properly handle coordinates
-                points.forEach(point => {
-                    try {
-                        let coords = JSON.parse(point.coordinates);
-                        let center = null;
-
-                        if (Array.isArray(coords) && coords.length === 2) {
-                            // Try to determine if coords are [lat, lon] or [lon, lat]
-                            let lon = coords[0];
-                            let lat = coords[1];
-
-                            // If first value is between -90 and 90, it might be latitude
-                            if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                180) {
-                                // Format is [lat, lon] - swap
-                                lon = coords[1];
-                                lat = coords[0];
-                            }
-
-                            center = ol.proj.fromLonLat([lon, lat]);
-                        }
-
-                        searchIndex.push({
-                            id: point.gisid,
-                            type: 'point',
-                            title: `GIS ID: ${point.gisid}`,
-                            subtitle: 'Point Location',
-                            coordinates: coords,
-                            center: center,
-                            geometryType: 'point',
-                            searchText: `${point.gisid} point`.toLowerCase()
-                        });
-                    } catch (e) {
-                        console.error('Error parsing point:', e);
-                    }
-                });
-
-                // Add point data
-                pointDatas.forEach(pd => {
-                    try {
-                        let coords = [];
-                        let center = null;
-
-                        // Parse coordinates from the stored JSON string
-                        if (pd.coordinates) {
-                            coords = JSON.parse(pd.coordinates);
-                            if (Array.isArray(coords) && coords.length === 2) {
-                                // Try to determine if coords are [lat, lon] or [lon, lat]
-                                let lon = coords[0];
-                                let lat = coords[1];
-
-                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                    180) {
-                                    lon = coords[1];
-                                    lat = coords[0];
-                                }
-
-                                center = ol.proj.fromLonLat([lon, lat]);
-                            }
-                        }
-
-                        let pointGisid = pd.point_gisid || '';
-
-                        searchIndex.push({
-                            id: pd.id,
-                            type: 'pointdata',
-                            title: `Assessment: ${pd.assessment || 'N/A'}`,
-                            subtitle: `GIS ID: ${pointGisid} | Owner: ${pd.owner_name || 'N/A'}`,
-                            assessment: pd.assessment || '',
-                            point_gisid: pointGisid,
-                            owner_name: pd.owner_name || '',
-                            phone_number: pd.phone_number || '',
-                            coordinates: coords,
-                            center: center,
-                            geometryType: 'point',
-                            searchText: `${pointGisid} ${pd.assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`
-                                .toLowerCase()
-                        });
-                    } catch (e) {
-                        console.error('Error indexing point data:', e);
-                    }
-                });
-
-                console.log('📊 Search Index Built:', searchIndex.length, 'items');
+            // ─────────────────────────────────────────────
+            // HELPERS
+            // ─────────────────────────────────────────────
+            function safeJsonParse(val, fallback = null) {
+                try {
+                    if (typeof val === 'string') return JSON.parse(val);
+                    return val;
+                } catch (e) {
+                    return fallback;
+                }
             }
-            // ─── LOAD SOURCES ───
+
+            function normalizeLonLat(rawCoords) {
+                if (!Array.isArray(rawCoords) || rawCoords.length < 2) return null;
+
+                let a = Number(rawCoords[0]);
+                let b = Number(rawCoords[1]);
+
+                if (isNaN(a) || isNaN(b)) return null;
+
+                // Already lon/lat
+                if (a >= -180 && a <= 180 && b >= -90 && b <= 90) {
+                    return [a, b];
+                }
+
+                // Possibly lat/lon
+                if (a >= -90 && a <= 90 && b >= -180 && b <= 180) {
+                    return [b, a];
+                }
+
+                return null;
+            }
+
+            function toMapCoord(rawCoords) {
+                const lonLat = normalizeLonLat(rawCoords);
+                if (!lonLat) return null;
+                return ol.proj.fromLonLat(lonLat);
+            }
+
+            function formatDistance(meters) {
+                if (meters < 1000) return `${Math.round(meters)} m`;
+                return `${(meters / 1000).toFixed(2)} km`;
+            }
+
+            function formatDuration(seconds) {
+                const mins = Math.round(seconds / 60);
+                if (mins < 60) return `${mins} mins`;
+                const hrs = Math.floor(mins / 60);
+                const rem = mins % 60;
+                return `${hrs} hr ${rem} mins`;
+            }
+
+            function escapeHtml(text) {
+                return String(text || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function showToast(message, duration = 2500) {
+                const $toast = $('#locationToast');
+                $toast.stop(true, true).text(message).fadeIn(200);
+                clearTimeout($toast.data('timeout'));
+                $toast.data('timeout', setTimeout(() => $toast.fadeOut(300), duration));
+            }
+
+            // ─────────────────────────────────────────────
+            // LOAD SOURCES
+            // ─────────────────────────────────────────────
             function loadPolygonSource() {
                 polygonSource.clear();
+
                 polygons.forEach(poly => {
                     try {
-                        let coords = JSON.parse(poly.coordinates);
+                        let coords = safeJsonParse(poly.coordinates, []);
+                        if (!Array.isArray(coords) || !coords.length) return;
+
                         const feature = new ol.Feature({
                             geometry: new ol.geom.Polygon([coords]),
                             gisid: poly.gisid,
@@ -917,54 +850,107 @@
                             phone_number: poly.phone_number || '',
                             originalData: poly
                         });
-                        feature.setId(poly.gisid);
+
+                        feature.setId(String(poly.gisid));
                         polygonSource.addFeature(feature);
                     } catch (e) {
                         console.error('polygon parse error:', e);
                     }
                 });
-                console.log('📊 Polygons loaded:', polygonSource.getFeatures().length);
             }
 
             function loadLineSource() {
                 lineSource.clear();
+
                 lines.forEach(line => {
                     try {
-                        let coords = JSON.parse(line.coordinates);
-                        let geometry;
+                        let coords = safeJsonParse(line.coordinates, []);
+                        let geometry = null;
+
                         if (Array.isArray(coords) && coords.length > 0) {
                             if (Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
                                 geometry = new ol.geom.MultiLineString(coords);
                             } else if (Array.isArray(coords[0]) && typeof coords[0][0] === 'number') {
                                 geometry = new ol.geom.LineString(coords);
-                            } else {
-                                geometry = new ol.geom.MultiLineString(coords);
                             }
                         }
 
-                        if (geometry) {
-                            const feature = new ol.Feature({
-                                geometry: geometry,
-                                gisid: line.gisid,
-                                type: 'line',
-                                road_name: line.road_name || '',
-                                originalData: line
-                            });
-                            feature.setId(line.gisid);
-                            lineSource.addFeature(feature);
-                        }
+                        if (!geometry) return;
+
+                        const feature = new ol.Feature({
+                            geometry: geometry,
+                            gisid: line.gisid,
+                            type: 'line',
+                            road_name: line.road_name || '',
+                            originalData: line
+                        });
+
+                        feature.setId(String(line.gisid));
+                        lineSource.addFeature(feature);
                     } catch (e) {
                         console.error('line parse error:', e);
                     }
                 });
-                console.log('📊 Lines loaded:', lineSource.getFeatures().length);
+            }
+
+            function loadPointSource() {
+                pointSource.clear();
+
+                points.forEach(point => {
+                    try {
+                        let coords = safeJsonParse(point.coordinates, null);
+                        let projected = toMapCoord(coords);
+                        if (!projected) return;
+
+                        const feature = new ol.Feature({
+                            geometry: new ol.geom.Point(projected),
+                            gisid: point.gisid,
+                            type: 'point',
+                            originalData: point
+                        });
+
+                        feature.setId(`point-${point.gisid}`);
+                        feature.setStyle(createPointStyle(String(point.gisid)));
+                        pointSource.addFeature(feature);
+                    } catch (e) {
+                        console.error('point parse error:', e);
+                    }
+                });
+
+                pointDatas.forEach(pd => {
+                    try {
+                        let coords = safeJsonParse(pd.coordinates, null);
+                        let projected = toMapCoord(coords);
+                        if (!projected) return;
+
+                        const pointGisid = pd.point_gisid || pd.gisid || pd.id;
+
+                        const feature = new ol.Feature({
+                            geometry: new ol.geom.Point(projected),
+                            gisid: pointGisid,
+                            type: 'pointdata',
+                            assessment: pd.assessment || '',
+                            owner_name: pd.owner_name || '',
+                            phone_number: pd.phone_number || '',
+                            originalData: pd
+                        });
+
+                        feature.setId(`pointdata-${pointGisid}`);
+                        feature.setStyle(createPointStyle(String(pointGisid)));
+                        pointSource.addFeature(feature);
+                    } catch (e) {
+                        console.error('pointData parse error:', e);
+                    }
+                });
             }
 
             loadPolygonSource();
             loadLineSource();
-            buildSearchIndex();
+            loadPointSource();
 
-            // ─── CREATE LAYERS ───
+            // ─────────────────────────────────────────────
+            // VECTOR LAYERS
+            // ─────────────────────────────────────────────
             const polygonLayer = new ol.layer.Vector({
                 source: polygonSource,
                 style: createPolygonStyle,
@@ -979,30 +965,52 @@
                 title: 'Lines'
             });
 
-            // ─── CREATE POSITION LAYERS ───
+            const pointLayer = new ol.layer.Vector({
+                source: pointSource,
+                visible: true,
+                title: 'Points'
+            });
+
+            const highlightLayer = new ol.layer.Vector({
+                source: highlightSource,
+                zIndex: 110
+            });
+
             positionLayer = new ol.layer.Vector({
                 source: new ol.source.Vector(),
                 visible: true,
-                zIndex: 100
+                zIndex: 120
             });
 
             routeLayer = new ol.layer.Vector({
                 source: new ol.source.Vector(),
                 visible: true,
-                zIndex: 99
+                zIndex: 119
             });
 
             destinationLayer = new ol.layer.Vector({
                 source: new ol.source.Vector(),
                 visible: true,
-                zIndex: 100
+                zIndex: 121
             });
 
-            // ─── CREATE MAP ───
+            // ─────────────────────────────────────────────
+            // MAP
+            // ─────────────────────────────────────────────
             const map = new ol.Map({
                 target: 'map',
-                layers: [osmLayer, satelliteLayer, streetViewLayer, droneLayer, polygonLayer, lineLayer,
-                    positionLayer, routeLayer, destinationLayer
+                layers: [
+                    osmLayer,
+                    satelliteLayer,
+                    streetViewLayer,
+                    droneLayer,
+                    polygonLayer,
+                    lineLayer,
+                    pointLayer,
+                    highlightLayer,
+                    routeLayer,
+                    positionLayer,
+                    destinationLayer
                 ],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
@@ -1010,12 +1018,11 @@
                 })
             });
 
-            // ─── GET MAP CONTAINER ───
             const $mapContainer = $('#map');
 
-            // ─── ADD ALL CONTROLS INSIDE MAP ───
-
-            // 1. LAYER SWITCHER
+            // ─────────────────────────────────────────────
+            // UI CONTROLS
+            // ─────────────────────────────────────────────
             $mapContainer.append(`
                 <div class="custom-layer-switcher">
                     <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
@@ -1055,29 +1062,15 @@
                             <div class="layer-name">Lines</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Points">
+                            <div class="layer-icon"><i class="bi bi-geo-alt"></i></div>
+                            <div class="layer-name">Points</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
                     </div>
                 </div>
             `);
 
-            // 2. LABEL TOGGLE
-            $mapContainer.append(`
-                <div class="custom-label-toggle">
-                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
-                        <i class="bi bi-fonts"></i>
-                    </button>
-                </div>
-            `);
-
-            // 3. LEGEND TOGGLE
-            $mapContainer.append(`
-                <div class="custom-legend-toggle">
-                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
-                        <i class="bi bi-list-ul"></i>
-                    </button>
-                </div>
-            `);
-
-            // 4. LOCATION SWITCHER
             $mapContainer.append(`
                 <div class="custom-location-switcher">
                     <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
@@ -1102,7 +1095,6 @@
                 <div class="location-toast" id="locationToast"></div>
             `);
 
-            // 5. SEARCH SWITCHER
             $mapContainer.append(`
                 <div class="custom-search-switcher">
                     <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
@@ -1115,6 +1107,7 @@
                             <div class="p-3">
                                 <input type="text" id="gisSearchInput" class="form-control" placeholder="Search by GIS ID, Assessment, Owner...">
                             </div>
+                            <div id="searchSuggestions" class="search-results-container"></div>
                             <div id="searchResults" class="search-results-container"></div>
                         </div>
                         <div class="search-tab-pane" id="filterTab" style="display:none;">
@@ -1145,7 +1138,22 @@
                 </div>
             `);
 
-            // 6. 3D TOGGLE
+            $mapContainer.append(`
+                <div class="custom-label-toggle">
+                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
+                        <i class="bi bi-fonts"></i>
+                    </button>
+                </div>
+            `);
+
+            $mapContainer.append(`
+                <div class="custom-legend-toggle">
+                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
+                        <i class="bi bi-list-ul"></i>
+                    </button>
+                </div>
+            `);
+
             $mapContainer.append(`
                 <div class="custom-3d-toggle">
                     <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
@@ -1154,7 +1162,6 @@
                 </div>
             `);
 
-            // 7. FULLSCREEN BUTTON
             $mapContainer.append(`
                 <button class="fullscreen-btn" id="fullscreenBtn">
                     <i class="bi bi-arrows-fullscreen"></i>
@@ -1164,7 +1171,6 @@
                 </button>
             `);
 
-            // 8. DIRECTION CONTROLS
             $mapContainer.append(`
                 <div class="direction-controls" id="directionControls">
                     <button class="btn-close-route" id="closeRouteBtn">&times;</button>
@@ -1173,36 +1179,460 @@
                 </div>
             `);
 
-            // ─── FUNCTIONS ───
+            // ─────────────────────────────────────────────
+            // SEARCH INDEX
+            // ─────────────────────────────────────────────
+            function buildSearchIndex() {
+                searchIndex = [];
 
-            // Show Toast
-            function showToast(message, duration = 3000) {
-                const $toast = $('#locationToast');
-                $toast.text(message).fadeIn(200);
-                clearTimeout($toast.data('timeout'));
-                $toast.data('timeout', setTimeout(() => $toast.fadeOut(300), duration));
-            }
+                polygons.forEach(poly => {
+                    try {
+                        const feature = polygonSource.getFeatureById(String(poly.gisid));
+                        let center = null;
+                        let extent = null;
 
-            // Switch Base Layer
-            function switchBaseLayer(layer) {
-                [osmLayer, satelliteLayer, streetViewLayer].forEach(l => {
-                    l.setVisible(l === layer);
+                        if (feature) {
+                            extent = feature.getGeometry().getExtent();
+                            center = ol.extent.getCenter(extent);
+                        }
+
+                        searchIndex.push({
+                            uid: `polygon-${poly.gisid}`,
+                            id: String(poly.gisid),
+                            gisid: String(poly.gisid),
+                            type: 'polygon',
+                            geometryType: 'polygon',
+                            title: `GIS ID: ${poly.gisid}`,
+                            subtitle: `Area: ${poly.sqfeet || 0} sqft`,
+                            assessment: poly.assessment || '',
+                            old_assessment: poly.old_assessment || '',
+                            owner_name: poly.owner_name || '',
+                            phone_number: poly.phone_number || '',
+                            sqfeet: poly.sqfeet || '',
+                            center: center,
+                            extent: extent,
+                            coordinates: safeJsonParse(poly.coordinates, []),
+                            searchText: `${poly.gisid} ${poly.assessment || ''} ${poly.old_assessment || ''} ${poly.owner_name || ''} ${poly.phone_number || ''} ${poly.sqfeet || ''}`.toLowerCase()
+                        });
+                    } catch (e) {
+                        console.error('Error indexing polygon:', e);
+                    }
                 });
-                const layerName = layer.get('title') || 'Layer';
-                $('#activeLayerBadge').text(layerName);
 
-                $('.layer-dropdown-item[data-layer-type="base"]').removeClass('active');
-                $('.layer-dropdown-item[data-layer="' + layerName + '"]').addClass('active');
+                lines.forEach(line => {
+                    try {
+                        const feature = lineSource.getFeatureById(String(line.gisid));
+                        let center = null;
+                        let extent = null;
+
+                        if (feature) {
+                            extent = feature.getGeometry().getExtent();
+                            center = ol.extent.getCenter(extent);
+                        }
+
+                        searchIndex.push({
+                            uid: `line-${line.gisid}`,
+                            id: String(line.gisid),
+                            gisid: String(line.gisid),
+                            type: 'line',
+                            geometryType: 'line',
+                            title: `Road: ${line.road_name || line.gisid}`,
+                            subtitle: `GIS ID: ${line.gisid}`,
+                            road_name: line.road_name || '',
+                            center: center,
+                            extent: extent,
+                            coordinates: safeJsonParse(line.coordinates, []),
+                            searchText: `${line.gisid} ${line.road_name || ''}`.toLowerCase()
+                        });
+                    } catch (e) {
+                        console.error('Error indexing line:', e);
+                    }
+                });
+
+                points.forEach(point => {
+                    try {
+                        const rawCoords = safeJsonParse(point.coordinates, null);
+                        const projected = toMapCoord(rawCoords);
+
+                        searchIndex.push({
+                            uid: `point-${point.gisid}`,
+                            id: String(point.gisid),
+                            gisid: String(point.gisid),
+                            type: 'point',
+                            geometryType: 'point',
+                            title: `GIS ID: ${point.gisid}`,
+                            subtitle: 'Point Location',
+                            center: projected,
+                            extent: projected ? [projected[0], projected[1], projected[0], projected[1]] : null,
+                            coordinates: rawCoords,
+                            searchText: `${point.gisid} point`.toLowerCase()
+                        });
+                    } catch (e) {
+                        console.error('Error indexing point:', e);
+                    }
+                });
+
+                pointDatas.forEach(pd => {
+                    try {
+                        const rawCoords = safeJsonParse(pd.coordinates, null);
+                        const projected = toMapCoord(rawCoords);
+                        const pointGisid = pd.point_gisid || pd.gisid || pd.id || '';
+
+                        searchIndex.push({
+                            uid: `pointdata-${pointGisid}-${pd.id}`,
+                            id: String(pd.id),
+                            gisid: String(pointGisid),
+                            point_gisid: String(pointGisid),
+                            type: 'pointdata',
+                            geometryType: 'point',
+                            title: `GIS ID: ${pointGisid}`,
+                            subtitle: `Assessment: ${pd.assessment || 'N/A'} | Owner: ${pd.owner_name || 'N/A'}`,
+                            assessment: pd.assessment || '',
+                            old_assessment: pd.old_assessment || '',
+                            owner_name: pd.owner_name || '',
+                            phone_number: pd.phone_number || '',
+                            center: projected,
+                            extent: projected ? [projected[0], projected[1], projected[0], projected[1]] : null,
+                            coordinates: rawCoords,
+                            searchText: `${pointGisid} ${pd.assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`.toLowerCase()
+                        });
+                    } catch (e) {
+                        console.error('Error indexing point data:', e);
+                    }
+                });
+
+                console.log('Search Index Built:', searchIndex.length);
             }
 
-            // Toggle Drone Layer
-            function toggleDroneLayer() {
-                const visible = !droneLayer.getVisible();
-                droneLayer.setVisible(visible);
-                return visible;
+            buildSearchIndex();
+
+            // ─────────────────────────────────────────────
+            // SEARCH / LOOKUP CORE
+            // ─────────────────────────────────────────────
+            function findBestSearchMatch(value) {
+                const v = String(value || '').toLowerCase().trim();
+                if (!v) return null;
+
+                let exact = searchIndex.find(item =>
+                    String(item.gisid || '').toLowerCase() === v ||
+                    String(item.id || '').toLowerCase() === v ||
+                    String(item.point_gisid || '').toLowerCase() === v
+                );
+
+                if (exact) return exact;
+
+                return searchIndex.find(item => item.searchText && item.searchText.includes(v)) || null;
             }
 
-            // Update Position
+            function getResultByUid(uid) {
+                return searchIndex.find(item => item.uid === uid) || null;
+            }
+
+            function clearHighlight() {
+                highlightSource.clear();
+                highlightedFeature = null;
+            }
+
+            function highlightItem(item) {
+                clearHighlight();
+                if (!item) return;
+
+                try {
+                    let feature = null;
+
+                    if (item.type === 'polygon') {
+                        feature = polygonSource.getFeatureById(String(item.gisid));
+                    } else if (item.type === 'line') {
+                        feature = lineSource.getFeatureById(String(item.gisid));
+                    } else {
+                        const center = item.center || toMapCoord(item.coordinates);
+                        if (center) {
+                            feature = new ol.Feature({
+                                geometry: new ol.geom.Point(center)
+                            });
+                        }
+                    }
+
+                    if (!feature) return;
+
+                    const clone = feature.clone();
+                    clone.setStyle(createHighlightStyle());
+                    highlightSource.addFeature(clone);
+                    highlightedFeature = clone;
+                } catch (e) {
+                    console.error('Highlight error:', e);
+                }
+            }
+
+            function zoomToSearchItem(item) {
+                if (!item) {
+                    showToast('⚠️ Item not found');
+                    return false;
+                }
+
+                try {
+                    highlightItem(item);
+
+                    if (item.extent && item.geometryType !== 'point') {
+                        map.getView().fit(item.extent, {
+                            padding: [80, 80, 80, 80],
+                            duration: 1000,
+                            maxZoom: 21
+                        });
+                        showToast(`📍 Zoomed to GIS ID: ${item.gisid || item.id}`);
+                        return true;
+                    }
+
+                    let center = item.center || toMapCoord(item.coordinates);
+                    if (center) {
+                        map.getView().animate({
+                            center: center,
+                            zoom: 21,
+                            duration: 1000
+                        });
+                        showToast(`📍 Zoomed to GIS ID: ${item.gisid || item.id}`);
+                        return true;
+                    }
+
+                    showToast(`⚠️ No location found for ${item.gisid || item.id}`);
+                    return false;
+                } catch (e) {
+                    console.error('zoomToSearchItem error:', e);
+                    showToast('❌ Zoom failed');
+                    return false;
+                }
+            }
+
+            function zoomToFeature(gisid) {
+                const item = findBestSearchMatch(gisid);
+                return zoomToSearchItem(item);
+            }
+
+            // ─────────────────────────────────────────────
+            // RESULT RENDER
+            // ─────────────────────────────────────────────
+            function renderSearchResults(matches, targetSelector, heading = 'Results') {
+                const $target = $(targetSelector);
+
+                if (!matches || !matches.length) {
+                    $target.html('<div class="p-3 text-center text-muted">No results found</div>');
+                    return;
+                }
+
+                let html = `<div class="dropdown-header">${heading} (${matches.length})</div>`;
+
+                matches.slice(0, 20).forEach(item => {
+                    const icon = item.geometryType === 'polygon'
+                        ? 'pentagon'
+                        : item.geometryType === 'line'
+                            ? 'vector-pen'
+                            : 'geo-alt';
+
+                    const details = [];
+                    if (item.assessment) details.push(`Assess: ${escapeHtml(item.assessment)}`);
+                    if (item.owner_name) details.push(`Owner: ${escapeHtml(item.owner_name)}`);
+                    if (item.phone_number) details.push(`Phone: ${escapeHtml(item.phone_number)}`);
+
+                    html += `
+                        <div class="search-result-item" data-uid="${escapeHtml(item.uid)}">
+                            <div class="search-result-title">
+                                <i class="bi bi-${icon} me-2"></i>${escapeHtml(item.title)}
+                            </div>
+                            <div class="search-result-subtitle">${escapeHtml(item.subtitle || '')}</div>
+                            ${details.length ? `<div class="search-result-subtitle" style="color:#666;">${details.join(' | ')}</div>` : ''}
+                            <div class="search-result-actions">
+                                <button class="btn btn-sm btn-success zoom-btn" data-uid="${escapeHtml(item.uid)}">Zoom</button>
+                                <button class="btn btn-sm btn-primary direction-btn" data-uid="${escapeHtml(item.uid)}">Direction</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                $target.html(html);
+            }
+
+            function renderSuggestions(matches) {
+                const $target = $('#searchSuggestions');
+
+                if (!matches || !matches.length) {
+                    $target.html('');
+                    return;
+                }
+
+                let html = `<div class="dropdown-header">Suggestions</div>`;
+                matches.slice(0, 8).forEach(item => {
+                    html += `
+                        <div class="search-result-item suggestion-item" data-uid="${escapeHtml(item.uid)}" style="cursor:pointer;">
+                            <div class="search-result-title">${escapeHtml(item.title)}</div>
+                            <div class="search-result-subtitle">${escapeHtml(item.subtitle || '')}</div>
+                        </div>
+                    `;
+                });
+
+                $target.html(html);
+            }
+
+            // ─────────────────────────────────────────────
+            // DIRECTION
+            // ─────────────────────────────────────────────
+            function clearDirectionRoute() {
+                if (directionRouteFeature) {
+                    routeLayer.getSource().removeFeature(directionRouteFeature);
+                    directionRouteFeature = null;
+                }
+
+                if (destinationMarker) {
+                    destinationLayer.getSource().removeFeature(destinationMarker);
+                    destinationMarker = null;
+                }
+
+                $('#directionControls').removeClass('active');
+                $('#routeInfo').html('');
+                $('#routeSteps').html('');
+            }
+
+            function ensureCurrentLocation(callback) {
+                if (currentPosition) {
+                    callback(currentPosition);
+                    return;
+                }
+
+                if (!navigator.geolocation) {
+                    showToast('❌ Geolocation not supported');
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(function (pos) {
+                    updatePosition(pos);
+                    callback(currentPosition);
+                }, function (error) {
+                    showToast('❌ Could not get current location: ' + error.message);
+                }, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            }
+
+            function getItemCenterLonLat(item) {
+                if (!item) return null;
+
+                let center = item.center || toMapCoord(item.coordinates);
+                if (!center) return null;
+
+                return ol.proj.toLonLat(center);
+            }
+
+            function showDestinationMarker(item) {
+                if (destinationMarker) {
+                    destinationLayer.getSource().removeFeature(destinationMarker);
+                    destinationMarker = null;
+                }
+
+                const center = item.center || toMapCoord(item.coordinates);
+                if (!center) return;
+
+                destinationMarker = new ol.Feature({
+                    geometry: new ol.geom.Point(center)
+                });
+                destinationMarker.setStyle(createDestinationStyle(item.gisid || item.id || 'Destination'));
+                destinationLayer.getSource().addFeature(destinationMarker);
+            }
+
+            async function getDirectionsToItem(item) {
+                if (!item) {
+                    showToast('⚠️ Destination not found');
+                    return;
+                }
+
+                ensureCurrentLocation(async function (fromProjected) {
+                    try {
+                        const fromLonLat = ol.proj.toLonLat(fromProjected);
+                        const toLonLat = getItemCenterLonLat(item);
+
+                        if (!toLonLat) {
+                            showToast('⚠️ Destination coordinates not found');
+                            return;
+                        }
+
+                        showDestinationMarker(item);
+
+                        const url = `https://router.project-osrm.org/route/v1/driving/${fromLonLat[0]},${fromLonLat[1]};${toLonLat[0]},${toLonLat[1]}?overview=full&geometries=geojson&steps=true`;
+
+                        $('#directionControls').addClass('active');
+                        $('#routeInfo').html('Getting directions...');
+                        $('#routeSteps').html('');
+
+                        const response = await fetch(url);
+                        const data = await response.json();
+
+                        if (!data.routes || !data.routes.length) {
+                            showToast('❌ Route not found');
+                            $('#routeInfo').html('Route not found');
+                            return;
+                        }
+
+                        const route = data.routes[0];
+                        const routeCoords = route.geometry.coordinates.map(c => ol.proj.fromLonLat(c));
+
+                        if (directionRouteFeature) {
+                            routeLayer.getSource().removeFeature(directionRouteFeature);
+                        }
+
+                        directionRouteFeature = new ol.Feature({
+                            geometry: new ol.geom.LineString(routeCoords)
+                        });
+
+                        directionRouteFeature.setStyle(new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: '#0d6efd',
+                                width: 5
+                            })
+                        }));
+
+                        routeLayer.getSource().addFeature(directionRouteFeature);
+
+                        const extent = directionRouteFeature.getGeometry().getExtent();
+                        map.getView().fit(extent, {
+                            padding: [80, 80, 120, 80],
+                            duration: 1200,
+                            maxZoom: 20
+                        });
+
+                        $('#routeInfo').html(`
+                            <strong>To:</strong> ${escapeHtml(item.gisid || item.id)}<br>
+                            <strong>Distance:</strong> ${formatDistance(route.distance)}<br>
+                            <strong>Duration:</strong> ${formatDuration(route.duration)}
+                        `);
+
+                        let stepsHtml = '';
+                        const steps = route.legs?.[0]?.steps || [];
+                        if (steps.length) {
+                            steps.forEach((step, index) => {
+                                stepsHtml += `
+                                    <div class="step-item">
+                                        ${index + 1}. ${escapeHtml(step.maneuver.instruction || step.name || 'Continue')}
+                                        (${formatDistance(step.distance)})
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            stepsHtml = '<div class="step-item">Route ready</div>';
+                        }
+
+                        $('#routeSteps').html(stepsHtml);
+                        showToast('✅ Directions loaded');
+                    } catch (e) {
+                        console.error('Direction error:', e);
+                        showToast('❌ Direction fetch failed');
+                        $('#routeInfo').html('Direction fetch failed');
+                    }
+                });
+            }
+
+            // ─────────────────────────────────────────────
+            // LOCATION
+            // ─────────────────────────────────────────────
             function updatePosition(position) {
                 const coords = [position.coords.longitude, position.coords.latitude];
                 const projected = ol.proj.fromLonLat(coords);
@@ -1228,12 +1658,11 @@
 
                 if (isTracking) {
                     routePoints.push(projected);
-                    updateRouteLine();
+                    updateTrackLine();
                 }
             }
 
-            // Update Route Line
-            function updateRouteLine() {
+            function updateTrackLine() {
                 if (routePoints.length < 2) return;
 
                 if (!routeLine) {
@@ -1253,250 +1682,71 @@
                 }
             }
 
-            // ─── FIXED: ZOOM TO FEATURE FUNCTION ───
-            function zoomToFeature(gisid, type) {
-                let coords = null;
-                let zoomLevel = 20;
-                let found = false;
+            // ─────────────────────────────────────────────
+            // LAYER SWITCH
+            // ─────────────────────────────────────────────
+            function switchBaseLayer(layer) {
+                [osmLayer, satelliteLayer, streetViewLayer].forEach(l => l.setVisible(l === layer));
+                const layerName = layer.get('title') || 'Layer';
 
-                console.log('🔍 Zooming to:', gisid, type);
-
-                // Case 1: Find in polygon source
-                if (type === 'polygon') {
-                    const feature = polygonSource.getFeatureById(gisid);
-                    if (feature) {
-                        try {
-                            const extent = feature.getGeometry().getExtent();
-                            coords = ol.extent.getCenter(extent);
-                            found = true;
-                            console.log('✅ Using polygon center:', coords);
-                        } catch (e) {
-                            console.error('Error getting polygon center:', e);
-                        }
-                    }
-                }
-
-                // Case 2: Find in line source
-                if (!found && type === 'line') {
-                    const feature = lineSource.getFeatureById(gisid);
-                    if (feature) {
-                        try {
-                            const extent = feature.getGeometry().getExtent();
-                            coords = ol.extent.getCenter(extent);
-                            found = true;
-                            console.log('✅ Using line center:', coords);
-                        } catch (e) {
-                            console.error('Error getting line center:', e);
-                        }
-                    }
-                }
-
-                // Case 3: Find in points array by gisid
-                if (!found && points) {
-                    const pointData = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
-                    if (pointData) {
-                        try {
-                            let rawCoords = typeof pointData.coordinates === 'string' ?
-                                JSON.parse(pointData.coordinates) : pointData.coordinates;
-
-                            if (Array.isArray(rawCoords) && rawCoords.length === 2) {
-                                let lon = rawCoords[0];
-                                let lat = rawCoords[1];
-
-                                // Check if coordinates might be swapped [lat, lon]
-                                if (rawCoords[0] >= -90 && rawCoords[0] <= 90 &&
-                                    rawCoords[1] >= -180 && rawCoords[1] <= 180) {
-                                    lon = rawCoords[1];
-                                    lat = rawCoords[0];
-                                }
-
-                                coords = ol.proj.fromLonLat([lon, lat]);
-                                found = true;
-                                zoomLevel = 21;
-                                console.log('✅ Using point from points array:', coords);
-                            }
-                        } catch (e) {
-                            console.error('Error parsing point:', e);
-                        }
-                    }
-                }
-
-                // Case 4: Find in pointDatas by point_gisid or id
-                if (!found && pointDatas) {
-                    const pointData = pointDatas.find(p =>
-                        (p.point_gisid && p.point_gisid.toString() === gisid.toString()) ||
-                        (p.id && p.id.toString() === gisid.toString())
-                    );
-                    if (pointData) {
-                        try {
-                            let rawCoords = typeof pointData.coordinates === 'string' ?
-                                JSON.parse(pointData.coordinates) : pointData.coordinates;
-
-                            if (Array.isArray(rawCoords) && rawCoords.length === 2) {
-                                let lon = rawCoords[0];
-                                let lat = rawCoords[1];
-
-                                // Check if coordinates might be swapped [lat, lon]
-                                if (rawCoords[0] >= -90 && rawCoords[0] <= 90 &&
-                                    rawCoords[1] >= -180 && rawCoords[1] <= 180) {
-                                    lon = rawCoords[1];
-                                    lat = rawCoords[0];
-                                }
-
-                                coords = ol.proj.fromLonLat([lon, lat]);
-                                found = true;
-                                zoomLevel = 21;
-                                console.log('✅ Using point from pointDatas:', coords);
-                            }
-                        } catch (e) {
-                            console.error('Error parsing pointData:', e);
-                        }
-                    }
-                }
-
-                // Case 5: Search in index for coordinates
-                if (!found && searchIndex) {
-                    const item = searchIndex.find(i =>
-                        i.id && i.id.toString() === gisid.toString() ||
-                        i.point_gisid && i.point_gisid.toString() === gisid.toString()
-                    );
-                    if (item) {
-                        try {
-                            if (item.center) {
-                                // Center might be in projected or lat/lon
-                                coords = item.center;
-                                // Check if center is in lat/lon format
-                                if (coords[0] >= -180 && coords[0] <= 180 &&
-                                    coords[1] >= -90 && coords[1] <= 90) {
-                                    coords = ol.proj.fromLonLat(coords);
-                                }
-                                found = true;
-                                zoomLevel = item.geometryType === 'point' ? 21 : 20;
-                                console.log('✅ Using center from search index:', coords);
-                            } else if (item.coordinates && Array.isArray(item.coordinates)) {
-                                // Try to get coordinates from the item
-                                let rawCoords = item.coordinates;
-                                if (Array.isArray(rawCoords) && rawCoords.length === 2) {
-                                    let lon = rawCoords[0];
-                                    let lat = rawCoords[1];
-                                    if (rawCoords[0] >= -90 && rawCoords[0] <= 90 &&
-                                        rawCoords[1] >= -180 && rawCoords[1] <= 180) {
-                                        lon = rawCoords[1];
-                                        lat = rawCoords[0];
-                                    }
-                                    coords = ol.proj.fromLonLat([lon, lat]);
-                                    found = true;
-                                    zoomLevel = 21;
-                                    console.log('✅ Using coordinates from search index:', coords);
-                                }
-                            }
-                        } catch (e) {
-                            console.error('Error getting coords from search index:', e);
-                        }
-                    }
-                }
-
-                // If we found coordinates, zoom to them
-                if (found && coords && Array.isArray(coords) && coords.length === 2) {
-                    // Validate coordinates
-                    if (!isNaN(coords[0]) && !isNaN(coords[1])) {
-                        // If coordinates look like lat/lon (small values), convert them
-                        if (coords[0] >= -180 && coords[0] <= 180 &&
-                            coords[1] >= -90 && coords[1] <= 90) {
-                            coords = ol.proj.fromLonLat(coords);
-                            console.log('🔄 Converted lat/lon to projected:', coords);
-                        }
-
-                        map.getView().animate({
-                            center: coords,
-                            zoom: zoomLevel,
-                            duration: 1000
-                        });
-                        showToast(`📍 Zoomed to GIS ID: ${gisid}`);
-                        return true;
-                    }
-                }
-
-                console.error('❌ Could not find coordinates for:', gisid);
-                showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000);
-                return false;
+                $('#activeLayerBadge').text(layerName);
+                $('.layer-dropdown-item[data-layer-type="base"]').removeClass('active');
+                $('.layer-dropdown-item[data-layer="' + layerName + '"]').addClass('active');
             }
 
-            // ─── SEARCH FUNCTION ───
-            function searchGIS(value) {
-                const v = value.toString().toLowerCase().trim();
-                if (!v) return [];
-                return searchIndex.filter(item =>
-                    (item.id && item.id.toString().toLowerCase().includes(v)) ||
-                    (item.point_gisid && item.point_gisid.toString().toLowerCase().includes(v)) ||
-                    (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
-                    (item.old_assessment && item.old_assessment.toString().toLowerCase().includes(v)) ||
-                    (item.owner_name && item.owner_name.toString().toLowerCase().includes(v)) ||
-                    (item.phone_number && item.phone_number.toString().toLowerCase().includes(v)) ||
-                    (item.title && item.title.toLowerCase().includes(v)) ||
-                    (item.subtitle && item.subtitle.toLowerCase().includes(v))
-                );
+            function toggleDroneLayer() {
+                const visible = !droneLayer.getVisible();
+                droneLayer.setVisible(visible);
+                return visible;
             }
 
-            // ─── EVENT HANDLERS ───
-
-            // Toggle Dropdowns
-            $(document).on('click', '.layer-toggle-btn', function(e) {
+            // ─────────────────────────────────────────────
+            // EVENTS
+            // ─────────────────────────────────────────────
+            $(document).on('click', '.layer-toggle-btn', function (e) {
                 e.stopPropagation();
                 $('.layer-dropdown').toggleClass('active');
-                $('.location-dropdown').removeClass('active');
-                $('.search-dropdown').removeClass('active');
+                $('.location-dropdown, .search-dropdown').removeClass('active');
             });
 
-            $(document).on('click', '.location-toggle-btn', function(e) {
+            $(document).on('click', '.location-toggle-btn', function (e) {
                 e.stopPropagation();
                 $('.location-dropdown').toggleClass('active');
-                $('.layer-dropdown').removeClass('active');
-                $('.search-dropdown').removeClass('active');
+                $('.layer-dropdown, .search-dropdown').removeClass('active');
             });
 
-            $(document).on('click', '.search-toggle-btn', function(e) {
+            $(document).on('click', '.search-toggle-btn', function (e) {
                 e.stopPropagation();
                 $('.search-dropdown').toggleClass('active');
-                $('.layer-dropdown').removeClass('active');
-                $('.location-dropdown').removeClass('active');
+                $('.layer-dropdown, .location-dropdown').removeClass('active');
+                $('#gisSearchInput').trigger('focus');
             });
 
-            // Close dropdowns when clicking outside
-            $(document).on('click', function(e) {
-                if (!$(e.target).closest('.custom-layer-switcher').length) {
-                    $('.layer-dropdown').removeClass('active');
-                }
-                if (!$(e.target).closest('.custom-location-switcher').length) {
-                    $('.location-dropdown').removeClass('active');
-                }
-                if (!$(e.target).closest('.custom-search-switcher').length) {
-                    $('.search-dropdown').removeClass('active');
-                }
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass('active');
+                if (!$(e.target).closest('.custom-location-switcher').length) $('.location-dropdown').removeClass('active');
+                if (!$(e.target).closest('.custom-search-switcher').length) $('.search-dropdown').removeClass('active');
             });
 
-            // Layer Dropdown Items
-            $(document).on('click', '.layer-dropdown-item', function(e) {
+            $(document).on('click', '.layer-dropdown-item', function (e) {
                 e.stopPropagation();
                 const layerType = $(this).data('layer-type');
                 const layerTitle = $(this).data('layer');
 
                 if (layerType === 'base') {
-                    let layer;
+                    let layer = null;
                     if (layerTitle === 'OpenStreetMap') layer = osmLayer;
-                    else if (layerTitle === 'Satellite') layer = satelliteLayer;
-                    else if (layerTitle === 'Street View') layer = streetViewLayer;
-
-                    if (layer) {
-                        switchBaseLayer(layer);
-                    }
+                    if (layerTitle === 'Satellite') layer = satelliteLayer;
+                    if (layerTitle === 'Street View') layer = streetViewLayer;
+                    if (layer) switchBaseLayer(layer);
                 } else if (layerTitle === 'Drone View') {
                     const visible = toggleDroneLayer();
                     $(this).toggleClass('active', visible);
                 } else if (layerType === 'vector') {
-                    let layer;
+                    let layer = null;
                     if (layerTitle === 'Polygons') layer = polygonLayer;
-                    else if (layerTitle === 'Lines') layer = lineLayer;
+                    if (layerTitle === 'Lines') layer = lineLayer;
+                    if (layerTitle === 'Points') layer = pointLayer;
 
                     if (layer) {
                         const visible = !layer.getVisible();
@@ -1506,25 +1756,22 @@
                 }
             });
 
-            // Label Toggle
-            $('#labelToggleBtn').on('click', function() {
+            $('#labelToggleBtn').on('click', function () {
                 $(this).toggleClass('active-label');
                 polygonLayer.setStyle(createPolygonStyle);
                 polygonLayer.changed();
             });
 
-            // Legend Toggle
-            $('#legendToggleBtn').on('click', function() {
+            $('#legendToggleBtn').on('click', function () {
                 Swal.fire({
                     title: 'Infrastructure Legend',
                     html: `
                         <div style="text-align:left;">
-                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(255,0,0,0.1);border:2px solid blue;margin-right:10px;"></span> Polygons (Land Parcels)</div>
-                            <div><span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span> Lines (Roads)</div>
-                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(0,0,0,0.3);border-radius:4px;margin-right:10px;"></span> Drone View</div>
-                            <hr>
-                            <div><span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span> Current Location</div>
-                            <div><span style="display:inline-block;width:20px;height:4px;background:#dc3545;border-radius:2px;margin-right:10px;"></span> Track Route</div>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(255,0,0,0.1);border:2px solid blue;margin-right:10px;"></span> Polygons</div>
+                            <div><span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span> Lines</div>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:#198754;border-radius:50%;margin-right:10px;"></span> Points</div>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;margin-right:10px;"></span> Current Location</div>
+                            <div><span style="display:inline-block;width:20px;height:4px;background:#0d6efd;border-radius:2px;margin-right:10px;"></span> Direction Route</div>
                         </div>
                     `,
                     icon: 'info',
@@ -1532,8 +1779,7 @@
                 });
             });
 
-            // 3D Toggle
-            $('#threeDToggleBtn').on('click', function() {
+            $('#threeDToggleBtn').on('click', function () {
                 $(this).toggleClass('active-3d');
                 Swal.fire({
                     title: '3D View',
@@ -1543,10 +1789,7 @@
                 });
             });
 
-            // ─── LOCATION FUNCTIONALITY ───
-
-            // Live Location
-            $('#liveLocationItem').on('click', function() {
+            $('#liveLocationItem').on('click', function () {
                 if (!navigator.geolocation) {
                     showToast('❌ Geolocation not supported');
                     return;
@@ -1561,50 +1804,38 @@
                     $btn.addClass('active-location');
                     showToast('📍 Live location activated');
 
-                    navigator.geolocation.getCurrentPosition(
-                        function(pos) {
-                            updatePosition(pos);
-                            if (!watchId) {
-                                watchId = navigator.geolocation.watchPosition(
-                                    function(newPos) {
-                                        updatePosition(newPos);
-                                    },
-                                    function(error) {
-                                        console.error('Watch error:', error);
-                                        showToast('❌ Location error: ' + error.message);
-                                    }, {
-                                        enableHighAccuracy: true,
-                                        timeout: 10000,
-                                        maximumAge: 0
-                                    }
-                                );
-                            }
-                        },
-                        function(error) {
-                            console.error('Get position error:', error);
-                            showToast('❌ Error getting location: ' + error.message);
-                            isLiveLocation = false;
-                            $badge.text('OFF').removeClass('active');
-                            $btn.removeClass('active-location');
-                        }, {
-                            enableHighAccuracy: true,
-                            timeout: 10000
+                    navigator.geolocation.getCurrentPosition(function (pos) {
+                        updatePosition(pos);
+                        if (!watchId) {
+                            watchId = navigator.geolocation.watchPosition(updatePosition, function (error) {
+                                showToast('❌ Location error: ' + error.message);
+                            }, {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 0
+                            });
                         }
-                    );
+                    }, function (error) {
+                        showToast('❌ Error getting location: ' + error.message);
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 10000
+                    });
                 } else {
                     $badge.text('OFF').removeClass('active');
                     $btn.removeClass('active-location');
                     showToast('📍 Live location deactivated');
-                    if (watchId) {
+
+                    if (watchId && !isTracking) {
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
                     }
                 }
+
                 $('.location-dropdown').removeClass('active');
             });
 
-            // Track Me
-            $('#trackMeItem').on('click', function() {
+            $('#trackMeItem').on('click', function () {
                 if (!navigator.geolocation) {
                     showToast('❌ Geolocation not supported');
                     return;
@@ -1613,177 +1844,135 @@
                 if (!isTracking) {
                     isTracking = true;
                     routePoints = [];
-                    const $badge = $('#trackMeBadge');
-                    const $btn = $('#locationToggleBtn');
-                    $badge.text('ON').addClass('tracking');
-                    $btn.addClass('tracking');
+                    $('#trackMeBadge').text('ON').addClass('tracking');
+                    $('#locationToggleBtn').addClass('tracking');
                     showToast('📍 Tracking started');
 
-                    navigator.geolocation.getCurrentPosition(
-                        function(pos) {
-                            updatePosition(pos);
-                            if (!watchId) {
-                                watchId = navigator.geolocation.watchPosition(
-                                    function(newPos) {
-                                        updatePosition(newPos);
-                                    },
-                                    function(error) {
-                                        console.error('Track error:', error);
-                                        showToast('❌ Tracking error: ' + error.message);
-                                    }, {
-                                        enableHighAccuracy: true,
-                                        timeout: 10000,
-                                        maximumAge: 0
-                                    }
-                                );
-                            }
-                        },
-                        function(error) {
-                            console.error('Get position error:', error);
-                            showToast('❌ Error starting tracking: ' + error.message);
-                            isTracking = false;
-                            $badge.text('OFF').removeClass('tracking');
-                            $btn.removeClass('tracking');
-                        }, {
-                            enableHighAccuracy: true,
-                            timeout: 10000
+                    navigator.geolocation.getCurrentPosition(function (pos) {
+                        updatePosition(pos);
+                        if (!watchId) {
+                            watchId = navigator.geolocation.watchPosition(updatePosition, function (error) {
+                                showToast('❌ Tracking error: ' + error.message);
+                            }, {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 0
+                            });
                         }
-                    );
+                    }, function (error) {
+                        isTracking = false;
+                        $('#trackMeBadge').text('OFF').removeClass('tracking');
+                        $('#locationToggleBtn').removeClass('tracking');
+                        showToast('❌ Error starting tracking: ' + error.message);
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 10000
+                    });
                 } else {
                     isTracking = false;
-                    const $badge = $('#trackMeBadge');
-                    const $btn = $('#locationToggleBtn');
-                    $badge.text('OFF').removeClass('tracking');
-                    $btn.removeClass('tracking');
+                    $('#trackMeBadge').text('OFF').removeClass('tracking');
+                    $('#locationToggleBtn').removeClass('tracking');
                     showToast('⏹️ Tracking stopped');
+
                     if (watchId && !isLiveLocation) {
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
                     }
                 }
+
                 $('.location-dropdown').removeClass('active');
             });
 
-            // Clear Route
-            $('#clearRouteItem').on('click', function() {
+            $('#clearRouteItem, #closeRouteBtn').on('click', function () {
                 if (watchId && !isLiveLocation && !isTracking) {
                     navigator.geolocation.clearWatch(watchId);
                     watchId = null;
                 }
 
-                // Clear route line
                 if (routeLine) {
                     routeLayer.getSource().removeFeature(routeLine);
                     routeLine = null;
                 }
+
                 routePoints = [];
-
-                // Clear position
-                if (positionFeature) {
-                    positionLayer.getSource().removeFeature(positionFeature);
-                    positionFeature = null;
-                }
-
-                // Reset states
-                isLiveLocation = false;
-                isTracking = false;
-                $('#liveLocationBadge').text('OFF').removeClass('active');
-                $('#trackMeBadge').text('OFF').removeClass('tracking');
-                $('#locationToggleBtn').removeClass('active-location tracking');
-
-                // Clear destination
-                if (destinationMarker) {
-                    destinationLayer.getSource().removeFeature(destinationMarker);
-                    destinationMarker = null;
-                }
+                clearDirectionRoute();
 
                 $('#directionControls').removeClass('active');
-                showToast('🧹 Cleared all location data');
+
+                if (!isTracking && !isLiveLocation && positionFeature) {
+                    positionLayer.getSource().removeFeature(positionFeature);
+                    positionFeature = null;
+                    currentPosition = null;
+                }
+
+                showToast('🧹 Route cleared');
                 $('.location-dropdown').removeClass('active');
             });
 
-            // ─── SEARCH FUNCTIONALITY ───
-
-            // Quick Search
-            $('#gisSearchInput').on('keyup', function() {
+            // Quick search with suggestions
+            $('#gisSearchInput').on('input keyup', function () {
                 const value = $(this).val().toLowerCase().trim();
-                const results = $('#searchResults');
 
-                if (!value || value.length < 1) {
-                    results.html('');
+                if (!value) {
+                    $('#searchSuggestions').html('');
+                    $('#searchResults').html('');
                     return;
                 }
 
-                const matches = searchIndex.filter(item =>
+                const exactMatches = searchIndex.filter(item =>
+                    String(item.gisid || '').toLowerCase() === value ||
+                    String(item.id || '').toLowerCase() === value ||
+                    String(item.point_gisid || '').toLowerCase() === value
+                );
+
+                const partialMatches = searchIndex.filter(item =>
                     item.searchText && item.searchText.includes(value)
                 );
 
-                if (!matches.length) {
-                    results.html('<div class="p-3 text-center text-muted">No results found</div>');
-                    return;
-                }
-
-                let html = '<div class="dropdown-header">Results (' + matches.length + ')</div>';
-                matches.slice(0, 15).forEach(item => {
-                    const icon = item.geometryType === 'polygon' ? 'pentagon' :
-                        item.geometryType === 'line' ? 'vector-pen' : 'geo-alt';
-                    const details = [];
-                    if (item.assessment) details.push('Assess: ' + item.assessment);
-                    if (item.owner_name) details.push('Owner: ' + item.owner_name);
-                    if (item.phone_number) details.push('Phone: ' + item.phone_number);
-
-                    html += `
-                        <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-                            <div class="search-result-title"><i class="bi bi-${icon} me-2"></i>${item.title}</div>
-                            <div class="search-result-subtitle">${item.subtitle}</div>
-                            ${details.length ? '<div class="search-result-subtitle" style="color:#666;">' + details.join(' | ') + '</div>' : ''}
-                            <div class="search-result-actions">
-                                <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                            </div>
-                        </div>
-                    `;
+                const uniqueMap = new Map();
+                [...exactMatches, ...partialMatches].forEach(item => {
+                    if (!uniqueMap.has(item.uid)) uniqueMap.set(item.uid, item);
                 });
-                results.html(html);
+
+                const matches = Array.from(uniqueMap.values());
+
+                renderSuggestions(matches.slice(0, 8));
+                renderSearchResults(matches, '#searchResults', 'Results');
             });
 
-            // Zoom button in search results
-            $(document).on('click', '.zoom-btn', function(e) {
+            $(document).on('click', '.suggestion-item', function () {
+                const uid = $(this).data('uid');
+                const item = getResultByUid(uid);
+                if (!item) return;
+
+                $('#gisSearchInput').val(item.gisid || item.id);
+                renderSuggestions([]);
+                renderSearchResults([item], '#searchResults', 'Selected');
+            });
+
+            $(document).on('click', '.zoom-btn', function (e) {
                 e.stopPropagation();
-                const id = $(this).data('id');
-                const type = $(this).data('type');
-
-                // For pointdata, use point_gisid for zooming
-                let zoomId = id;
-                if (type === 'pointdata') {
-                    const item = searchIndex.find(i => i.id == id && i.type === type);
-                    if (item && item.point_gisid) {
-                        zoomId = item.point_gisid;
-                    }
-                }
-
-                zoomToFeature(zoomId, type);
+                const uid = $(this).data('uid');
+                const item = getResultByUid(uid);
+                zoomToSearchItem(item);
             });
 
-            // Search result item click
-            $(document).on('click', '.search-result-item', function() {
-                const id = $(this).data('id');
-                const type = $(this).data('type');
-                const item = searchIndex.find(i => i.id == id && i.type === type);
-
-                if (item) {
-                    let zoomId = id;
-                    if (type === 'pointdata' && item.point_gisid) {
-                        zoomId = item.point_gisid;
-                    }
-                    zoomToFeature(zoomId, type);
-                    $('.search-dropdown').removeClass('active');
-                    $('#gisSearchInput').val('');
-                    $('#searchResults').html('');
-                }
+            $(document).on('click', '.direction-btn', function (e) {
+                e.stopPropagation();
+                const uid = $(this).data('uid');
+                const item = getResultByUid(uid);
+                getDirectionsToItem(item);
             });
 
-            // Search tabs
-            $('.search-tab-btn').on('click', function() {
+            $(document).on('click', '.search-result-item', function () {
+                const uid = $(this).data('uid');
+                const item = getResultByUid(uid);
+                if (!item) return;
+
+                zoomToSearchItem(item);
+            });
+
+            $('.search-tab-btn').on('click', function () {
                 const tab = $(this).data('tab');
                 $('.search-tab-btn').removeClass('active');
                 $(this).addClass('active');
@@ -1797,145 +1986,109 @@
                 }
             });
 
-            // ─── FILTER FUNCTIONALITY ───
-
-            // Filter Search - Uses searchIndex with multiple criteria
-            $('#applyFilterBtn').on('click', function() {
+            $('#applyFilterBtn').on('click', function () {
                 const assessment = $('#filterAssessment').val().toLowerCase().trim();
                 const oldAssessment = $('#filterOldAssessment').val().toLowerCase().trim();
                 const ownerName = $('#filterOwnerName').val().toLowerCase().trim();
                 const phoneNumber = $('#filterPhoneNumber').val().toLowerCase().trim();
 
-                // Check if any filter is applied
                 if (!assessment && !oldAssessment && !ownerName && !phoneNumber) {
                     showToast('⚠️ Please enter at least one filter criteria');
                     return;
                 }
 
-                // Filter using searchIndex
-                let matches = searchIndex.filter(item => {
+                const matches = searchIndex.filter(item => {
                     let match = true;
 
-                    if (assessment) {
-                        const itemAssessment = (item.assessment || '').toString().toLowerCase();
-                        match = match && itemAssessment.includes(assessment);
-                    }
-                    if (oldAssessment) {
-                        const itemOldAssessment = (item.old_assessment || '').toString()
-                            .toLowerCase();
-                        match = match && itemOldAssessment.includes(oldAssessment);
-                    }
-                    if (ownerName) {
-                        const itemOwner = (item.owner_name || '').toString().toLowerCase();
-                        match = match && itemOwner.includes(ownerName);
-                    }
-                    if (phoneNumber) {
-                        const itemPhone = (item.phone_number || '').toString().toLowerCase();
-                        match = match && itemPhone.includes(phoneNumber);
-                    }
+                    if (assessment) match = match && String(item.assessment || '').toLowerCase().includes(assessment);
+                    if (oldAssessment) match = match && String(item.old_assessment || '').toLowerCase().includes(oldAssessment);
+                    if (ownerName) match = match && String(item.owner_name || '').toLowerCase().includes(ownerName);
+                    if (phoneNumber) match = match && String(item.phone_number || '').toLowerCase().includes(phoneNumber);
 
                     return match;
                 });
 
-                const results = $('#filterResults');
+                renderSearchResults(matches, '#filterResults', 'Filtered Results');
 
-                if (matches.length === 0) {
-                    results.html('<div class="p-3 text-center text-muted">No matching records found</div>');
+                if (!matches.length) {
                     showToast('❌ No results found');
-                    return;
+                } else {
+                    showToast(`✅ Found ${matches.length} results`);
                 }
-
-                let html = '<div class="dropdown-header">Results (' + matches.length + ' found)</div>';
-                matches.slice(0, 15).forEach(item => {
-                    const icon = item.geometryType === 'polygon' ? 'pentagon' :
-                        item.geometryType === 'line' ? 'vector-pen' : 'geo-alt';
-                    const details = [];
-                    if (item.assessment) details.push('Assess: ' + item.assessment);
-                    if (item.owner_name) details.push('Owner: ' + item.owner_name);
-                    if (item.phone_number) details.push('Phone: ' + item.phone_number);
-
-                    html += `
-                        <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-                            <div class="search-result-title"><i class="bi bi-${icon} me-2"></i>${item.title}</div>
-                            <div class="search-result-subtitle">${item.subtitle}</div>
-                            ${details.length ? '<div class="search-result-subtitle" style="color:#666;">' + details.join(' | ') + '</div>' : ''}
-                            <div class="search-result-actions">
-                                <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                            </div>
-                        </div>
-                    `;
-                });
-                results.html(html);
-                showToast('✅ Found ' + matches.length + ' results');
             });
 
-            // Enter key for filter search
-            $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress',
-                function(e) {
-                    if (e.which === 13) {
-                        $('#applyFilterBtn').click();
-                    }
-                });
+            $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress', function (e) {
+                if (e.which === 13) $('#applyFilterBtn').click();
+            });
 
-            // Enter key for quick search
-            $('#gisSearchInput').on('keypress', function(e) {
+            $('#gisSearchInput').on('keypress', function (e) {
                 if (e.which === 13) {
                     e.preventDefault();
-                    $(this).trigger('keyup');
-                    const firstResult = $('.search-result-item').first();
-                    if (firstResult.length) {
-                        firstResult.click();
+                    const first = $('#searchResults .search-result-item').first();
+                    if (first.length) first.click();
+                    else {
+                        const item = findBestSearchMatch($(this).val());
+                        if (item) zoomToSearchItem(item);
+                        else showToast('❌ No matching GISID found');
                     }
                 }
             });
 
-            // ─── FULLSCREEN ───
+            // Fullscreen
             let isFullscreen = false;
 
-            $('#fullscreenBtn').on('click', function() {
-                const $card = $('#mapCard');
-                const $container = $('#map');
-                const $btn = $(this);
-                const $exitBtn = $('#fullscreenExitBtn');
-
-                $card.addClass('fullscreen-mode');
-                $container.addClass('fullscreen');
-                $btn.hide();
-                $exitBtn.show();
+            $('#fullscreenBtn').on('click', function () {
+                $('#mapCard').addClass('fullscreen-mode');
+                $('#map').addClass('fullscreen');
+                $('#fullscreenBtn').hide();
+                $('#fullscreenExitBtn').show();
                 isFullscreen = true;
 
-                setTimeout(function() {
-                    map.updateSize();
-                }, 150);
+                setTimeout(() => map.updateSize(), 150);
             });
 
-            $('#fullscreenExitBtn').on('click', function() {
-                const $card = $('#mapCard');
-                const $container = $('#map');
-                const $btn = $('#fullscreenBtn');
-                const $exitBtn = $(this);
-
-                $card.removeClass('fullscreen-mode');
-                $container.removeClass('fullscreen');
-                $exitBtn.hide();
-                $btn.show();
+            $('#fullscreenExitBtn').on('click', function () {
+                $('#mapCard').removeClass('fullscreen-mode');
+                $('#map').removeClass('fullscreen');
+                $('#fullscreenExitBtn').hide();
+                $('#fullscreenBtn').show();
                 isFullscreen = false;
 
-                setTimeout(function() {
-                    map.updateSize();
-                }, 150);
+                setTimeout(() => map.updateSize(), 150);
             });
 
-            $(document).on('keydown', function(e) {
+            $(document).on('keydown', function (e) {
                 if (e.key === 'Escape' && isFullscreen) {
                     $('#fullscreenExitBtn').click();
                 }
             });
 
-            console.log('✅ GIS Dashboard initialized successfully!');
+            // Map click to inspect feature
+            map.on('singleclick', function (evt) {
+                let foundFeature = null;
+
+                map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+                    foundFeature = feature;
+                    return true;
+                });
+
+                if (foundFeature) {
+                    const gisid = foundFeature.get('gisid');
+                    if (gisid) {
+                        const item = findBestSearchMatch(gisid);
+                        if (item) {
+                            highlightItem(item);
+                            showToast(`Selected GIS ID: ${gisid}`);
+                        }
+                    }
+                }
+            });
+
+            console.log('✅ GIS Dashboard initialized successfully');
             console.log('📊 Search Index Size:', searchIndex.length);
             console.log('📊 Polygons:', polygons.length);
             console.log('📊 Lines:', lines.length);
+            console.log('📊 Points:', points.length);
             console.log('📊 Point Data:', pointDatas.length);
         });
     </script>
