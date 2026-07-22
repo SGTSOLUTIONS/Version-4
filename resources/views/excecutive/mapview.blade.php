@@ -453,6 +453,19 @@
             border-color: #0d6efd;
             box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
         }
+
+        /* Type Badge Styles */
+        .type-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+        .type-badge.road { background: #0dcaf0; color: #000; }
+        .type-badge.parcel { background: #198754; color: #fff; }
+        .type-badge.point { background: #ffc107; color: #000; }
+        .type-badge.assessment { background: #0d6efd; color: #fff; }
     </style>
 @endpush
 
@@ -569,8 +582,8 @@
             let watchId = null;
             let isTracking = false;
             let isLiveLocation = false;
-            let currentPosition = null;      // projected (EPSG:3857) current position
-            let currentLocation = null;       // { lon, lat } in WGS84, used for routing
+            let currentPosition = null;
+            let currentLocation = null;
             let positionFeature = null;
             let positionLayer = null;
             let routeLine = null;
@@ -585,8 +598,6 @@
                 const sqft = feature.get('sqfeet') || '0';
                 const polygonData = polygonDatas.find(d => d.gisid == gisid);
 
-                // FIX: stroke and fill now share the same color logic instead of
-                // fill always being hard-coded to red regardless of the parcel state.
                 const isFlagged = !!polygonData;
                 const strokeColor = isFlagged ? '#dc3545' : '#0d6efd';
                 const fillColor = isFlagged ? 'rgba(220, 53, 69, 0.15)' : 'rgba(13, 110, 253, 0.15)';
@@ -753,16 +764,6 @@
                 lines.forEach(line => {
                     try {
                         const coords = JSON.parse(line.coordinates);
-                        let center = null;
-                        try {
-                            const flatCoords = coords.flat(2);
-                            if (flatCoords && flatCoords.length > 0) {
-                                const extent = ol.extent.boundingExtent(flatCoords);
-
-                            }
-                        } catch (e) {
-                            // Skip center calculation for lines
-                        }
                         searchIndex.push({
                             id: line.gisid,
                             type: 'line',
@@ -782,24 +783,6 @@
                 points.forEach(point => {
                     try {
                         let coords = JSON.parse(point.coordinates);
-                        let center = null;
-
-                        if (Array.isArray(coords) && coords.length === 2) {
-                            // Try to determine if coords are [lat, lon] or [lon, lat]
-                            let lon = coords[0];
-                            let lat = coords[1];
-
-                            // If first value is between -90 and 90, it might be latitude
-                            if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                180) {
-                                // Format is [lat, lon] - swap
-                                lon = coords[1];
-                                lat = coords[0];
-                            }
-
-
-                        }
-
                         searchIndex.push({
                             id: point.gisid,
                             type: 'point',
@@ -820,20 +803,15 @@
                         let coords = [];
                         let center = null;
 
-                        // Parse coordinates from the stored JSON string
                         if (pd.coordinates) {
                             coords = JSON.parse(pd.coordinates);
                             if (Array.isArray(coords) && coords.length === 2) {
-                                // Try to determine if coords are [lat, lon] or [lon, lat]
                                 let lon = coords[0];
                                 let lat = coords[1];
-
-                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                    180) {
+                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
                                     lon = coords[1];
                                     lat = coords[0];
                                 }
-
                                 center = ol.proj.fromLonLat([lon, lat]);
                             }
                         }
@@ -926,7 +904,6 @@
             loadPolygonSource();
             loadLineSource();
             buildSearchIndex();
-            console.log(searchIndex);
 
             // ─── CREATE LAYERS ───
             const polygonLayer = new ol.layer.Vector({
@@ -1168,11 +1145,34 @@
                 return visible;
             }
 
-            // ─── FIXED FUNCTIONS ───
-
-            // ─── GET COORDS BY GIS ID - FIXED ───
-            function getCoordsByGisId(gisid) {
+            // ─── GET COORDS BY GIS ID - FIXED to prioritize correct type ───
+            function getCoordsByGisId(gisid, type = null) {
                 if (!gisid) return null;
+
+                // If type is specified, check that type first
+                if (type === 'line') {
+                    // Check line features first
+                    const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (lineFeatures.length > 0) {
+                        try {
+                            return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
+                        } catch (e) {
+                            console.error('getCoordsByGisId: line extent error', e);
+                        }
+                    }
+                }
+
+                if (type === 'polygon') {
+                    // Check polygon features first
+                    const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (polyFeatures.length > 0) {
+                        try {
+                            return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
+                        } catch (e) {
+                            console.error('getCoordsByGisId: polygon extent error', e);
+                        }
+                    }
+                }
 
                 // 1. Raw points array
                 const point = points.find(p => p.gisid == gisid);
@@ -1210,30 +1210,34 @@
                     }
                 }
 
-                // 3. Polygon features
-                const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                if (polyFeatures.length > 0) {
-                    try {
-                        return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
-                    } catch (e) {
-                        console.error('getCoordsByGisId: polygon extent error', e);
+                // 3. Polygon features (fallback)
+                if (type !== 'line') {
+                    const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (polyFeatures.length > 0) {
+                        try {
+                            return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
+                        } catch (e) {
+                            console.error('getCoordsByGisId: polygon extent error', e);
+                        }
                     }
                 }
 
-                // 4. Line features
-                const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                if (lineFeatures.length > 0) {
-                    try {
-                        return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
-                    } catch (e) {
-                        console.error('getCoordsByGisId: line extent error', e);
+                // 4. Line features (fallback)
+                if (type !== 'polygon') {
+                    const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (lineFeatures.length > 0) {
+                        try {
+                            return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
+                        } catch (e) {
+                            console.error('getCoordsByGisId: line extent error', e);
+                        }
                     }
                 }
 
                 return null;
             }
 
-            // ─── ZOOM TO FEATURE - FIXED ───
+            // ─── ZOOM TO FEATURE - FIXED to prioritize correct type ───
             function zoomToFeature(item) {
                 if (!item) {
                     showToast('❌ Invalid item', 3000);
@@ -1243,18 +1247,19 @@
                 let coords = null;
                 const gisid = item.id || item.point_gisid;
 
+                // Handle based on type - prioritize the exact type
                 if (item.type === 'polygon') {
                     const feature = polygonSource.getFeatureById(gisid);
                     if (feature) {
                         coords = ol.extent.getCenter(feature.getGeometry().getExtent());
                     } else {
-                        // Try to find by gisid property
                         const features = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
                         if (features.length > 0) {
                             coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
                         }
                     }
                 } else if (item.type === 'line') {
+                    // For lines, ONLY look in lineSource first
                     const feature = lineSource.getFeatureById(gisid);
                     if (feature) {
                         coords = ol.extent.getCenter(feature.getGeometry().getExtent());
@@ -1262,6 +1267,14 @@
                         const features = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
                         if (features.length > 0) {
                             coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
+                        }
+                    }
+
+                    // If no line found, fallback to polygon (optional)
+                    if (!coords) {
+                        const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                        if (polyFeatures.length > 0) {
+                            coords = ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
                         }
                     }
                 } else {
@@ -1379,27 +1392,26 @@
                 });
             }
 
-            // ─── CALCULATE DIRECTION - FIXED ───
+            // ─── CALCULATE DIRECTION - FIXED to handle line types ───
             function calculateDirection(loc, feature) {
                 if (!loc || !feature) {
                     showToast('❌ Missing location or feature data', 3000);
                     return;
                 }
 
-                // Get coordinates using the feature's ID
                 const gisid = feature.id || feature.point_gisid;
                 if (!gisid) {
                     Swal.fire('Error', 'No GIS ID found for this feature', 'error');
                     return;
                 }
 
-                const coords = getCoordsByGisId(gisid);
+                // Pass the type to prioritize correct geometry
+                const coords = getCoordsByGisId(gisid, feature.type);
                 if (!coords) {
                     Swal.fire('Error', `No coordinates found for GIS ID: ${gisid}`, 'error');
                     return;
                 }
 
-                // coords are in EPSG:3857 — convert to WGS84 lon/lat for OSRM
                 const lonLat = ol.proj.toLonLat(coords);
                 const destLon = lonLat[0];
                 const destLat = lonLat[1];
@@ -1410,11 +1422,11 @@
                     return;
                 }
 
-                console.log(`Routing to GIS ID ${gisid}: lon=${destLon}, lat=${destLat}`);
+                console.log(`Routing to GIS ID ${gisid} (${feature.type}): lon=${destLon}, lat=${destLat}`);
                 getRoute(loc.lon, loc.lat, destLon, destLat);
             }
 
-            // ─── GET ROUTE - FIXED ───
+            // ─── GET ROUTE ───
             function getRoute(startLon, startLat, endLon, endLat) {
                 $('#directionControls').addClass('active');
                 $('#routeInfo').text('Getting directions...');
@@ -1442,11 +1454,9 @@
                         const mins = Math.round(route.duration / 60);
                         $('#routeInfo').html(`<strong>${km} km</strong> · about ${mins} min`);
 
-                        // Clear previous route and destination
                         routeLayer.getSource().clear();
                         destinationLayer.getSource().clear();
 
-                        // Draw the route line
                         const lineCoords = route.geometry.coordinates.map(c => ol.proj.fromLonLat(c));
                         const routeFeature = new ol.Feature({
                             geometry: new ol.geom.LineString(lineCoords)
@@ -1459,21 +1469,18 @@
                         }));
                         routeLayer.getSource().addFeature(routeFeature);
 
-                        // Drop a destination marker
                         const destMarker = new ol.Feature({
                             geometry: new ol.geom.Point(ol.proj.fromLonLat([endLon, endLat]))
                         });
                         destMarker.setStyle(createDestinationStyle());
                         destinationLayer.getSource().addFeature(destMarker);
 
-                        // Fit view to the route
                         map.getView().fit(new ol.geom.LineString(lineCoords).getExtent(), {
                             padding: [80, 80, 80, 80],
                             duration: 800,
                             maxZoom: 19
                         });
 
-                        // Turn-by-turn steps
                         let stepsHtml = '';
                         const legs = route.legs || [];
                         legs.forEach(leg => {
@@ -1808,13 +1815,33 @@
                         const icon = item.geometryType === 'point' ? 'geo-alt' :
                             item.geometryType === 'polygon' ? 'pentagon' : 'vector-pen';
 
+                        // Type badge
+                        let badgeClass = '';
+                        let badgeText = '';
+                        if (item.type === 'line') {
+                            badgeClass = 'road';
+                            badgeText = 'Road';
+                        } else if (item.type === 'polygon') {
+                            badgeClass = 'parcel';
+                            badgeText = 'Parcel';
+                        } else if (item.type === 'point') {
+                            badgeClass = 'point';
+                            badgeText = 'Point';
+                        } else if (item.type === 'pointdata') {
+                            badgeClass = 'assessment';
+                            badgeText = 'Assessment';
+                        }
+
                         const editBtn = item.type === 'pointdata' ?
                             `<button class="btn btn-sm btn-warning edit-btn" data-id="${item.id}"><i class="bi bi-pencil"></i> Edit</button>` :
                             '';
 
                         html += `
                             <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-                                <div class="search-result-title"><i class="bi bi-${icon} me-2"></i>${displayTitle}</div>
+                                <div class="search-result-title">
+                                    <i class="bi bi-${icon} me-2"></i>${displayTitle}
+                                    <span class="type-badge ${badgeClass}">${badgeText}</span>
+                                </div>
                                 <div class="search-result-subtitle">${displaySubtitle}</div>
                                 <div class="mt-2 d-flex gap-2">
                                     <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
@@ -1848,15 +1875,10 @@
                 const id = $(this).data('id');
                 const type = $(this).data('type');
 
-                // Find the item by ID and type
                 let item = searchIndex.find(i => i.id == id && i.type === type);
-
-                // If not found, try to find by point_gisid
                 if (!item) {
                     item = searchIndex.find(i => i.point_gisid == id);
                 }
-
-                // If still not found, try to find by ID only
                 if (!item) {
                     item = searchIndex.find(i => i.id == id);
                 }
@@ -1877,15 +1899,10 @@
                 const id = $(this).data('id');
                 const type = $(this).data('type');
 
-                // Find the item by ID and type
                 let item = searchIndex.find(i => i.id == id && i.type === type);
-
-                // If not found, try to find by point_gisid
                 if (!item) {
                     item = searchIndex.find(i => i.point_gisid == id);
                 }
-
-                // If still not found, try to find by ID only
                 if (!item) {
                     item = searchIndex.find(i => i.id == id);
                 }
@@ -1969,13 +1986,33 @@
                     if (item.owner_name) details.push('Owner: ' + item.owner_name);
                     if (item.phone_number) details.push('Phone: ' + item.phone_number);
 
+                    let badgeClass = '';
+                    let badgeText = '';
+                    if (item.type === 'line') {
+                        badgeClass = 'road';
+                        badgeText = 'Road';
+                    } else if (item.type === 'polygon') {
+                        badgeClass = 'parcel';
+                        badgeText = 'Parcel';
+                    } else if (item.type === 'point') {
+                        badgeClass = 'point';
+                        badgeText = 'Point';
+                    } else if (item.type === 'pointdata') {
+                        badgeClass = 'assessment';
+                        badgeText = 'Assessment';
+                    }
+
                     html += `
                         <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-                            <div class="search-result-title"><i class="bi bi-${icon} me-2"></i>${item.title}</div>
+                            <div class="search-result-title">
+                                <i class="bi bi-${icon} me-2"></i>${item.title}
+                                <span class="type-badge ${badgeClass}">${badgeText}</span>
+                            </div>
                             <div class="search-result-subtitle">${item.subtitle}</div>
                             ${details.length ? '<div class="search-result-subtitle" style="color:#666;">' + details.join(' | ') + '</div>' : ''}
                             <div class="search-result-actions">
                                 <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
+                                <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
                             </div>
                         </div>
                     `;
