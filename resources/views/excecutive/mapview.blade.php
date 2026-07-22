@@ -928,6 +928,7 @@
             loadPolygonSource();
             loadLineSource();
             buildSearchIndex();
+            console.log(searchIndex);
 
             // ─── CREATE LAYERS ───
             const polygonLayer = new ol.layer.Vector({
