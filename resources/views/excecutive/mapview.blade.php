@@ -1882,7 +1882,7 @@
                 if (!item) {
                     item = searchIndex.find(i => i.id == id);
                 }
-
+                console.log("item",item);
                 if (item) {
                     zoomToFeature(item);
                 } else {
