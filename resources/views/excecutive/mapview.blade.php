@@ -1385,8 +1385,29 @@
             }
 
             // ─── ZOOM TO FEATURE - FIXED FOR ALL COORDINATE TYPES ───
-            function zoomToFeature(item) {
-               console.log("item",item);
+            function zoomToFeature(item,type) {
+                let coords = null;
+
+                    if (type === 'polygon') {
+                        const feature = polygonSource.getFeatureById(gisid);
+                        if (feature) coords = ol.extent.getCenter(feature.getGeometry().getExtent());
+                    } else if (type === 'line') {
+                        const feature = lineSource.getFeatureById(gisid);
+                        if (feature) coords = ol.extent.getCenter(feature.getGeometry().getExtent());
+                    } else {
+                        // point, pointdata (id here is either a point gisid or a point_gisid)
+                        coords = getCoordsByGisId(gisid);
+                    }
+
+                    if (!coords) {
+                        showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000);
+                        return;
+                    }
+                    map.getView().animate({
+                        center: coords,
+                        zoom: 22,
+                        duration: 1000
+                    });
             }
 
             // ─── EVENT HANDLERS ───
@@ -1802,7 +1823,7 @@
                 const type = $(this).data('type');
                 const item = searchIndex.find(i => i.id == id && i.type === type);
                 if (item) {
-                    zoomToFeature(item);
+                    zoomToFeature(item,type);
                     $('.search-dropdown').removeClass('active');
                     $('#gisSearchInput').val('');
                     $('#searchResults').html('');
