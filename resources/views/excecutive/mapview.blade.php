@@ -740,7 +740,6 @@
                             owner_name: poly.owner_name || '',
                             phone_number: poly.phone_number || '',
                             coordinates: coords,
-                            center: center,
                             geometryType: 'polygon',
                             searchText: `${poly.gisid} ${poly.assessment || ''} ${poly.old_assessment || ''} ${poly.owner_name || ''} ${poly.phone_number || ''} ${poly.sqfeet || ''}`
                                 .toLowerCase()
@@ -759,7 +758,7 @@
                             const flatCoords = coords.flat(2);
                             if (flatCoords && flatCoords.length > 0) {
                                 const extent = ol.extent.boundingExtent(flatCoords);
-                                center = ol.extent.getCenter(extent);
+
                             }
                         } catch (e) {
                             // Skip center calculation for lines
@@ -771,7 +770,6 @@
                             subtitle: `GIS ID: ${line.gisid}`,
                             road_name: line.road_name || '',
                             coordinates: coords,
-                            center: center,
                             geometryType: 'line',
                             searchText: `${line.gisid} ${line.road_name || ''}`.toLowerCase()
                         });
@@ -799,7 +797,7 @@
                                 lat = coords[0];
                             }
 
-                            center = ol.proj.fromLonLat([lon, lat]);
+
                         }
 
                         searchIndex.push({
@@ -808,7 +806,6 @@
                             title: `GIS ID: ${point.gisid}`,
                             subtitle: 'Point Location',
                             coordinates: coords,
-                            center: center,
                             geometryType: 'point',
                             searchText: `${point.gisid} point`.toLowerCase()
                         });
@@ -1389,195 +1386,7 @@
 
             // ─── ZOOM TO FEATURE - FIXED FOR ALL COORDINATE TYPES ───
             function zoomToFeature(item) {
-                try {
-                    let center = null;
-                    let zoomLevel = 20;
-                    let found = false;
-
-                    console.log('🔍 Zooming to item:', item);
-
-                    // Case 1: Item has center property (from search index)
-                    if (item.center) {
-                        center = item.center;
-                        found = true;
-                        console.log('✅ Using center from search index:', center);
-                    }
-                    // Case 2: Item is polygon with coordinates
-                    else if (item.type === 'polygon' && item.coordinates && Array.isArray(item.coordinates)) {
-                        try {
-                            const extent = ol.extent.boundingExtent(item.coordinates);
-                            center = ol.extent.getCenter(extent);
-                            found = true;
-                            console.log('✅ Using polygon center:', center);
-                        } catch (e) {
-                            console.error('Error getting polygon center:', e);
-                        }
-                    }
-                    // Case 3: Item is line with coordinates
-                    else if (item.type === 'line' && item.coordinates) {
-                        try {
-                            const flatCoords = item.coordinates.flat(2);
-                            if (flatCoords && flatCoords.length > 0) {
-                                const extent = ol.extent.boundingExtent(flatCoords);
-                                center = ol.extent.getCenter(extent);
-                                found = true;
-                                console.log('✅ Using line center:', center);
-                            }
-                        } catch (e) {
-                            console.error('Error getting line center:', e);
-                        }
-                    }
-                    // Case 4: Item is point (from points array)
-                    else if (item.type === 'point' && item.coordinates) {
-                        try {
-                            let coords = item.coordinates;
-                            if (Array.isArray(coords) && coords.length === 2) {
-                                let lon = coords[0];
-                                let lat = coords[1];
-
-                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
-                                    lon = coords[1];
-                                    lat = coords[0];
-                                }
-
-                                center = ol.proj.fromLonLat([lon, lat]);
-                                found = true;
-                                zoomLevel = 21;
-                                console.log('✅ Using point coordinates [lon, lat]:', [lon, lat], 'projected:',
-                                    center);
-                            }
-                        } catch (e) {
-                            console.error('Error converting point coordinates:', e);
-                        }
-                    }
-                    // Case 5: Item is pointdata with lat/lon coordinates
-                    else if (item.type === 'pointdata' && item.coordinates && item.coordinates.length === 2) {
-                        try {
-                            let lon = item.coordinates[0];
-                            let lat = item.coordinates[1];
-
-                            if (item.coordinates[0] >= -90 && item.coordinates[0] <= 90 &&
-                                item.coordinates[1] >= -180 && item.coordinates[1] <= 180) {
-                                lon = item.coordinates[1];
-                                lat = item.coordinates[0];
-                            }
-
-                            center = ol.proj.fromLonLat([lon, lat]);
-                            found = true;
-                            zoomLevel = 21;
-                            console.log('✅ Using pointdata coordinates [lon, lat]:', [lon, lat], 'projected:',
-                                center);
-                        } catch (e) {
-                            console.error('Error converting pointdata coordinates:', e);
-                        }
-                    }
-                    // Case 6: Try to find by GISID in polygonSource or original data
-                    else if (item.id) {
-                        const features = polygonSource.getFeatures();
-                        for (let f of features) {
-                            if (f.get('gisid') == item.id) {
-                                try {
-                                    const geom = f.getGeometry();
-                                    if (geom) {
-                                        const extent = geom.getExtent();
-                                        center = ol.extent.getCenter(extent);
-                                        found = true;
-                                        console.log('✅ Using feature from polygonSource:', center);
-                                        break;
-                                    }
-                                } catch (e) {
-                                    console.error('Error getting feature geometry:', e);
-                                }
-                            }
-                        }
-
-                        if (!found && points) {
-                            const pointData = points.find(p => p.gisid == item.id);
-                            if (pointData) {
-                                try {
-                                    let coords = JSON.parse(pointData.coordinates);
-                                    if (Array.isArray(coords) && coords.length === 2) {
-                                        let lon = coords[0];
-                                        let lat = coords[1];
-
-                                        if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                            180) {
-                                            lon = coords[1];
-                                            lat = coords[0];
-                                        }
-
-                                        center = ol.proj.fromLonLat([lon, lat]);
-                                        found = true;
-                                        zoomLevel = 21;
-                                        console.log('✅ Using point from points array:', center);
-                                    }
-                                } catch (e) {
-                                    console.error('Error parsing point data:', e);
-                                }
-                            }
-                        }
-
-                        if (!found && pointDatas) {
-                            const pointData = pointDatas.find(p => p.point_gisid == item.id || p.id == item.id);
-                            if (pointData && pointData.coordinates) {
-                                try {
-                                    let coords = JSON.parse(pointData.coordinates);
-                                    if (Array.isArray(coords) && coords.length === 2) {
-                                        let lon = coords[0];
-                                        let lat = coords[1];
-
-                                        if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                            180) {
-                                            lon = coords[1];
-                                            lat = coords[0];
-                                        }
-
-                                        center = ol.proj.fromLonLat([lon, lat]);
-                                        found = true;
-                                        zoomLevel = 21;
-                                        console.log('✅ Using point from pointDatas:', center);
-                                    }
-                                } catch (e) {
-                                    console.error('Error parsing pointData:', e);
-                                }
-                            }
-                        }
-                    }
-
-                    if (found && center) {
-                        if (Array.isArray(center) && center.length === 2 &&
-                            !isNaN(center[0]) && !isNaN(center[1])) {
-
-                            if (center[0] >= -180 && center[0] <= 180 &&
-                                center[1] >= -90 && center[1] <= 90) {
-                                center = ol.proj.fromLonLat(center);
-                                console.log('🔄 Converted lat/lon to projected:', center);
-                            }
-
-                            map.getView().animate({
-                                center: center,
-                                zoom: zoomLevel,
-                                duration: 1000
-                            });
-
-                            let displayName = item.title || `GISID: ${item.id}`;
-                            showToast(`📍 Zoomed to: ${displayName}`);
-                            return true;
-                        } else {
-                            console.error('Invalid center coordinates:', center);
-                            showToast('❌ Invalid coordinates for this item');
-                            return false;
-                        }
-                    } else {
-                        showToast('❌ Cannot zoom to this item - no coordinates found');
-                        console.log('❌ Item details:', item);
-                        return false;
-                    }
-                } catch (e) {
-                    console.error('❌ Error in zoomToFeature:', e);
-                    showToast('❌ Error zooming to item');
-                    return false;
-                }
+               console.log("item",item);
             }
 
             // ─── EVENT HANDLERS ───
