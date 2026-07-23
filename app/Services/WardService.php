@@ -748,7 +748,64 @@ class WardService
             ];
         }
     }
+public function createSingleLine(array $data)
+{
+    try {
 
+        $wardId  = $data['ward_id'];
+        $feature = $data['feature'];
+
+        $tableName = 'lines_' . $wardId;
+
+        // Create table if not exists
+        if (!Schema::hasTable($tableName)) {
+            $this->createLineTable($wardId);
+        }
+
+        // Validate geometry
+        if (
+            !isset($feature['geometry']) ||
+            !in_array($feature['geometry']['type'], ['LineString', 'MultiLineString'])
+        ) {
+            throw new \Exception('Invalid LineString Geometry');
+        }
+
+        $properties = $feature['properties'] ?? [];
+
+        $gisid = $properties['gisid']
+            ?? $properties['GIS_ID']
+            ?? $this->generateLineGISID($tableName);
+
+        $roadName = $properties['road_name']
+            ?? $properties['ROAD_NAME']
+            ?? $properties['name']
+            ?? null;
+
+        DB::table($tableName)->insert([
+            'gisid'       => $gisid,
+            'type'        => $feature['geometry']['type'],
+            'coordinates' => json_encode($feature['geometry']['coordinates']),
+            'road_name'   => $roadName,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        return [
+            'status'  => true,
+            'message' => 'Line created successfully',
+            'gisid'   => $gisid
+        ];
+
+    } catch (\Exception $e) {
+
+        Log::error('createSingleLine : ' . $e->getMessage());
+
+        return [
+            'status'  => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
     /**
      * Generate unique GIS ID for line
      */

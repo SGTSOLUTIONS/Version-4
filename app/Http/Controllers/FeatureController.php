@@ -63,10 +63,9 @@ class FeatureController extends Controller
                     break;
 
                 case 'LineString':
-                    $result = $this->wardService->storeSingleLine([
-                        'ward_id'   => $wardId,
-                        'layer_type' => $layerType,
-                        'feature'   => $request->feature
+                    $result = $this->wardService->createSingleLine([
+                        'ward_id' => $wardId,
+                        'feature' => $request->feature,
                     ]);
                     break;
 
