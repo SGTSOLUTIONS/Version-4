@@ -820,19 +820,7 @@
                             let coords = [];
                             let center = null;
 
-                            if (pd.coordinates) {
-                                coords = JSON.parse(pd.coordinates);
-                                if (Array.isArray(coords) && coords.length === 2) {
-                                    let lon = coords[0];
-                                    let lat = coords[1];
-                                    if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                        180) {
-                                        lon = coords[1];
-                                        lat = coords[0];
-                                    }
-                                    center = ol.proj.fromLonLat([lon, lat]);
-                                }
-                            }
+
 
                             let pointGisid = pd.point_gisid || '';
 
@@ -845,7 +833,7 @@
                                 point_gisid: pointGisid,
                                 owner_name: pd.owner_name || '',
                                 phone_number: pd.phone_number || '',
-                                coordinates: coords,
+
                                 center: center,
                                 geometryType: 'point',
                                 searchText: `${pointGisid} ${pd.assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`

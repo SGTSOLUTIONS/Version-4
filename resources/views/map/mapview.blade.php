@@ -3626,7 +3626,7 @@
                                 type: 'pointdata',
                                 title: `GIS ID: ${pd.gisid}`,
                                 subtitle: `Assessment: ${pd.assessment} | Point GIS ID: ${pd.point_gisid}`,
-                                coordinates: JSON.parse(pd.coordinates),
+
                                 geometryType: 'point',
                                 assessment: pd.assessment,
                                 old_assessment: pd.old_assessment,
@@ -3644,6 +3644,7 @@
 
                     const v = value.toString().toLowerCase().trim();
                     if (!v) return [];
+                    console.log(v);
                     return searchIndex.filter(item =>
                         (item.id && item.id.toString().toLowerCase().includes(v)) ||
                        (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
