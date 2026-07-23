@@ -148,11 +148,9 @@
             0% {
                 opacity: 1;
             }
-
             50% {
                 opacity: 0.5;
             }
-
             100% {
                 opacity: 1;
             }
@@ -452,45 +450,6 @@
             margin-bottom: 6px;
         }
 
-        .filter-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-
-        .filter-options.scrollable-options {
-            max-height: 100px;
-            overflow-y: auto;
-            display: block;
-        }
-
-        .filter-options.scrollable-options .filter-option {
-            display: inline-flex;
-            width: 48%;
-            margin: 2px 0;
-        }
-
-        .filter-option {
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        .filter-option:hover {
-            background: #f0f8ff;
-        }
-
-        .filter-option input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
-            cursor: pointer;
-            accent-color: #0d6efd;
-        }
-
         .filter-range {
             padding: 4px 0;
         }
@@ -522,12 +481,6 @@
 
         .filter-range .form-range::-webkit-slider-thumb {
             background: #0d6efd;
-        }
-
-        .amenities-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2px;
         }
 
         .filter-actions {
@@ -614,6 +567,33 @@
         .filter-dropdown::-webkit-scrollbar-thumb:hover,
         .scrollable-options::-webkit-scrollbar-thumb:hover {
             background: #999;
+        }
+
+        /* Form Select Styles */
+        .form-select-sm {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background-color: white;
+            width: 100%;
+        }
+
+        .form-select-sm:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+        }
+
+        select[multiple] {
+            min-height: 60px;
+        }
+
+        .text-muted {
+            color: #6c757d;
+            font-size: 10px;
+            display: block;
+            margin-top: 2px;
         }
     </style>
 @endpush
@@ -1087,15 +1067,16 @@
                         <!-- Building Usage Filter -->
                         <div class="filter-section">
                             <div class="filter-section-header">Building Usage</div>
-                            <div class="filter-options" id="usageFilter">
-                                <label class="filter-option"><input type="checkbox" value="RESIDENTIAL" checked> Residential</label>
-                                <label class="filter-option"><input type="checkbox" value="COMMERCIAL" checked> Commercial</label>
-                                <label class="filter-option"><input type="checkbox" value="INDUSTRIAL" checked> Industrial</label>
-                                <label class="filter-option"><input type="checkbox" value="INSTITUTIONAL" checked> Institutional</label>
-                                <label class="filter-option"><input type="checkbox" value="MIXED" checked> Mixed</label>
-                                <label class="filter-option"><input type="checkbox" value="GOVERNMENT" checked> Government</label>
-                                <label class="filter-option"><input type="checkbox" value="VACANT" checked> Vacant</label>
-                            </div>
+                            <select class="form-select form-select-sm" id="usageFilter">
+                                <option value="all">All</option>
+                                <option value="RESIDENTIAL">Residential</option>
+                                <option value="COMMERCIAL">Commercial</option>
+                                <option value="INDUSTRIAL">Industrial</option>
+                                <option value="INSTITUTIONAL">Institutional</option>
+                                <option value="MIXED">Mixed</option>
+                                <option value="GOVERNMENT">Government</option>
+                                <option value="VACANT">Vacant</option>
+                            </select>
                         </div>
 
                         <div class="dropdown-divider"></div>
@@ -1118,13 +1099,14 @@
                         <!-- Zonation Filter -->
                         <div class="filter-section">
                             <div class="filter-section-header">Zonation</div>
-                            <div class="filter-options" id="zoneFilter">
-                                <label class="filter-option"><input type="checkbox" value="ZONE-A" checked> Zone A</label>
-                                <label class="filter-option"><input type="checkbox" value="ZONE-B" checked> Zone B</label>
-                                <label class="filter-option"><input type="checkbox" value="ZONE-C" checked> Zone C</label>
-                                <label class="filter-option"><input type="checkbox" value="ZONE-D" checked> Zone D</label>
-                                <label class="filter-option"><input type="checkbox" value="ZONE-E" checked> Zone E</label>
-                            </div>
+                            <select class="form-select form-select-sm" id="zoneFilter">
+                                <option value="all">All</option>
+                                <option value="ZONE-A">Zone A</option>
+                                <option value="ZONE-B">Zone B</option>
+                                <option value="ZONE-C">Zone C</option>
+                                <option value="ZONE-D">Zone D</option>
+                                <option value="ZONE-E">Zone E</option>
+                            </select>
                         </div>
 
                         <div class="dropdown-divider"></div>
@@ -1132,14 +1114,15 @@
                         <!-- Construction Type Filter -->
                         <div class="filter-section">
                             <div class="filter-section-header">Construction Type</div>
-                            <div class="filter-options" id="constructionFilter">
-                                <label class="filter-option"><input type="checkbox" value="PERMANENT" checked> Permanent</label>
-                                <label class="filter-option"><input type="checkbox" value="SEMI_PERMANENT" checked> Semi Permanent</label>
-                                <label class="filter-option"><input type="checkbox" value="VACANT_LAND" checked> Vacant Land</label>
-                                <label class="filter-option"><input type="checkbox" value="SHED" checked> Shed</label>
-                                <label class="filter-option"><input type="checkbox" value="CAR_SHED" checked> Car Shed</label>
-                                <label class="filter-option"><input type="checkbox" value="TEMPORARY" checked> Temporary</label>
-                            </div>
+                            <select class="form-select form-select-sm" id="constructionFilter">
+                                <option value="all">All</option>
+                                <option value="PERMANENT">Permanent</option>
+                                <option value="SEMI_PERMANENT">Semi Permanent</option>
+                                <option value="VACANT_LAND">Vacant Land</option>
+                                <option value="SHED">Shed</option>
+                                <option value="CAR_SHED">Car Shed</option>
+                                <option value="TEMPORARY">Temporary</option>
+                            </select>
                         </div>
 
                         <div class="dropdown-divider"></div>
@@ -1147,49 +1130,51 @@
                         <!-- Building Type Filter -->
                         <div class="filter-section">
                             <div class="filter-section-header">Building Type</div>
-                            <div class="filter-options scrollable-options" id="buildingTypeFilter">
-                                <label class="filter-option"><input type="checkbox" value="Independent" checked> Independent</label>
-                                <label class="filter-option"><input type="checkbox" value="Flat" checked> Flat</label>
-                                <label class="filter-option"><input type="checkbox" value="Kalyana_Mandapam" checked> Kalyana Mandapam</label>
-                                <label class="filter-option"><input type="checkbox" value="Hotel" checked> Hotel</label>
-                                <label class="filter-option"><input type="checkbox" value="Cinema_Theatre" checked> Cinema Theatre</label>
-                                <label class="filter-option"><input type="checkbox" value="Central_Government_Building" checked> Central Govt</label>
-                                <label class="filter-option"><input type="checkbox" value="State_Government_Building" checked> State Govt</label>
-                                <label class="filter-option"><input type="checkbox" value="Municipality_Corporation" checked> Municipality</label>
-                                <label class="filter-option"><input type="checkbox" value="Educational_Institution" checked> Educational</label>
-                                <label class="filter-option"><input type="checkbox" value="Hospital" checked> Hospital</label>
-                                <label class="filter-option"><input type="checkbox" value="Commercial_Complex" checked> Commercial Complex</label>
-                                <label class="filter-option"><input type="checkbox" value="Shop" checked> Shop</label>
-                                <label class="filter-option"><input type="checkbox" value="Office" checked> Office</label>
-                                <label class="filter-option"><input type="checkbox" value="Temple" checked> Temple</label>
-                                <label class="filter-option"><input type="checkbox" value="Mosque" checked> Mosque</label>
-                                <label class="filter-option"><input type="checkbox" value="Church" checked> Church</label>
-                                <label class="filter-option"><input type="checkbox" value="Amma_Unavagam" checked> Amma Unavagam</label>
-                                <label class="filter-option"><input type="checkbox" value="Public_Toilet" checked> Public Toilet</label>
-                                <label class="filter-option"><input type="checkbox" value="Vacant Land" checked> Vacant Land</label>
-                                <label class="filter-option"><input type="checkbox" value="Under Construction" checked> Under Construction</label>
-                                <label class="filter-option"><input type="checkbox" value="Others" checked> Others</label>
-                            </div>
+                            <select class="form-select form-select-sm" id="buildingTypeFilter">
+                                <option value="all">All</option>
+                                <option value="Independent">Independent</option>
+                                <option value="Flat">Flat</option>
+                                <option value="Kalyana_Mandapam">Kalyana Mandapam</option>
+                                <option value="Hotel">Hotel</option>
+                                <option value="Cinema_Theatre">Cinema Theatre</option>
+                                <option value="Central_Government_Building">Central Govt</option>
+                                <option value="State_Government_Building">State Govt</option>
+                                <option value="Municipality_Corporation">Municipality</option>
+                                <option value="Educational_Institution">Educational</option>
+                                <option value="Hospital">Hospital</option>
+                                <option value="Commercial_Complex">Commercial Complex</option>
+                                <option value="Shop">Shop</option>
+                                <option value="Office">Office</option>
+                                <option value="Temple">Temple</option>
+                                <option value="Mosque">Mosque</option>
+                                <option value="Church">Church</option>
+                                <option value="Amma_Unavagam">Amma Unavagam</option>
+                                <option value="Public_Toilet">Public Toilet</option>
+                                <option value="Vacant Land">Vacant Land</option>
+                                <option value="Under Construction">Under Construction</option>
+                                <option value="Others">Others</option>
+                            </select>
                         </div>
 
                         <div class="dropdown-divider"></div>
 
-                        <!-- Amenities Filters -->
+                        <!-- Amenities Filters - Multi-select dropdown -->
                         <div class="filter-section">
                             <div class="filter-section-header">Amenities</div>
-                            <div class="filter-options amenities-grid" id="amenitiesFilter">
-                                <label class="filter-option"><input type="checkbox" value="liftroom" checked> Lift</label>
-                                <label class="filter-option"><input type="checkbox" value="headroom" checked> Head Room</label>
-                                <label class="filter-option"><input type="checkbox" value="overhead_tank" checked> Overhead Tank</label>
-                                <label class="filter-option"><input type="checkbox" value="rainwater_harvesting" checked> Rainwater Harvesting</label>
-                                <label class="filter-option"><input type="checkbox" value="parking" checked> Parking</label>
-                                <label class="filter-option"><input type="checkbox" value="ramp" checked> Ramp</label>
-                                <label class="filter-option"><input type="checkbox" value="hoarding" checked> Hoarding</label>
-                                <label class="filter-option"><input type="checkbox" value="cctv" checked> CCTV</label>
-                                <label class="filter-option"><input type="checkbox" value="cell_tower" checked> Cell Tower</label>
-                                <label class="filter-option"><input type="checkbox" value="solar_panel" checked> Solar Panel</label>
-                                <label class="filter-option"><input type="checkbox" value="water_connection" checked> Water Connection</label>
-                            </div>
+                            <select class="form-select form-select-sm" id="amenitiesFilter" multiple size="3">
+                                <option value="liftroom">Lift</option>
+                                <option value="headroom">Head Room</option>
+                                <option value="overhead_tank">Overhead Tank</option>
+                                <option value="rainwater_harvesting">Rainwater Harvesting</option>
+                                <option value="parking">Parking</option>
+                                <option value="ramp">Ramp</option>
+                                <option value="hoarding">Hoarding</option>
+                                <option value="cctv">CCTV</option>
+                                <option value="cell_tower">Cell Tower</option>
+                                <option value="solar_panel">Solar Panel</option>
+                                <option value="water_connection">Water Connection</option>
+                            </select>
+                            <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
                         </div>
 
                         <div class="dropdown-divider"></div>
@@ -1197,17 +1182,18 @@
                         <!-- UGD Status Filter -->
                         <div class="filter-section">
                             <div class="filter-section-header">UGD Status</div>
-                            <div class="filter-options scrollable-options" id="ugdFilter">
-                                <label class="filter-option"><input type="checkbox" value="No_Connection" checked> No Connection</label>
-                                <label class="filter-option"><input type="checkbox" value="Manhole_Available_but_Connection_Not_Given_to_House" checked> Manhole Available</label>
-                                <label class="filter-option"><input type="checkbox" value="Stage_1_Completed" checked> Stage 1 Completed</label>
-                                <label class="filter-option"><input type="checkbox" value="Stage_1_2_Completed" checked> Stage 1 & 2 Completed</label>
-                                <label class="filter-option"><input type="checkbox" value="Stage_1_2_Completed_but_Not_Connected" checked> Stage 1 & 2 Not Connected</label>
-                                <label class="filter-option"><input type="checkbox" value="Stage_1_2_3_Completed" checked> Stage 1,2 & 3 Completed</label>
-                                <label class="filter-option"><input type="checkbox" value="Direct_Connection_Given" checked> Direct Connection</label>
-                                <label class="filter-option"><input type="checkbox" value="1_UGD_Connection_-_3_Stage_Completed" checked> 1 UGD - 3 Stage</label>
-                                <label class="filter-option"><input type="checkbox" value="2_UGD_Connection_-_3_Stage_Completed" checked> 2 UGD - 3 Stage</label>
-                            </div>
+                            <select class="form-select form-select-sm" id="ugdFilter">
+                                <option value="all">All</option>
+                                <option value="No_Connection">No Connection</option>
+                                <option value="Manhole_Available_but_Connection_Not_Given_to_House">Manhole Available</option>
+                                <option value="Stage_1_Completed">Stage 1 Completed</option>
+                                <option value="Stage_1_2_Completed">Stage 1 & 2 Completed</option>
+                                <option value="Stage_1_2_Completed_but_Not_Connected">Stage 1 & 2 Not Connected</option>
+                                <option value="Stage_1_2_3_Completed">Stage 1,2 & 3 Completed</option>
+                                <option value="Direct_Connection_Given">Direct Connection</option>
+                                <option value="1_UGD_Connection_-_3_Stage_Completed">1 UGD - 3 Stage</option>
+                                <option value="2_UGD_Connection_-_3_Stage_Completed">2 UGD - 3 Stage</option>
+                            </select>
                         </div>
 
                         <div class="dropdown-divider"></div>
@@ -1228,7 +1214,7 @@
                 </div>
             `);
 
-            // 1. LAYER SWITCHER
+            // 2. LAYER SWITCHER
             $stack.append(`
                 <div class="custom-layer-switcher">
                     <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
@@ -1272,7 +1258,7 @@
                 </div>
             `);
 
-            // 2. LOCATION SWITCHER
+            // 3. LOCATION SWITCHER
             $stack.append(`
                 <div class="custom-location-switcher">
                     <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
@@ -1301,7 +1287,7 @@
                 <div class="location-toast" id="locationToast"></div>
             `);
 
-            // 3. SEARCH SWITCHER
+            // 4. SEARCH SWITCHER
             $stack.append(`
                 <div class="custom-search-switcher">
                     <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
@@ -1344,7 +1330,7 @@
                 </div>
             `);
 
-            // 4. LABEL TOGGLE
+            // 5. LABEL TOGGLE
             $stack.append(`
                 <div class="custom-label-toggle">
                     <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
@@ -1353,7 +1339,7 @@
                 </div>
             `);
 
-            // 5. LEGEND TOGGLE
+            // 6. LEGEND TOGGLE
             $stack.append(`
                 <div class="custom-legend-toggle">
                     <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
@@ -1362,7 +1348,7 @@
                 </div>
             `);
 
-            // 6. 3D TOGGLE
+            // 7. 3D TOGGLE
             $stack.append(`
                 <div class="custom-3d-toggle">
                     <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
@@ -1370,7 +1356,6 @@
                     </button>
                 </div>
             `);
-
 
             // 8. FULLSCREEN BUTTONS
             $mapContainer.append(`
@@ -1831,34 +1816,34 @@
 
             // ─── FILTER FUNCTIONS ───
 
-            function getSelectedCheckboxValues(containerSelector) {
-                const values = [];
-                $(containerSelector).find('input[type="checkbox"]:checked').each(function() {
-                    values.push($(this).val());
-                });
-                return values;
+            function getSelectedDropdownValue(selector) {
+                return $(selector).val();
+            }
+
+            function getSelectedMultiDropdownValues(selector) {
+                return $(selector).val() || [];
             }
 
             function applyFilters() {
-                const selectedUsage = getSelectedCheckboxValues('#usageFilter');
-                const selectedZones = getSelectedCheckboxValues('#zoneFilter');
-                const selectedConstruction = getSelectedCheckboxValues('#constructionFilter');
-                const selectedBuildingTypes = getSelectedCheckboxValues('#buildingTypeFilter');
-                const selectedAmenities = getSelectedCheckboxValues('#amenitiesFilter');
-                const selectedUgd = getSelectedCheckboxValues('#ugdFilter');
+                const selectedUsage = $('#usageFilter').val();
+                const selectedZone = $('#zoneFilter').val();
+                const selectedConstruction = $('#constructionFilter').val();
+                const selectedBuildingType = $('#buildingTypeFilter').val();
+                const selectedAmenities = getSelectedMultiDropdownValues('#amenitiesFilter');
+                const selectedUgd = $('#ugdFilter').val();
                 const minArea = parseInt($('#minArea').val()) || 0;
                 const maxArea = parseInt($('#maxArea').val()) || 10000;
 
-                const allUsageSelected = selectedUsage.length === 7;
-                const allZonesSelected = selectedZones.length === 5;
-                const allConstructionSelected = selectedConstruction.length === 6;
-                const allBuildingTypesSelected = selectedBuildingTypes.length === 21;
-                const allAmenitiesSelected = selectedAmenities.length === 11;
-                const allUgdSelected = selectedUgd.length === 9;
+                const allUsageSelected = selectedUsage === 'all';
+                const allZonesSelected = selectedZone === 'all';
+                const allConstructionSelected = selectedConstruction === 'all';
+                const allBuildingTypesSelected = selectedBuildingType === 'all';
+                const allUgdSelected = selectedUgd === 'all';
+                const noAmenitiesSelected = selectedAmenities.length === 0;
                 const areaDefault = minArea === 0 && maxArea === 10000;
 
                 const anyFilterActive = !allUsageSelected || !allZonesSelected || !allConstructionSelected ||
-                    !allBuildingTypesSelected || !allAmenitiesSelected || !allUgdSelected || !areaDefault;
+                    !allBuildingTypesSelected || !allUgdSelected || !noAmenitiesSelected || !areaDefault;
 
                 if (!anyFilterActive) {
                     resetAllFilters(true);
@@ -1876,57 +1861,53 @@
 
                     let passesFilters = true;
 
+                    // Area filter
                     if (!(sqfeet >= minArea && sqfeet <= maxArea)) {
                         passesFilters = false;
                     }
 
-                    if (passesFilters && buildingData) {
+                    // Usage filter
+                    if (passesFilters && selectedUsage !== 'all' && buildingData) {
                         const usage = buildingData.building_usage || '';
-                        if (selectedUsage.length > 0 && !selectedUsage.includes(usage)) {
+                        if (selectedUsage !== usage) {
                             passesFilters = false;
                         }
-                    } else if (passesFilters && !buildingData) {
-                        if (selectedUsage.length < 7) {
-                            passesFilters = false;
-                        }
+                    } else if (passesFilters && selectedUsage !== 'all' && !buildingData) {
+                        passesFilters = false;
                     }
 
-                    if (passesFilters && buildingData) {
+                    // Zone filter
+                    if (passesFilters && selectedZone !== 'all' && buildingData) {
                         const zone = buildingData.zone || buildingData.building_zone || '';
-                        if (selectedZones.length > 0 && !selectedZones.includes(zone)) {
+                        if (selectedZone !== zone) {
                             passesFilters = false;
                         }
-                    } else if (passesFilters && !buildingData) {
-                        if (selectedZones.length < 5) {
-                            passesFilters = false;
-                        }
+                    } else if (passesFilters && selectedZone !== 'all' && !buildingData) {
+                        passesFilters = false;
                     }
 
-                    if (passesFilters && buildingData) {
+                    // Construction filter
+                    if (passesFilters && selectedConstruction !== 'all' && buildingData) {
                         const constructionType = buildingData.construction_type || '';
-                        if (selectedConstruction.length > 0 && !selectedConstruction.includes(
-                                constructionType)) {
+                        if (selectedConstruction !== constructionType) {
                             passesFilters = false;
                         }
-                    } else if (passesFilters && !buildingData) {
-                        if (selectedConstruction.length < 6) {
-                            passesFilters = false;
-                        }
+                    } else if (passesFilters && selectedConstruction !== 'all' && !buildingData) {
+                        passesFilters = false;
                     }
 
-                    if (passesFilters && buildingData) {
+                    // Building Type filter
+                    if (passesFilters && selectedBuildingType !== 'all' && buildingData) {
                         const buildingType = buildingData.building_type || '';
-                        if (selectedBuildingTypes.length > 0 && !selectedBuildingTypes.includes(
-                                buildingType)) {
+                        if (selectedBuildingType !== buildingType) {
                             passesFilters = false;
                         }
-                    } else if (passesFilters && !buildingData) {
-                        if (selectedBuildingTypes.length < 21) {
-                            passesFilters = false;
-                        }
+                    } else if (passesFilters && selectedBuildingType !== 'all' && !buildingData) {
+                        passesFilters = false;
                     }
 
-                    if (passesFilters && buildingData && selectedAmenities.length > 0) {
+                    // Amenities filter (multi-select)
+                    if (passesFilters && selectedAmenities.length > 0 && buildingData) {
                         const hasAllAmenities = selectedAmenities.every(amenity => {
                             const value = buildingData[amenity];
                             return value === 'Yes' || value === true || value === 1 ||
@@ -1935,21 +1916,18 @@
                         if (!hasAllAmenities) {
                             passesFilters = false;
                         }
-                    } else if (passesFilters && !buildingData) {
-                        if (selectedAmenities.length < 11) {
-                            passesFilters = false;
-                        }
+                    } else if (passesFilters && selectedAmenities.length > 0 && !buildingData) {
+                        passesFilters = false;
                     }
 
-                    if (passesFilters && buildingData) {
+                    // UGD filter
+                    if (passesFilters && selectedUgd !== 'all' && buildingData) {
                         const ugdStatus = buildingData.ugd || '';
-                        if (selectedUgd.length > 0 && !selectedUgd.includes(ugdStatus)) {
+                        if (selectedUgd !== ugdStatus) {
                             passesFilters = false;
                         }
-                    } else if (passesFilters && !buildingData) {
-                        if (selectedUgd.length < 9) {
-                            passesFilters = false;
-                        }
+                    } else if (passesFilters && selectedUgd !== 'all' && !buildingData) {
+                        passesFilters = false;
                     }
 
                     if (passesFilters) {
@@ -1971,7 +1949,8 @@
                 $('#visibleCount').text(visibleCount);
                 const total = allFeatures.length;
                 $('#filterStats').html(
-                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
+                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`
+                );
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -1985,10 +1964,14 @@
             }
 
             function resetAllFilters(silent = false) {
-                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #amenitiesFilter, #ugdFilter')
-                    .find('input[type="checkbox"]')
-                    .prop('checked', true);
+                // Reset all dropdowns to "all"
+                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter')
+                    .val('all');
 
+                // Reset multi-select amenities
+                $('#amenitiesFilter').val([]);
+
+                // Reset area range
                 $('#minArea').val(0);
                 $('#maxArea').val(10000);
                 $('#areaRange').val(5000);
@@ -2001,7 +1984,7 @@
                 $('#visibleCount').text(allFeatures.length);
                 $('#filterStats').html(
                     `Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`
-                    );
+                );
 
                 polygonLayer.changed();
                 polygonSource.changed();
