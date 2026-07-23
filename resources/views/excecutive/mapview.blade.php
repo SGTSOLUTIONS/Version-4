@@ -168,29 +168,34 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            padding: 8px 0;
-            max-height: 500px;
-            overflow-y: auto;
+            padding: 0;
             z-index: 1001;
         }
 
         .layer-dropdown {
             width: 260px;
+            max-height: 500px;
+            overflow-y: auto;
         }
 
         .location-dropdown {
             width: 240px;
+            max-height: 500px;
+            overflow-y: auto;
         }
 
         .search-dropdown {
             width: 380px;
+            max-height: 500px;
+            overflow-y: auto;
         }
 
         .filter-dropdown {
-            width: 400px;
-            max-height: 90vh;
-            padding: 12px 0;
-            overflow-y: auto;
+            width: 420px;
+            max-height: 85vh;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .layer-dropdown.active,
@@ -201,22 +206,22 @@
         }
 
         .dropdown-header {
-            padding: 8px 16px;
+            padding: 12px 16px;
             font-weight: 600;
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 13px;
+            color: #333;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
             position: sticky;
             top: 0;
-            background: white;
-            z-index: 2;
+            z-index: 10;
+            border-radius: 12px 12px 0 0;
         }
 
         .dropdown-divider {
             height: 1px;
             background: #e9ecef;
-            margin: 4px 0;
+            margin: 4px 12px;
         }
 
         .layer-dropdown-item,
@@ -452,7 +457,7 @@
             color: #666;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .filter-range {
@@ -494,7 +499,8 @@
             background: #f8f9fa;
             position: sticky;
             bottom: 0;
-            z-index: 2;
+            z-index: 10;
+            border-radius: 0 0 12px 12px;
         }
 
         .filter-stats {
@@ -560,30 +566,29 @@
             box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
         }
 
-        /* Scrollbar Styles */
-        .filter-dropdown::-webkit-scrollbar,
-        .scrollable-options::-webkit-scrollbar,
-        .search-results-container::-webkit-scrollbar {
+        /* Scrollable Filter Container */
+        .filter-scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 0;
+            max-height: calc(85vh - 120px);
+        }
+
+        .filter-scroll-container::-webkit-scrollbar {
             width: 6px;
         }
 
-        .filter-dropdown::-webkit-scrollbar-track,
-        .scrollable-options::-webkit-scrollbar-track,
-        .search-results-container::-webkit-scrollbar-track {
+        .filter-scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 3px;
         }
 
-        .filter-dropdown::-webkit-scrollbar-thumb,
-        .scrollable-options::-webkit-scrollbar-thumb,
-        .search-results-container::-webkit-scrollbar-thumb {
+        .filter-scroll-container::-webkit-scrollbar-thumb {
             background: #ccc;
             border-radius: 3px;
         }
 
-        .filter-dropdown::-webkit-scrollbar-thumb:hover,
-        .scrollable-options::-webkit-scrollbar-thumb:hover,
-        .search-results-container::-webkit-scrollbar-thumb:hover {
+        .filter-scroll-container::-webkit-scrollbar-thumb:hover {
             background: #999;
         }
 
@@ -597,6 +602,7 @@
             width: 100%;
             max-height: 120px;
             overflow-y: auto;
+            cursor: pointer;
         }
 
         .form-select-sm:focus {
@@ -618,33 +624,31 @@
             margin-top: 2px;
         }
 
-        /* Scrollable Filter Container */
-        .filter-scroll-container {
-            max-height: 70vh;
-            overflow-y: auto;
-            padding: 0 4px;
+        /* Scrollbar for all dropdowns */
+        .layer-dropdown::-webkit-scrollbar,
+        .location-dropdown::-webkit-scrollbar,
+        .search-dropdown::-webkit-scrollbar {
+            width: 6px;
         }
 
-        .filter-scroll-container::-webkit-scrollbar {
-            width: 4px;
+        .layer-dropdown::-webkit-scrollbar-track,
+        .location-dropdown::-webkit-scrollbar-track,
+        .search-dropdown::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
         }
 
-        .filter-scroll-container::-webkit-scrollbar-thumb {
+        .layer-dropdown::-webkit-scrollbar-thumb,
+        .location-dropdown::-webkit-scrollbar-thumb,
+        .search-dropdown::-webkit-scrollbar-thumb {
             background: #ccc;
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
-        .filter-scroll-container::-webkit-scrollbar-thumb:hover {
+        .layer-dropdown::-webkit-scrollbar-thumb:hover,
+        .location-dropdown::-webkit-scrollbar-thumb:hover,
+        .search-dropdown::-webkit-scrollbar-thumb:hover {
             background: #999;
-        }
-
-        /* Sticky header in filter dropdown */
-        .filter-sticky-header {
-            position: sticky;
-            top: 0;
-            background: white;
-            z-index: 2;
-            padding: 0 0 8px 0;
         }
     </style>
 @endpush
@@ -2053,7 +2057,7 @@
                     const style = f.getStyle();
                     if (style && typeof style === 'function') {
                         const appliedStyle = style(f);
-                        if (appliedStyle && appliedStyle.getStroke &&
+                        if (appliedStyle && appliedStyle.getStroke() &&
                             appliedStyle.getStroke() &&
                             appliedStyle.getStroke().getColor() !== 'rgba(200,200,200,0.2)') {
                             visible++;
