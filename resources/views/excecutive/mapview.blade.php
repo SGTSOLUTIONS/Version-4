@@ -678,6 +678,40 @@
             background: #999;
         }
 
+        /* Loading Spinner */
+        .location-loading {
+            display: none;
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .location-loading .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         /* Mobile Responsive Styles */
         @media (max-width: 768px) {
             #map {
@@ -788,6 +822,12 @@
                 font-size: 12px;
                 padding: 8px 16px;
                 max-width: 85%;
+            }
+
+            .location-loading {
+                bottom: 120px;
+                font-size: 12px;
+                padding: 10px 20px;
             }
         }
 
@@ -945,6 +985,12 @@
                 padding: 6px 12px;
                 max-width: 90%;
                 border-radius: 6px;
+            }
+
+            .location-loading {
+                bottom: 100px;
+                font-size: 11px;
+                padding: 8px 16px;
             }
 
             .filter-scroll-container {
@@ -1127,6 +1173,7 @@
             let destinationMarker = null;
             let destinationLayer = null;
             let trackInterval = null;
+            let isGettingLocation = false;
 
             // ─── STYLES ───
             function createPolygonStyle(feature) {
@@ -1467,6 +1514,14 @@
             $mapContainer.append(`<div class="map-controls-stack" id="mapControlsStack"></div>`);
             const $stack = $('#mapControlsStack');
 
+            // ─── CREATE LOADING INDICATOR ───
+            $('body').append(`
+                <div class="location-loading" id="locationLoading">
+                    <span class="spinner"></span>
+                    <span id="loadingText">Getting your location...</span>
+                </div>
+            `);
+
             // ─── CONTROLS INJECTION ───
             // 1. FILTER TOGGLE WITH SCROLLABLE DROPDOWNS
             $stack.append(`
@@ -1791,6 +1846,16 @@
 
             // ─── HELPER FUNCTIONS ───
 
+            // Show/Hide Loading
+            function showLoading(message = 'Getting your location...') {
+                $('#loadingText').text(message);
+                $('#locationLoading').fadeIn(200);
+            }
+
+            function hideLoading() {
+                $('#locationLoading').fadeOut(200);
+            }
+
             // Fixed Toast function - prevents layout shift
             function showToast(message, duration = 3000) {
                 // Remove existing toast if any
@@ -2044,28 +2109,68 @@
                 }
             }
 
-            function getCurrentLocation(callback) {
+            // Improved location getter with better error handling
+            function getCurrentLocation(callback, retryCount = 0) {
                 if (currentLocation) {
                     callback(currentLocation);
                     return;
                 }
+
                 if (!navigator.geolocation) {
+                    showToast('❌ Geolocation is not supported by your browser', 4000);
                     callback(null);
                     return;
                 }
+
+                if (isGettingLocation) {
+                    showToast('⏳ Already getting location...', 2000);
+                    return;
+                }
+
+                isGettingLocation = true;
+                showLoading('Getting your location...');
+
+                // Try with high accuracy first, then fallback to low accuracy
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
+                        isGettingLocation = false;
+                        hideLoading();
                         currentLocation = {
                             lon: pos.coords.longitude,
                             lat: pos.coords.latitude
                         };
                         callback(currentLocation);
                     },
-                    function() {
+                    function(error) {
+                        isGettingLocation = false;
+                        hideLoading();
+                        console.error('Get position error:', error);
+
+                        // Retry with lower accuracy if timeout
+                        if (error.code === 3 && retryCount < 2) {
+                            showToast('⏳ Retrying with lower accuracy...', 2000);
+                            setTimeout(function() {
+                                getCurrentLocation(callback, retryCount + 1);
+                            }, 1000);
+                            return;
+                        }
+
+                        let errorMsg = '❌ Could not get your location. ';
+                        if (error.code === 1) {
+                            errorMsg += 'Please allow location access in your browser.';
+                        } else if (error.code === 2) {
+                            errorMsg += 'Location services are unavailable.';
+                        } else if (error.code === 3) {
+                            errorMsg += 'Location request timed out. Please try again.';
+                        } else {
+                            errorMsg += error.message || 'Unknown error.';
+                        }
+                        showToast(errorMsg, 5000);
                         callback(null);
                     }, {
-                        enableHighAccuracy: true,
-                        timeout: 10000
+                        enableHighAccuracy: retryCount === 0,
+                        timeout: retryCount === 0 ? 10000 : 15000,
+                        maximumAge: 30000
                     }
                 );
             }
@@ -2220,6 +2325,8 @@
 
                 isLiveLocation = false;
                 isTracking = false;
+                isGettingLocation = false;
+                hideLoading();
                 $('#liveLocationBadge').text('OFF').removeClass('active');
                 $('#trackMeBadge').text('OFF').removeClass('tracking');
                 $('#locationToggleBtn').removeClass('active-location tracking');
@@ -2596,11 +2703,23 @@
                 if (isLiveLocation) {
                     $badge.text('ON').addClass('active');
                     $btn.addClass('active-location');
-                    showToast('📍 Live location activated - showing position', 2000);
+                    showToast('📍 Getting your location...', 2000);
 
-                    navigator.geolocation.getCurrentPosition(
-                        function(pos) {
-                            updatePosition(pos, false);
+                    showLoading('Getting your location...');
+
+                    getCurrentLocation(function(loc) {
+                        hideLoading();
+                        if (loc) {
+                            // Create a mock position object
+                            const mockPos = {
+                                coords: {
+                                    longitude: loc.lon,
+                                    latitude: loc.lat
+                                }
+                            };
+                            updatePosition(mockPos, false);
+                            showToast('📍 Live location activated - showing position', 2000);
+
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
@@ -2608,30 +2727,29 @@
                                     },
                                     function(error) {
                                         console.error('Watch error:', error);
-                                        showToast('❌ Location error: ' + error.message, 3000);
+                                        if (error.code === 3) {
+                                            showToast('⏳ Location update timeout. Retrying...', 3000);
+                                        } else {
+                                            showToast('❌ Location error: ' + error.message, 3000);
+                                        }
                                     }, {
                                         enableHighAccuracy: true,
-                                        timeout: 10000,
-                                        maximumAge: 0
+                                        timeout: 15000,
+                                        maximumAge: 30000
                                     }
                                 );
                             }
-                        },
-                        function(error) {
-                            console.error('Get position error:', error);
-                            showToast('❌ Error getting location: ' + error.message, 3000);
+                        } else {
                             isLiveLocation = false;
                             $badge.text('OFF').removeClass('active');
                             $btn.removeClass('active-location');
-                        }, {
-                            enableHighAccuracy: true,
-                            timeout: 10000
                         }
-                    );
+                    });
                 } else {
                     $badge.text('OFF').removeClass('active');
                     $btn.removeClass('active-location');
                     showToast('📍 Live location deactivated', 2000);
+                    hideLoading();
                     if (watchId && !isTracking) {
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
@@ -2653,16 +2771,26 @@
                     const $btn = $('#locationToggleBtn');
                     $badge.text('ON').addClass('tracking');
                     $btn.addClass('tracking');
-                    showToast('📍 Tracking started - auto-centering every 2 seconds', 3000);
+                    showToast('📍 Getting your location for tracking...', 2000);
 
-                    if (trackInterval) {
-                        clearInterval(trackInterval);
-                        trackInterval = null;
-                    }
+                    showLoading('Starting tracking...');
 
-                    navigator.geolocation.getCurrentPosition(
-                        function(pos) {
-                            updatePosition(pos, true);
+                    getCurrentLocation(function(loc) {
+                        hideLoading();
+                        if (loc) {
+                            const mockPos = {
+                                coords: {
+                                    longitude: loc.lon,
+                                    latitude: loc.lat
+                                }
+                            };
+                            updatePosition(mockPos, true);
+                            showToast('📍 Tracking started - auto-centering every 2 seconds', 3000);
+
+                            if (trackInterval) {
+                                clearInterval(trackInterval);
+                                trackInterval = null;
+                            }
 
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
@@ -2671,11 +2799,15 @@
                                     },
                                     function(error) {
                                         console.error('Track error:', error);
-                                        showToast('❌ Tracking error: ' + error.message, 3000);
+                                        if (error.code === 3) {
+                                            showToast('⏳ Location update timeout. Retrying...', 3000);
+                                        } else {
+                                            showToast('❌ Tracking error: ' + error.message, 3000);
+                                        }
                                     }, {
                                         enableHighAccuracy: true,
-                                        timeout: 10000,
-                                        maximumAge: 0
+                                        timeout: 15000,
+                                        maximumAge: 30000
                                     }
                                 );
                             }
@@ -2689,23 +2821,12 @@
                                     });
                                 }
                             }, 2000);
-
-                        },
-                        function(error) {
-                            console.error('Get position error:', error);
-                            showToast('❌ Error starting tracking: ' + error.message, 3000);
+                        } else {
                             isTracking = false;
                             $badge.text('OFF').removeClass('tracking');
                             $btn.removeClass('tracking');
-                            if (trackInterval) {
-                                clearInterval(trackInterval);
-                                trackInterval = null;
-                            }
-                        }, {
-                            enableHighAccuracy: true,
-                            timeout: 10000
                         }
-                    );
+                    });
                 } else {
                     isTracking = false;
                     const $badge = $('#trackMeBadge');
@@ -2713,6 +2834,7 @@
                     $badge.text('OFF').removeClass('tracking');
                     $btn.removeClass('tracking');
                     showToast('⏹️ Tracking stopped', 2000);
+                    hideLoading();
 
                     if (trackInterval) {
                         clearInterval(trackInterval);
