@@ -82,6 +82,7 @@
             flex-direction: column;
             gap: 10px;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            pointer-events: auto;
         }
 
         .map-controls-stack>div {
@@ -110,6 +111,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1001;
         }
 
         .layer-toggle-btn:hover,
@@ -192,24 +196,24 @@
 
         .filter-dropdown {
             width: 420px;
-            /* max-height: 85vh; */
             display: none;
             flex-direction: column;
             overflow: hidden;
         }
-@media (max-width: 576px) {
-    .filter-dropdown {
-        width: 350px;
 
-    }
-}
-@media (max-width: 500px) {
-    .filter-dropdown {
-        width: 250px;
+        @media (max-width: 576px) {
+            .filter-dropdown {
+                width: 350px;
+            }
+        }
 
+        @media (max-width: 500px) {
+            .filter-dropdown {
+                width: 280px;
+                right: -10px;
+            }
+        }
 
-    }
-}
         .layer-dropdown.active,
         .location-dropdown.active,
         .search-dropdown.active,
@@ -315,19 +319,31 @@
             overflow-y: auto;
         }
 
-        .location-toast {
-            display: none;
-            position: absolute;
+        /* Toast Styles - Fixed position to prevent layout shift */
+        .toast-container {
+            position: fixed;
             bottom: 80px;
             left: 50%;
             transform: translateX(-50%);
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .location-toast {
+            display: none;
             background: rgba(0, 0, 0, 0.85);
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
             font-size: 14px;
-            z-index: 1000;
             white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            max-width: 90%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         /* Search Results Styles */
@@ -509,7 +525,6 @@
             padding: 12px 16px;
             border-top: 1px solid #e9ecef;
             background: #f8f9fa;
-            /* position: sticky; */
             bottom: 0;
             z-index: 10;
             border-radius: 0 0 12px 12px;
@@ -661,6 +676,337 @@
         .location-dropdown::-webkit-scrollbar-thumb:hover,
         .search-dropdown::-webkit-scrollbar-thumb:hover {
             background: #999;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            #map {
+                height: 500px;
+            }
+
+            .map-header {
+                padding: 10px 12px;
+            }
+
+            .map-title {
+                font-size: 13px;
+            }
+
+            .map-controls-stack {
+                right: 15px;
+                top: 15px;
+                gap: 8px;
+            }
+
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+                padding: 8px 10px;
+            }
+
+            .layer-dropdown {
+                width: 220px;
+                max-height: 350px;
+            }
+
+            .location-dropdown {
+                width: 210px;
+                max-height: 350px;
+            }
+
+            .search-dropdown {
+                width: 300px;
+                max-height: 350px;
+                right: -10px;
+            }
+
+            .filter-dropdown {
+                width: 320px;
+                max-height: 80vh;
+                right: -10px;
+            }
+
+            .dropdown-header {
+                font-size: 11px;
+                padding: 10px 14px;
+            }
+
+            .filter-section {
+                padding: 6px 12px;
+            }
+
+            .filter-section-header {
+                font-size: 10px;
+            }
+
+            .form-select-sm {
+                font-size: 11px;
+                padding: 3px 6px;
+                max-height: 80px;
+            }
+
+            select[multiple] {
+                min-height: 40px;
+                max-height: 80px;
+            }
+
+            .range-inputs input[type="number"] {
+                width: 60px;
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+
+            .fullscreen-btn,
+            .fullscreen-btn-exit {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+                padding: 8px 10px;
+                right: 15px;
+                bottom: 15px;
+            }
+
+            .direction-controls {
+                min-width: 250px;
+                max-width: 350px;
+                padding: 12px 16px;
+                bottom: 80px;
+            }
+
+            .toast-container {
+                bottom: 60px;
+            }
+
+            .location-toast {
+                font-size: 12px;
+                padding: 8px 16px;
+                max-width: 85%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #map {
+                height: 400px;
+            }
+
+            .map-title {
+                font-size: 11px;
+            }
+
+            .map-header .badge {
+                font-size: 9px;
+                padding: 3px 6px;
+            }
+
+            .map-controls-stack {
+                right: 8px;
+                top: 8px;
+                gap: 5px;
+            }
+
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 13px;
+                padding: 6px 8px;
+                border-radius: 6px;
+            }
+
+            .layer-dropdown {
+                width: 190px;
+                max-height: 300px;
+                right: -5px;
+            }
+
+            .location-dropdown {
+                width: 180px;
+                max-height: 300px;
+                right: -5px;
+            }
+
+            .search-dropdown {
+                width: 250px;
+                max-height: 300px;
+                right: -15px;
+            }
+
+            .filter-dropdown {
+                width: 260px;
+                max-height: 75vh;
+                right: -15px;
+            }
+
+            .dropdown-header {
+                font-size: 10px;
+                padding: 8px 10px;
+            }
+
+            .filter-section {
+                padding: 4px 8px;
+            }
+
+            .filter-section-header {
+                font-size: 9px;
+            }
+
+            .form-select-sm {
+                font-size: 10px;
+                padding: 2px 5px;
+                max-height: 60px;
+            }
+
+            select[multiple] {
+                min-height: 30px;
+                max-height: 60px;
+            }
+
+            .range-inputs input[type="number"] {
+                width: 50px;
+                font-size: 9px;
+                padding: 2px 4px;
+            }
+
+            .filter-actions {
+                padding: 8px 10px;
+            }
+
+            .filter-actions .btn-sm {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+
+            .filter-stats {
+                font-size: 10px;
+            }
+
+            .fullscreen-btn,
+            .fullscreen-btn-exit {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+                padding: 6px 8px;
+                right: 8px;
+                bottom: 8px;
+            }
+
+            .direction-controls {
+                min-width: 200px;
+                max-width: 280px;
+                padding: 10px 12px;
+                bottom: 60px;
+                width: 95%;
+            }
+
+            .direction-controls .route-info {
+                font-size: 11px;
+            }
+
+            #routeSteps {
+                max-height: 80px;
+                font-size: 10px;
+            }
+
+            .search-result-item {
+                padding: 6px 10px;
+            }
+
+            .search-result-title {
+                font-size: 11px;
+            }
+
+            .search-result-subtitle {
+                font-size: 10px;
+            }
+
+            .search-result-actions .btn-sm {
+                font-size: 9px;
+                padding: 1px 6px;
+            }
+
+            .toast-container {
+                bottom: 50px;
+            }
+
+            .location-toast {
+                font-size: 11px;
+                padding: 6px 12px;
+                max-width: 90%;
+                border-radius: 6px;
+            }
+
+            .filter-scroll-container {
+                max-height: calc(75vh - 100px);
+            }
+
+            .text-muted {
+                font-size: 8px;
+            }
+
+            .dropdown-divider {
+                margin: 2px 6px;
+            }
+
+            .search-tab-btn {
+                font-size: 10px;
+                padding: 6px 0;
+            }
+
+            .filter-field-group label {
+                font-size: 9px;
+            }
+
+            .filter-field-group input {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .form-select-sm {
+                font-size: 14px;
+                padding: 6px 8px;
+                min-height: 38px;
+            }
+
+            select[multiple] {
+                min-height: 60px;
+            }
+
+            .filter-actions .btn-sm {
+                min-height: 38px;
+                font-size: 13px;
+            }
+
+            .search-result-actions .btn-sm {
+                min-height: 30px;
+                font-size: 11px;
+                padding: 4px 10px;
+            }
         }
     </style>
 @endpush
@@ -1352,7 +1698,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="location-toast" id="locationToast"></div>
             `);
 
             // 4. SEARCH SWITCHER
@@ -1446,25 +1791,45 @@
 
             // ─── HELPER FUNCTIONS ───
 
+            // Fixed Toast function - prevents layout shift
             function showToast(message, duration = 3000) {
-                const $toast = $('#locationToast');
-                $toast.text(message).css({
+                // Remove existing toast if any
+                $('#locationToast').remove();
+
+                // Create toast container if it doesn't exist
+                if (!$('.toast-container').length) {
+                    $('body').append('<div class="toast-container"></div>');
+                }
+
+                // Create toast element
+                const $toast = $('<div id="locationToast" class="location-toast">' + message + '</div>');
+                $('.toast-container').append($toast);
+
+                // Show with animation
+                $toast.css({
                     'display': 'block',
                     'opacity': 0,
                     'transform': 'translateX(-50%) translateY(10px)'
-                }).animate({
-                    opacity: 1,
-                    transform: 'translateX(-50%) translateY(0)'
-                }, 200);
+                });
 
-                clearTimeout($toast.data('timeout'));
-                $toast.data('timeout', setTimeout(() => {
-                    $toast.animate({
-                        opacity: 0,
-                        transform: 'translateX(-50%) translateY(10px)'
-                    }, 200, function() {
-                        $(this).css('display', 'none');
+                // Animate in
+                setTimeout(function() {
+                    $toast.css({
+                        'opacity': 1,
+                        'transform': 'translateX(-50%) translateY(0)'
                     });
+                }, 50);
+
+                // Auto hide
+                clearTimeout($toast.data('timeout'));
+                $toast.data('timeout', setTimeout(function() {
+                    $toast.css({
+                        'opacity': 0,
+                        'transform': 'translateX(-50%) translateY(10px)'
+                    });
+                    setTimeout(function() {
+                        $toast.remove();
+                    }, 300);
                 }, duration));
             }
 
