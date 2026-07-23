@@ -72,11 +72,7 @@
             height: calc(100vh - 5px);
         }
 
-        /* ───────────────────────────────────────────────
-                                       Control stack — every floating control on the map
-                                       shares one flex column so they can never overlap,
-                                       regardless of how many are shown/hidden.
-                                    ─────────────────────────────────────────────── */
+        /* Control Stack */
         .map-controls-stack {
             position: absolute;
             right: 30px;
@@ -92,46 +88,14 @@
             position: relative;
         }
 
-        /* Fullscreen Button - Inside map, bottom-right, own stack */
-        .fullscreen-btn,
-        .fullscreen-btn-exit {
-            position: absolute;
-            right: 30px;
-            bottom: 30px;
-            z-index: 1000;
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
-            transition: all 0.2s;
-            border: none;
-            color: #333;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .fullscreen-btn-exit {
-            display: none;
-        }
-
-        .fullscreen-btn:hover,
-        .fullscreen-btn-exit:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-
         /* Toggle Button Styles */
         .layer-toggle-btn,
         .location-toggle-btn,
         .search-toggle-btn,
         .label-toggle-btn,
         .legend-toggle-btn,
-        .threed-toggle-btn {
+        .threed-toggle-btn,
+        .filter-toggle-btn {
             background: white;
             border-radius: 8px;
             padding: 10px 12px;
@@ -153,7 +117,8 @@
         .search-toggle-btn:hover,
         .label-toggle-btn:hover,
         .legend-toggle-btn:hover,
-        .threed-toggle-btn:hover {
+        .threed-toggle-btn:hover,
+        .filter-toggle-btn:hover {
             background: #f0f0f0;
             transform: scale(1.05);
         }
@@ -175,24 +140,21 @@
             animation: pulse 1.5s infinite;
         }
 
+        .filter-toggle-btn.active-filter {
+            color: #0d6efd;
+        }
+
         @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-
-            100% {
-                opacity: 1;
-            }
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         /* Dropdown Styles */
         .layer-dropdown,
         .location-dropdown,
-        .search-dropdown {
+        .search-dropdown,
+        .filter-dropdown {
             display: none;
             position: absolute;
             right: 0;
@@ -203,25 +165,22 @@
             padding: 8px 0;
             max-height: 500px;
             overflow-y: auto;
-            min-width: 200px;
             z-index: 1001;
         }
 
-        .layer-dropdown {
-            width: 260px;
-        }
-
-        .location-dropdown {
-            width: 240px;
-        }
-
-        .search-dropdown {
+        .layer-dropdown { width: 260px; }
+        .location-dropdown { width: 240px; }
+        .search-dropdown { width: 380px; }
+        .filter-dropdown {
             width: 380px;
+            max-height: 90vh;
+            padding: 12px 0;
         }
 
         .layer-dropdown.active,
         .location-dropdown.active,
-        .search-dropdown.active {
+        .search-dropdown.active,
+        .filter-dropdown.active {
             display: block;
         }
 
@@ -373,6 +332,40 @@
             border-radius: 0 0 12px 12px;
         }
 
+        /* Fullscreen Buttons */
+        .fullscreen-btn,
+        .fullscreen-btn-exit {
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+            border: none;
+            color: #333;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-btn-exit {
+            display: none;
+        }
+
+        .fullscreen-btn:hover,
+        .fullscreen-btn-exit:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        /* Direction Controls */
         .direction-controls {
             position: absolute;
             bottom: 100px;
@@ -428,30 +421,109 @@
             border-bottom: none;
         }
 
-        .filter-field-group {
-            margin-bottom: 8px;
+        /* Filter Styles */
+        .filter-section {
+            padding: 8px 16px;
         }
 
-        .filter-field-group label {
+        .filter-section-header {
             font-size: 11px;
-            color: #666;
             font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .filter-options.scrollable-options {
+            max-height: 100px;
+            overflow-y: auto;
             display: block;
-            margin-bottom: 2px;
         }
 
-        .filter-field-group input {
-            width: 100%;
-            padding: 6px 10px;
-            border: 1px solid #ddd;
+        .filter-options.scrollable-options .filter-option {
+            display: inline-flex;
+            width: 48%;
+            margin: 2px 0;
+        }
+
+        .filter-option {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .filter-option:hover {
+            background: #f0f8ff;
+        }
+
+        .filter-option input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: #0d6efd;
+        }
+
+        .filter-range {
+            padding: 4px 0;
+        }
+
+        .range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .range-inputs input[type="number"] {
+            width: 80px;
+            padding: 4px 8px;
             border-radius: 6px;
-            font-size: 13px;
+            border: 1px solid #ddd;
+            font-size: 12px;
         }
 
-        .filter-field-group input:focus {
-            outline: none;
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+        .range-separator {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .filter-range .form-range {
+            height: 6px;
+            width: 100%;
+        }
+
+        .filter-range .form-range::-webkit-slider-thumb {
+            background: #0d6efd;
+        }
+
+        .amenities-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+        }
+
+        .filter-actions {
+            padding: 12px 16px;
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+
+        .filter-stats {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 6px;
         }
 
         /* Type Badge Styles */
@@ -483,69 +555,48 @@
             color: #fff;
         }
 
-        /* Filter Dropdown Styles */
-        .filter-toggle-btn {
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
-            transition: all 0.2s;
-            border: none;
-            color: #333;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* Filter Field Group */
+        .filter-field-group {
+            margin-bottom: 8px;
         }
 
-        .filter-toggle-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
+        .filter-field-group label {
+            font-size: 11px;
+            color: #666;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 2px;
         }
 
-        .filter-toggle-btn.active-filter {
-            color: #0d6efd;
+        .filter-field-group input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
         }
 
-        .filter-dropdown::-webkit-scrollbar {
-            width: 6px;
+        .filter-field-group input:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
         }
 
-        .filter-dropdown::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 3px;
-        }
-
-        .filter-dropdown::-webkit-scrollbar-thumb:hover {
-            background: #999;
-        }
-
-        .filter-option:hover {
-            background: #f0f8ff;
-        }
-
-        .filter-option input[type="checkbox"]:checked {
-            accent-color: #0d6efd;
-        }
-
-        .filter-range .form-range {
-            height: 6px;
-        }
-
-        .filter-range .form-range::-webkit-slider-thumb {
-            background: #0d6efd;
-        }
-
+        /* Scrollbar Styles */
+        .filter-dropdown::-webkit-scrollbar,
         .scrollable-options::-webkit-scrollbar {
             width: 4px;
         }
 
+        .filter-dropdown::-webkit-scrollbar-thumb,
         .scrollable-options::-webkit-scrollbar-thumb {
             background: #ccc;
             border-radius: 2px;
+        }
+
+        .filter-dropdown::-webkit-scrollbar-thumb:hover,
+        .scrollable-options::-webkit-scrollbar-thumb:hover {
+            background: #999;
         }
     </style>
 @endpush
@@ -586,19 +637,12 @@
             let pointDatas = @json($pointDatas ?? [], JSON_HEX_TAG);
             let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
             let ward = @json($ward ?? [], JSON_HEX_TAG);
-            let analytics = @json($analytics ?? [], JSON_HEX_TAG);
-            let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
 
-            // ─── BUILDING DATA ───
-            let buildingData = @json($buildingData ?? [], JSON_HEX_TAG);
-            let allBuildings = buildingData.buildings || [];
-            let usageCounts = buildingData.usage_counts || {};
-
+            // ─── IMAGE EXTENT ───
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
                 {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
             ];
 
-            // ─── CHECK COORDINATE SYSTEM ───
             const isLatLon = imageExtentRaw[0] > -180 && imageExtentRaw[0] < 180 &&
                 imageExtentRaw[1] > -90 && imageExtentRaw[1] < 90;
 
@@ -817,12 +861,9 @@
             function buildSearchIndex() {
                 searchIndex = [];
 
-                // Add polygons
                 polygons.forEach(poly => {
                     try {
                         const coords = JSON.parse(poly.coordinates);
-                        const extent = ol.extent.boundingExtent(coords);
-                        const center = ol.extent.getCenter(extent);
                         searchIndex.push({
                             id: poly.gisid,
                             type: 'polygon',
@@ -842,7 +883,6 @@
                     }
                 });
 
-                // Add lines
                 lines.forEach(line => {
                     try {
                         const coords = JSON.parse(line.coordinates);
@@ -861,7 +901,6 @@
                     }
                 });
 
-                // Add points
                 points.forEach(point => {
                     try {
                         let coords = JSON.parse(point.coordinates);
@@ -879,16 +918,9 @@
                     }
                 });
 
-                // Add point data
                 pointDatas.forEach(pd => {
                     try {
-                        let coords = [];
-                        let center = null;
-
-
-
                         let pointGisid = pd.point_gisid || '';
-
                         searchIndex.push({
                             id: pointGisid,
                             type: 'pointdata',
@@ -898,8 +930,6 @@
                             point_gisid: pointGisid,
                             owner_name: pd.owner_name || '',
                             phone_number: pd.phone_number || '',
-
-                            center: center,
                             geometryType: 'point',
                             searchText: `${pointGisid} ${pd.assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`
                                 .toLowerCase()
@@ -1024,424 +1054,300 @@
 
             // ─── GET MAP CONTAINER ───
             const $mapContainer = $('#map');
-
-            // ─── ADD ALL CONTROLS INSIDE MAP ───
             $mapContainer.append(`<div class="map-controls-stack" id="mapControlsStack"></div>`);
             const $stack = $('#mapControlsStack');
 
+            // ─── CONTROLS INJECTION ───
+
             // 1. LAYER SWITCHER
             $stack.append(`
-                    <div class="custom-layer-switcher">
-                        <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
-                        <div class="layer-dropdown" id="layerDropdown">
-                            <div class="dropdown-header">Base Maps</div>
-                            <div class="layer-dropdown-item active" data-layer-type="base" data-layer="OpenStreetMap">
-                                <div class="layer-icon"><i class="bi bi-map"></i></div>
-                                <div class="layer-name">OpenStreetMap</div>
-                                <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                            </div>
-                            <div class="layer-dropdown-item" data-layer-type="base" data-layer="Satellite">
-                                <div class="layer-icon"><i class="bi bi-satellite"></i></div>
-                                <div class="layer-name">Satellite</div>
-                                <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                            </div>
-                            <div class="layer-dropdown-item" data-layer-type="base" data-layer="Street View">
-                                <div class="layer-icon"><i class="bi bi-signpost-2"></i></div>
-                                <div class="layer-name">Street View</div>
-                                <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                            </div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">Overlays</div>
-                            <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Drone View">
-                                <div class="layer-icon"><i class="bi bi-camera-drone"></i></div>
-                                <div class="layer-name">Drone View</div>
-                                <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                            </div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">Vector Layers</div>
-                            <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Polygons">
-                                <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
-                                <div class="layer-name">Polygons</div>
-                                <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                            </div>
-                            <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Lines">
-                                <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
-                                <div class="layer-name">Lines</div>
-                                <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                            </div>
+                <div class="custom-layer-switcher">
+                    <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
+                    <div class="layer-dropdown" id="layerDropdown">
+                        <div class="dropdown-header">Base Maps</div>
+                        <div class="layer-dropdown-item active" data-layer-type="base" data-layer="OpenStreetMap">
+                            <div class="layer-icon"><i class="bi bi-map"></i></div>
+                            <div class="layer-name">OpenStreetMap</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Satellite">
+                            <div class="layer-icon"><i class="bi bi-satellite"></i></div>
+                            <div class="layer-name">Satellite</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Street View">
+                            <div class="layer-icon"><i class="bi bi-signpost-2"></i></div>
+                            <div class="layer-name">Street View</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">Overlays</div>
+                        <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Drone View">
+                            <div class="layer-icon"><i class="bi bi-camera-drone"></i></div>
+                            <div class="layer-name">Drone View</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">Vector Layers</div>
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Polygons">
+                            <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
+                            <div class="layer-name">Polygons</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Lines">
+                            <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
+                            <div class="layer-name">Lines</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
                     </div>
-                `);
+                </div>
+            `);
 
             // 2. LOCATION SWITCHER
             $stack.append(`
-                    <div class="custom-location-switcher">
-                        <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
-                        <div class="location-dropdown" id="locationDropdown">
-                            <div class="dropdown-header">Location Tools</div>
-                            <div class="location-dropdown-item" id="liveLocationItem">
-                                <div class="location-item-icon"><i class="bi bi-crosshair2"></i></div>
-                                <div class="location-item-name">Live Location</div>
-                                <div class="location-item-badge" id="liveLocationBadge">OFF</div>
-                            </div>
-                            <div class="location-dropdown-item" id="trackMeItem">
-                                <div class="location-item-icon"><i class="bi bi-broadcast"></i></div>
-                                <div class="location-item-name">Track Me</div>
-                                <div class="location-item-badge" id="trackMeBadge">OFF</div>
-                            </div>
-                            <div class="location-dropdown-item" id="zoomToExtentItem">
-                                <div class="location-item-icon"><i class="bi bi-arrows-angle-expand"></i></div>
-                                <div class="location-item-name">Zoom to Extent</div>
-                            </div>
-                            <div class="location-dropdown-item" id="clearRouteItem">
-                                <div class="location-item-icon"><i class="bi bi-x-circle"></i></div>
-                                <div class="location-item-name">Clear Route</div>
-                            </div>
+                <div class="custom-location-switcher">
+                    <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
+                    <div class="location-dropdown" id="locationDropdown">
+                        <div class="dropdown-header">Location Tools</div>
+                        <div class="location-dropdown-item" id="liveLocationItem">
+                            <div class="location-item-icon"><i class="bi bi-crosshair2"></i></div>
+                            <div class="location-item-name">Live Location</div>
+                            <div class="location-item-badge" id="liveLocationBadge">OFF</div>
+                        </div>
+                        <div class="location-dropdown-item" id="trackMeItem">
+                            <div class="location-item-icon"><i class="bi bi-broadcast"></i></div>
+                            <div class="location-item-name">Track Me</div>
+                            <div class="location-item-badge" id="trackMeBadge">OFF</div>
+                        </div>
+                        <div class="location-dropdown-item" id="zoomToExtentItem">
+                            <div class="location-item-icon"><i class="bi bi-arrows-angle-expand"></i></div>
+                            <div class="location-item-name">Zoom to Extent</div>
+                        </div>
+                        <div class="location-dropdown-item" id="clearRouteItem">
+                            <div class="location-item-icon"><i class="bi bi-x-circle"></i></div>
+                            <div class="location-item-name">Clear Route</div>
                         </div>
                     </div>
-                    <div class="location-toast" id="locationToast"></div>
-                `);
+                </div>
+                <div class="location-toast" id="locationToast"></div>
+            `);
 
             // 3. SEARCH SWITCHER
             $stack.append(`
-                    <div class="custom-search-switcher">
-                        <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
-                        <div class="search-dropdown" id="searchDropdown">
-                            <div class="d-flex border-bottom">
-                                <button type="button" class="btn btn-sm flex-fill search-tab-btn active" data-tab="quick">Quick Search</button>
-                                <button type="button" class="btn btn-sm flex-fill search-tab-btn" data-tab="filter">Filter</button>
+                <div class="custom-search-switcher">
+                    <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
+                    <div class="search-dropdown" id="searchDropdown">
+                        <div class="d-flex border-bottom">
+                            <button type="button" class="btn btn-sm flex-fill search-tab-btn active" data-tab="quick">Quick Search</button>
+                            <button type="button" class="btn btn-sm flex-fill search-tab-btn" data-tab="filter">Filter</button>
+                        </div>
+                        <div class="search-tab-pane" id="quickSearchTab">
+                            <div class="p-3">
+                                <input type="text" id="gisSearchInput" class="form-control" placeholder="Search by GIS ID, Assessment, Owner...">
                             </div>
-                            <div class="search-tab-pane" id="quickSearchTab">
-                                <div class="p-3">
-                                    <input type="text" id="gisSearchInput" class="form-control" placeholder="Search by GIS ID, Assessment, Owner...">
+                            <div id="searchResults" class="search-results-container"></div>
+                        </div>
+                        <div class="search-tab-pane" id="filterTab" style="display:none;">
+                            <div class="p-3">
+                                <div class="filter-field-group">
+                                    <label>Assessment Number</label>
+                                    <input type="text" id="filterAssessment" class="form-control" placeholder="Enter assessment number...">
                                 </div>
-                                <div id="searchResults" class="search-results-container"></div>
-                            </div>
-                            <div class="search-tab-pane" id="filterTab" style="display:none;">
-                                <div class="p-3">
-                                    <div class="filter-field-group">
-                                        <label>Assessment Number</label>
-                                        <input type="text" id="filterAssessment" class="form-control" placeholder="Enter assessment number...">
-                                    </div>
-                                    <div class="filter-field-group">
-                                        <label>Old Assessment</label>
-                                        <input type="text" id="filterOldAssessment" class="form-control" placeholder="Enter old assessment...">
-                                    </div>
-                                    <div class="filter-field-group">
-                                        <label>Owner Name</label>
-                                        <input type="text" id="filterOwnerName" class="form-control" placeholder="Enter owner name...">
-                                    </div>
-                                    <div class="filter-field-group">
-                                        <label>Phone Number</label>
-                                        <input type="text" id="filterPhoneNumber" class="form-control" placeholder="Enter phone number...">
-                                    </div>
-                                    <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn">
-                                        <i class="bi bi-search me-1"></i>Search
-                                    </button>
+                                <div class="filter-field-group">
+                                    <label>Old Assessment</label>
+                                    <input type="text" id="filterOldAssessment" class="form-control" placeholder="Enter old assessment...">
                                 </div>
-                                <div id="filterResults" class="search-results-container"></div>
+                                <div class="filter-field-group">
+                                    <label>Owner Name</label>
+                                    <input type="text" id="filterOwnerName" class="form-control" placeholder="Enter owner name...">
+                                </div>
+                                <div class="filter-field-group">
+                                    <label>Phone Number</label>
+                                    <input type="text" id="filterPhoneNumber" class="form-control" placeholder="Enter phone number...">
+                                </div>
+                                <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn">
+                                    <i class="bi bi-search me-1"></i>Search
+                                </button>
                             </div>
+                            <div id="filterResults" class="search-results-container"></div>
                         </div>
                     </div>
-                `);
+                </div>
+            `);
 
             // 4. LABEL TOGGLE
             $stack.append(`
-                    <div class="custom-label-toggle">
-                        <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
-                            <i class="bi bi-fonts"></i>
-                        </button>
-                    </div>
-                `);
+                <div class="custom-label-toggle">
+                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
+                        <i class="bi bi-fonts"></i>
+                    </button>
+                </div>
+            `);
 
             // 5. LEGEND TOGGLE
             $stack.append(`
-                    <div class="custom-legend-toggle">
-                        <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
-                            <i class="bi bi-list-ul"></i>
-                        </button>
-                    </div>
-                `);
+                <div class="custom-legend-toggle">
+                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
+                        <i class="bi bi-list-ul"></i>
+                    </button>
+                </div>
+            `);
 
             // 6. 3D TOGGLE
             $stack.append(`
-                    <div class="custom-3d-toggle">
-                        <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
-                            <i class="bi bi-box"></i>
-                        </button>
-                    </div>
-                `);
+                <div class="custom-3d-toggle">
+                    <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
+                        <i class="bi bi-box"></i>
+                    </button>
+                </div>
+            `);
 
-            //FILTER TOGGLE
+            // 7. FILTER TOGGLE
             $stack.append(`
-                    <div class="custom-filter-toggle">
-                        <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
-                            <i class="bi bi-funnel"></i>
-                        </button>
-                    </div>
-                `); <
-            !--FILTER DROPDOWN-- >
-            $stack.append(`
-                <div class="custom-filter-switcher" style="position:relative;">
-                    <div class="filter-dropdown" id="filterDropdown" style="display:none; position:absolute; right:0; top:52px; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.2); padding:12px 0; max-height:500px; overflow-y:auto; min-width:340px; max-width:400px; z-index:1002;">
-
+                <div class="custom-filter-toggle">
+                    <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <div class="filter-dropdown" id="filterDropdown">
                         <div class="dropdown-header">🔍 Filter Features</div>
 
                         <!-- Building Usage Filter -->
-                        <div class="filter-section" style="padding:8px 16px;">
-                            <div class="filter-section-header" style="font-size:11px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Building Usage</div>
-                            <div class="filter-options" id="usageFilter" style="display:flex; flex-wrap:wrap; gap:4px;">
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="RESIDENTIAL" checked style="width:14px; height:14px; cursor:pointer;"> Residential
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="COMMERCIAL" checked style="width:14px; height:14px; cursor:pointer;"> Commercial
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="INDUSTRIAL" checked style="width:14px; height:14px; cursor:pointer;"> Industrial
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="INSTITUTIONAL" checked style="width:14px; height:14px; cursor:pointer;"> Institutional
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="MIXED" checked style="width:14px; height:14px; cursor:pointer;"> Mixed
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="GOVERNMENT" checked style="width:14px; height:14px; cursor:pointer;"> Government
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="VACANT" checked style="width:14px; height:14px; cursor:pointer;"> Vacant
-                                </label>
+                        <div class="filter-section">
+                            <div class="filter-section-header">Building Usage</div>
+                            <div class="filter-options" id="usageFilter">
+                                <label class="filter-option"><input type="checkbox" value="RESIDENTIAL" checked> Residential</label>
+                                <label class="filter-option"><input type="checkbox" value="COMMERCIAL" checked> Commercial</label>
+                                <label class="filter-option"><input type="checkbox" value="INDUSTRIAL" checked> Industrial</label>
+                                <label class="filter-option"><input type="checkbox" value="INSTITUTIONAL" checked> Institutional</label>
+                                <label class="filter-option"><input type="checkbox" value="MIXED" checked> Mixed</label>
+                                <label class="filter-option"><input type="checkbox" value="GOVERNMENT" checked> Government</label>
+                                <label class="filter-option"><input type="checkbox" value="VACANT" checked> Vacant</label>
                             </div>
                         </div>
 
-                        <div class="dropdown-divider" style="height:1px; background:#e9ecef; margin:4px 0;"></div>
+                        <div class="dropdown-divider"></div>
 
                         <!-- Area Range Filter -->
-                        <div class="filter-section" style="padding:8px 16px;">
-                            <div class="filter-section-header" style="font-size:11px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Area Range (sqft)</div>
-                            <div class="filter-range" style="padding:4px 0;">
-                                <div class="range-inputs" style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                                    <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0" style="width:80px; padding:4px 8px; border-radius:6px; border:1px solid #ddd; font-size:12px;">
-                                    <span class="range-separator" style="color:#999; font-size:12px;">to</span>
-                                    <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000" style="width:80px; padding:4px 8px; border-radius:6px; border:1px solid #ddd; font-size:12px;">
+                        <div class="filter-section">
+                            <div class="filter-section-header">Area Range (sqft)</div>
+                            <div class="filter-range">
+                                <div class="range-inputs">
+                                    <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
+                                    <span class="range-separator">to</span>
+                                    <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000">
                                 </div>
-                                <input type="range" id="areaRange" class="form-range" min="0" max="10000" step="100" value="5000" style="width:100%;">
+                                <input type="range" id="areaRange" class="form-range" min="0" max="10000" step="100" value="5000">
                             </div>
                         </div>
 
-                        <div class="dropdown-divider" style="height:1px; background:#e9ecef; margin:4px 0;"></div>
+                        <div class="dropdown-divider"></div>
 
                         <!-- Zonation Filter -->
-                        <div class="filter-section" style="padding:8px 16px;">
-                            <div class="filter-section-header" style="font-size:11px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Zonation</div>
-                            <div class="filter-options" id="zoneFilter" style="display:flex; flex-wrap:wrap; gap:4px;">
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="ZONE-A" checked style="width:14px; height:14px; cursor:pointer;"> Zone A
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="ZONE-B" checked style="width:14px; height:14px; cursor:pointer;"> Zone B
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="ZONE-C" checked style="width:14px; height:14px; cursor:pointer;"> Zone C
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="ZONE-D" checked style="width:14px; height:14px; cursor:pointer;"> Zone D
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="ZONE-E" checked style="width:14px; height:14px; cursor:pointer;"> Zone E
-                                </label>
+                        <div class="filter-section">
+                            <div class="filter-section-header">Zonation</div>
+                            <div class="filter-options" id="zoneFilter">
+                                <label class="filter-option"><input type="checkbox" value="ZONE-A" checked> Zone A</label>
+                                <label class="filter-option"><input type="checkbox" value="ZONE-B" checked> Zone B</label>
+                                <label class="filter-option"><input type="checkbox" value="ZONE-C" checked> Zone C</label>
+                                <label class="filter-option"><input type="checkbox" value="ZONE-D" checked> Zone D</label>
+                                <label class="filter-option"><input type="checkbox" value="ZONE-E" checked> Zone E</label>
                             </div>
                         </div>
 
-                        <div class="dropdown-divider" style="height:1px; background:#e9ecef; margin:4px 0;"></div>
+                        <div class="dropdown-divider"></div>
 
                         <!-- Construction Type Filter -->
-                        <div class="filter-section" style="padding:8px 16px;">
-                            <div class="filter-section-header" style="font-size:11px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Construction Type</div>
-                            <div class="filter-options" id="constructionFilter" style="display:flex; flex-wrap:wrap; gap:4px;">
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="PERMANENT" checked style="width:14px; height:14px; cursor:pointer;"> Permanent
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="SEMI_PERMANENT" checked style="width:14px; height:14px; cursor:pointer;"> Semi Permanent
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="VACANT_LAND" checked style="width:14px; height:14px; cursor:pointer;"> Vacant Land
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="SHED" checked style="width:14px; height:14px; cursor:pointer;"> Shed
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="CAR_SHED" checked style="width:14px; height:14px; cursor:pointer;"> Car Shed
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="TEMPORARY" checked style="width:14px; height:14px; cursor:pointer;"> Temporary
-                                </label>
+                        <div class="filter-section">
+                            <div class="filter-section-header">Construction Type</div>
+                            <div class="filter-options" id="constructionFilter">
+                                <label class="filter-option"><input type="checkbox" value="PERMANENT" checked> Permanent</label>
+                                <label class="filter-option"><input type="checkbox" value="SEMI_PERMANENT" checked> Semi Permanent</label>
+                                <label class="filter-option"><input type="checkbox" value="VACANT_LAND" checked> Vacant Land</label>
+                                <label class="filter-option"><input type="checkbox" value="SHED" checked> Shed</label>
+                                <label class="filter-option"><input type="checkbox" value="CAR_SHED" checked> Car Shed</label>
+                                <label class="filter-option"><input type="checkbox" value="TEMPORARY" checked> Temporary</label>
                             </div>
                         </div>
 
-                        <div class="dropdown-divider" style="height:1px; background:#e9ecef; margin:4px 0;"></div>
+                        <div class="dropdown-divider"></div>
 
                         <!-- Building Type Filter -->
-                        <div class="filter-section" style="padding:8px 16px;">
-                            <div class="filter-section-header" style="font-size:11px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Building Type</div>
-                            <div class="filter-options scrollable-options" id="buildingTypeFilter" style="max-height:100px; overflow-y:auto; display:block;">
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Independent" checked style="width:14px; height:14px; cursor:pointer;"> Independent
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Flat" checked style="width:14px; height:14px; cursor:pointer;"> Flat
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Kalyana_Mandapam" checked style="width:14px; height:14px; cursor:pointer;"> Kalyana Mandapam
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Hotel" checked style="width:14px; height:14px; cursor:pointer;"> Hotel
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Cinema_Theatre" checked style="width:14px; height:14px; cursor:pointer;"> Cinema Theatre
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Central_Government_Building" checked style="width:14px; height:14px; cursor:pointer;"> Central Govt
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="State_Government_Building" checked style="width:14px; height:14px; cursor:pointer;"> State Govt
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Municipality_Corporation" checked style="width:14px; height:14px; cursor:pointer;"> Municipality
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Educational_Institution" checked style="width:14px; height:14px; cursor:pointer;"> Educational
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Hospital" checked style="width:14px; height:14px; cursor:pointer;"> Hospital
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Commercial_Complex" checked style="width:14px; height:14px; cursor:pointer;"> Commercial Complex
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Shop" checked style="width:14px; height:14px; cursor:pointer;"> Shop
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Office" checked style="width:14px; height:14px; cursor:pointer;"> Office
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Temple" checked style="width:14px; height:14px; cursor:pointer;"> Temple
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Mosque" checked style="width:14px; height:14px; cursor:pointer;"> Mosque
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Church" checked style="width:14px; height:14px; cursor:pointer;"> Church
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Amma_Unavagam" checked style="width:14px; height:14px; cursor:pointer;"> Amma Unavagam
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Public_Toilet" checked style="width:14px; height:14px; cursor:pointer;"> Public Toilet
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Vacant Land" checked style="width:14px; height:14px; cursor:pointer;"> Vacant Land
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Under Construction" checked style="width:14px; height:14px; cursor:pointer;"> Under Construction
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Others" checked style="width:14px; height:14px; cursor:pointer;"> Others
-                                </label>
+                        <div class="filter-section">
+                            <div class="filter-section-header">Building Type</div>
+                            <div class="filter-options scrollable-options" id="buildingTypeFilter">
+                                <label class="filter-option"><input type="checkbox" value="Independent" checked> Independent</label>
+                                <label class="filter-option"><input type="checkbox" value="Flat" checked> Flat</label>
+                                <label class="filter-option"><input type="checkbox" value="Kalyana_Mandapam" checked> Kalyana Mandapam</label>
+                                <label class="filter-option"><input type="checkbox" value="Hotel" checked> Hotel</label>
+                                <label class="filter-option"><input type="checkbox" value="Cinema_Theatre" checked> Cinema Theatre</label>
+                                <label class="filter-option"><input type="checkbox" value="Central_Government_Building" checked> Central Govt</label>
+                                <label class="filter-option"><input type="checkbox" value="State_Government_Building" checked> State Govt</label>
+                                <label class="filter-option"><input type="checkbox" value="Municipality_Corporation" checked> Municipality</label>
+                                <label class="filter-option"><input type="checkbox" value="Educational_Institution" checked> Educational</label>
+                                <label class="filter-option"><input type="checkbox" value="Hospital" checked> Hospital</label>
+                                <label class="filter-option"><input type="checkbox" value="Commercial_Complex" checked> Commercial Complex</label>
+                                <label class="filter-option"><input type="checkbox" value="Shop" checked> Shop</label>
+                                <label class="filter-option"><input type="checkbox" value="Office" checked> Office</label>
+                                <label class="filter-option"><input type="checkbox" value="Temple" checked> Temple</label>
+                                <label class="filter-option"><input type="checkbox" value="Mosque" checked> Mosque</label>
+                                <label class="filter-option"><input type="checkbox" value="Church" checked> Church</label>
+                                <label class="filter-option"><input type="checkbox" value="Amma_Unavagam" checked> Amma Unavagam</label>
+                                <label class="filter-option"><input type="checkbox" value="Public_Toilet" checked> Public Toilet</label>
+                                <label class="filter-option"><input type="checkbox" value="Vacant Land" checked> Vacant Land</label>
+                                <label class="filter-option"><input type="checkbox" value="Under Construction" checked> Under Construction</label>
+                                <label class="filter-option"><input type="checkbox" value="Others" checked> Others</label>
                             </div>
                         </div>
 
-                        <div class="dropdown-divider" style="height:1px; background:#e9ecef; margin:4px 0;"></div>
+                        <div class="dropdown-divider"></div>
 
                         <!-- Amenities Filters -->
-                        <div class="filter-section" style="padding:8px 16px;">
-                            <div class="filter-section-header" style="font-size:11px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Amenities</div>
-                            <div class="filter-options amenities-grid" id="amenitiesFilter" style="display:grid; grid-template-columns:1fr 1fr; gap:2px;">
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="liftroom" checked style="width:14px; height:14px; cursor:pointer;"> Lift
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="headroom" checked style="width:14px; height:14px; cursor:pointer;"> Head Room
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="overhead_tank" checked style="width:14px; height:14px; cursor:pointer;"> Overhead Tank
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="rainwater_harvesting" checked style="width:14px; height:14px; cursor:pointer;"> Rainwater Harvesting
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="parking" checked style="width:14px; height:14px; cursor:pointer;"> Parking
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="ramp" checked style="width:14px; height:14px; cursor:pointer;"> Ramp
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="hoarding" checked style="width:14px; height:14px; cursor:pointer;"> Hoarding
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="cctv" checked style="width:14px; height:14px; cursor:pointer;"> CCTV
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="cell_tower" checked style="width:14px; height:14px; cursor:pointer;"> Cell Tower
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="solar_panel" checked style="width:14px; height:14px; cursor:pointer;"> Solar Panel
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px;">
-                                    <input type="checkbox" value="water_connection" checked style="width:14px; height:14px; cursor:pointer;"> Water Connection
-                                </label>
+                        <div class="filter-section">
+                            <div class="filter-section-header">Amenities</div>
+                            <div class="filter-options amenities-grid" id="amenitiesFilter">
+                                <label class="filter-option"><input type="checkbox" value="liftroom" checked> Lift</label>
+                                <label class="filter-option"><input type="checkbox" value="headroom" checked> Head Room</label>
+                                <label class="filter-option"><input type="checkbox" value="overhead_tank" checked> Overhead Tank</label>
+                                <label class="filter-option"><input type="checkbox" value="rainwater_harvesting" checked> Rainwater Harvesting</label>
+                                <label class="filter-option"><input type="checkbox" value="parking" checked> Parking</label>
+                                <label class="filter-option"><input type="checkbox" value="ramp" checked> Ramp</label>
+                                <label class="filter-option"><input type="checkbox" value="hoarding" checked> Hoarding</label>
+                                <label class="filter-option"><input type="checkbox" value="cctv" checked> CCTV</label>
+                                <label class="filter-option"><input type="checkbox" value="cell_tower" checked> Cell Tower</label>
+                                <label class="filter-option"><input type="checkbox" value="solar_panel" checked> Solar Panel</label>
+                                <label class="filter-option"><input type="checkbox" value="water_connection" checked> Water Connection</label>
                             </div>
                         </div>
 
-                        <div class="dropdown-divider" style="height:1px; background:#e9ecef; margin:4px 0;"></div>
+                        <div class="dropdown-divider"></div>
 
                         <!-- UGD Status Filter -->
-                        <div class="filter-section" style="padding:8px 16px;">
-                            <div class="filter-section-header" style="font-size:11px; font-weight:600; color:#666; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">UGD Status</div>
-                            <div class="filter-options scrollable-options" id="ugdFilter" style="max-height:100px; overflow-y:auto; display:block;">
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="No_Connection" checked style="width:14px; height:14px; cursor:pointer;"> No Connection
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Manhole_Available_but_Connection_Not_Given_to_House" checked style="width:14px; height:14px; cursor:pointer;"> Manhole Available
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Stage_1_Completed" checked style="width:14px; height:14px; cursor:pointer;"> Stage 1 Completed
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Stage_1_2_Completed" checked style="width:14px; height:14px; cursor:pointer;"> Stage 1 & 2 Completed
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Stage_1_2_Completed_but_Not_Connected" checked style="width:14px; height:14px; cursor:pointer;"> Stage 1 & 2 Not Connected
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Stage_1_2_3_Completed" checked style="width:14px; height:14px; cursor:pointer;"> Stage 1,2 & 3 Completed
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="Direct_Connection_Given" checked style="width:14px; height:14px; cursor:pointer;"> Direct Connection
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="1_UGD_Connection_-_3_Stage_Completed" checked style="width:14px; height:14px; cursor:pointer;"> 1 UGD - 3 Stage
-                                </label>
-                                <label class="filter-option" style="font-size:12px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; padding:2px 6px; border-radius:4px; width:48%; margin:2px 0;">
-                                    <input type="checkbox" value="2_UGD_Connection_-_3_Stage_Completed" checked style="width:14px; height:14px; cursor:pointer;"> 2 UGD - 3 Stage
-                                </label>
+                        <div class="filter-section">
+                            <div class="filter-section-header">UGD Status</div>
+                            <div class="filter-options scrollable-options" id="ugdFilter">
+                                <label class="filter-option"><input type="checkbox" value="No_Connection" checked> No Connection</label>
+                                <label class="filter-option"><input type="checkbox" value="Manhole_Available_but_Connection_Not_Given_to_House" checked> Manhole Available</label>
+                                <label class="filter-option"><input type="checkbox" value="Stage_1_Completed" checked> Stage 1 Completed</label>
+                                <label class="filter-option"><input type="checkbox" value="Stage_1_2_Completed" checked> Stage 1 & 2 Completed</label>
+                                <label class="filter-option"><input type="checkbox" value="Stage_1_2_Completed_but_Not_Connected" checked> Stage 1 & 2 Not Connected</label>
+                                <label class="filter-option"><input type="checkbox" value="Stage_1_2_3_Completed" checked> Stage 1,2 & 3 Completed</label>
+                                <label class="filter-option"><input type="checkbox" value="Direct_Connection_Given" checked> Direct Connection</label>
+                                <label class="filter-option"><input type="checkbox" value="1_UGD_Connection_-_3_Stage_Completed" checked> 1 UGD - 3 Stage</label>
+                                <label class="filter-option"><input type="checkbox" value="2_UGD_Connection_-_3_Stage_Completed" checked> 2 UGD - 3 Stage</label>
                             </div>
                         </div>
 
-                        <div class="dropdown-divider" style="height:1px; background:#e9ecef; margin:4px 0;"></div>
+                        <div class="dropdown-divider"></div>
 
                         <!-- Filter Actions -->
-                        <div class="filter-actions" style="padding:12px 16px; border-top:1px solid #e9ecef; background:#f8f9fa;">
-                            <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn" style="border-radius:6px; font-weight:600;">
+                        <div class="filter-actions">
+                            <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn">
                                 <i class="bi bi-check-circle"></i> Apply Filters
                             </button>
-                            <button class="btn btn-outline-secondary btn-sm w-100 mt-2" id="resetFiltersBtn" style="border-radius:6px; font-weight:600;">
+                            <button class="btn btn-outline-secondary btn-sm w-100 mt-2" id="resetFiltersBtn">
                                 <i class="bi bi-arrow-counterclockwise"></i> Reset All
                             </button>
-                            <div class="filter-stats mt-2" id="filterStats" style="font-size:12px; color:#666; text-align:center;">
+                            <div class="filter-stats mt-2" id="filterStats">
                                 <span>Showing: <strong id="visibleCount">0</strong> features</span>
                             </div>
                         </div>
@@ -1449,28 +1355,27 @@
                 </div>
             `);
 
-            // 7. FULLSCREEN BUTTON
+            // 8. FULLSCREEN BUTTONS
             $mapContainer.append(`
-                    <button class="fullscreen-btn" id="fullscreenBtn">
-                        <i class="bi bi-arrows-fullscreen"></i>
-                    </button>
-                    <button class="fullscreen-btn-exit" id="fullscreenExitBtn" style="display:none;">
-                        <i class="bi bi-fullscreen-exit"></i>
-                    </button>
-                `);
+                <button class="fullscreen-btn" id="fullscreenBtn">
+                    <i class="bi bi-arrows-fullscreen"></i>
+                </button>
+                <button class="fullscreen-btn-exit" id="fullscreenExitBtn" style="display:none;">
+                    <i class="bi bi-fullscreen-exit"></i>
+                </button>
+            `);
 
-            // 8. DIRECTION CONTROLS
+            // 9. DIRECTION CONTROLS
             $mapContainer.append(`
-                    <div class="direction-controls" id="directionControls">
-                        <button class="btn-close-route" id="closeRouteBtn">&times;</button>
-                        <div class="route-info" id="routeInfo">Getting directions...</div>
-                        <div id="routeSteps"></div>
-                    </div>
-                `);
+                <div class="direction-controls" id="directionControls">
+                    <button class="btn-close-route" id="closeRouteBtn">&times;</button>
+                    <div class="route-info" id="routeInfo">Getting directions...</div>
+                    <div id="routeSteps"></div>
+                </div>
+            `);
 
-            // ─── FUNCTIONS ───
+            // ─── HELPER FUNCTIONS ───
 
-            // Show Toast with better visibility
             function showToast(message, duration = 3000) {
                 const $toast = $('#locationToast');
                 $toast.text(message).css({
@@ -1493,7 +1398,6 @@
                 }, duration));
             }
 
-            // Switch Base Layer
             function switchBaseLayer(layer) {
                 [osmLayer, satelliteLayer, streetViewLayer].forEach(l => {
                     l.setVisible(l === layer);
@@ -1505,18 +1409,15 @@
                 $('.layer-dropdown-item[data-layer="' + layerName + '"]').addClass('active');
             }
 
-            // Toggle Drone Layer
             function toggleDroneLayer() {
                 const visible = !droneLayer.getVisible();
                 droneLayer.setVisible(visible);
                 return visible;
             }
 
-            // ─── GET COORDS BY GIS ID - FIXED to prioritize correct type ───
             function getCoordsByGisId(gisid, type = null) {
                 if (!gisid) return null;
 
-                // If type is specified, check that type first
                 if (type === 'line') {
                     const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
                     if (lineFeatures.length > 0) {
@@ -1539,7 +1440,6 @@
                     }
                 }
 
-                // 1. Raw points array
                 const point = points.find(p => p.gisid == gisid);
                 if (point) {
                     try {
@@ -1558,7 +1458,6 @@
                     }
                 }
 
-                // 2. pointDatas array
                 const pd = pointDatas.find(p => p.point_gisid == gisid || p.id == gisid);
                 if (pd && pd.coordinates) {
                     try {
@@ -1577,7 +1476,6 @@
                     }
                 }
 
-                // 3. Polygon features (fallback)
                 if (type !== 'line') {
                     const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
                     if (polyFeatures.length > 0) {
@@ -1589,7 +1487,6 @@
                     }
                 }
 
-                // 4. Line features (fallback)
                 if (type !== 'polygon') {
                     const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
                     if (lineFeatures.length > 0) {
@@ -1604,7 +1501,6 @@
                 return null;
             }
 
-            // ─── ZOOM TO FEATURE ───
             function zoomToFeature(item) {
                 if (!item) {
                     showToast('❌ Invalid item', 3000);
@@ -1650,7 +1546,6 @@
                 });
             }
 
-            // ─── ZOOM TO EXTENT ───
             function zoomToExtent() {
                 map.getView().fit(imageExtent, {
                     padding: [50, 50, 50, 50],
@@ -1660,7 +1555,6 @@
                 showToast('📍 Zoomed to ward extent', 2000);
             }
 
-            // ─── UPDATE POSITION ───
             function updatePosition(position, autoCenter = false) {
                 const lon = position.coords.longitude;
                 const lat = position.coords.latitude;
@@ -1681,12 +1575,6 @@
                     positionFeature.getGeometry().setCoordinates(projected);
                 }
 
-                // Show location update in toast only when actively tracking
-                if (isLiveLocation) {
-                    // Silent update - no toast
-                }
-
-                // Auto-center only when tracking is active
                 if (autoCenter && isTracking) {
                     map.getView().animate({
                         center: projected,
@@ -1695,14 +1583,12 @@
                     });
                 }
 
-                // Track route (always record if tracking)
                 if (isTracking) {
                     routePoints.push(projected);
                     updateRouteLine();
                 }
             }
 
-            // ─── UPDATE ROUTE LINE ───
             function updateRouteLine() {
                 if (routePoints.length < 2) return;
 
@@ -1723,7 +1609,6 @@
                 }
             }
 
-            // ─── GET CURRENT LOCATION ───
             function getCurrentLocation(callback) {
                 if (currentLocation) {
                     callback(currentLocation);
@@ -1750,7 +1635,6 @@
                 );
             }
 
-            // ─── GET DIRECTION TO FEATURE ───
             function getDirectionToFeature(feature) {
                 if (!feature) {
                     showToast('❌ Invalid feature for directions', 3000);
@@ -1768,7 +1652,6 @@
                 });
             }
 
-            // ─── CALCULATE DIRECTION ───
             function calculateDirection(loc, feature) {
                 if (!loc || !feature) {
                     showToast('❌ Missing location or feature data', 3000);
@@ -1801,7 +1684,6 @@
                 getRoute(loc.lon, loc.lat, destLon, destLat);
             }
 
-            // ─── GET ROUTE ───
             function getRoute(startLon, startLat, endLon, endLat) {
                 $('#directionControls').addClass('active');
                 $('#routeInfo').text('Getting directions...');
@@ -1878,9 +1760,7 @@
                     });
             }
 
-            // ─── CLEAR ALL ROUTE STATE ───
             function clearAllRouteState() {
-                // Clear tracking interval
                 if (trackInterval) {
                     clearInterval(trackInterval);
                     trackInterval = null;
@@ -1917,7 +1797,6 @@
                 $('#directionControls').removeClass('active');
             }
 
-            // ─── SEARCH FUNCTIONALITY ───
             function searchGIS(value) {
                 const v = value.toString().toLowerCase().trim();
                 if (!v) return [];
@@ -1933,31 +1812,246 @@
                 );
             }
 
+            // ─── FILTER FUNCTIONS ───
+
+            function getSelectedCheckboxValues(containerSelector) {
+                const values = [];
+                $(containerSelector).find('input[type="checkbox"]:checked').each(function() {
+                    values.push($(this).val());
+                });
+                return values;
+            }
+
+            function applyFilters() {
+                const selectedUsage = getSelectedCheckboxValues('#usageFilter');
+                const selectedZones = getSelectedCheckboxValues('#zoneFilter');
+                const selectedConstruction = getSelectedCheckboxValues('#constructionFilter');
+                const selectedBuildingTypes = getSelectedCheckboxValues('#buildingTypeFilter');
+                const selectedAmenities = getSelectedCheckboxValues('#amenitiesFilter');
+                const selectedUgd = getSelectedCheckboxValues('#ugdFilter');
+                const minArea = parseInt($('#minArea').val()) || 0;
+                const maxArea = parseInt($('#maxArea').val()) || 10000;
+
+                const allUsageSelected = selectedUsage.length === 7;
+                const allZonesSelected = selectedZones.length === 5;
+                const allConstructionSelected = selectedConstruction.length === 6;
+                const allBuildingTypesSelected = selectedBuildingTypes.length === 21;
+                const allAmenitiesSelected = selectedAmenities.length === 11;
+                const allUgdSelected = selectedUgd.length === 9;
+                const areaDefault = minArea === 0 && maxArea === 10000;
+
+                const anyFilterActive = !allUsageSelected || !allZonesSelected || !allConstructionSelected ||
+                    !allBuildingTypesSelected || !allAmenitiesSelected || !allUgdSelected || !areaDefault;
+
+                if (!anyFilterActive) {
+                    resetAllFilters(true);
+                    showToast('ℹ️ All filters reset - showing all features', 2000);
+                    return;
+                }
+
+                const allFeatures = polygonSource.getFeatures();
+                let visibleCount = 0;
+
+                allFeatures.forEach(feature => {
+                    const gisid = feature.get('gisid');
+                    const sqfeet = parseFloat(feature.get('sqfeet')) || 0;
+                    const buildingData = polygonDatas.find(d => d.gisid == gisid);
+
+                    let passesFilters = true;
+
+                    if (!(sqfeet >= minArea && sqfeet <= maxArea)) {
+                        passesFilters = false;
+                    }
+
+                    if (passesFilters && buildingData) {
+                        const usage = buildingData.building_usage || '';
+                        if (selectedUsage.length > 0 && !selectedUsage.includes(usage)) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedUsage.length < 7) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters && buildingData) {
+                        const zone = buildingData.zone || buildingData.building_zone || '';
+                        if (selectedZones.length > 0 && !selectedZones.includes(zone)) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedZones.length < 5) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters && buildingData) {
+                        const constructionType = buildingData.construction_type || '';
+                        if (selectedConstruction.length > 0 && !selectedConstruction.includes(constructionType)) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedConstruction.length < 6) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters && buildingData) {
+                        const buildingType = buildingData.building_type || '';
+                        if (selectedBuildingTypes.length > 0 && !selectedBuildingTypes.includes(buildingType)) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedBuildingTypes.length < 21) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters && buildingData && selectedAmenities.length > 0) {
+                        const hasAllAmenities = selectedAmenities.every(amenity => {
+                            const value = buildingData[amenity];
+                            return value === 'Yes' || value === true || value === 1 ||
+                                (typeof value === 'string' && value.toLowerCase() === 'yes');
+                        });
+                        if (!hasAllAmenities) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedAmenities.length < 11) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters && buildingData) {
+                        const ugdStatus = buildingData.ugd || '';
+                        if (selectedUgd.length > 0 && !selectedUgd.includes(ugdStatus)) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedUgd.length < 9) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters) {
+                        feature.setStyle(createPolygonStyle(feature));
+                        visibleCount++;
+                    } else {
+                        feature.setStyle(new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: 'rgba(200,200,200,0.2)',
+                                width: 1
+                            }),
+                            fill: new ol.style.Fill({
+                                color: 'rgba(200,200,200,0.05)'
+                            })
+                        }));
+                    }
+                });
+
+                $('#visibleCount').text(visibleCount);
+                const total = allFeatures.length;
+                $('#filterStats').html(`Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
+
+                polygonLayer.changed();
+                polygonSource.changed();
+
+                const hiddenCount = total - visibleCount;
+                if (hiddenCount > 0) {
+                    showToast(`🔍 Filter applied: ${visibleCount} visible, ${hiddenCount} hidden`, 3000);
+                } else {
+                    showToast(`✅ All ${visibleCount} features match the selected filters`, 2000);
+                }
+            }
+
+            function resetAllFilters(silent = false) {
+                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #amenitiesFilter, #ugdFilter')
+                    .find('input[type="checkbox"]')
+                    .prop('checked', true);
+
+                $('#minArea').val(0);
+                $('#maxArea').val(10000);
+                $('#areaRange').val(5000);
+
+                const allFeatures = polygonSource.getFeatures();
+                allFeatures.forEach(feature => {
+                    feature.setStyle(createPolygonStyle(feature));
+                });
+
+                $('#visibleCount').text(allFeatures.length);
+                $('#filterStats').html(`Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`);
+
+                polygonLayer.changed();
+                polygonSource.changed();
+
+                if (!silent) {
+                    showToast('🔄 All filters reset - all features visible', 2000);
+                }
+            }
+
+            function updateFilterStats() {
+                const total = polygonSource.getFeatures().length;
+                let visible = 0;
+                polygonSource.getFeatures().forEach(f => {
+                    const style = f.getStyle();
+                    if (style && typeof style === 'function') {
+                        const appliedStyle = style(f);
+                        if (appliedStyle && appliedStyle.getStroke &&
+                            appliedStyle.getStroke() &&
+                            appliedStyle.getStroke().getColor() !== 'rgba(200,200,200,0.2)') {
+                            visible++;
+                        }
+                    } else {
+                        visible++;
+                    }
+                });
+                $('#visibleCount').text(visible);
+                $('#filterStats').html(`Showing: <strong>${visible}</strong> of <strong>${total}</strong> features`);
+            }
+
             // ─── EVENT HANDLERS ───
 
-            // Toggle Dropdowns
+            // Layer Toggle
             $(document).on('click', '.layer-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.layer-dropdown').toggleClass('active');
                 $('.location-dropdown').removeClass('active');
                 $('.search-dropdown').removeClass('active');
+                $('#filterDropdown').removeClass('active');
             });
 
+            // Location Toggle
             $(document).on('click', '.location-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.location-dropdown').toggleClass('active');
                 $('.layer-dropdown').removeClass('active');
                 $('.search-dropdown').removeClass('active');
+                $('#filterDropdown').removeClass('active');
             });
 
+            // Search Toggle
             $(document).on('click', '.search-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.search-dropdown').toggleClass('active');
                 $('.layer-dropdown').removeClass('active');
                 $('.location-dropdown').removeClass('active');
+                $('#filterDropdown').removeClass('active');
             });
 
-            // Close dropdowns when clicking outside
+            // Filter Toggle
+            $(document).on('click', '#filterToggleBtn', function(e) {
+                e.stopPropagation();
+                $('#filterDropdown').toggleClass('active');
+                $(this).toggleClass('active-filter');
+                $('.layer-dropdown').removeClass('active');
+                $('.location-dropdown').removeClass('active');
+                $('.search-dropdown').removeClass('active');
+                if ($('#filterDropdown').hasClass('active')) {
+                    updateFilterStats();
+                }
+            });
+
+            // Close dropdowns on outside click
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.custom-layer-switcher').length) {
                     $('.layer-dropdown').removeClass('active');
@@ -1967,6 +2061,10 @@
                 }
                 if (!$(e.target).closest('.custom-search-switcher').length) {
                     $('.search-dropdown').removeClass('active');
+                }
+                if (!$(e.target).closest('.custom-filter-toggle').length) {
+                    $('#filterDropdown').removeClass('active');
+                    $('#filterToggleBtn').removeClass('active-filter');
                 }
             });
 
@@ -2013,22 +2111,20 @@
                 Swal.fire({
                     title: 'Infrastructure Legend',
                     html: `
-                            <div style="text-align:left;">
-                                <div><span style="display:inline-block;width:20px;height:20px;background:rgba(13,110,253,0.15);border:2px solid #0d6efd;margin-right:10px;"></span> Polygons (Land Parcels)</div>
-                                <div><span style="display:inline-block;width:20px;height:20px;background:rgba(220,53,69,0.15);border:2px solid #dc3545;margin-right:10px;"></span> Flagged Parcels</div>
-                                <div><span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span> Lines (Roads)</div>
-                                <div><span style="display:inline-block;width:20px;height:20px;background:rgba(0,0,0,0.3);border-radius:4px;margin-right:10px;"></span> Drone View</div>
-                                <hr>
-                                <div><span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span> Current Location</div>
-                                <div><span style="display:inline-block;width:20px;height:4px;background:#dc3545;border-radius:2px;margin-right:10px;"></span> Track Route</div>
-                            </div>
-                        `,
+                        <div style="text-align:left;">
+                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(13,110,253,0.15);border:2px solid #0d6efd;margin-right:10px;"></span> Polygons (Land Parcels)</div>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(220,53,69,0.15);border:2px solid #dc3545;margin-right:10px;"></span> Flagged Parcels</div>
+                            <div><span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span> Lines (Roads)</div>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(0,0,0,0.3);border-radius:4px;margin-right:10px;"></span> Drone View</div>
+                            <hr>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span> Current Location</div>
+                            <div><span style="display:inline-block;width:20px;height:4px;background:#dc3545;border-radius:2px;margin-right:10px;"></span> Track Route</div>
+                        </div>
+                    `,
                     icon: 'info',
                     confirmButtonText: 'Close'
                 });
             });
-
-
 
             // 3D Toggle
             $('#threeDToggleBtn').on('click', function() {
@@ -2041,34 +2137,13 @@
                 });
             });
 
-            $('#filterToggleBtn').on('click', function() {
-                Swal.fire({
-                    title: 'Infrastructure Legend',
-                    html: `
-                            <div style="text-align:left;">
-                                <div><span style="display:inline-block;width:20px;height:20px;background:rgba(13,110,253,0.15);border:2px solid #0d6efd;margin-right:10px;"></span> Polygons (Land Parcels)</div>
-                                <div><span style="display:inline-block;width:20px;height:20px;background:rgba(220,53,69,0.15);border:2px solid #dc3545;margin-right:10px;"></span> Flagged Parcels</div>
-                                <div><span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span> Lines (Roads)</div>
-                                <div><span style="display:inline-block;width:20px;height:20px;background:rgba(0,0,0,0.3);border-radius:4px;margin-right:10px;"></span> Drone View</div>
-                                <hr>
-                                <div><span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span> Current Location</div>
-                                <div><span style="display:inline-block;width:20px;height:4px;background:#dc3545;border-radius:2px;margin-right:10px;"></span> Track Route</div>
-                            </div>
-                        `,
-                    icon: 'info',
-                    confirmButtonText: 'Close'
-                });
-            });
+            // ─── LOCATION EVENT HANDLERS ───
 
-            // ─── LOCATION FUNCTIONALITY ───
-
-            // ─── ZOOM TO EXTENT ───
             $('#zoomToExtentItem').on('click', function() {
                 zoomToExtent();
                 $('.location-dropdown').removeClass('active');
             });
 
-            // ─── LIVE LOCATION (Passive - just show location) ───
             $('#liveLocationItem').on('click', function() {
                 if (!navigator.geolocation) {
                     showToast('❌ Geolocation not supported');
@@ -2086,11 +2161,11 @@
 
                     navigator.geolocation.getCurrentPosition(
                         function(pos) {
-                            updatePosition(pos, false); // NO auto-center
+                            updatePosition(pos, false);
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        updatePosition(newPos, false); // NO auto-center
+                                        updatePosition(newPos, false);
                                     },
                                     function(error) {
                                         console.error('Watch error:', error);
@@ -2126,7 +2201,6 @@
                 $('.location-dropdown').removeClass('active');
             });
 
-            // ─── TRACK ME (Auto-center every 2 seconds) ───
             $('#trackMeItem').on('click', function() {
                 if (!navigator.geolocation) {
                     showToast('❌ Geolocation not supported');
@@ -2142,7 +2216,6 @@
                     $btn.addClass('tracking');
                     showToast('📍 Tracking started - auto-centering every 2 seconds', 3000);
 
-                    // Clear any existing interval
                     if (trackInterval) {
                         clearInterval(trackInterval);
                         trackInterval = null;
@@ -2150,13 +2223,12 @@
 
                     navigator.geolocation.getCurrentPosition(
                         function(pos) {
-                            updatePosition(pos, true); // Auto-center immediately
+                            updatePosition(pos, true);
 
-                            // Start tracking with interval
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        updatePosition(newPos, true); // Auto-center on each update
+                                        updatePosition(newPos, true);
                                     },
                                     function(error) {
                                         console.error('Track error:', error);
@@ -2169,7 +2241,6 @@
                                 );
                             }
 
-                            // Set up interval to force auto-center every 2 seconds
                             trackInterval = setInterval(function() {
                                 if (currentPosition && isTracking) {
                                     map.getView().animate({
@@ -2178,7 +2249,7 @@
                                         duration: 500
                                     });
                                 }
-                            }, 2000); // Every 2 seconds
+                            }, 2000);
 
                         },
                         function(error) {
@@ -2197,7 +2268,6 @@
                         }
                     );
                 } else {
-                    // Stop tracking
                     isTracking = false;
                     const $badge = $('#trackMeBadge');
                     const $btn = $('#locationToggleBtn');
@@ -2205,7 +2275,6 @@
                     $btn.removeClass('tracking');
                     showToast('⏹️ Tracking stopped', 2000);
 
-                    // Clear interval
                     if (trackInterval) {
                         clearInterval(trackInterval);
                         trackInterval = null;
@@ -2219,14 +2288,12 @@
                 $('.location-dropdown').removeClass('active');
             });
 
-            // Clear Route
             $('#clearRouteItem').on('click', function() {
                 clearAllRouteState();
                 showToast('🧹 Cleared all location data', 2000);
                 $('.location-dropdown').removeClass('active');
             });
 
-            // Close route (×) button
             $(document).on('click', '#closeRouteBtn', function() {
                 routeLayer.getSource().clear();
                 if (destinationMarker) {
@@ -2236,7 +2303,8 @@
                 $('#directionControls').removeClass('active');
             });
 
-            // ─── QUICK SEARCH ───
+            // ─── SEARCH EVENT HANDLERS ───
+
             $('#gisSearchInput').on('keyup', function() {
                 const value = $(this).val();
                 if (!value || value.length < 1) {
@@ -2278,24 +2346,23 @@
                             '';
 
                         html += `
-                                <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-                                    <div class="search-result-title">
-                                        <i class="bi bi-${icon} me-2"></i>${displayTitle}
-                                        <span class="type-badge ${badgeClass}">${badgeText}</span>
-                                    </div>
-                                    <div class="search-result-subtitle">${displaySubtitle}</div>
-                                    <div class="mt-2 d-flex gap-2">
-                                        <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                        <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
-                                        ${editBtn}
-                                    </div>
-                                </div>`;
+                            <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
+                                <div class="search-result-title">
+                                    <i class="bi bi-${icon} me-2"></i>${displayTitle}
+                                    <span class="type-badge ${badgeClass}">${badgeText}</span>
+                                </div>
+                                <div class="search-result-subtitle">${displaySubtitle}</div>
+                                <div class="mt-2 d-flex gap-2">
+                                    <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
+                                    <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
+                                    ${editBtn}
+                                </div>
+                            </div>`;
                     });
                 }
                 $('#searchResults').html(html);
             });
 
-            // ─── SEARCH RESULT ITEM CLICK ───
             $(document).on('click', '.search-result-item', function() {
                 const id = $(this).data('id');
                 const type = $(this).data('type');
@@ -2310,7 +2377,6 @@
                 }
             });
 
-            // ─── ZOOM BUTTON ───
             $(document).on('click', '.zoom-btn', function(e) {
                 e.stopPropagation();
                 const id = $(this).data('id');
@@ -2333,7 +2399,6 @@
                 $('#searchResults').html('');
             });
 
-            // ─── DIRECTION BUTTON ───
             $(document).on('click', '.direction-btn', function(e) {
                 e.stopPropagation();
                 const id = $(this).data('id');
@@ -2357,7 +2422,6 @@
                 }
             });
 
-            // Search tabs
             $('.search-tab-btn').on('click', function() {
                 const tab = $(this).data('tab');
                 $('.search-tab-btn').removeClass('active');
@@ -2372,7 +2436,50 @@
                 }
             });
 
-            // ─── FILTER FUNCTIONALITY ───
+            // ─── FILTER EVENT HANDLERS ───
+
+            $('#applyFiltersBtn').on('click', function() {
+                applyFilters();
+            });
+
+            $('#resetFiltersBtn').on('click', function() {
+                resetAllFilters(false);
+            });
+
+            $('#areaRange').on('input', function() {
+                const val = parseInt($(this).val());
+                const maxVal = parseInt($('#maxArea').val());
+                if (val > maxVal) {
+                    $(this).val(maxVal);
+                }
+                $('#minArea').val($(this).val());
+            });
+
+            $('#minArea').on('change', function() {
+                let val = parseInt($(this).val()) || 0;
+                const maxVal = parseInt($('#maxArea').val()) || 10000;
+                if (val > maxVal) {
+                    val = maxVal;
+                    $(this).val(val);
+                }
+                $('#areaRange').val(val);
+            });
+
+            $('#maxArea').on('change', function() {
+                let val = parseInt($(this).val()) || 10000;
+                const minVal = parseInt($('#minArea').val()) || 0;
+                if (val < minVal) {
+                    val = minVal;
+                    $(this).val(val);
+                }
+                const sliderVal = parseInt($('#areaRange').val());
+                if (sliderVal > val) {
+                    $('#areaRange').val(val);
+                }
+            });
+
+            // ─── FILTER SEARCH EVENT HANDLERS ───
+
             $('#applyFilterBtn').on('click', function() {
                 const assessment = $('#filterAssessment').val().toLowerCase().trim();
                 const oldAssessment = $('#filterOldAssessment').val().toLowerCase().trim();
@@ -2442,25 +2549,24 @@
                     }
 
                     html += `
-                            <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-                                <div class="search-result-title">
-                                    <i class="bi bi-${icon} me-2"></i>${item.title}
-                                    <span class="type-badge ${badgeClass}">${badgeText}</span>
-                                </div>
-                                <div class="search-result-subtitle">${item.subtitle}</div>
-                                ${details.length ? '<div class="search-result-subtitle" style="color:#666;">' + details.join(' | ') + '</div>' : ''}
-                                <div class="search-result-actions">
-                                    <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                    <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
-                                </div>
+                        <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
+                            <div class="search-result-title">
+                                <i class="bi bi-${icon} me-2"></i>${item.title}
+                                <span class="type-badge ${badgeClass}">${badgeText}</span>
                             </div>
-                        `;
+                            <div class="search-result-subtitle">${item.subtitle}</div>
+                            ${details.length ? '<div class="search-result-subtitle" style="color:#666;">' + details.join(' | ') + '</div>' : ''}
+                            <div class="search-result-actions">
+                                <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
+                                <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
+                            </div>
+                        </div>
+                    `;
                 });
                 results.html(html);
                 showToast('✅ Found ' + matches.length + ' results', 2000);
             });
 
-            // Enter key for filter search
             $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress',
                 function(e) {
                     if (e.which === 13) {
@@ -2468,7 +2574,6 @@
                     }
                 });
 
-            // Enter key for quick search
             $('#gisSearchInput').on('keypress', function(e) {
                 if (e.which === 13) {
                     e.preventDefault();
@@ -2522,6 +2627,9 @@
                     $('#fullscreenExitBtn').click();
                 }
             });
+
+            // ─── INITIALIZE ───
+            setTimeout(updateFilterStats, 500);
 
             console.log('✅ GIS Dashboard initialized successfully!');
             console.log('📊 Search Index Size:', searchIndex.length);
