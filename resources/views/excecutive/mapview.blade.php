@@ -190,19 +190,12 @@
             overflow-y: auto;
         }
 
-        .filter-dropdown {
-            width: 420px;
-            max-height: 85vh;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-        }
-@media (max-width: 576px) {
-    .filter-dropdown {
-        width: 350px;
-        max-width: 420px;
-
-    }
+ .filter-dropdown {
+    width: min(420px, calc(100vw - 20px));
+    max-height: 85vh;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
 }
         .layer-dropdown.active,
         .location-dropdown.active,
