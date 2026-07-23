@@ -227,7 +227,7 @@
         </button>
 
         <nav class="ol-breadcrumb" aria-label="Breadcrumb">
-            <span>Revenue Dept.</span>
+
             <i class="bi bi-chevron-right"></i>
             <span class="page-title">@yield('page_title', 'Dashboard')</span>
         </nav>
