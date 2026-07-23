@@ -64,8 +64,9 @@ class FeatureController extends Controller
 
                 case 'LineString':
                     $result = $this->wardService->createSingleLine([
-                        'ward_id' => $wardId,
-                        'feature' => $request->feature,
+                        'ward_id'   => $wardId,
+                        'layer_type' => $layerType,
+                        'feature'   => $request->feature,
                     ]);
                     break;
 
