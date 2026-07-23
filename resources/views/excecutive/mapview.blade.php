@@ -152,9 +152,11 @@
             0% {
                 opacity: 1;
             }
+
             50% {
                 opacity: 0.5;
             }
+
             100% {
                 opacity: 1;
             }
@@ -1022,6 +1024,7 @@
 
         /* Touch-friendly improvements */
         @media (hover: none) and (pointer: coarse) {
+
             .layer-toggle-btn,
             .location-toggle-btn,
             .search-toggle-btn,
@@ -1092,6 +1095,7 @@
             let points = @json($points ?? [], JSON_HEX_TAG);
             let pointDatas = @json($pointDatas ?? [], JSON_HEX_TAG);
             let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
+            let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
             let ward = @json($ward ?? [], JSON_HEX_TAG);
 
             // ─── IMAGE EXTENT ───
@@ -2391,84 +2395,77 @@
                     return;
                 }
 
+                // ── STEP 1: build a gisid-set for EACH active filter ──
+
+                // Area filter → gisids whose sqfeet is inside range
+                let areaGisids = null;
+                if (!areaDefault) {
+                    areaGisids = new Set(
+                        polygons
+                        .filter(p => {
+                            const sqfeet = parseFloat(p.sqfeet) || 0;
+                            return sqfeet >= minArea && sqfeet <= maxArea;
+                        })
+                        .map(p => p.gisid)
+                    );
+                }
+
+                // Generic helper: filter polygonDatas by a field == selected value
+                function gisidsByField(selectedValue, isAll, fieldGetter) {
+                    if (isAll) return null; // null = "no restriction from this filter"
+                    return new Set(
+                        polygonDatas
+                        .filter(d => fieldGetter(d) === selectedValue)
+                        .map(d => d.gisid)
+                    );
+                }
+
+                const usageGisids = gisidsByField(selectedUsage, allUsageSelected, d => d.building_usage || '');
+                const zoneGisids = gisidsByField(selectedZone, allZonesSelected, d => d.zone || d.building_zone ||
+                    '');
+                const constructionGisids = gisidsByField(selectedConstruction, allConstructionSelected, d => d
+                    .construction_type || '');
+                const buildingTypeGisids = gisidsByField(selectedBuildingType, allBuildingTypesSelected, d => d
+                    .building_type || '');
+                const ugdGisids = gisidsByField(selectedUgd, allUgdSelected, d => d.ugd || '');
+
+                // Amenities filter → gisids where ALL selected amenities are "Yes"
+                let amenitiesGisids = null;
+                if (!noAmenitiesSelected) {
+                    amenitiesGisids = new Set(
+                        polygonDatas
+                        .filter(d => selectedAmenities.every(amenity => {
+                            const value = d[amenity];
+                            return value === 'Yes' || value === true || value === 1 ||
+                                (typeof value === 'string' && value.toLowerCase() === 'yes');
+                        }))
+                        .map(d => d.gisid)
+                    );
+                }
+
+                // ── STEP 2: intersect all active filter sets into one final gisid set ──
+                const allSets = [areaGisids, usageGisids, zoneGisids, constructionGisids, buildingTypeGisids,
+                        ugdGisids, amenitiesGisids
+                    ]
+                    .filter(set => set !== null); // drop filters that are "all" / not active
+
+                let finalGisids;
+                if (allSets.length === 0) {
+                    finalGisids =
+                        null; // no filters active at all (shouldn't happen, anyFilterActive already checked)
+                } else {
+                    finalGisids = allSets.reduce((acc, set) => {
+                        return new Set([...acc].filter(gisid => set.has(gisid)));
+                    });
+                }
+
+                // ── STEP 3: apply styles based on membership in finalGisids ──
                 const allFeatures = polygonSource.getFeatures();
                 let visibleCount = 0;
 
                 allFeatures.forEach(feature => {
                     const gisid = feature.get('gisid');
-                    const sqfeet = parseFloat(feature.get('sqfeet')) || 0;
-                    const buildingData = polygonDatas.find(d => d.gisid == gisid);
-
-                    let passesFilters = true;
-
-                    // Area filter
-                    if (!(sqfeet >= minArea && sqfeet <= maxArea)) {
-                        passesFilters = false;
-                    }
-
-                    // Usage filter
-                    if (passesFilters && selectedUsage !== 'all' && buildingData) {
-                        const usage = buildingData.building_usage || '';
-                        if (selectedUsage !== usage) {
-                            passesFilters = false;
-                        }
-                    } else if (passesFilters && selectedUsage !== 'all' && !buildingData) {
-                        passesFilters = false;
-                    }
-
-                    // Zone filter
-                    if (passesFilters && selectedZone !== 'all' && buildingData) {
-                        const zone = buildingData.zone || buildingData.building_zone || '';
-                        if (selectedZone !== zone) {
-                            passesFilters = false;
-                        }
-                    } else if (passesFilters && selectedZone !== 'all' && !buildingData) {
-                        passesFilters = false;
-                    }
-
-                    // Construction filter
-                    if (passesFilters && selectedConstruction !== 'all' && buildingData) {
-                        const constructionType = buildingData.construction_type || '';
-                        if (selectedConstruction !== constructionType) {
-                            passesFilters = false;
-                        }
-                    } else if (passesFilters && selectedConstruction !== 'all' && !buildingData) {
-                        passesFilters = false;
-                    }
-
-                    // Building Type filter
-                    if (passesFilters && selectedBuildingType !== 'all' && buildingData) {
-                        const buildingType = buildingData.building_type || '';
-                        if (selectedBuildingType !== buildingType) {
-                            passesFilters = false;
-                        }
-                    } else if (passesFilters && selectedBuildingType !== 'all' && !buildingData) {
-                        passesFilters = false;
-                    }
-
-                    // Amenities filter (multi-select)
-                    if (passesFilters && selectedAmenities.length > 0 && buildingData) {
-                        const hasAllAmenities = selectedAmenities.every(amenity => {
-                            const value = buildingData[amenity];
-                            return value === 'Yes' || value === true || value === 1 ||
-                                (typeof value === 'string' && value.toLowerCase() === 'yes');
-                        });
-                        if (!hasAllAmenities) {
-                            passesFilters = false;
-                        }
-                    } else if (passesFilters && selectedAmenities.length > 0 && !buildingData) {
-                        passesFilters = false;
-                    }
-
-                    // UGD filter
-                    if (passesFilters && selectedUgd !== 'all' && buildingData) {
-                        const ugdStatus = buildingData.ugd || '';
-                        if (selectedUgd !== ugdStatus) {
-                            passesFilters = false;
-                        }
-                    } else if (passesFilters && selectedUgd !== 'all' && !buildingData) {
-                        passesFilters = false;
-                    }
+                    const passesFilters = finalGisids ? finalGisids.has(gisid) : true;
 
                     if (passesFilters) {
                         feature.setStyle(createPolygonStyle(feature));
@@ -2489,8 +2486,7 @@
                 $('#visibleCount').text(visibleCount);
                 const total = allFeatures.length;
                 $('#filterStats').html(
-                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`
-                );
+                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -2552,7 +2548,7 @@
                 });
                 $('#visibleCount').text(visible);
                 $('#filterStats').html(
-                `Showing: <strong>${visible}</strong> of <strong>${total}</strong> features`);
+                    `Showing: <strong>${visible}</strong> of <strong>${total}</strong> features`);
             }
 
             // ─── EVENT HANDLERS ───
@@ -2728,9 +2724,11 @@
                                     function(error) {
                                         console.error('Watch error:', error);
                                         if (error.code === 3) {
-                                            showToast('⏳ Location update timeout. Retrying...', 3000);
+                                            showToast('⏳ Location update timeout. Retrying...',
+                                                3000);
                                         } else {
-                                            showToast('❌ Location error: ' + error.message, 3000);
+                                            showToast('❌ Location error: ' + error.message,
+                                                3000);
                                         }
                                     }, {
                                         enableHighAccuracy: true,
@@ -2800,9 +2798,11 @@
                                     function(error) {
                                         console.error('Track error:', error);
                                         if (error.code === 3) {
-                                            showToast('⏳ Location update timeout. Retrying...', 3000);
+                                            showToast('⏳ Location update timeout. Retrying...',
+                                                3000);
                                         } else {
-                                            showToast('❌ Tracking error: ' + error.message, 3000);
+                                            showToast('❌ Tracking error: ' + error.message,
+                                                3000);
                                         }
                                     }, {
                                         enableHighAccuracy: true,

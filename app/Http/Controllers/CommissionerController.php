@@ -518,6 +518,7 @@ class CommissionerController extends Controller
                 $polygon->sqfeet = $totalSqfeet;
             }
         }
+
         return view('excecutive.mapview', compact(
             'ward',
             'polygons',
