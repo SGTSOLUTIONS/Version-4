@@ -199,7 +199,7 @@
         }
 @media (max-width: 576px) {
     .filter-dropdown {
-        width: calc(100vw - 20px);
+        width: 350px;
         max-width: 420px;
 
     }
