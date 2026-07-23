@@ -73,10 +73,10 @@
         }
 
         /* ───────────────────────────────────────────────
-           Control stack — every floating control on the map
-           shares one flex column so they can never overlap,
-           regardless of how many are shown/hidden.
-        ─────────────────────────────────────────────── */
+                   Control stack — every floating control on the map
+                   shares one flex column so they can never overlap,
+                   regardless of how many are shown/hidden.
+                ─────────────────────────────────────────────── */
         .map-controls-stack {
             position: absolute;
             right: 30px;
@@ -88,7 +88,7 @@
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
 
-        .map-controls-stack > div {
+        .map-controls-stack>div {
             position: relative;
         }
 
@@ -462,10 +462,26 @@
             margin-left: 6px;
             font-weight: 600;
         }
-        .type-badge.road { background: #0dcaf0; color: #000; }
-        .type-badge.parcel { background: #198754; color: #fff; }
-        .type-badge.point { background: #ffc107; color: #000; }
-        .type-badge.assessment { background: #0d6efd; color: #fff; }
+
+        .type-badge.road {
+            background: #0dcaf0;
+            color: #000;
+        }
+
+        .type-badge.parcel {
+            background: #198754;
+            color: #fff;
+        }
+
+        .type-badge.point {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .type-badge.assessment {
+            background: #0d6efd;
+            color: #fff;
+        }
     </style>
 @endpush
 
@@ -808,7 +824,8 @@
                             if (Array.isArray(coords) && coords.length === 2) {
                                 let lon = coords[0];
                                 let lat = coords[1];
-                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
+                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
+                                    180) {
                                     lon = coords[1];
                                     lat = coords[0];
                                 }
@@ -819,7 +836,7 @@
                         let pointGisid = pd.point_gisid || '';
 
                         searchIndex.push({
-                            id:pointGisid,
+                            id: pointGisid,
                             type: 'pointdata',
                             title: `Assessment: ${pd.assessment || 'N/A'}`,
                             subtitle: `GIS ID: ${pointGisid} | Owner: ${pd.owner_name || 'N/A'}`,
@@ -1180,7 +1197,8 @@
                     try {
                         const coords = JSON.parse(point.coordinates);
                         if (Array.isArray(coords) && coords.length === 2) {
-                            let lon = coords[0], lat = coords[1];
+                            let lon = coords[0],
+                                lat = coords[1];
                             if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
                                 lon = coords[1];
                                 lat = coords[0];
@@ -1198,7 +1216,8 @@
                     try {
                         const coords = JSON.parse(pd.coordinates);
                         if (Array.isArray(coords) && coords.length === 2) {
-                            let lon = coords[0], lat = coords[1];
+                            let lon = coords[0],
+                                lat = coords[1];
                             if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
                                 lon = coords[1];
                                 lat = coords[0];
@@ -1247,7 +1266,7 @@
                 let coords = null;
                 const gisid = item.id || item.point_gisid;
 
-              if (item.type === 'line') {
+                if (item.type === 'line') {
                     // For lines, ONLY look in lineSource first
                     const feature = lineSource.getFeatureById(gisid);
                     if (feature) {
@@ -1266,12 +1285,12 @@
                             coords = ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
                         }
                     }
-                } else{
-                        const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                        if (polyFeatures.length > 0) {
-                            coords = ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
-                        }
+                } else {
+                    const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (polyFeatures.length > 0) {
+                        coords = ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
                     }
+                }
 
                 if (!coords) {
                     showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000);
@@ -1286,12 +1305,15 @@
             }
 
             // ─── UPDATE POSITION ───
-            function updatePosition(position) {
+            function updatePosition(position, autoCenter = false) {
                 const lon = position.coords.longitude;
                 const lat = position.coords.latitude;
                 const projected = ol.proj.fromLonLat([lon, lat]);
                 currentPosition = projected;
-                currentLocation = { lon, lat };
+                currentLocation = {
+                    lon,
+                    lat
+                };
 
                 if (!positionFeature) {
                     positionFeature = new ol.Feature({
@@ -1303,14 +1325,16 @@
                     positionFeature.getGeometry().setCoordinates(projected);
                 }
 
-                if (isLiveLocation) {
+                // Auto-center only when tracking is active
+                if (autoCenter && isTracking) {
                     map.getView().animate({
                         center: projected,
                         zoom: 19,
-                        duration: 1000
+                        duration: 500 // Smoother animation
                     });
                 }
 
+                // Track route (always record if tracking)
                 if (isTracking) {
                     routePoints.push(projected);
                     updateRouteLine();
@@ -1480,10 +1504,12 @@
                                     `${step.maneuver.type} onto ${step.name}` :
                                     step.maneuver.type;
                                 const dist = Math.round(step.distance);
-                                stepsHtml += `<div class="step-item">${instruction} — ${dist} m</div>`;
+                                stepsHtml +=
+                                    `<div class="step-item">${instruction} — ${dist} m</div>`;
                             });
                         });
-                        $('#routeSteps').html(stepsHtml || '<div class="step-item">No turn-by-turn details available.</div>');
+                        $('#routeSteps').html(stepsHtml ||
+                            '<div class="step-item">No turn-by-turn details available.</div>');
                     })
                     .catch(err => {
                         console.error('getRoute error:', err);
@@ -1494,6 +1520,12 @@
 
             // ─── CLEAR ALL ROUTE STATE ───
             function clearAllRouteState() {
+                // Clear tracking interval
+                if (trackInterval) {
+                    clearInterval(trackInterval);
+                    trackInterval = null;
+                }
+
                 if (watchId && !isLiveLocation && !isTracking) {
                     navigator.geolocation.clearWatch(watchId);
                     watchId = null;
@@ -1649,7 +1681,7 @@
 
             // ─── LOCATION FUNCTIONALITY ───
 
-            // Live Location
+            // ─── LIVE LOCATION (Passive - just show location) ───
             $('#liveLocationItem').on('click', function() {
                 if (!navigator.geolocation) {
                     showToast('❌ Geolocation not supported');
@@ -1663,15 +1695,15 @@
                 if (isLiveLocation) {
                     $badge.text('ON').addClass('active');
                     $btn.addClass('active-location');
-                    showToast('📍 Live location activated');
+                    showToast('📍 Live location activated (showing position)');
 
                     navigator.geolocation.getCurrentPosition(
                         function(pos) {
-                            updatePosition(pos);
+                            updatePosition(pos, false); // NO auto-center
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        updatePosition(newPos);
+                                        updatePosition(newPos, false); // NO auto-center
                                     },
                                     function(error) {
                                         console.error('Watch error:', error);
@@ -1707,7 +1739,9 @@
                 $('.location-dropdown').removeClass('active');
             });
 
-            // Track Me
+            // ─── TRACK ME (Auto-center every 2 seconds) ───
+            let trackInterval = null;
+
             $('#trackMeItem').on('click', function() {
                 if (!navigator.geolocation) {
                     showToast('❌ Geolocation not supported');
@@ -1721,15 +1755,23 @@
                     const $btn = $('#locationToggleBtn');
                     $badge.text('ON').addClass('tracking');
                     $btn.addClass('tracking');
-                    showToast('📍 Tracking started');
+                    showToast('📍 Tracking started (auto-centering every 2 seconds)');
+
+                    // Clear any existing interval
+                    if (trackInterval) {
+                        clearInterval(trackInterval);
+                        trackInterval = null;
+                    }
 
                     navigator.geolocation.getCurrentPosition(
                         function(pos) {
-                            updatePosition(pos);
+                            updatePosition(pos, true); // Auto-center immediately
+
+                            // Start tracking with interval
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        updatePosition(newPos);
+                                        updatePosition(newPos, true); // Auto-center on each update
                                     },
                                     function(error) {
                                         console.error('Track error:', error);
@@ -1741,6 +1783,18 @@
                                     }
                                 );
                             }
+
+                            // Set up interval to force auto-center every 2 seconds
+                            trackInterval = setInterval(function() {
+                                if (currentPosition && isTracking) {
+                                    map.getView().animate({
+                                        center: currentPosition,
+                                        zoom: 19,
+                                        duration: 500
+                                    });
+                                }
+                            }, 2000); // Every 2 seconds
+
                         },
                         function(error) {
                             console.error('Get position error:', error);
@@ -1748,18 +1802,30 @@
                             isTracking = false;
                             $badge.text('OFF').removeClass('tracking');
                             $btn.removeClass('tracking');
+                            if (trackInterval) {
+                                clearInterval(trackInterval);
+                                trackInterval = null;
+                            }
                         }, {
                             enableHighAccuracy: true,
                             timeout: 10000
                         }
                     );
                 } else {
+                    // Stop tracking
                     isTracking = false;
                     const $badge = $('#trackMeBadge');
                     const $btn = $('#locationToggleBtn');
                     $badge.text('OFF').removeClass('tracking');
                     $btn.removeClass('tracking');
                     showToast('⏹️ Tracking stopped');
+
+                    // Clear interval
+                    if (trackInterval) {
+                        clearInterval(trackInterval);
+                        trackInterval = null;
+                    }
+
                     if (watchId && !isLiveLocation) {
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
@@ -1767,7 +1833,6 @@
                 }
                 $('.location-dropdown').removeClass('active');
             });
-
             // Clear Route
             $('#clearRouteItem').on('click', function() {
                 clearAllRouteState();
@@ -1873,7 +1938,7 @@
                 if (!item) {
                     item = searchIndex.find(i => i.id == id);
                 }
-                console.log("item",item);
+                console.log("item", item);
                 if (item) {
                     zoomToFeature(item);
                 } else {
