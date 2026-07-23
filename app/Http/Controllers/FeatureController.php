@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Services\WardService;
+use App\Support\PolygonSplitter; // <-- correct namespaced import
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use geoPHP;
+use Exception;
+
 
 class FeatureController extends Controller
 {
@@ -92,48 +95,32 @@ class FeatureController extends Controller
         }
     }
 
-
-    public function polygonSplit(Request $request)
+ public function polygonSplit(Request $request)
     {
         $user = auth()->user();
 
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated'
-            ], 401);
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
         }
 
         $wardId = $user->ward_id;
-
         if (!$wardId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User has no ward assigned'
-            ], 400);
+            return response()->json(['success' => false, 'message' => 'User has no ward assigned'], 400);
         }
 
         $gisid = $request->input('gisid');
-
         if (!$gisid) {
-            return response()->json([
-                'success' => false,
-                'message' => 'GIS ID is required'
-            ], 400);
+            return response()->json(['success' => false, 'message' => 'GIS ID is required'], 400);
         }
 
         $polygon = json_decode($request->polygon, true);
         $line    = json_decode($request->splitLine, true);
 
         if (!$polygon || !$line) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid polygon or split line data'
-            ], 400);
+            return response()->json(['success' => false, 'message' => 'Invalid polygon or split line data'], 400);
         }
 
-        // Unwrap polygon to a flat ring for Python
-        // [[[x,y],...]] → [[x,y],...]
+        // Unwrap polygon to a flat ring: [[[x,y],...]] → [[x,y],...]
         if (isset($polygon[0][0]) && is_array($polygon[0][0])) {
             $polygonRing = $polygon[0];
         } elseif (isset($polygon[0]) && is_array($polygon[0]) && is_numeric($polygon[0][0])) {
@@ -146,47 +133,13 @@ class FeatureController extends Controller
         }
 
         if (count($polygonRing) < 3) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Polygon ring must have at least 3 coordinate pairs'
-            ], 400);
+            return response()->json(['success' => false, 'message' => 'Polygon ring must have at least 3 coordinate pairs'], 400);
         }
 
-        $python = public_path('polygon_split.py');
-
-
-        if (!file_exists($python)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Python split script not found at: ' . $python
-            ], 500);
-        }
-
-        $command = sprintf(
-            'python "%s" %s %s 2>&1',
-            $python,
-            escapeshellarg(json_encode($polygonRing)),
-            escapeshellarg(json_encode($line))
-        );
-
-        $output = shell_exec($command);
-
-        if (!$output) {
-            return response()->json([
-                'success'    => false,
-                'message'    => 'Python script produced no output',
-                'raw_output' => $output
-            ], 500);
-        }
-
-        $result = json_decode($output, true);
-
-        if (!$result || isset($result['error'])) {
-            return response()->json([
-                'success'    => false,
-                'message'    => $result['error'] ?? 'Failed to split polygon',
-                'raw_output' => $output
-            ], 500);
+        try {
+            $result = PolygonSplitter::split($polygonRing, $line);
+        } catch (Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
 
         if (count($result) < 2) {
@@ -204,6 +157,118 @@ class FeatureController extends Controller
 
         return response()->json($storeResult);
     }
+
+    // public function polygonSplit(Request $request)
+    // {
+    //     $user = auth()->user();
+
+    //     if (!$user) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Unauthenticated'
+    //         ], 401);
+    //     }
+
+    //     $wardId = $user->ward_id;
+
+    //     if (!$wardId) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'User has no ward assigned'
+    //         ], 400);
+    //     }
+
+    //     $gisid = $request->input('gisid');
+
+    //     if (!$gisid) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'GIS ID is required'
+    //         ], 400);
+    //     }
+
+    //     $polygon = json_decode($request->polygon, true);
+    //     $line    = json_decode($request->splitLine, true);
+
+    //     if (!$polygon || !$line) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Invalid polygon or split line data'
+    //         ], 400);
+    //     }
+
+    //     // Unwrap polygon to a flat ring for Python
+    //     // [[[x,y],...]] → [[x,y],...]
+    //     if (isset($polygon[0][0]) && is_array($polygon[0][0])) {
+    //         $polygonRing = $polygon[0];
+    //     } elseif (isset($polygon[0]) && is_array($polygon[0]) && is_numeric($polygon[0][0])) {
+    //         $polygonRing = $polygon;
+    //     } else {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Could not extract polygon ring. Expected [[[x,y],...]] or [[x,y],...]'
+    //         ], 400);
+    //     }
+
+    //     if (count($polygonRing) < 3) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Polygon ring must have at least 3 coordinate pairs'
+    //         ], 400);
+    //     }
+
+    //     $python = public_path('polygon_split.py');
+
+
+    //     if (!file_exists($python)) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Python split script not found at: ' . $python
+    //         ], 500);
+    //     }
+
+    //     $command = sprintf(
+    //         'python "%s" %s %s 2>&1',
+    //         $python,
+    //         escapeshellarg(json_encode($polygonRing)),
+    //         escapeshellarg(json_encode($line))
+    //     );
+
+    //     $output = shell_exec($command);
+
+    //     if (!$output) {
+    //         return response()->json([
+    //             'success'    => false,
+    //             'message'    => 'Python script produced no output',
+    //             'raw_output' => $output
+    //         ], 500);
+    //     }
+
+    //     $result = json_decode($output, true);
+
+    //     if (!$result || isset($result['error'])) {
+    //         return response()->json([
+    //             'success'    => false,
+    //             'message'    => $result['error'] ?? 'Failed to split polygon',
+    //             'raw_output' => $output
+    //         ], 500);
+    //     }
+
+    //     if (count($result) < 2) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Split did not produce at least 2 polygons. Ensure the line crosses the polygon fully.'
+    //         ], 422);
+    //     }
+
+    //     $storeResult = $this->wardService->storeSplitPolygon([
+    //         'ward_id' => $wardId,
+    //         'feature' => $result,
+    //         'gisid'   => $gisid,
+    //     ]);
+
+    //     return response()->json($storeResult);
+    // }
 
     public function polygonUpdate(Request $request)
     {

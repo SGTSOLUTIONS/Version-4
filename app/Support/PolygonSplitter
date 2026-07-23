@@ -1,0 +1,449 @@
+<?php
+
+namespace App\Support;
+
+use Exception;
+
+/**
+ * PolygonSplitter
+ * ----------------
+ * Pure-PHP replacement for the Python/Shapely "split polygon by an exact line"
+ * script. No shell_exec, no Python, no VPS required.
+ *
+ * Algorithm (mirrors what GEOS/Shapely does under the hood for split()):
+ *   1. Treat the polygon boundary edges + the drawn line's segments as one
+ *      set of edges.
+ *   2. Compute every intersection between a polygon edge and a line segment,
+ *      and "node" (subdivide) every edge at the points that fall on it.
+ *   3. Build a planar graph from all the resulting minimal segments.
+ *   4. Trace every face of that graph (standard rotational-sweep face
+ *      tracing used to build a DCEL / polygonize a noded arrangement).
+ *   5. Keep only the faces that (a) are not the outer/unbounded face,
+ *      (b) actually sit inside the original polygon, and (c) are not
+ *      tiny slivers.
+ *
+ * This supports a straight line, a multi-vertex (bent) cut line, and even
+ * a line that crosses the polygon boundary more than twice (multiple cuts),
+ * matching the same "exact line, no extension" behaviour as the original
+ * Python script.
+ *
+ * Usage:
+ *   $pieces = PolygonSplitter::split($polygonRing, $lineCoords);
+ *   // $polygonRing: [[x,y], [x,y], ...]   (open ring, no closing duplicate needed)
+ *   // $lineCoords : [[x,y], [x,y], ...]   (open path, 2+ points)
+ *   // $pieces     : [ [[x,y],...], [[x,y],...], ... ]  (open rings)
+ *
+ * Throws \Exception with a human-readable message on any failure, using the
+ * same messages as the original Python script so your frontend/controller
+ * error handling doesn't need to change.
+ */
+class PolygonSplitter
+{
+    const EPS = 1e-9;
+    const PRECISION = 6; // decimal places used to de-duplicate points
+
+    /**
+     * @param array $polygonRing [[x,y], ...]
+     * @param array $lineCoords  [[x,y], ...]
+     * @return array             array of rings [[x,y],...]
+     * @throws Exception
+     */
+    public static function split(array $polygonRing, array $lineCoords): array
+    {
+        $polygonRing = self::normalizeRing($polygonRing);
+
+        if (count($polygonRing) < 3) {
+            throw new Exception('Polygon must be an array of at least 3 coordinate pairs');
+        }
+        if (count($lineCoords) < 2) {
+            throw new Exception('Split line must be an array of at least 2 coordinate pairs');
+        }
+
+        $polyArea = abs(self::signedArea($polygonRing));
+        if ($polyArea < self::EPS) {
+            throw new Exception('Invalid polygon geometry and could not be repaired');
+        }
+
+        if (!self::lineIntersectsPolygon($lineCoords, $polygonRing)) {
+            throw new Exception('The drawn line does not intersect the polygon');
+        }
+
+        // Tag every raw edge with its source so we can tell, after tracing,
+        // which faces actually got cut by the line and which one is just
+        // the untouched outer boundary.
+        $rawEdges = [];
+        $n = count($polygonRing);
+        for ($i = 0; $i < $n; $i++) {
+            $rawEdges[] = ['a' => $polygonRing[$i], 'b' => $polygonRing[($i + 1) % $n], 'source' => 'polygon'];
+        }
+        $m = count($lineCoords);
+        for ($i = 0; $i < $m - 1; $i++) {
+            $rawEdges[] = ['a' => $lineCoords[$i], 'b' => $lineCoords[$i + 1], 'source' => 'line'];
+        }
+
+        $segments = self::nodeEdges($rawEdges);
+        [$nodes, $adjacency, $edgeSource] = self::buildGraph($segments);
+
+        if (count($nodes) < 3) {
+            throw new Exception(
+                'The drawn line did not split the polygon. ' .
+                'Make sure the line fully crosses the polygon from one side to another.'
+            );
+        }
+
+        $faces = self::traceFaces($nodes, $adjacency, $edgeSource);
+
+        $result = [];
+        foreach ($faces as $face) {
+            if (!$face['hasLineEdge']) continue; // this is the untouched outer/original boundary
+
+            $coords = $face['coords'];
+            if (count($coords) < 3) continue;
+
+            $area = abs(self::signedArea($coords));
+            if ($area < $polyArea * 0.001) continue;      // sliver
+            if ($area > $polyArea * 0.999) continue;       // safety: shouldn't happen once hasLineEdge is true
+
+            $interior = self::interiorPoint($coords);
+            if (!self::pointInPolygon($interior, $polygonRing)) continue; // e.g. line portion drawn outside polygon
+
+            $result[] = $coords;
+        }
+
+        // De-duplicate identical faces that can appear twice from the
+        // rotational trace (one per winding direction) by rounding + sorting
+        // a signature of each ring.
+        $result = self::dedupeRings($result);
+
+        if (count($result) < 2) {
+            throw new Exception(
+                'The drawn line did not split the polygon into at least 2 parts. ' .
+                'The line must fully cross the polygon from one boundary to another.'
+            );
+        }
+
+        return $result;
+    }
+
+    // ---------------------------------------------------------------------
+    // geometry helpers
+    // ---------------------------------------------------------------------
+
+    private static function normalizeRing(array $ring): array
+    {
+        $ring = array_values($ring);
+        $n = count($ring);
+        if ($n > 1) {
+            $first = $ring[0];
+            $last = $ring[$n - 1];
+            if (abs($first[0] - $last[0]) < self::EPS && abs($first[1] - $last[1]) < self::EPS) {
+                array_pop($ring);
+            }
+        }
+        return $ring;
+    }
+
+    private static function signedArea(array $ring): float
+    {
+        $area = 0.0;
+        $n = count($ring);
+        for ($i = 0; $i < $n; $i++) {
+            [$x1, $y1] = $ring[$i];
+            [$x2, $y2] = $ring[($i + 1) % $n];
+            $area += ($x1 * $y2 - $x2 * $y1);
+        }
+        return $area / 2.0;
+    }
+
+    /**
+     * Finds a point guaranteed to be inside a simple (possibly non-convex)
+     * ring, using a horizontal scanline through a vertex-derived y level.
+     * Falls back to the plain vertex average if the scanline trick fails.
+     */
+    private static function interiorPoint(array $ring): array
+    {
+        $n = count($ring);
+
+        // pick a y that's the average of two consecutive vertices' y values
+        // (avoids landing exactly on a vertex) and scan for crossings.
+        for ($i = 0; $i < $n; $i++) {
+            $y1 = $ring[$i][1];
+            $y2 = $ring[($i + 1) % $n][1];
+            $y = ($y1 + $y2) / 2.0;
+
+            $xs = [];
+            for ($j = 0; $j < $n; $j++) {
+                $a = $ring[$j];
+                $b = $ring[($j + 1) % $n];
+                $ay = $a[1]; $by = $b[1];
+                if (($ay <= $y && $by > $y) || ($by <= $y && $ay > $y)) {
+                    $t = ($y - $ay) / ($by - $ay);
+                    $xs[] = $a[0] + $t * ($b[0] - $a[0]);
+                }
+            }
+            if (count($xs) >= 2) {
+                sort($xs);
+                // midpoint of the first crossing interval
+                $mx = ($xs[0] + $xs[1]) / 2.0;
+                return [$mx, $y];
+            }
+        }
+
+        // fallback: plain centroid of vertices
+        $x = 0.0; $y = 0.0;
+        foreach ($ring as $p) { $x += $p[0]; $y += $p[1]; }
+        return [$x / $n, $y / $n];
+    }
+
+    private static function pointInPolygon(array $pt, array $ring): bool
+    {
+        $x = $pt[0]; $y = $pt[1];
+        $n = count($ring);
+        $inside = false;
+        for ($i = 0, $j = $n - 1; $i < $n; $j = $i++) {
+            $xi = $ring[$i][0]; $yi = $ring[$i][1];
+            $xj = $ring[$j][0]; $yj = $ring[$j][1];
+            $denom = ($yj - $yi);
+            if (abs($denom) < self::EPS) $denom = self::EPS;
+            $intersect = (($yi > $y) != ($yj > $y)) &&
+                ($x < ($xj - $xi) * ($y - $yi) / $denom + $xi);
+            if ($intersect) $inside = !$inside;
+        }
+        return $inside;
+    }
+
+    private static function lineIntersectsPolygon(array $line, array $ring): bool
+    {
+        $n = count($ring);
+        $m = count($line);
+        for ($i = 0; $i < $m - 1; $i++) {
+            for ($j = 0; $j < $n; $j++) {
+                $a = $line[$i]; $b = $line[$i + 1];
+                $c = $ring[$j]; $d = $ring[($j + 1) % $n];
+                if (self::segmentsIntersect($a, $b, $c, $d) !== null) return true;
+            }
+        }
+        foreach ($line as $p) {
+            if (self::pointInPolygon($p, $ring)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns [x, y, t, u] if segments p1-p2 and p3-p4 intersect (including
+     * touching at endpoints), t/u in [0,1]. Returns null if there is no
+     * intersection or the segments are parallel/collinear (not handled).
+     */
+    private static function segmentsIntersect(array $p1, array $p2, array $p3, array $p4): ?array
+    {
+        $x1 = $p1[0]; $y1 = $p1[1];
+        $x2 = $p2[0]; $y2 = $p2[1];
+        $x3 = $p3[0]; $y3 = $p3[1];
+        $x4 = $p4[0]; $y4 = $p4[1];
+
+        $d1x = $x2 - $x1; $d1y = $y2 - $y1;
+        $d2x = $x4 - $x3; $d2y = $y4 - $y3;
+
+        $denom = $d1x * $d2y - $d1y * $d2x;
+        if (abs($denom) < self::EPS) {
+            return null;
+        }
+
+        $t = (($x3 - $x1) * $d2y - ($y3 - $y1) * $d2x) / $denom;
+        $u = (($x3 - $x1) * $d1y - ($y3 - $y1) * $d1x) / $denom;
+
+        if ($t < -self::EPS || $t > 1 + self::EPS || $u < -self::EPS || $u > 1 + self::EPS) {
+            return null;
+        }
+
+        $t = max(0.0, min(1.0, $t));
+        $u = max(0.0, min(1.0, $u));
+
+        return [$x1 + $t * $d1x, $y1 + $t * $d1y, $t, $u];
+    }
+
+    private static function pointKey(float $x, float $y): string
+    {
+        return round($x, self::PRECISION) . '_' . round($y, self::PRECISION);
+    }
+
+    /**
+     * Subdivides every raw edge at every point that lies on it (its own
+     * endpoints plus any intersection with any other edge), producing a
+     * flat list of minimal sub-segments, each tagged with its source.
+     */
+    private static function nodeEdges(array $rawEdges): array
+    {
+        $edgeCount = count($rawEdges);
+        $pointsOnEdge = array_fill(0, $edgeCount, []);
+
+        foreach ($rawEdges as $i => $e) {
+            $pointsOnEdge[$i][] = ['t' => 0.0, 'pt' => $e['a']];
+            $pointsOnEdge[$i][] = ['t' => 1.0, 'pt' => $e['b']];
+        }
+
+        for ($i = 0; $i < $edgeCount; $i++) {
+            for ($j = $i + 1; $j < $edgeCount; $j++) {
+                $inter = self::segmentsIntersect($rawEdges[$i]['a'], $rawEdges[$i]['b'], $rawEdges[$j]['a'], $rawEdges[$j]['b']);
+                if ($inter === null) continue;
+                [$ix, $iy, $t, $u] = $inter;
+                $pointsOnEdge[$i][] = ['t' => $t, 'pt' => [$ix, $iy]];
+                $pointsOnEdge[$j][] = ['t' => $u, 'pt' => [$ix, $iy]];
+            }
+        }
+
+        $segments = [];
+        for ($i = 0; $i < $edgeCount; $i++) {
+            $pts = $pointsOnEdge[$i];
+            usort($pts, fn($a, $b) => $a['t'] <=> $b['t']);
+
+            $clean = [];
+            foreach ($pts as $p) {
+                $last = end($clean);
+                if ($last !== false && self::pointKey($last['pt'][0], $last['pt'][1]) === self::pointKey($p['pt'][0], $p['pt'][1])) {
+                    continue;
+                }
+                $clean[] = $p;
+            }
+
+            for ($k = 0; $k < count($clean) - 1; $k++) {
+                $p = $clean[$k]['pt'];
+                $q = $clean[$k + 1]['pt'];
+                if (self::pointKey($p[0], $p[1]) === self::pointKey($q[0], $q[1])) continue;
+                $segments[] = ['a' => $p, 'b' => $q, 'source' => $rawEdges[$i]['source']];
+            }
+        }
+
+        return $segments;
+    }
+
+    /**
+     * Builds node list + undirected adjacency (stored as directed neighbor
+     * lists both ways) plus a lookup of each directed half-edge's source.
+     *
+     * @return array [nodes, adjacency, edgeSource]
+     */
+    private static function buildGraph(array $segments): array
+    {
+        $nodeIndex = [];
+        $nodes = [];
+        $adjacency = [];
+        $edgeSource = [];
+
+        $getIndex = function ($pt) use (&$nodeIndex, &$nodes, &$adjacency) {
+            $key = self::pointKey($pt[0], $pt[1]);
+            if (!isset($nodeIndex[$key])) {
+                $nodeIndex[$key] = count($nodes);
+                $nodes[] = $pt;
+                $adjacency[count($nodes) - 1] = [];
+            }
+            return $nodeIndex[$key];
+        };
+
+        foreach ($segments as $seg) {
+            $ia = $getIndex($seg['a']);
+            $ib = $getIndex($seg['b']);
+            if ($ia === $ib) continue;
+
+            if (!in_array($ib, $adjacency[$ia], true)) $adjacency[$ia][] = $ib;
+            if (!in_array($ia, $adjacency[$ib], true)) $adjacency[$ib][] = $ia;
+
+            $keyAB = "{$ia}_{$ib}";
+            $keyBA = "{$ib}_{$ia}";
+            // if an edge is covered by both a polygon and a line segment
+            // (exact overlap), prefer marking it as 'line' so the cut is honored.
+            if (!isset($edgeSource[$keyAB]) || $seg['source'] === 'line') $edgeSource[$keyAB] = $seg['source'];
+            if (!isset($edgeSource[$keyBA]) || $seg['source'] === 'line') $edgeSource[$keyBA] = $seg['source'];
+        }
+
+        return [$nodes, $adjacency, $edgeSource];
+    }
+
+    /**
+     * Traces every face of the planar graph using the standard rotational
+     * "next clockwise half-edge from the reverse" rule, so every directed
+     * half-edge is consumed exactly once.
+     *
+     * @return array list of ['coords' => [[x,y],...], 'hasLineEdge' => bool]
+     */
+    private static function traceFaces(array $nodes, array $adjacency, array $edgeSource): array
+    {
+        $sortedAdj = [];
+        foreach ($adjacency as $u => $neighbors) {
+            $withAngle = [];
+            foreach ($neighbors as $v) {
+                $dx = $nodes[$v][0] - $nodes[$u][0];
+                $dy = $nodes[$v][1] - $nodes[$u][1];
+                $withAngle[] = ['v' => $v, 'a' => atan2($dy, $dx)];
+            }
+            usort($withAngle, fn($x, $y) => $x['a'] <=> $y['a']);
+            $sortedAdj[$u] = array_column($withAngle, 'v');
+        }
+
+        $nextHalfEdge = function ($u, $v) use ($sortedAdj) {
+            $neighbors = $sortedAdj[$v];
+            $count = count($neighbors);
+            $pos = array_search($u, $neighbors, true);
+            $prevPos = ($pos - 1 + $count) % $count;
+            return $neighbors[$prevPos];
+        };
+
+        $visited = [];
+        $faces = [];
+
+        foreach ($adjacency as $u => $neighbors) {
+            foreach ($neighbors as $v) {
+                $key = "{$u}_{$v}";
+                if (isset($visited[$key])) continue;
+
+                $faceNodeIdx = [$u];
+                $hasLineEdge = false;
+                $curU = $u;
+                $curV = $v;
+                $guard = 0;
+                $maxSteps = count($nodes) * 4 + 20;
+                $startU = $u; $startV = $v;
+
+                while (true) {
+                    $visited["{$curU}_{$curV}"] = true;
+                    if (($edgeSource["{$curU}_{$curV}"] ?? null) === 'line') $hasLineEdge = true;
+                    $faceNodeIdx[] = $curV;
+
+                    $nextV = $nextHalfEdge($curU, $curV);
+                    $curU = $curV;
+                    $curV = $nextV;
+
+                    if ($curU === $startU && $curV === $startV) break;
+                    if (++$guard > $maxSteps) break;
+                }
+
+                array_pop($faceNodeIdx);
+                if (count($faceNodeIdx) >= 3) {
+                    $coords = array_map(fn($idx) => $nodes[$idx], $faceNodeIdx);
+                    $faces[] = ['coords' => $coords, 'hasLineEdge' => $hasLineEdge];
+                }
+            }
+        }
+
+        return $faces;
+    }
+
+    /**
+     * Removes duplicate rings (the rotational trace can occasionally yield
+     * the same face twice from different starting half-edges).
+     */
+    private static function dedupeRings(array $rings): array
+    {
+        $seen = [];
+        $unique = [];
+        foreach ($rings as $ring) {
+            $pts = $ring;
+            usort($pts, fn($a, $b) => [$a[0], $a[1]] <=> [$b[0], $b[1]]);
+            $sig = implode('|', array_map(fn($p) => self::pointKey($p[0], $p[1]), $pts));
+            if (isset($seen[$sig])) continue;
+            $seen[$sig] = true;
+            $unique[] = $ring;
+        }
+        return $unique;
+    }
+}
