@@ -153,7 +153,7 @@ class FeatureController extends Controller
         }
 
         $python = public_path('polygon_split.py');
-        return response()->json($python);
+
 
         if (!file_exists($python)) {
             return response()->json([

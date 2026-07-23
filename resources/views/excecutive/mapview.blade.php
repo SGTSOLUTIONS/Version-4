@@ -187,9 +187,10 @@
         }
 
         .filter-dropdown {
-            width: 380px;
+            width: 400px;
             max-height: 90vh;
             padding: 12px 0;
+            overflow-y: auto;
         }
 
         .layer-dropdown.active,
@@ -206,6 +207,10 @@
             color: #666;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 2;
         }
 
         .dropdown-divider {
@@ -487,6 +492,9 @@
             padding: 12px 16px;
             border-top: 1px solid #e9ecef;
             background: #f8f9fa;
+            position: sticky;
+            bottom: 0;
+            z-index: 2;
         }
 
         .filter-stats {
@@ -554,18 +562,28 @@
 
         /* Scrollbar Styles */
         .filter-dropdown::-webkit-scrollbar,
-        .scrollable-options::-webkit-scrollbar {
-            width: 4px;
+        .scrollable-options::-webkit-scrollbar,
+        .search-results-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .filter-dropdown::-webkit-scrollbar-track,
+        .scrollable-options::-webkit-scrollbar-track,
+        .search-results-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
         }
 
         .filter-dropdown::-webkit-scrollbar-thumb,
-        .scrollable-options::-webkit-scrollbar-thumb {
+        .scrollable-options::-webkit-scrollbar-thumb,
+        .search-results-container::-webkit-scrollbar-thumb {
             background: #ccc;
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
         .filter-dropdown::-webkit-scrollbar-thumb:hover,
-        .scrollable-options::-webkit-scrollbar-thumb:hover {
+        .scrollable-options::-webkit-scrollbar-thumb:hover,
+        .search-results-container::-webkit-scrollbar-thumb:hover {
             background: #999;
         }
 
@@ -577,6 +595,8 @@
             border: 1px solid #ddd;
             background-color: white;
             width: 100%;
+            max-height: 120px;
+            overflow-y: auto;
         }
 
         .form-select-sm:focus {
@@ -587,6 +607,8 @@
 
         select[multiple] {
             min-height: 60px;
+            max-height: 120px;
+            overflow-y: auto;
         }
 
         .text-muted {
@@ -594,6 +616,35 @@
             font-size: 10px;
             display: block;
             margin-top: 2px;
+        }
+
+        /* Scrollable Filter Container */
+        .filter-scroll-container {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 0 4px;
+        }
+
+        .filter-scroll-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .filter-scroll-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+        }
+
+        .filter-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        /* Sticky header in filter dropdown */
+        .filter-sticky-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 2;
+            padding: 0 0 8px 0;
         }
     </style>
 @endpush
@@ -1055,7 +1106,7 @@
             const $stack = $('#mapControlsStack');
 
             // ─── CONTROLS INJECTION ───
-            // 1. FILTER TOGGLE
+            // 1. FILTER TOGGLE WITH SCROLLABLE DROPDOWNS
             $stack.append(`
                 <div class="custom-filter-toggle">
                     <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
@@ -1063,137 +1114,138 @@
                     </button>
                     <div class="filter-dropdown" id="filterDropdown">
                         <div class="dropdown-header">🔍 Filter Features</div>
-
-                        <!-- Building Usage Filter -->
-                        <div class="filter-section">
-                            <div class="filter-section-header">Building Usage</div>
-                            <select class="form-select form-select-sm" id="usageFilter">
-                                <option value="all">All</option>
-                                <option value="RESIDENTIAL">Residential</option>
-                                <option value="COMMERCIAL">Commercial</option>
-                                <option value="INDUSTRIAL">Industrial</option>
-                                <option value="INSTITUTIONAL">Institutional</option>
-                                <option value="MIXED">Mixed</option>
-                                <option value="GOVERNMENT">Government</option>
-                                <option value="VACANT">Vacant</option>
-                            </select>
-                        </div>
-
-                        <div class="dropdown-divider"></div>
-
-                        <!-- Area Range Filter -->
-                        <div class="filter-section">
-                            <div class="filter-section-header">Area Range (sqft)</div>
-                            <div class="filter-range">
-                                <div class="range-inputs">
-                                    <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
-                                    <span class="range-separator">to</span>
-                                    <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000">
-                                </div>
-                                <input type="range" id="areaRange" class="form-range" min="0" max="10000" step="100" value="5000">
+                        <div class="filter-scroll-container">
+                            <!-- Building Usage Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Building Usage</div>
+                                <select class="form-select form-select-sm" id="usageFilter">
+                                    <option value="all">All</option>
+                                    <option value="RESIDENTIAL">Residential</option>
+                                    <option value="COMMERCIAL">Commercial</option>
+                                    <option value="INDUSTRIAL">Industrial</option>
+                                    <option value="INSTITUTIONAL">Institutional</option>
+                                    <option value="MIXED">Mixed</option>
+                                    <option value="GOVERNMENT">Government</option>
+                                    <option value="VACANT">Vacant</option>
+                                </select>
                             </div>
-                        </div>
 
-                        <div class="dropdown-divider"></div>
+                            <div class="dropdown-divider"></div>
 
-                        <!-- Zonation Filter -->
-                        <div class="filter-section">
-                            <div class="filter-section-header">Zonation</div>
-                            <select class="form-select form-select-sm" id="zoneFilter">
-                                <option value="all">All</option>
-                                <option value="ZONE-A">Zone A</option>
-                                <option value="ZONE-B">Zone B</option>
-                                <option value="ZONE-C">Zone C</option>
-                                <option value="ZONE-D">Zone D</option>
-                                <option value="ZONE-E">Zone E</option>
-                            </select>
-                        </div>
+                            <!-- Area Range Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Area Range (sqft)</div>
+                                <div class="filter-range">
+                                    <div class="range-inputs">
+                                        <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
+                                        <span class="range-separator">to</span>
+                                        <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000">
+                                    </div>
+                                    <input type="range" id="areaRange" class="form-range" min="0" max="10000" step="100" value="5000">
+                                </div>
+                            </div>
 
-                        <div class="dropdown-divider"></div>
+                            <div class="dropdown-divider"></div>
 
-                        <!-- Construction Type Filter -->
-                        <div class="filter-section">
-                            <div class="filter-section-header">Construction Type</div>
-                            <select class="form-select form-select-sm" id="constructionFilter">
-                                <option value="all">All</option>
-                                <option value="PERMANENT">Permanent</option>
-                                <option value="SEMI_PERMANENT">Semi Permanent</option>
-                                <option value="VACANT_LAND">Vacant Land</option>
-                                <option value="SHED">Shed</option>
-                                <option value="CAR_SHED">Car Shed</option>
-                                <option value="TEMPORARY">Temporary</option>
-                            </select>
-                        </div>
+                            <!-- Zonation Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Zonation</div>
+                                <select class="form-select form-select-sm" id="zoneFilter">
+                                    <option value="all">All</option>
+                                    <option value="ZONE-A">Zone A</option>
+                                    <option value="ZONE-B">Zone B</option>
+                                    <option value="ZONE-C">Zone C</option>
+                                    <option value="ZONE-D">Zone D</option>
+                                    <option value="ZONE-E">Zone E</option>
+                                </select>
+                            </div>
 
-                        <div class="dropdown-divider"></div>
+                            <div class="dropdown-divider"></div>
 
-                        <!-- Building Type Filter -->
-                        <div class="filter-section">
-                            <div class="filter-section-header">Building Type</div>
-                            <select class="form-select form-select-sm" id="buildingTypeFilter">
-                                <option value="all">All</option>
-                                <option value="Independent">Independent</option>
-                                <option value="Flat">Flat</option>
-                                <option value="Kalyana_Mandapam">Kalyana Mandapam</option>
-                                <option value="Hotel">Hotel</option>
-                                <option value="Cinema_Theatre">Cinema Theatre</option>
-                                <option value="Central_Government_Building">Central Govt</option>
-                                <option value="State_Government_Building">State Govt</option>
-                                <option value="Municipality_Corporation">Municipality</option>
-                                <option value="Educational_Institution">Educational</option>
-                                <option value="Hospital">Hospital</option>
-                                <option value="Commercial_Complex">Commercial Complex</option>
-                                <option value="Shop">Shop</option>
-                                <option value="Office">Office</option>
-                                <option value="Temple">Temple</option>
-                                <option value="Mosque">Mosque</option>
-                                <option value="Church">Church</option>
-                                <option value="Amma_Unavagam">Amma Unavagam</option>
-                                <option value="Public_Toilet">Public Toilet</option>
-                                <option value="Vacant Land">Vacant Land</option>
-                                <option value="Under Construction">Under Construction</option>
-                                <option value="Others">Others</option>
-                            </select>
-                        </div>
+                            <!-- Construction Type Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Construction Type</div>
+                                <select class="form-select form-select-sm" id="constructionFilter">
+                                    <option value="all">All</option>
+                                    <option value="PERMANENT">Permanent</option>
+                                    <option value="SEMI_PERMANENT">Semi Permanent</option>
+                                    <option value="VACANT_LAND">Vacant Land</option>
+                                    <option value="SHED">Shed</option>
+                                    <option value="CAR_SHED">Car Shed</option>
+                                    <option value="TEMPORARY">Temporary</option>
+                                </select>
+                            </div>
 
-                        <div class="dropdown-divider"></div>
+                            <div class="dropdown-divider"></div>
 
-                        <!-- Amenities Filters - Multi-select dropdown -->
-                        <div class="filter-section">
-                            <div class="filter-section-header">Amenities</div>
-                            <select class="form-select form-select-sm" id="amenitiesFilter" multiple size="3">
-                                <option value="liftroom">Lift</option>
-                                <option value="headroom">Head Room</option>
-                                <option value="overhead_tank">Overhead Tank</option>
-                                <option value="rainwater_harvesting">Rainwater Harvesting</option>
-                                <option value="parking">Parking</option>
-                                <option value="ramp">Ramp</option>
-                                <option value="hoarding">Hoarding</option>
-                                <option value="cctv">CCTV</option>
-                                <option value="cell_tower">Cell Tower</option>
-                                <option value="solar_panel">Solar Panel</option>
-                                <option value="water_connection">Water Connection</option>
-                            </select>
-                            <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
-                        </div>
+                            <!-- Building Type Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Building Type</div>
+                                <select class="form-select form-select-sm" id="buildingTypeFilter">
+                                    <option value="all">All</option>
+                                    <option value="Independent">Independent</option>
+                                    <option value="Flat">Flat</option>
+                                    <option value="Kalyana_Mandapam">Kalyana Mandapam</option>
+                                    <option value="Hotel">Hotel</option>
+                                    <option value="Cinema_Theatre">Cinema Theatre</option>
+                                    <option value="Central_Government_Building">Central Govt</option>
+                                    <option value="State_Government_Building">State Govt</option>
+                                    <option value="Municipality_Corporation">Municipality</option>
+                                    <option value="Educational_Institution">Educational</option>
+                                    <option value="Hospital">Hospital</option>
+                                    <option value="Commercial_Complex">Commercial Complex</option>
+                                    <option value="Shop">Shop</option>
+                                    <option value="Office">Office</option>
+                                    <option value="Temple">Temple</option>
+                                    <option value="Mosque">Mosque</option>
+                                    <option value="Church">Church</option>
+                                    <option value="Amma_Unavagam">Amma Unavagam</option>
+                                    <option value="Public_Toilet">Public Toilet</option>
+                                    <option value="Vacant Land">Vacant Land</option>
+                                    <option value="Under Construction">Under Construction</option>
+                                    <option value="Others">Others</option>
+                                </select>
+                            </div>
 
-                        <div class="dropdown-divider"></div>
+                            <div class="dropdown-divider"></div>
 
-                        <!-- UGD Status Filter -->
-                        <div class="filter-section">
-                            <div class="filter-section-header">UGD Status</div>
-                            <select class="form-select form-select-sm" id="ugdFilter">
-                                <option value="all">All</option>
-                                <option value="No_Connection">No Connection</option>
-                                <option value="Manhole_Available_but_Connection_Not_Given_to_House">Manhole Available</option>
-                                <option value="Stage_1_Completed">Stage 1 Completed</option>
-                                <option value="Stage_1_2_Completed">Stage 1 & 2 Completed</option>
-                                <option value="Stage_1_2_Completed_but_Not_Connected">Stage 1 & 2 Not Connected</option>
-                                <option value="Stage_1_2_3_Completed">Stage 1,2 & 3 Completed</option>
-                                <option value="Direct_Connection_Given">Direct Connection</option>
-                                <option value="1_UGD_Connection_-_3_Stage_Completed">1 UGD - 3 Stage</option>
-                                <option value="2_UGD_Connection_-_3_Stage_Completed">2 UGD - 3 Stage</option>
-                            </select>
+                            <!-- Amenities Filters - Multi-select scrollable dropdown -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Amenities</div>
+                                <select class="form-select form-select-sm" id="amenitiesFilter" multiple size="4">
+                                    <option value="liftroom">Lift</option>
+                                    <option value="headroom">Head Room</option>
+                                    <option value="overhead_tank">Overhead Tank</option>
+                                    <option value="rainwater_harvesting">Rainwater Harvesting</option>
+                                    <option value="parking">Parking</option>
+                                    <option value="ramp">Ramp</option>
+                                    <option value="hoarding">Hoarding</option>
+                                    <option value="cctv">CCTV</option>
+                                    <option value="cell_tower">Cell Tower</option>
+                                    <option value="solar_panel">Solar Panel</option>
+                                    <option value="water_connection">Water Connection</option>
+                                </select>
+                                <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
+                            </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- UGD Status Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">UGD Status</div>
+                                <select class="form-select form-select-sm" id="ugdFilter">
+                                    <option value="all">All</option>
+                                    <option value="No_Connection">No Connection</option>
+                                    <option value="Manhole_Available_but_Connection_Not_Given_to_House">Manhole Available</option>
+                                    <option value="Stage_1_Completed">Stage 1 Completed</option>
+                                    <option value="Stage_1_2_Completed">Stage 1 & 2 Completed</option>
+                                    <option value="Stage_1_2_Completed_but_Not_Connected">Stage 1 & 2 Not Connected</option>
+                                    <option value="Stage_1_2_3_Completed">Stage 1,2 & 3 Completed</option>
+                                    <option value="Direct_Connection_Given">Direct Connection</option>
+                                    <option value="1_UGD_Connection_-_3_Stage_Completed">1 UGD - 3 Stage</option>
+                                    <option value="2_UGD_Connection_-_3_Stage_Completed">2 UGD - 3 Stage</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="dropdown-divider"></div>
