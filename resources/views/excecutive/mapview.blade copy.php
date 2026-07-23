@@ -72,102 +72,20 @@
             height: calc(100vh - 5px);
         }
 
-        /* Common Control Styles - All inside map */
-        .custom-layer-switcher {
+        /* Control Stack */
+        .map-controls-stack {
             position: absolute;
             right: 30px;
             top: 20px;
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
 
-        .custom-location-switcher {
-            position: absolute;
-            right: 30px;
-            top: 74px;
-            z-index: 1000;
-        }
-
-        .custom-search-switcher {
-            position: absolute;
-            right: 30px;
-            top: 128px;
-            z-index: 1000;
-        }
-
-        .custom-label-toggle {
-            position: absolute;
-            right: 30px;
-            top: 182px;
-            z-index: 1000;
-        }
-
-        .custom-legend-toggle {
-            position: absolute;
-            right: 30px;
-            top: 236px;
-            z-index: 1000;
-        }
-
-        .custom-3d-toggle {
-            position: absolute;
-            right: 30px;
-            top: 290px;
-            z-index: 1000;
-        }
-
-        /* Fullscreen Button - Inside map */
-        .fullscreen-btn {
-            position: absolute;
-            right: 30px;
-            bottom: 30px;
-            z-index: 1000;
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
-            transition: all 0.2s;
-            border: none;
-            color: #333;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .fullscreen-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-
-        .fullscreen-btn-exit {
-            display: none;
-            position: absolute;
-            right: 30px;
-            bottom: 30px;
-            z-index: 1000;
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
-            transition: all 0.2s;
-            border: none;
-            color: #333;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .fullscreen-btn-exit:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
+        .map-controls-stack>div {
+            position: relative;
         }
 
         /* Toggle Button Styles */
@@ -176,7 +94,8 @@
         .search-toggle-btn,
         .label-toggle-btn,
         .legend-toggle-btn,
-        .threed-toggle-btn {
+        .threed-toggle-btn,
+        .filter-toggle-btn {
             background: white;
             border-radius: 8px;
             padding: 10px 12px;
@@ -198,7 +117,8 @@
         .search-toggle-btn:hover,
         .label-toggle-btn:hover,
         .legend-toggle-btn:hover,
-        .threed-toggle-btn:hover {
+        .threed-toggle-btn:hover,
+        .filter-toggle-btn:hover {
             background: #f0f0f0;
             transform: scale(1.05);
         }
@@ -220,6 +140,10 @@
             animation: pulse 1.5s infinite;
         }
 
+        .filter-toggle-btn.active-filter {
+            color: #0d6efd;
+        }
+
         @keyframes pulse {
             0% {
                 opacity: 1;
@@ -237,18 +161,18 @@
         /* Dropdown Styles */
         .layer-dropdown,
         .location-dropdown,
-        .search-dropdown {
+        .search-dropdown,
+        .filter-dropdown {
             display: none;
             position: absolute;
             right: 0;
-            top: 52px;
+            top: 2px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             padding: 8px 0;
             max-height: 500px;
             overflow-y: auto;
-            min-width: 200px;
             z-index: 1001;
         }
 
@@ -264,9 +188,16 @@
             width: 380px;
         }
 
+        .filter-dropdown {
+            width: 380px;
+            max-height: 90vh;
+            padding: 12px 0;
+        }
+
         .layer-dropdown.active,
         .location-dropdown.active,
-        .search-dropdown.active {
+        .search-dropdown.active,
+        .filter-dropdown.active {
             display: block;
         }
 
@@ -418,6 +349,40 @@
             border-radius: 0 0 12px 12px;
         }
 
+        /* Fullscreen Buttons */
+        .fullscreen-btn,
+        .fullscreen-btn-exit {
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+            border: none;
+            color: #333;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-btn-exit {
+            display: none;
+        }
+
+        .fullscreen-btn:hover,
+        .fullscreen-btn-exit:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        /* Direction Controls */
         .direction-controls {
             position: absolute;
             bottom: 100px;
@@ -473,6 +438,141 @@
             border-bottom: none;
         }
 
+        /* Filter Styles */
+        .filter-section {
+            padding: 8px 16px;
+        }
+
+        .filter-section-header {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .filter-options.scrollable-options {
+            max-height: 100px;
+            overflow-y: auto;
+            display: block;
+        }
+
+        .filter-options.scrollable-options .filter-option {
+            display: inline-flex;
+            width: 48%;
+            margin: 2px 0;
+        }
+
+        .filter-option {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .filter-option:hover {
+            background: #f0f8ff;
+        }
+
+        .filter-option input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: #0d6efd;
+        }
+
+        .filter-range {
+            padding: 4px 0;
+        }
+
+        .range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .range-inputs input[type="number"] {
+            width: 80px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 12px;
+        }
+
+        .range-separator {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .filter-range .form-range {
+            height: 6px;
+            width: 100%;
+        }
+
+        .filter-range .form-range::-webkit-slider-thumb {
+            background: #0d6efd;
+        }
+
+        .amenities-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+        }
+
+        .filter-actions {
+            padding: 12px 16px;
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+
+        .filter-stats {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        /* Type Badge Styles */
+        .type-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+
+        .type-badge.road {
+            background: #0dcaf0;
+            color: #000;
+        }
+
+        .type-badge.parcel {
+            background: #198754;
+            color: #fff;
+        }
+
+        .type-badge.point {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .type-badge.assessment {
+            background: #0d6efd;
+            color: #fff;
+        }
+
+        /* Filter Field Group */
         .filter-field-group {
             margin-bottom: 8px;
         }
@@ -497,6 +597,23 @@
             outline: none;
             border-color: #0d6efd;
             box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+        }
+
+        /* Scrollbar Styles */
+        .filter-dropdown::-webkit-scrollbar,
+        .scrollable-options::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .filter-dropdown::-webkit-scrollbar-thumb,
+        .scrollable-options::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+        }
+
+        .filter-dropdown::-webkit-scrollbar-thumb:hover,
+        .scrollable-options::-webkit-scrollbar-thumb:hover {
+            background: #999;
         }
     </style>
 @endpush
@@ -537,19 +654,12 @@
             let pointDatas = @json($pointDatas ?? [], JSON_HEX_TAG);
             let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
             let ward = @json($ward ?? [], JSON_HEX_TAG);
-            let analytics = @json($analytics ?? [], JSON_HEX_TAG);
-            let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
 
-            // ─── BUILDING DATA ───
-            let buildingData = @json($buildingData ?? [], JSON_HEX_TAG);
-            let allBuildings = buildingData.buildings || [];
-            let usageCounts = buildingData.usage_counts || {};
-
+            // ─── IMAGE EXTENT ───
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
                 {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
             ];
 
-            // ─── CHECK COORDINATE SYSTEM ───
             const isLatLon = imageExtentRaw[0] > -180 && imageExtentRaw[0] < 180 &&
                 imageExtentRaw[1] > -90 && imageExtentRaw[1] < 90;
 
@@ -615,6 +725,7 @@
             let isTracking = false;
             let isLiveLocation = false;
             let currentPosition = null;
+            let currentLocation = null;
             let positionFeature = null;
             let positionLayer = null;
             let routeLine = null;
@@ -622,26 +733,31 @@
             let routePoints = [];
             let destinationMarker = null;
             let destinationLayer = null;
+            let trackInterval = null;
 
             // ─── STYLES ───
             function createPolygonStyle(feature) {
                 const gisid = feature.get('gisid');
                 const sqft = feature.get('sqfeet') || '0';
                 const polygonData = polygonDatas.find(d => d.gisid == gisid);
-                const color = polygonData ? 'red' : 'blue';
+
+                const isFlagged = !!polygonData;
+                const strokeColor = isFlagged ? '#dc3545' : '#0d6efd';
+                const fillColor = isFlagged ? 'rgba(220, 53, 69, 0.15)' : 'rgba(13, 110, 253, 0.15)';
+
                 const showLabels = $('#labelToggleBtn').hasClass('active-label');
 
                 try {
                     const styles = [
                         new ol.style.Style({
                             stroke: new ol.style.Stroke({
-                                color: color,
+                                color: strokeColor,
                                 width: 4,
                                 lineJoin: 'round',
                                 lineCap: 'round'
                             }),
                             fill: new ol.style.Fill({
-                                color: 'rgba(255, 0, 0, 0.1)'
+                                color: fillColor
                             })
                         })
                     ];
@@ -675,8 +791,11 @@
                 } catch (e) {
                     return new ol.style.Style({
                         stroke: new ol.style.Stroke({
-                            color: 'blue',
+                            color: '#0d6efd',
                             width: 4
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(13, 110, 253, 0.15)'
                         })
                     });
                 }
@@ -759,12 +878,9 @@
             function buildSearchIndex() {
                 searchIndex = [];
 
-                // Add polygons
                 polygons.forEach(poly => {
                     try {
                         const coords = JSON.parse(poly.coordinates);
-                        const extent = ol.extent.boundingExtent(coords);
-                        const center = ol.extent.getCenter(extent);
                         searchIndex.push({
                             id: poly.gisid,
                             type: 'polygon',
@@ -775,7 +891,6 @@
                             owner_name: poly.owner_name || '',
                             phone_number: poly.phone_number || '',
                             coordinates: coords,
-                            center: center,
                             geometryType: 'polygon',
                             searchText: `${poly.gisid} ${poly.assessment || ''} ${poly.old_assessment || ''} ${poly.owner_name || ''} ${poly.phone_number || ''} ${poly.sqfeet || ''}`
                                 .toLowerCase()
@@ -785,20 +900,9 @@
                     }
                 });
 
-                // Add lines
                 lines.forEach(line => {
                     try {
                         const coords = JSON.parse(line.coordinates);
-                        let center = null;
-                        try {
-                            const flatCoords = coords.flat(2);
-                            if (flatCoords && flatCoords.length > 0) {
-                                const extent = ol.extent.boundingExtent(flatCoords);
-                                center = ol.extent.getCenter(extent);
-                            }
-                        } catch (e) {
-                            // Skip center calculation for lines
-                        }
                         searchIndex.push({
                             id: line.gisid,
                             type: 'line',
@@ -806,7 +910,6 @@
                             subtitle: `GIS ID: ${line.gisid}`,
                             road_name: line.road_name || '',
                             coordinates: coords,
-                            center: center,
                             geometryType: 'line',
                             searchText: `${line.gisid} ${line.road_name || ''}`.toLowerCase()
                         });
@@ -815,35 +918,15 @@
                     }
                 });
 
-                // Add points - FIXED to properly handle coordinates
                 points.forEach(point => {
                     try {
                         let coords = JSON.parse(point.coordinates);
-                        let center = null;
-
-                        if (Array.isArray(coords) && coords.length === 2) {
-                            // Try to determine if coords are [lat, lon] or [lon, lat]
-                            let lon = coords[0];
-                            let lat = coords[1];
-
-                            // If first value is between -90 and 90, it might be latitude
-                            if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                180) {
-                                // Format is [lat, lon] - swap
-                                lon = coords[1];
-                                lat = coords[0];
-                            }
-
-                            center = ol.proj.fromLonLat([lon, lat]);
-                        }
-
                         searchIndex.push({
                             id: point.gisid,
                             type: 'point',
                             title: `GIS ID: ${point.gisid}`,
                             subtitle: 'Point Location',
                             coordinates: coords,
-                            center: center,
                             geometryType: 'point',
                             searchText: `${point.gisid} point`.toLowerCase()
                         });
@@ -852,34 +935,11 @@
                     }
                 });
 
-                // Add point data
                 pointDatas.forEach(pd => {
                     try {
-                        let coords = [];
-                        let center = null;
-
-                        // Parse coordinates from the stored JSON string
-                        if (pd.coordinates) {
-                            coords = JSON.parse(pd.coordinates);
-                            if (Array.isArray(coords) && coords.length === 2) {
-                                // Try to determine if coords are [lat, lon] or [lon, lat]
-                                let lon = coords[0];
-                                let lat = coords[1];
-
-                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                    180) {
-                                    lon = coords[1];
-                                    lat = coords[0];
-                                }
-
-                                center = ol.proj.fromLonLat([lon, lat]);
-                            }
-                        }
-
                         let pointGisid = pd.point_gisid || '';
-
                         searchIndex.push({
-                            id: pd.id,
+                            id: pointGisid,
                             type: 'pointdata',
                             title: `Assessment: ${pd.assessment || 'N/A'}`,
                             subtitle: `GIS ID: ${pointGisid} | Owner: ${pd.owner_name || 'N/A'}`,
@@ -887,8 +947,6 @@
                             point_gisid: pointGisid,
                             owner_name: pd.owner_name || '',
                             phone_number: pd.phone_number || '',
-                            coordinates: coords,
-                            center: center,
                             geometryType: 'point',
                             searchText: `${pointGisid} ${pd.assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`
                                 .toLowerCase()
@@ -900,6 +958,7 @@
 
                 console.log('📊 Search Index Built:', searchIndex.length, 'items');
             }
+
             // ─── LOAD SOURCES ───
             function loadPolygonSource() {
                 polygonSource.clear();
@@ -1012,11 +1071,165 @@
 
             // ─── GET MAP CONTAINER ───
             const $mapContainer = $('#map');
+            $mapContainer.append(`<div class="map-controls-stack" id="mapControlsStack"></div>`);
+            const $stack = $('#mapControlsStack');
 
-            // ─── ADD ALL CONTROLS INSIDE MAP ───
+            // ─── CONTROLS INJECTION ───
+            // 1. FILTER TOGGLE
+            $stack.append(`
+                <div class="custom-filter-toggle">
+                    <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <div class="filter-dropdown" id="filterDropdown">
+                        <div class="dropdown-header">🔍 Filter Features</div>
+
+                        <!-- Building Usage Filter -->
+                        <div class="filter-section">
+                            <div class="filter-section-header">Building Usage</div>
+                            <div class="filter-options" id="usageFilter">
+                                <label class="filter-option"><input type="checkbox" value="RESIDENTIAL" checked> Residential</label>
+                                <label class="filter-option"><input type="checkbox" value="COMMERCIAL" checked> Commercial</label>
+                                <label class="filter-option"><input type="checkbox" value="INDUSTRIAL" checked> Industrial</label>
+                                <label class="filter-option"><input type="checkbox" value="INSTITUTIONAL" checked> Institutional</label>
+                                <label class="filter-option"><input type="checkbox" value="MIXED" checked> Mixed</label>
+                                <label class="filter-option"><input type="checkbox" value="GOVERNMENT" checked> Government</label>
+                                <label class="filter-option"><input type="checkbox" value="VACANT" checked> Vacant</label>
+                            </div>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        <!-- Area Range Filter -->
+                        <div class="filter-section">
+                            <div class="filter-section-header">Area Range (sqft)</div>
+                            <div class="filter-range">
+                                <div class="range-inputs">
+                                    <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
+                                    <span class="range-separator">to</span>
+                                    <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000">
+                                </div>
+                                <input type="range" id="areaRange" class="form-range" min="0" max="10000" step="100" value="5000">
+                            </div>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        <!-- Zonation Filter -->
+                        <div class="filter-section">
+                            <div class="filter-section-header">Zonation</div>
+                            <div class="filter-options" id="zoneFilter">
+                                <label class="filter-option"><input type="checkbox" value="ZONE-A" checked> Zone A</label>
+                                <label class="filter-option"><input type="checkbox" value="ZONE-B" checked> Zone B</label>
+                                <label class="filter-option"><input type="checkbox" value="ZONE-C" checked> Zone C</label>
+                                <label class="filter-option"><input type="checkbox" value="ZONE-D" checked> Zone D</label>
+                                <label class="filter-option"><input type="checkbox" value="ZONE-E" checked> Zone E</label>
+                            </div>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        <!-- Construction Type Filter -->
+                        <div class="filter-section">
+                            <div class="filter-section-header">Construction Type</div>
+                            <div class="filter-options" id="constructionFilter">
+                                <label class="filter-option"><input type="checkbox" value="PERMANENT" checked> Permanent</label>
+                                <label class="filter-option"><input type="checkbox" value="SEMI_PERMANENT" checked> Semi Permanent</label>
+                                <label class="filter-option"><input type="checkbox" value="VACANT_LAND" checked> Vacant Land</label>
+                                <label class="filter-option"><input type="checkbox" value="SHED" checked> Shed</label>
+                                <label class="filter-option"><input type="checkbox" value="CAR_SHED" checked> Car Shed</label>
+                                <label class="filter-option"><input type="checkbox" value="TEMPORARY" checked> Temporary</label>
+                            </div>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        <!-- Building Type Filter -->
+                        <div class="filter-section">
+                            <div class="filter-section-header">Building Type</div>
+                            <div class="filter-options scrollable-options" id="buildingTypeFilter">
+                                <label class="filter-option"><input type="checkbox" value="Independent" checked> Independent</label>
+                                <label class="filter-option"><input type="checkbox" value="Flat" checked> Flat</label>
+                                <label class="filter-option"><input type="checkbox" value="Kalyana_Mandapam" checked> Kalyana Mandapam</label>
+                                <label class="filter-option"><input type="checkbox" value="Hotel" checked> Hotel</label>
+                                <label class="filter-option"><input type="checkbox" value="Cinema_Theatre" checked> Cinema Theatre</label>
+                                <label class="filter-option"><input type="checkbox" value="Central_Government_Building" checked> Central Govt</label>
+                                <label class="filter-option"><input type="checkbox" value="State_Government_Building" checked> State Govt</label>
+                                <label class="filter-option"><input type="checkbox" value="Municipality_Corporation" checked> Municipality</label>
+                                <label class="filter-option"><input type="checkbox" value="Educational_Institution" checked> Educational</label>
+                                <label class="filter-option"><input type="checkbox" value="Hospital" checked> Hospital</label>
+                                <label class="filter-option"><input type="checkbox" value="Commercial_Complex" checked> Commercial Complex</label>
+                                <label class="filter-option"><input type="checkbox" value="Shop" checked> Shop</label>
+                                <label class="filter-option"><input type="checkbox" value="Office" checked> Office</label>
+                                <label class="filter-option"><input type="checkbox" value="Temple" checked> Temple</label>
+                                <label class="filter-option"><input type="checkbox" value="Mosque" checked> Mosque</label>
+                                <label class="filter-option"><input type="checkbox" value="Church" checked> Church</label>
+                                <label class="filter-option"><input type="checkbox" value="Amma_Unavagam" checked> Amma Unavagam</label>
+                                <label class="filter-option"><input type="checkbox" value="Public_Toilet" checked> Public Toilet</label>
+                                <label class="filter-option"><input type="checkbox" value="Vacant Land" checked> Vacant Land</label>
+                                <label class="filter-option"><input type="checkbox" value="Under Construction" checked> Under Construction</label>
+                                <label class="filter-option"><input type="checkbox" value="Others" checked> Others</label>
+                            </div>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        <!-- Amenities Filters -->
+                        <div class="filter-section">
+                            <div class="filter-section-header">Amenities</div>
+                            <div class="filter-options amenities-grid" id="amenitiesFilter">
+                                <label class="filter-option"><input type="checkbox" value="liftroom" checked> Lift</label>
+                                <label class="filter-option"><input type="checkbox" value="headroom" checked> Head Room</label>
+                                <label class="filter-option"><input type="checkbox" value="overhead_tank" checked> Overhead Tank</label>
+                                <label class="filter-option"><input type="checkbox" value="rainwater_harvesting" checked> Rainwater Harvesting</label>
+                                <label class="filter-option"><input type="checkbox" value="parking" checked> Parking</label>
+                                <label class="filter-option"><input type="checkbox" value="ramp" checked> Ramp</label>
+                                <label class="filter-option"><input type="checkbox" value="hoarding" checked> Hoarding</label>
+                                <label class="filter-option"><input type="checkbox" value="cctv" checked> CCTV</label>
+                                <label class="filter-option"><input type="checkbox" value="cell_tower" checked> Cell Tower</label>
+                                <label class="filter-option"><input type="checkbox" value="solar_panel" checked> Solar Panel</label>
+                                <label class="filter-option"><input type="checkbox" value="water_connection" checked> Water Connection</label>
+                            </div>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        <!-- UGD Status Filter -->
+                        <div class="filter-section">
+                            <div class="filter-section-header">UGD Status</div>
+                            <div class="filter-options scrollable-options" id="ugdFilter">
+                                <label class="filter-option"><input type="checkbox" value="No_Connection" checked> No Connection</label>
+                                <label class="filter-option"><input type="checkbox" value="Manhole_Available_but_Connection_Not_Given_to_House" checked> Manhole Available</label>
+                                <label class="filter-option"><input type="checkbox" value="Stage_1_Completed" checked> Stage 1 Completed</label>
+                                <label class="filter-option"><input type="checkbox" value="Stage_1_2_Completed" checked> Stage 1 & 2 Completed</label>
+                                <label class="filter-option"><input type="checkbox" value="Stage_1_2_Completed_but_Not_Connected" checked> Stage 1 & 2 Not Connected</label>
+                                <label class="filter-option"><input type="checkbox" value="Stage_1_2_3_Completed" checked> Stage 1,2 & 3 Completed</label>
+                                <label class="filter-option"><input type="checkbox" value="Direct_Connection_Given" checked> Direct Connection</label>
+                                <label class="filter-option"><input type="checkbox" value="1_UGD_Connection_-_3_Stage_Completed" checked> 1 UGD - 3 Stage</label>
+                                <label class="filter-option"><input type="checkbox" value="2_UGD_Connection_-_3_Stage_Completed" checked> 2 UGD - 3 Stage</label>
+                            </div>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        <!-- Filter Actions -->
+                        <div class="filter-actions">
+                            <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn">
+                                <i class="bi bi-check-circle"></i> Apply Filters
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm w-100 mt-2" id="resetFiltersBtn">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset All
+                            </button>
+                            <div class="filter-stats mt-2" id="filterStats">
+                                <span>Showing: <strong id="visibleCount">0</strong> features</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
 
             // 1. LAYER SWITCHER
-            $mapContainer.append(`
+            $stack.append(`
                 <div class="custom-layer-switcher">
                     <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
                     <div class="layer-dropdown" id="layerDropdown">
@@ -1059,26 +1272,8 @@
                 </div>
             `);
 
-            // 2. LABEL TOGGLE
-            $mapContainer.append(`
-                <div class="custom-label-toggle">
-                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
-                        <i class="bi bi-fonts"></i>
-                    </button>
-                </div>
-            `);
-
-            // 3. LEGEND TOGGLE
-            $mapContainer.append(`
-                <div class="custom-legend-toggle">
-                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
-                        <i class="bi bi-list-ul"></i>
-                    </button>
-                </div>
-            `);
-
-            // 4. LOCATION SWITCHER
-            $mapContainer.append(`
+            // 2. LOCATION SWITCHER
+            $stack.append(`
                 <div class="custom-location-switcher">
                     <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
                     <div class="location-dropdown" id="locationDropdown">
@@ -1093,6 +1288,10 @@
                             <div class="location-item-name">Track Me</div>
                             <div class="location-item-badge" id="trackMeBadge">OFF</div>
                         </div>
+                        <div class="location-dropdown-item" id="zoomToExtentItem">
+                            <div class="location-item-icon"><i class="bi bi-arrows-angle-expand"></i></div>
+                            <div class="location-item-name">Zoom to Extent</div>
+                        </div>
                         <div class="location-dropdown-item" id="clearRouteItem">
                             <div class="location-item-icon"><i class="bi bi-x-circle"></i></div>
                             <div class="location-item-name">Clear Route</div>
@@ -1102,8 +1301,8 @@
                 <div class="location-toast" id="locationToast"></div>
             `);
 
-            // 5. SEARCH SWITCHER
-            $mapContainer.append(`
+            // 3. SEARCH SWITCHER
+            $stack.append(`
                 <div class="custom-search-switcher">
                     <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
                     <div class="search-dropdown" id="searchDropdown">
@@ -1145,8 +1344,26 @@
                 </div>
             `);
 
+            // 4. LABEL TOGGLE
+            $stack.append(`
+                <div class="custom-label-toggle">
+                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
+                        <i class="bi bi-fonts"></i>
+                    </button>
+                </div>
+            `);
+
+            // 5. LEGEND TOGGLE
+            $stack.append(`
+                <div class="custom-legend-toggle">
+                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
+                        <i class="bi bi-list-ul"></i>
+                    </button>
+                </div>
+            `);
+
             // 6. 3D TOGGLE
-            $mapContainer.append(`
+            $stack.append(`
                 <div class="custom-3d-toggle">
                     <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
                         <i class="bi bi-box"></i>
@@ -1154,7 +1371,8 @@
                 </div>
             `);
 
-            // 7. FULLSCREEN BUTTON
+
+            // 8. FULLSCREEN BUTTONS
             $mapContainer.append(`
                 <button class="fullscreen-btn" id="fullscreenBtn">
                     <i class="bi bi-arrows-fullscreen"></i>
@@ -1164,7 +1382,7 @@
                 </button>
             `);
 
-            // 8. DIRECTION CONTROLS
+            // 9. DIRECTION CONTROLS
             $mapContainer.append(`
                 <div class="direction-controls" id="directionControls">
                     <button class="btn-close-route" id="closeRouteBtn">&times;</button>
@@ -1173,17 +1391,30 @@
                 </div>
             `);
 
-            // ─── FUNCTIONS ───
+            // ─── HELPER FUNCTIONS ───
 
-            // Show Toast
             function showToast(message, duration = 3000) {
                 const $toast = $('#locationToast');
-                $toast.text(message).fadeIn(200);
+                $toast.text(message).css({
+                    'display': 'block',
+                    'opacity': 0,
+                    'transform': 'translateX(-50%) translateY(10px)'
+                }).animate({
+                    opacity: 1,
+                    transform: 'translateX(-50%) translateY(0)'
+                }, 200);
+
                 clearTimeout($toast.data('timeout'));
-                $toast.data('timeout', setTimeout(() => $toast.fadeOut(300), duration));
+                $toast.data('timeout', setTimeout(() => {
+                    $toast.animate({
+                        opacity: 0,
+                        transform: 'translateX(-50%) translateY(10px)'
+                    }, 200, function() {
+                        $(this).css('display', 'none');
+                    });
+                }, duration));
             }
 
-            // Switch Base Layer
             function switchBaseLayer(layer) {
                 [osmLayer, satelliteLayer, streetViewLayer].forEach(l => {
                     l.setVisible(l === layer);
@@ -1195,18 +1426,161 @@
                 $('.layer-dropdown-item[data-layer="' + layerName + '"]').addClass('active');
             }
 
-            // Toggle Drone Layer
             function toggleDroneLayer() {
                 const visible = !droneLayer.getVisible();
                 droneLayer.setVisible(visible);
                 return visible;
             }
 
-            // Update Position
-            function updatePosition(position) {
-                const coords = [position.coords.longitude, position.coords.latitude];
-                const projected = ol.proj.fromLonLat(coords);
+            function getCoordsByGisId(gisid, type = null) {
+                if (!gisid) return null;
+
+                if (type === 'line') {
+                    const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (lineFeatures.length > 0) {
+                        try {
+                            return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
+                        } catch (e) {
+                            console.error('getCoordsByGisId: line extent error', e);
+                        }
+                    }
+                }
+
+                if (type === 'polygon') {
+                    const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (polyFeatures.length > 0) {
+                        try {
+                            return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
+                        } catch (e) {
+                            console.error('getCoordsByGisId: polygon extent error', e);
+                        }
+                    }
+                }
+
+                const point = points.find(p => p.gisid == gisid);
+                if (point) {
+                    try {
+                        const coords = JSON.parse(point.coordinates);
+                        if (Array.isArray(coords) && coords.length === 2) {
+                            let lon = coords[0],
+                                lat = coords[1];
+                            if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
+                                lon = coords[1];
+                                lat = coords[0];
+                            }
+                            return ol.proj.fromLonLat([lon, lat]);
+                        }
+                    } catch (e) {
+                        console.error('getCoordsByGisId: point parse error', e);
+                    }
+                }
+
+                const pd = pointDatas.find(p => p.point_gisid == gisid || p.id == gisid);
+                if (pd && pd.coordinates) {
+                    try {
+                        const coords = JSON.parse(pd.coordinates);
+                        if (Array.isArray(coords) && coords.length === 2) {
+                            let lon = coords[0],
+                                lat = coords[1];
+                            if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
+                                lon = coords[1];
+                                lat = coords[0];
+                            }
+                            return ol.proj.fromLonLat([lon, lat]);
+                        }
+                    } catch (e) {
+                        console.error('getCoordsByGisId: pointData parse error', e);
+                    }
+                }
+
+                if (type !== 'line') {
+                    const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (polyFeatures.length > 0) {
+                        try {
+                            return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
+                        } catch (e) {
+                            console.error('getCoordsByGisId: polygon extent error', e);
+                        }
+                    }
+                }
+
+                if (type !== 'polygon') {
+                    const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (lineFeatures.length > 0) {
+                        try {
+                            return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
+                        } catch (e) {
+                            console.error('getCoordsByGisId: line extent error', e);
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            function zoomToFeature(item) {
+                if (!item) {
+                    showToast('❌ Invalid item', 3000);
+                    return;
+                }
+
+                let coords = null;
+                const gisid = item.id || item.point_gisid;
+
+                if (item.type === 'line') {
+                    const feature = lineSource.getFeatureById(gisid);
+                    if (feature) {
+                        coords = ol.extent.getCenter(feature.getGeometry().getExtent());
+                    } else {
+                        const features = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                        if (features.length > 0) {
+                            coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
+                        }
+                    }
+
+                    if (!coords) {
+                        const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                        if (polyFeatures.length > 0) {
+                            coords = ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
+                        }
+                    }
+                } else {
+                    const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (polyFeatures.length > 0) {
+                        coords = ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
+                    }
+                }
+
+                if (!coords) {
+                    showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000);
+                    return;
+                }
+
+                map.getView().animate({
+                    center: coords,
+                    zoom: 20,
+                    duration: 1000
+                });
+            }
+
+            function zoomToExtent() {
+                map.getView().fit(imageExtent, {
+                    padding: [50, 50, 50, 50],
+                    duration: 1000,
+                    maxZoom: 20
+                });
+                showToast('📍 Zoomed to ward extent', 2000);
+            }
+
+            function updatePosition(position, autoCenter = false) {
+                const lon = position.coords.longitude;
+                const lat = position.coords.latitude;
+                const projected = ol.proj.fromLonLat([lon, lat]);
                 currentPosition = projected;
+                currentLocation = {
+                    lon,
+                    lat
+                };
 
                 if (!positionFeature) {
                     positionFeature = new ol.Feature({
@@ -1218,11 +1592,11 @@
                     positionFeature.getGeometry().setCoordinates(projected);
                 }
 
-                if (isLiveLocation) {
+                if (autoCenter && isTracking) {
                     map.getView().animate({
                         center: projected,
                         zoom: 19,
-                        duration: 1000
+                        duration: 500
                     });
                 }
 
@@ -1232,7 +1606,6 @@
                 }
             }
 
-            // Update Route Line
             function updateRouteLine() {
                 if (routePoints.length < 2) return;
 
@@ -1253,240 +1626,455 @@
                 }
             }
 
-            // ─── ZOOM TO FEATURE - FIXED FOR ALL COORDINATE TYPES ───
-            function zoomToFeature(item) {
-                try {
-                    let center = null;
-                    let zoomLevel = 20;
-                    let found = false;
-
-                    console.log('🔍 Zooming to item:', item);
-
-                    // Case 1: Item has center property (from search index)
-                    if (item.center) {
-                        center = item.center;
-                        found = true;
-                        console.log('✅ Using center from search index:', center);
+            function getCurrentLocation(callback) {
+                if (currentLocation) {
+                    callback(currentLocation);
+                    return;
+                }
+                if (!navigator.geolocation) {
+                    callback(null);
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        currentLocation = {
+                            lon: pos.coords.longitude,
+                            lat: pos.coords.latitude
+                        };
+                        callback(currentLocation);
+                    },
+                    function() {
+                        callback(null);
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 10000
                     }
-                    // Case 2: Item is polygon with coordinates
-                    else if (item.type === 'polygon' && item.coordinates && Array.isArray(item.coordinates)) {
-                        try {
-                            const extent = ol.extent.boundingExtent(item.coordinates);
-                            center = ol.extent.getCenter(extent);
-                            found = true;
-                            console.log('✅ Using polygon center:', center);
-                        } catch (e) {
-                            console.error('Error getting polygon center:', e);
-                        }
+                );
+            }
+
+            function getDirectionToFeature(feature) {
+                if (!feature) {
+                    showToast('❌ Invalid feature for directions', 3000);
+                    return;
+                }
+
+                getCurrentLocation(function(loc) {
+                    if (!loc) {
+                        Swal.fire('Location Error',
+                            'Could not get your location. Please enable GPS and try again.',
+                            'error');
+                        return;
                     }
-                    // Case 3: Item is line with coordinates
-                    else if (item.type === 'line' && item.coordinates) {
-                        try {
-                            const flatCoords = item.coordinates.flat(2);
-                            if (flatCoords && flatCoords.length > 0) {
-                                const extent = ol.extent.boundingExtent(flatCoords);
-                                center = ol.extent.getCenter(extent);
-                                found = true;
-                                console.log('✅ Using line center:', center);
-                            }
-                        } catch (e) {
-                            console.error('Error getting line center:', e);
+                    calculateDirection(loc, feature);
+                });
+            }
+
+            function calculateDirection(loc, feature) {
+                if (!loc || !feature) {
+                    showToast('❌ Missing location or feature data', 3000);
+                    return;
+                }
+
+                const gisid = feature.id || feature.point_gisid;
+                if (!gisid) {
+                    Swal.fire('Error', 'No GIS ID found for this feature', 'error');
+                    return;
+                }
+
+                const coords = getCoordsByGisId(gisid, feature.type);
+                if (!coords) {
+                    Swal.fire('Error', `No coordinates found for GIS ID: ${gisid}`, 'error');
+                    return;
+                }
+
+                const lonLat = ol.proj.toLonLat(coords);
+                const destLon = lonLat[0];
+                const destLat = lonLat[1];
+
+                if (destLon < -180 || destLon > 180 || destLat < -90 || destLat > 90) {
+                    Swal.fire('Error', 'Converted coordinates are out of valid range. Check your data projection.',
+                        'error');
+                    return;
+                }
+
+                console.log(`Routing to GIS ID ${gisid} (${feature.type}): lon=${destLon}, lat=${destLat}`);
+                getRoute(loc.lon, loc.lat, destLon, destLat);
+            }
+
+            function getRoute(startLon, startLat, endLon, endLat) {
+                $('#directionControls').addClass('active');
+                $('#routeInfo').text('Getting directions...');
+                $('#routeSteps').html('');
+
+                const url = `https://router.project-osrm.org/route/v1/driving/` +
+                    `${startLon},${startLat};${endLon},${endLat}` +
+                    `?overview=full&geometries=geojson&steps=true`;
+
+                fetch(url)
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error(`HTTP error! status: ${res.status}`);
                         }
-                    }
-                    // Case 4: Item is point (from points array)
-                    else if (item.type === 'point' && item.coordinates) {
-                        try {
-                            let coords = item.coordinates;
-                            // Check if coordinates are in [lat, lon] or [lon, lat] format
-                            if (Array.isArray(coords) && coords.length === 2) {
-                                // Try both formats
-                                let lon = coords[0];
-                                let lat = coords[1];
-
-                                // If first value is between -90 and 90, it might be latitude
-                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
-                                    // Format is [lat, lon] - swap
-                                    lon = coords[1];
-                                    lat = coords[0];
-                                }
-
-                                center = ol.proj.fromLonLat([lon, lat]);
-                                found = true;
-                                zoomLevel = 21;
-                                console.log('✅ Using point coordinates [lon, lat]:', [lon, lat], 'projected:',
-                                    center);
-                            }
-                        } catch (e) {
-                            console.error('Error converting point coordinates:', e);
-                        }
-                    }
-                    // Case 5: Item is pointdata with lat/lon coordinates
-                    else if (item.type === 'pointdata' && item.coordinates && item.coordinates.length === 2) {
-                        try {
-                            let lon = item.coordinates[0];
-                            let lat = item.coordinates[1];
-
-                            // Check if coordinates might be swapped
-                            if (item.coordinates[0] >= -90 && item.coordinates[0] <= 90 &&
-                                item.coordinates[1] >= -180 && item.coordinates[1] <= 180) {
-                                // Format is [lat, lon] - swap
-                                lon = item.coordinates[1];
-                                lat = item.coordinates[0];
-                            }
-
-                            center = ol.proj.fromLonLat([lon, lat]);
-                            found = true;
-                            zoomLevel = 21;
-                            console.log('✅ Using pointdata coordinates [lon, lat]:', [lon, lat], 'projected:',
-                                center);
-                        } catch (e) {
-                            console.error('Error converting pointdata coordinates:', e);
-                        }
-                    }
-                    // Case 6: Try to find by GISID in polygonSource or original data
-                    else if (item.id) {
-                        // Check in polygon source
-                        const features = polygonSource.getFeatures();
-                        for (let f of features) {
-                            if (f.get('gisid') == item.id) {
-                                try {
-                                    const geom = f.getGeometry();
-                                    if (geom) {
-                                        const extent = geom.getExtent();
-                                        center = ol.extent.getCenter(extent);
-                                        found = true;
-                                        console.log('✅ Using feature from polygonSource:', center);
-                                        break;
-                                    }
-                                } catch (e) {
-                                    console.error('Error getting feature geometry:', e);
-                                }
-                            }
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (!data.routes || !data.routes.length) {
+                            $('#routeInfo').text('No route could be found.');
+                            return;
                         }
 
-                        // If not found in polygonSource, check points array
-                        if (!found && points) {
-                            const pointData = points.find(p => p.gisid == item.id);
-                            if (pointData) {
-                                try {
-                                    let coords = JSON.parse(pointData.coordinates);
-                                    if (Array.isArray(coords) && coords.length === 2) {
-                                        let lon = coords[0];
-                                        let lat = coords[1];
+                        const route = data.routes[0];
+                        const km = (route.distance / 1000).toFixed(2);
+                        const mins = Math.round(route.duration / 60);
+                        $('#routeInfo').html(`<strong>${km} km</strong> · about ${mins} min`);
 
-                                        // Check if coordinates might be swapped
-                                        if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                            180) {
-                                            lon = coords[1];
-                                            lat = coords[0];
-                                        }
+                        routeLayer.getSource().clear();
+                        destinationLayer.getSource().clear();
 
-                                        center = ol.proj.fromLonLat([lon, lat]);
-                                        found = true;
-                                        zoomLevel = 21;
-                                        console.log('✅ Using point from points array:', center);
-                                    }
-                                } catch (e) {
-                                    console.error('Error parsing point data:', e);
-                                }
-                            }
-                        }
+                        const lineCoords = route.geometry.coordinates.map(c => ol.proj.fromLonLat(c));
+                        const routeFeature = new ol.Feature({
+                            geometry: new ol.geom.LineString(lineCoords)
+                        });
+                        routeFeature.setStyle(new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: '#0d6efd',
+                                width: 5
+                            })
+                        }));
+                        routeLayer.getSource().addFeature(routeFeature);
 
-                        // If not found, check pointDatas
-                        if (!found && pointDatas) {
-                            const pointData = pointDatas.find(p => p.point_gisid == item.id || p.id == item.id);
-                            if (pointData && pointData.coordinates) {
-                                try {
-                                    let coords = JSON.parse(pointData.coordinates);
-                                    if (Array.isArray(coords) && coords.length === 2) {
-                                        let lon = coords[0];
-                                        let lat = coords[1];
+                        const destMarker = new ol.Feature({
+                            geometry: new ol.geom.Point(ol.proj.fromLonLat([endLon, endLat]))
+                        });
+                        destMarker.setStyle(createDestinationStyle());
+                        destinationLayer.getSource().addFeature(destMarker);
 
-                                        if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <=
-                                            180) {
-                                            lon = coords[1];
-                                            lat = coords[0];
-                                        }
+                        map.getView().fit(new ol.geom.LineString(lineCoords).getExtent(), {
+                            padding: [80, 80, 80, 80],
+                            duration: 800,
+                            maxZoom: 19
+                        });
 
-                                        center = ol.proj.fromLonLat([lon, lat]);
-                                        found = true;
-                                        zoomLevel = 21;
-                                        console.log('✅ Using point from pointDatas:', center);
-                                    }
-                                } catch (e) {
-                                    console.error('Error parsing pointData:', e);
-                                }
-                            }
-                        }
-                    }
-
-                    // If we found a center, zoom to it
-                    if (found && center) {
-                        // Validate center coordinates
-                        if (Array.isArray(center) && center.length === 2 &&
-                            !isNaN(center[0]) && !isNaN(center[1])) {
-
-                            // Ensure center is in projected coordinates (not lat/lon)
-                            // If center values are small (-180 to 180), they might be lat/lon
-                            if (center[0] >= -180 && center[0] <= 180 &&
-                                center[1] >= -90 && center[1] <= 90) {
-                                // Center is in lat/lon, convert to projected
-                                center = ol.proj.fromLonLat(center);
-                                console.log('🔄 Converted lat/lon to projected:', center);
-                            }
-
-                            map.getView().animate({
-                                center: center,
-                                zoom: zoomLevel,
-                                duration: 1000
+                        let stepsHtml = '';
+                        const legs = route.legs || [];
+                        legs.forEach(leg => {
+                            (leg.steps || []).forEach(step => {
+                                const instruction = step.name ?
+                                    `${step.maneuver.type} onto ${step.name}` :
+                                    step.maneuver.type;
+                                const dist = Math.round(step.distance);
+                                stepsHtml +=
+                                    `<div class="step-item">${instruction} — ${dist} m</div>`;
                             });
+                        });
+                        $('#routeSteps').html(stepsHtml ||
+                            '<div class="step-item">No turn-by-turn details available.</div>');
+                    })
+                    .catch(err => {
+                        console.error('getRoute error:', err);
+                        $('#routeInfo').text('Error getting directions. Please try again.');
+                        showToast('❌ Route error: ' + err.message, 4000);
+                    });
+            }
 
-                            // Show success message with details
-                            let displayName = item.title || `GISID: ${item.id}`;
-                            showToast(`📍 Zoomed to: ${displayName}`);
-                            return true;
-                        } else {
-                            console.error('Invalid center coordinates:', center);
-                            showToast('❌ Invalid coordinates for this item');
-                            return false;
+            function clearAllRouteState() {
+                if (trackInterval) {
+                    clearInterval(trackInterval);
+                    trackInterval = null;
+                }
+
+                if (watchId && !isLiveLocation && !isTracking) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
+
+                if (routeLine) {
+                    routeLayer.getSource().removeFeature(routeLine);
+                    routeLine = null;
+                }
+                routeLayer.getSource().clear();
+                routePoints = [];
+
+                if (positionFeature) {
+                    positionLayer.getSource().removeFeature(positionFeature);
+                    positionFeature = null;
+                }
+
+                isLiveLocation = false;
+                isTracking = false;
+                $('#liveLocationBadge').text('OFF').removeClass('active');
+                $('#trackMeBadge').text('OFF').removeClass('tracking');
+                $('#locationToggleBtn').removeClass('active-location tracking');
+
+                if (destinationMarker) {
+                    destinationLayer.getSource().removeFeature(destinationMarker);
+                    destinationMarker = null;
+                }
+
+                $('#directionControls').removeClass('active');
+            }
+
+            function searchGIS(value) {
+                const v = value.toString().toLowerCase().trim();
+                if (!v) return [];
+                return searchIndex.filter(item =>
+                    (item.id && item.id.toString().toLowerCase().includes(v)) ||
+                    (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
+                    (item.old_assessment && item.old_assessment.toString().toLowerCase().includes(v)) ||
+                    (item.owner_name && item.owner_name.toString().toLowerCase().includes(v)) ||
+                    (item.phone_number && item.phone_number.toString().toLowerCase().includes(v)) ||
+                    (item.title && item.title.toLowerCase().includes(v)) ||
+                    (item.subtitle && item.subtitle.toLowerCase().includes(v)) ||
+                    (item.point_gisid && item.point_gisid.toString().toLowerCase().includes(v))
+                );
+            }
+
+            // ─── FILTER FUNCTIONS ───
+
+            function getSelectedCheckboxValues(containerSelector) {
+                const values = [];
+                $(containerSelector).find('input[type="checkbox"]:checked').each(function() {
+                    values.push($(this).val());
+                });
+                return values;
+            }
+
+            function applyFilters() {
+                const selectedUsage = getSelectedCheckboxValues('#usageFilter');
+                const selectedZones = getSelectedCheckboxValues('#zoneFilter');
+                const selectedConstruction = getSelectedCheckboxValues('#constructionFilter');
+                const selectedBuildingTypes = getSelectedCheckboxValues('#buildingTypeFilter');
+                const selectedAmenities = getSelectedCheckboxValues('#amenitiesFilter');
+                const selectedUgd = getSelectedCheckboxValues('#ugdFilter');
+                const minArea = parseInt($('#minArea').val()) || 0;
+                const maxArea = parseInt($('#maxArea').val()) || 10000;
+
+                const allUsageSelected = selectedUsage.length === 7;
+                const allZonesSelected = selectedZones.length === 5;
+                const allConstructionSelected = selectedConstruction.length === 6;
+                const allBuildingTypesSelected = selectedBuildingTypes.length === 21;
+                const allAmenitiesSelected = selectedAmenities.length === 11;
+                const allUgdSelected = selectedUgd.length === 9;
+                const areaDefault = minArea === 0 && maxArea === 10000;
+
+                const anyFilterActive = !allUsageSelected || !allZonesSelected || !allConstructionSelected ||
+                    !allBuildingTypesSelected || !allAmenitiesSelected || !allUgdSelected || !areaDefault;
+
+                if (!anyFilterActive) {
+                    resetAllFilters(true);
+                    showToast('ℹ️ All filters reset - showing all features', 2000);
+                    return;
+                }
+
+                const allFeatures = polygonSource.getFeatures();
+                let visibleCount = 0;
+
+                allFeatures.forEach(feature => {
+                    const gisid = feature.get('gisid');
+                    const sqfeet = parseFloat(feature.get('sqfeet')) || 0;
+                    const buildingData = polygonDatas.find(d => d.gisid == gisid);
+
+                    let passesFilters = true;
+
+                    if (!(sqfeet >= minArea && sqfeet <= maxArea)) {
+                        passesFilters = false;
+                    }
+
+                    if (passesFilters && buildingData) {
+                        const usage = buildingData.building_usage || '';
+                        if (selectedUsage.length > 0 && !selectedUsage.includes(usage)) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedUsage.length < 7) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters && buildingData) {
+                        const zone = buildingData.zone || buildingData.building_zone || '';
+                        if (selectedZones.length > 0 && !selectedZones.includes(zone)) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedZones.length < 5) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters && buildingData) {
+                        const constructionType = buildingData.construction_type || '';
+                        if (selectedConstruction.length > 0 && !selectedConstruction.includes(
+                                constructionType)) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedConstruction.length < 6) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters && buildingData) {
+                        const buildingType = buildingData.building_type || '';
+                        if (selectedBuildingTypes.length > 0 && !selectedBuildingTypes.includes(
+                                buildingType)) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedBuildingTypes.length < 21) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters && buildingData && selectedAmenities.length > 0) {
+                        const hasAllAmenities = selectedAmenities.every(amenity => {
+                            const value = buildingData[amenity];
+                            return value === 'Yes' || value === true || value === 1 ||
+                                (typeof value === 'string' && value.toLowerCase() === 'yes');
+                        });
+                        if (!hasAllAmenities) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedAmenities.length < 11) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters && buildingData) {
+                        const ugdStatus = buildingData.ugd || '';
+                        if (selectedUgd.length > 0 && !selectedUgd.includes(ugdStatus)) {
+                            passesFilters = false;
+                        }
+                    } else if (passesFilters && !buildingData) {
+                        if (selectedUgd.length < 9) {
+                            passesFilters = false;
+                        }
+                    }
+
+                    if (passesFilters) {
+                        feature.setStyle(createPolygonStyle(feature));
+                        visibleCount++;
+                    } else {
+                        feature.setStyle(new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: 'rgba(200,200,200,0.2)',
+                                width: 1
+                            }),
+                            fill: new ol.style.Fill({
+                                color: 'rgba(200,200,200,0.05)'
+                            })
+                        }));
+                    }
+                });
+
+                $('#visibleCount').text(visibleCount);
+                const total = allFeatures.length;
+                $('#filterStats').html(
+                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
+
+                polygonLayer.changed();
+                polygonSource.changed();
+
+                const hiddenCount = total - visibleCount;
+                if (hiddenCount > 0) {
+                    showToast(`🔍 Filter applied: ${visibleCount} visible, ${hiddenCount} hidden`, 3000);
+                } else {
+                    showToast(`✅ All ${visibleCount} features match the selected filters`, 2000);
+                }
+            }
+
+            function resetAllFilters(silent = false) {
+                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #amenitiesFilter, #ugdFilter')
+                    .find('input[type="checkbox"]')
+                    .prop('checked', true);
+
+                $('#minArea').val(0);
+                $('#maxArea').val(10000);
+                $('#areaRange').val(5000);
+
+                const allFeatures = polygonSource.getFeatures();
+                allFeatures.forEach(feature => {
+                    feature.setStyle(createPolygonStyle(feature));
+                });
+
+                $('#visibleCount').text(allFeatures.length);
+                $('#filterStats').html(
+                    `Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`
+                    );
+
+                polygonLayer.changed();
+                polygonSource.changed();
+
+                if (!silent) {
+                    showToast('🔄 All filters reset - all features visible', 2000);
+                }
+            }
+
+            function updateFilterStats() {
+                const total = polygonSource.getFeatures().length;
+                let visible = 0;
+                polygonSource.getFeatures().forEach(f => {
+                    const style = f.getStyle();
+                    if (style && typeof style === 'function') {
+                        const appliedStyle = style(f);
+                        if (appliedStyle && appliedStyle.getStroke &&
+                            appliedStyle.getStroke() &&
+                            appliedStyle.getStroke().getColor() !== 'rgba(200,200,200,0.2)') {
+                            visible++;
                         }
                     } else {
-                        showToast('❌ Cannot zoom to this item - no coordinates found');
-                        console.log('❌ Item details:', item);
-                        return false;
+                        visible++;
                     }
-                } catch (e) {
-                    console.error('❌ Error in zoomToFeature:', e);
-                    showToast('❌ Error zooming to item');
-                    return false;
-                }
+                });
+                $('#visibleCount').text(visible);
+                $('#filterStats').html(
+                `Showing: <strong>${visible}</strong> of <strong>${total}</strong> features`);
             }
 
             // ─── EVENT HANDLERS ───
 
-            // Toggle Dropdowns
+            // Layer Toggle
             $(document).on('click', '.layer-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.layer-dropdown').toggleClass('active');
                 $('.location-dropdown').removeClass('active');
                 $('.search-dropdown').removeClass('active');
+                $('#filterDropdown').removeClass('active');
             });
 
+            // Location Toggle
             $(document).on('click', '.location-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.location-dropdown').toggleClass('active');
                 $('.layer-dropdown').removeClass('active');
                 $('.search-dropdown').removeClass('active');
+                $('#filterDropdown').removeClass('active');
             });
 
+            // Search Toggle
             $(document).on('click', '.search-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.search-dropdown').toggleClass('active');
                 $('.layer-dropdown').removeClass('active');
                 $('.location-dropdown').removeClass('active');
+                $('#filterDropdown').removeClass('active');
             });
 
-            // Close dropdowns when clicking outside
+            // Filter Toggle
+            $(document).on('click', '#filterToggleBtn', function(e) {
+                e.stopPropagation();
+                $('#filterDropdown').toggleClass('active');
+                $(this).toggleClass('active-filter');
+                $('.layer-dropdown').removeClass('active');
+                $('.location-dropdown').removeClass('active');
+                $('.search-dropdown').removeClass('active');
+                if ($('#filterDropdown').hasClass('active')) {
+                    updateFilterStats();
+                }
+            });
+
+            // Close dropdowns on outside click
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.custom-layer-switcher').length) {
                     $('.layer-dropdown').removeClass('active');
@@ -1496,6 +2084,10 @@
                 }
                 if (!$(e.target).closest('.custom-search-switcher').length) {
                     $('.search-dropdown').removeClass('active');
+                }
+                if (!$(e.target).closest('.custom-filter-toggle').length) {
+                    $('#filterDropdown').removeClass('active');
+                    $('#filterToggleBtn').removeClass('active-filter');
                 }
             });
 
@@ -1543,7 +2135,8 @@
                     title: 'Infrastructure Legend',
                     html: `
                         <div style="text-align:left;">
-                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(255,0,0,0.1);border:2px solid blue;margin-right:10px;"></span> Polygons (Land Parcels)</div>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(13,110,253,0.15);border:2px solid #0d6efd;margin-right:10px;"></span> Polygons (Land Parcels)</div>
+                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(220,53,69,0.15);border:2px solid #dc3545;margin-right:10px;"></span> Flagged Parcels</div>
                             <div><span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span> Lines (Roads)</div>
                             <div><span style="display:inline-block;width:20px;height:20px;background:rgba(0,0,0,0.3);border-radius:4px;margin-right:10px;"></span> Drone View</div>
                             <hr>
@@ -1567,9 +2160,13 @@
                 });
             });
 
-            // ─── LOCATION FUNCTIONALITY ───
+            // ─── LOCATION EVENT HANDLERS ───
 
-            // Live Location
+            $('#zoomToExtentItem').on('click', function() {
+                zoomToExtent();
+                $('.location-dropdown').removeClass('active');
+            });
+
             $('#liveLocationItem').on('click', function() {
                 if (!navigator.geolocation) {
                     showToast('❌ Geolocation not supported');
@@ -1583,19 +2180,19 @@
                 if (isLiveLocation) {
                     $badge.text('ON').addClass('active');
                     $btn.addClass('active-location');
-                    showToast('📍 Live location activated');
+                    showToast('📍 Live location activated - showing position', 2000);
 
                     navigator.geolocation.getCurrentPosition(
                         function(pos) {
-                            updatePosition(pos);
+                            updatePosition(pos, false);
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        updatePosition(newPos);
+                                        updatePosition(newPos, false);
                                     },
                                     function(error) {
                                         console.error('Watch error:', error);
-                                        showToast('❌ Location error: ' + error.message);
+                                        showToast('❌ Location error: ' + error.message, 3000);
                                     }, {
                                         enableHighAccuracy: true,
                                         timeout: 10000,
@@ -1606,7 +2203,7 @@
                         },
                         function(error) {
                             console.error('Get position error:', error);
-                            showToast('❌ Error getting location: ' + error.message);
+                            showToast('❌ Error getting location: ' + error.message, 3000);
                             isLiveLocation = false;
                             $badge.text('OFF').removeClass('active');
                             $btn.removeClass('active-location');
@@ -1618,8 +2215,8 @@
                 } else {
                     $badge.text('OFF').removeClass('active');
                     $btn.removeClass('active-location');
-                    showToast('📍 Live location deactivated');
-                    if (watchId) {
+                    showToast('📍 Live location deactivated', 2000);
+                    if (watchId && !isTracking) {
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
                     }
@@ -1627,7 +2224,6 @@
                 $('.location-dropdown').removeClass('active');
             });
 
-            // Track Me
             $('#trackMeItem').on('click', function() {
                 if (!navigator.geolocation) {
                     showToast('❌ Geolocation not supported');
@@ -1641,19 +2237,25 @@
                     const $btn = $('#locationToggleBtn');
                     $badge.text('ON').addClass('tracking');
                     $btn.addClass('tracking');
-                    showToast('📍 Tracking started');
+                    showToast('📍 Tracking started - auto-centering every 2 seconds', 3000);
+
+                    if (trackInterval) {
+                        clearInterval(trackInterval);
+                        trackInterval = null;
+                    }
 
                     navigator.geolocation.getCurrentPosition(
                         function(pos) {
-                            updatePosition(pos);
+                            updatePosition(pos, true);
+
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        updatePosition(newPos);
+                                        updatePosition(newPos, true);
                                     },
                                     function(error) {
                                         console.error('Track error:', error);
-                                        showToast('❌ Tracking error: ' + error.message);
+                                        showToast('❌ Tracking error: ' + error.message, 3000);
                                     }, {
                                         enableHighAccuracy: true,
                                         timeout: 10000,
@@ -1661,13 +2263,28 @@
                                     }
                                 );
                             }
+
+                            trackInterval = setInterval(function() {
+                                if (currentPosition && isTracking) {
+                                    map.getView().animate({
+                                        center: currentPosition,
+                                        zoom: 19,
+                                        duration: 500
+                                    });
+                                }
+                            }, 2000);
+
                         },
                         function(error) {
                             console.error('Get position error:', error);
-                            showToast('❌ Error starting tracking: ' + error.message);
+                            showToast('❌ Error starting tracking: ' + error.message, 3000);
                             isTracking = false;
                             $badge.text('OFF').removeClass('tracking');
                             $btn.removeClass('tracking');
+                            if (trackInterval) {
+                                clearInterval(trackInterval);
+                                trackInterval = null;
+                            }
                         }, {
                             enableHighAccuracy: true,
                             timeout: 10000
@@ -1679,7 +2296,13 @@
                     const $btn = $('#locationToggleBtn');
                     $badge.text('OFF').removeClass('tracking');
                     $btn.removeClass('tracking');
-                    showToast('⏹️ Tracking stopped');
+                    showToast('⏹️ Tracking stopped', 2000);
+
+                    if (trackInterval) {
+                        clearInterval(trackInterval);
+                        trackInterval = null;
+                    }
+
                     if (watchId && !isLiveLocation) {
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
@@ -1688,102 +2311,81 @@
                 $('.location-dropdown').removeClass('active');
             });
 
-            // Clear Route
             $('#clearRouteItem').on('click', function() {
-                if (watchId && !isLiveLocation && !isTracking) {
-                    navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
-                }
+                clearAllRouteState();
+                showToast('🧹 Cleared all location data', 2000);
+                $('.location-dropdown').removeClass('active');
+            });
 
-                // Clear route line
-                if (routeLine) {
-                    routeLayer.getSource().removeFeature(routeLine);
-                    routeLine = null;
-                }
-                routePoints = [];
-
-                // Clear position
-                if (positionFeature) {
-                    positionLayer.getSource().removeFeature(positionFeature);
-                    positionFeature = null;
-                }
-
-                // Reset states
-                isLiveLocation = false;
-                isTracking = false;
-                $('#liveLocationBadge').text('OFF').removeClass('active');
-                $('#trackMeBadge').text('OFF').removeClass('tracking');
-                $('#locationToggleBtn').removeClass('active-location tracking');
-
-                // Clear destination
+            $(document).on('click', '#closeRouteBtn', function() {
+                routeLayer.getSource().clear();
                 if (destinationMarker) {
                     destinationLayer.getSource().removeFeature(destinationMarker);
                     destinationMarker = null;
                 }
-
                 $('#directionControls').removeClass('active');
-                showToast('🧹 Cleared all location data');
-                $('.location-dropdown').removeClass('active');
             });
 
-            // ─── SEARCH FUNCTIONALITY ───
+            // ─── SEARCH EVENT HANDLERS ───
 
-            // Quick Search
             $('#gisSearchInput').on('keyup', function() {
-                const value = $(this).val().toLowerCase().trim();
-                const results = $('#searchResults');
-
+                const value = $(this).val();
                 if (!value || value.length < 1) {
-                    results.html('');
+                    $('#searchResults').html('');
                     return;
                 }
-
-                const matches = searchIndex.filter(item =>
-                    item.searchText && item.searchText.includes(value)
-                );
-
-                if (!matches.length) {
-                    results.html('<div class="p-3 text-center text-muted">No results found</div>');
-                    return;
-                }
-
-                let html = '<div class="dropdown-header">Results (' + matches.length + ')</div>';
-                matches.slice(0, 15).forEach(item => {
-                    const icon = item.geometryType === 'polygon' ? 'pentagon' :
-                        item.geometryType === 'line' ? 'vector-pen' : 'geo-alt';
-                    const details = [];
-                    if (item.assessment) details.push('Assess: ' + item.assessment);
-                    if (item.owner_name) details.push('Owner: ' + item.owner_name);
-                    if (item.phone_number) details.push('Phone: ' + item.phone_number);
-
-                    html += `
-                        <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-                            <div class="search-result-title"><i class="bi bi-${icon} me-2"></i>${item.title}</div>
-                            <div class="search-result-subtitle">${item.subtitle}</div>
-                            ${details.length ? '<div class="search-result-subtitle" style="color:#666;">' + details.join(' | ') + '</div>' : ''}
-                            <div class="search-result-actions">
-                                <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                            </div>
-                        </div>
-                    `;
-                });
-                results.html(html);
-            });
-
-            // Zoom button in search results
-            $(document).on('click', '.zoom-btn', function(e) {
-                e.stopPropagation();
-                const id = $(this).data('id');
-                const type = $(this).data('type');
-                const item = searchIndex.find(i => i.id == id && i.type === type);
-                if (item) {
-                    zoomToFeature(item);
+                const results = searchGIS(value);
+                let html = '';
+                if (!results.length) {
+                    html = '<div class="p-3 text-center text-muted">No results found</div>';
                 } else {
-                    showToast('❌ Item not found in search index');
+                    results.slice(0, 10).forEach(item => {
+                        const displayTitle = item.type === 'pointdata' ?
+                            `${item.title} | Assessment: ${item.assessment}` : item.title;
+                        const displaySubtitle = item.type === 'pointdata' ?
+                            `Point GIS ID: ${item.point_gisid || 'N/A'}${item.owner_name ? ' | Owner: ' + item.owner_name : ''}` :
+                            item.subtitle;
+                        const icon = item.geometryType === 'point' ? 'geo-alt' :
+                            item.geometryType === 'polygon' ? 'pentagon' : 'vector-pen';
+
+                        let badgeClass = '';
+                        let badgeText = '';
+                        if (item.type === 'line') {
+                            badgeClass = 'road';
+                            badgeText = 'Road';
+                        } else if (item.type === 'polygon') {
+                            badgeClass = 'parcel';
+                            badgeText = 'Parcel';
+                        } else if (item.type === 'point') {
+                            badgeClass = 'point';
+                            badgeText = 'Point';
+                        } else if (item.type === 'pointdata') {
+                            badgeClass = 'assessment';
+                            badgeText = 'Assessment';
+                        }
+
+                        const editBtn = item.type === 'pointdata' ?
+                            `<button class="btn btn-sm btn-warning edit-btn" data-id="${item.id}"><i class="bi bi-pencil"></i> Edit</button>` :
+                            '';
+
+                        html += `
+                            <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
+                                <div class="search-result-title">
+                                    <i class="bi bi-${icon} me-2"></i>${displayTitle}
+                                    <span class="type-badge ${badgeClass}">${badgeText}</span>
+                                </div>
+                                <div class="search-result-subtitle">${displaySubtitle}</div>
+                                <div class="mt-2 d-flex gap-2">
+                                    <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
+                                    <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
+                                    ${editBtn}
+                                </div>
+                            </div>`;
+                    });
                 }
+                $('#searchResults').html(html);
             });
 
-            // Search result item click
             $(document).on('click', '.search-result-item', function() {
                 const id = $(this).data('id');
                 const type = $(this).data('type');
@@ -1793,10 +2395,56 @@
                     $('.search-dropdown').removeClass('active');
                     $('#gisSearchInput').val('');
                     $('#searchResults').html('');
+                } else {
+                    showToast('❌ Could not find item to zoom to', 3000);
                 }
             });
 
-            // Search tabs
+            $(document).on('click', '.zoom-btn', function(e) {
+                e.stopPropagation();
+                const id = $(this).data('id');
+                const type = $(this).data('type');
+
+                let item = searchIndex.find(i => i.id == id && i.type === type);
+                if (!item) {
+                    item = searchIndex.find(i => i.point_gisid == id);
+                }
+                if (!item) {
+                    item = searchIndex.find(i => i.id == id);
+                }
+                if (item) {
+                    zoomToFeature(item);
+                } else {
+                    showToast(`❌ Could not find feature with ID: ${id}`, 3000);
+                }
+                $('.search-dropdown').removeClass('active');
+                $('#gisSearchInput').val('');
+                $('#searchResults').html('');
+            });
+
+            $(document).on('click', '.direction-btn', function(e) {
+                e.stopPropagation();
+                const id = $(this).data('id');
+                const type = $(this).data('type');
+
+                let item = searchIndex.find(i => i.id == id && i.type === type);
+                if (!item) {
+                    item = searchIndex.find(i => i.point_gisid == id);
+                }
+                if (!item) {
+                    item = searchIndex.find(i => i.id == id);
+                }
+
+                if (item) {
+                    getDirectionToFeature(item);
+                    $('.search-dropdown').removeClass('active');
+                    $('#gisSearchInput').val('');
+                    $('#searchResults').html('');
+                } else {
+                    showToast(`❌ Could not find feature with ID: ${id} for directions`, 3000);
+                }
+            });
+
             $('.search-tab-btn').on('click', function() {
                 const tab = $(this).data('tab');
                 $('.search-tab-btn').removeClass('active');
@@ -1811,22 +2459,61 @@
                 }
             });
 
-            // ─── FILTER FUNCTIONALITY ───
+            // ─── FILTER EVENT HANDLERS ───
 
-            // Filter Search - Uses searchIndex with multiple criteria
+            $('#applyFiltersBtn').on('click', function() {
+                applyFilters();
+            });
+
+            $('#resetFiltersBtn').on('click', function() {
+                resetAllFilters(false);
+            });
+
+            $('#areaRange').on('input', function() {
+                const val = parseInt($(this).val());
+                const maxVal = parseInt($('#maxArea').val());
+                if (val > maxVal) {
+                    $(this).val(maxVal);
+                }
+                $('#minArea').val($(this).val());
+            });
+
+            $('#minArea').on('change', function() {
+                let val = parseInt($(this).val()) || 0;
+                const maxVal = parseInt($('#maxArea').val()) || 10000;
+                if (val > maxVal) {
+                    val = maxVal;
+                    $(this).val(val);
+                }
+                $('#areaRange').val(val);
+            });
+
+            $('#maxArea').on('change', function() {
+                let val = parseInt($(this).val()) || 10000;
+                const minVal = parseInt($('#minArea').val()) || 0;
+                if (val < minVal) {
+                    val = minVal;
+                    $(this).val(val);
+                }
+                const sliderVal = parseInt($('#areaRange').val());
+                if (sliderVal > val) {
+                    $('#areaRange').val(val);
+                }
+            });
+
+            // ─── FILTER SEARCH EVENT HANDLERS ───
+
             $('#applyFilterBtn').on('click', function() {
                 const assessment = $('#filterAssessment').val().toLowerCase().trim();
                 const oldAssessment = $('#filterOldAssessment').val().toLowerCase().trim();
                 const ownerName = $('#filterOwnerName').val().toLowerCase().trim();
                 const phoneNumber = $('#filterPhoneNumber').val().toLowerCase().trim();
 
-                // Check if any filter is applied
                 if (!assessment && !oldAssessment && !ownerName && !phoneNumber) {
-                    showToast('⚠️ Please enter at least one filter criteria');
+                    showToast('⚠️ Please enter at least one filter criteria', 3000);
                     return;
                 }
 
-                // Filter using searchIndex
                 let matches = searchIndex.filter(item => {
                     let match = true;
 
@@ -1855,7 +2542,7 @@
 
                 if (matches.length === 0) {
                     results.html('<div class="p-3 text-center text-muted">No matching records found</div>');
-                    showToast('❌ No results found');
+                    showToast('❌ No results found', 2000);
                     return;
                 }
 
@@ -1868,22 +2555,41 @@
                     if (item.owner_name) details.push('Owner: ' + item.owner_name);
                     if (item.phone_number) details.push('Phone: ' + item.phone_number);
 
+                    let badgeClass = '';
+                    let badgeText = '';
+                    if (item.type === 'line') {
+                        badgeClass = 'road';
+                        badgeText = 'Road';
+                    } else if (item.type === 'polygon') {
+                        badgeClass = 'parcel';
+                        badgeText = 'Parcel';
+                    } else if (item.type === 'point') {
+                        badgeClass = 'point';
+                        badgeText = 'Point';
+                    } else if (item.type === 'pointdata') {
+                        badgeClass = 'assessment';
+                        badgeText = 'Assessment';
+                    }
+
                     html += `
                         <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-                            <div class="search-result-title"><i class="bi bi-${icon} me-2"></i>${item.title}</div>
+                            <div class="search-result-title">
+                                <i class="bi bi-${icon} me-2"></i>${item.title}
+                                <span class="type-badge ${badgeClass}">${badgeText}</span>
+                            </div>
                             <div class="search-result-subtitle">${item.subtitle}</div>
                             ${details.length ? '<div class="search-result-subtitle" style="color:#666;">' + details.join(' | ') + '</div>' : ''}
                             <div class="search-result-actions">
                                 <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
+                                <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
                             </div>
                         </div>
                     `;
                 });
                 results.html(html);
-                showToast('✅ Found ' + matches.length + ' results');
+                showToast('✅ Found ' + matches.length + ' results', 2000);
             });
 
-            // Enter key for filter search
             $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress',
                 function(e) {
                     if (e.which === 13) {
@@ -1891,7 +2597,6 @@
                     }
                 });
 
-            // Enter key for quick search
             $('#gisSearchInput').on('keypress', function(e) {
                 if (e.which === 13) {
                     e.preventDefault();
@@ -1945,6 +2650,9 @@
                     $('#fullscreenExitBtn').click();
                 }
             });
+
+            // ─── INITIALIZE ───
+            setTimeout(updateFilterStats, 500);
 
             console.log('✅ GIS Dashboard initialized successfully!');
             console.log('📊 Search Index Size:', searchIndex.length);
