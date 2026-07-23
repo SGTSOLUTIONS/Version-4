@@ -33,8 +33,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
         }
 
         .map-title {
@@ -77,12 +75,12 @@
         /* Control Stack */
         .map-controls-stack {
             position: absolute;
-            right: 15px;
-            top: 15px;
+            right: 30px;
+            top: 20px;
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         }
 
@@ -100,15 +98,15 @@
         .filter-toggle-btn {
             background: white;
             border-radius: 8px;
-            padding: 8px 10px;
+            padding: 10px 12px;
             cursor: pointer;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
+            font-size: 20px;
             transition: all 0.2s;
             border: none;
             color: #333;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -175,25 +173,25 @@
         }
 
         .layer-dropdown {
-            width: 240px;
-            max-height: 400px;
+            width: 260px;
+            max-height: 500px;
             overflow-y: auto;
         }
 
         .location-dropdown {
-            width: 220px;
-            max-height: 400px;
+            width: 240px;
+            max-height: 500px;
             overflow-y: auto;
         }
 
         .search-dropdown {
-            width: 340px;
-            max-height: 400px;
+            width: 380px;
+            max-height: 500px;
             overflow-y: auto;
         }
 
         .filter-dropdown {
-            width: 380px;
+            width: 420px;
             max-height: 85vh;
             display: none;
             flex-direction: column;
@@ -208,9 +206,9 @@
         }
 
         .dropdown-header {
-            padding: 10px 14px;
+            padding: 12px 16px;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 13px;
             color: #333;
             background: white;
             border-bottom: 1px solid #e9ecef;
@@ -223,14 +221,14 @@
         .dropdown-divider {
             height: 1px;
             background: #e9ecef;
-            margin: 4px 10px;
+            margin: 4px 12px;
         }
 
         .layer-dropdown-item,
         .location-dropdown-item {
             display: flex;
             align-items: center;
-            padding: 8px 14px;
+            padding: 8px 16px;
             cursor: pointer;
             transition: background 0.15s;
         }
@@ -242,21 +240,21 @@
 
         .layer-icon,
         .location-item-icon {
-            width: 24px;
-            font-size: 14px;
+            width: 28px;
+            font-size: 16px;
             color: #555;
         }
 
         .layer-name,
         .location-item-name {
             flex: 1;
-            font-size: 13px;
+            font-size: 14px;
             color: #333;
         }
 
         .layer-check {
             color: #ccc;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .layer-dropdown-item.active .layer-check {
@@ -264,8 +262,8 @@
         }
 
         .location-item-badge {
-            font-size: 10px;
-            padding: 2px 6px;
+            font-size: 11px;
+            padding: 2px 8px;
             border-radius: 12px;
             background: #e9ecef;
             color: #666;
@@ -284,8 +282,8 @@
         .search-tab-btn {
             border: none;
             background: transparent;
-            padding: 8px 0;
-            font-size: 12px;
+            padding: 10px 0;
+            font-size: 13px;
             color: #666;
             border-bottom: 2px solid transparent;
             transition: all 0.2s;
@@ -301,7 +299,7 @@
         }
 
         .search-results-container {
-            max-height: 200px;
+            max-height: 250px;
             overflow-y: auto;
         }
 
@@ -313,16 +311,16 @@
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.85);
             color: white;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 14px;
             z-index: 1000;
             white-space: nowrap;
         }
 
         /* Search Results Styles */
         .search-result-item {
-            padding: 8px 14px;
+            padding: 10px 16px;
             border-bottom: 1px solid #f0f0f0;
             cursor: default;
         }
@@ -334,25 +332,24 @@
         .search-result-title {
             font-weight: 500;
             color: #333;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .search-result-subtitle {
-            font-size: 11px;
+            font-size: 12px;
             color: #888;
             margin-top: 2px;
         }
 
         .search-result-actions {
-            margin-top: 4px;
+            margin-top: 6px;
             display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
+            gap: 6px;
         }
 
         .search-result-actions .btn-sm {
-            padding: 2px 8px;
-            font-size: 10px;
+            padding: 2px 10px;
+            font-size: 11px;
         }
 
         /* OL Override */
@@ -364,20 +361,20 @@
         .fullscreen-btn,
         .fullscreen-btn-exit {
             position: absolute;
-            right: 15px;
-            bottom: 15px;
+            right: 30px;
+            bottom: 30px;
             z-index: 1000;
             background: white;
             border-radius: 8px;
-            padding: 8px 10px;
+            padding: 10px 12px;
             cursor: pointer;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 16px;
+            font-size: 18px;
             transition: all 0.2s;
             border: none;
             color: #333;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -396,18 +393,17 @@
         /* Direction Controls */
         .direction-controls {
             position: absolute;
-            bottom: 80px;
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
             background: white;
             border-radius: 12px;
-            padding: 12px 16px;
+            padding: 15px 20px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             display: none;
-            min-width: 260px;
-            max-width: 360px;
-            width: 90%;
+            min-width: 300px;
+            max-width: 400px;
         }
 
         .direction-controls.active {
@@ -415,18 +411,18 @@
         }
 
         .direction-controls .route-info {
-            font-size: 12px;
+            font-size: 13px;
             color: #333;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .direction-controls .btn-close-route {
             position: absolute;
-            top: 6px;
-            right: 10px;
+            top: 8px;
+            right: 12px;
             background: none;
             border: none;
-            font-size: 18px;
+            font-size: 20px;
             cursor: pointer;
             color: #999;
         }
@@ -436,13 +432,13 @@
         }
 
         #routeSteps {
-            max-height: 120px;
+            max-height: 150px;
             overflow-y: auto;
-            font-size: 11px;
+            font-size: 12px;
         }
 
         #routeSteps .step-item {
-            padding: 3px 0;
+            padding: 4px 0;
             border-bottom: 1px solid #f0f0f0;
         }
 
@@ -452,55 +448,53 @@
 
         /* Filter Styles */
         .filter-section {
-            padding: 6px 12px;
+            padding: 8px 16px;
         }
 
         .filter-section-header {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
             color: #666;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
 
         .filter-range {
-            padding: 3px 0;
+            padding: 4px 0;
         }
 
         .range-inputs {
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin-bottom: 4px;
+            gap: 8px;
+            margin-bottom: 6px;
         }
 
         .range-inputs input[type="number"] {
-            width: 70px;
-            padding: 3px 6px;
+            width: 80px;
+            padding: 4px 8px;
             border-radius: 6px;
             border: 1px solid #ddd;
-            font-size: 11px;
+            font-size: 12px;
         }
 
         .range-separator {
             color: #999;
-            font-size: 11px;
+            font-size: 12px;
         }
 
         .filter-range .form-range {
-            height: 4px;
+            height: 6px;
             width: 100%;
         }
 
         .filter-range .form-range::-webkit-slider-thumb {
             background: #0d6efd;
-            width: 14px;
-            height: 14px;
         }
 
         .filter-actions {
-            padding: 10px 12px;
+            padding: 12px 16px;
             border-top: 1px solid #e9ecef;
             background: #f8f9fa;
             position: sticky;
@@ -510,18 +504,18 @@
         }
 
         .filter-stats {
-            font-size: 11px;
+            font-size: 12px;
             color: #666;
             text-align: center;
-            margin-top: 4px;
+            margin-top: 6px;
         }
 
         /* Type Badge Styles */
         .type-badge {
-            font-size: 9px;
-            padding: 1px 6px;
+            font-size: 10px;
+            padding: 2px 8px;
             border-radius: 12px;
-            margin-left: 4px;
+            margin-left: 6px;
             font-weight: 600;
         }
 
@@ -547,11 +541,11 @@
 
         /* Filter Field Group */
         .filter-field-group {
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .filter-field-group label {
-            font-size: 10px;
+            font-size: 11px;
             color: #666;
             font-weight: 600;
             display: block;
@@ -560,10 +554,10 @@
 
         .filter-field-group input {
             width: 100%;
-            padding: 4px 8px;
+            padding: 6px 10px;
             border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 13px;
         }
 
         .filter-field-group input:focus {
@@ -576,22 +570,22 @@
         .filter-scroll-container {
             flex: 1;
             overflow-y: auto;
-            padding: 2px 0;
-            max-height: calc(85vh - 100px);
+            padding: 4px 0;
+            max-height: calc(85vh - 120px);
         }
 
         .filter-scroll-container::-webkit-scrollbar {
-            width: 4px;
+            width: 6px;
         }
 
         .filter-scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
         .filter-scroll-container::-webkit-scrollbar-thumb {
             background: #ccc;
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
         .filter-scroll-container::-webkit-scrollbar-thumb:hover {
@@ -600,13 +594,13 @@
 
         /* Form Select Styles */
         .form-select-sm {
-            font-size: 11px;
-            padding: 3px 6px;
+            font-size: 12px;
+            padding: 4px 8px;
             border-radius: 6px;
             border: 1px solid #ddd;
             background-color: white;
             width: 100%;
-            max-height: 100px;
+            max-height: 120px;
             overflow-y: auto;
             cursor: pointer;
         }
@@ -618,14 +612,14 @@
         }
 
         select[multiple] {
-            min-height: 50px;
-            max-height: 100px;
+            min-height: 60px;
+            max-height: 120px;
             overflow-y: auto;
         }
 
         .text-muted {
             color: #6c757d;
-            font-size: 9px;
+            font-size: 10px;
             display: block;
             margin-top: 2px;
         }
@@ -634,422 +628,27 @@
         .layer-dropdown::-webkit-scrollbar,
         .location-dropdown::-webkit-scrollbar,
         .search-dropdown::-webkit-scrollbar {
-            width: 4px;
+            width: 6px;
         }
 
         .layer-dropdown::-webkit-scrollbar-track,
         .location-dropdown::-webkit-scrollbar-track,
         .search-dropdown::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
         .layer-dropdown::-webkit-scrollbar-thumb,
         .location-dropdown::-webkit-scrollbar-thumb,
         .search-dropdown::-webkit-scrollbar-thumb {
             background: #ccc;
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
         .layer-dropdown::-webkit-scrollbar-thumb:hover,
         .location-dropdown::-webkit-scrollbar-thumb:hover,
         .search-dropdown::-webkit-scrollbar-thumb:hover {
             background: #999;
-        }
-
-        /* Mobile Responsive Styles */
-        @media (max-width: 768px) {
-            #map {
-                height: 500px;
-            }
-
-            .map-header {
-                padding: 10px 12px;
-            }
-
-            .map-title {
-                font-size: 13px;
-            }
-
-            .map-controls-stack {
-                right: 8px;
-                top: 8px;
-                gap: 6px;
-            }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                width: 34px;
-                height: 34px;
-                font-size: 15px;
-                padding: 6px 8px;
-                border-radius: 6px;
-            }
-
-            .layer-dropdown {
-                width: 200px;
-                max-height: 350px;
-            }
-
-            .location-dropdown {
-                width: 190px;
-                max-height: 350px;
-            }
-
-            .search-dropdown {
-                width: 280px;
-                max-height: 350px;
-                right: -10px;
-            }
-
-            .filter-dropdown {
-                width: 300px;
-                max-height: 80vh;
-                right: -10px;
-            }
-
-            .dropdown-header {
-                font-size: 11px;
-                padding: 8px 10px;
-            }
-
-            .layer-dropdown-item,
-            .location-dropdown-item {
-                padding: 6px 10px;
-                font-size: 12px;
-            }
-
-            .layer-name,
-            .location-item-name {
-                font-size: 12px;
-            }
-
-            .filter-section {
-                padding: 4px 10px;
-            }
-
-            .filter-section-header {
-                font-size: 9px;
-            }
-
-            .form-select-sm {
-                font-size: 10px;
-                padding: 2px 5px;
-                max-height: 80px;
-            }
-
-            select[multiple] {
-                min-height: 40px;
-                max-height: 80px;
-            }
-
-            .range-inputs input[type="number"] {
-                width: 60px;
-                font-size: 10px;
-                padding: 2px 4px;
-            }
-
-            .filter-actions {
-                padding: 8px 10px;
-            }
-
-            .filter-actions .btn-sm {
-                font-size: 11px;
-                padding: 4px 8px;
-            }
-
-            .filter-stats {
-                font-size: 10px;
-            }
-
-            .fullscreen-btn,
-            .fullscreen-btn-exit {
-                width: 34px;
-                height: 34px;
-                font-size: 14px;
-                padding: 6px 8px;
-                right: 8px;
-                bottom: 8px;
-            }
-
-            .direction-controls {
-                min-width: 220px;
-                max-width: 300px;
-                padding: 10px 12px;
-                bottom: 60px;
-            }
-
-            .search-result-item {
-                padding: 6px 10px;
-            }
-
-            .search-result-title {
-                font-size: 12px;
-            }
-
-            .search-result-subtitle {
-                font-size: 10px;
-            }
-
-            .search-result-actions .btn-sm {
-                font-size: 9px;
-                padding: 1px 6px;
-            }
-
-            .location-toast {
-                font-size: 11px;
-                padding: 6px 12px;
-                bottom: 60px;
-            }
-
-            .filter-scroll-container {
-                max-height: calc(80vh - 80px);
-            }
-
-            .text-muted {
-                font-size: 8px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            #map {
-                height: 400px;
-            }
-
-            .map-title {
-                font-size: 11px;
-            }
-
-            .map-header .badge {
-                font-size: 9px;
-                padding: 3px 6px;
-            }
-
-            .map-controls-stack {
-                right: 5px;
-                top: 5px;
-                gap: 4px;
-            }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                width: 30px;
-                height: 30px;
-                font-size: 13px;
-                padding: 4px 6px;
-                border-radius: 5px;
-            }
-
-            .layer-dropdown {
-                width: 170px;
-                max-height: 300px;
-                right: -5px;
-            }
-
-            .location-dropdown {
-                width: 160px;
-                max-height: 300px;
-                right: -5px;
-            }
-
-            .search-dropdown {
-                width: 240px;
-                max-height: 300px;
-                right: -15px;
-            }
-
-            .filter-dropdown {
-                width: 260px;
-                max-height: 75vh;
-                right: -15px;
-            }
-
-            .dropdown-header {
-                font-size: 10px;
-                padding: 6px 8px;
-            }
-
-            .layer-dropdown-item,
-            .location-dropdown-item {
-                padding: 4px 8px;
-                font-size: 11px;
-            }
-
-            .layer-name,
-            .location-item-name {
-                font-size: 11px;
-            }
-
-            .layer-icon,
-            .location-item-icon {
-                width: 20px;
-                font-size: 12px;
-            }
-
-            .filter-section {
-                padding: 3px 8px;
-            }
-
-            .filter-section-header {
-                font-size: 8px;
-            }
-
-            .form-select-sm {
-                font-size: 9px;
-                padding: 2px 4px;
-                max-height: 60px;
-            }
-
-            select[multiple] {
-                min-height: 30px;
-                max-height: 60px;
-            }
-
-            .range-inputs input[type="number"] {
-                width: 50px;
-                font-size: 9px;
-                padding: 2px 3px;
-            }
-
-            .range-separator {
-                font-size: 9px;
-            }
-
-            .filter-actions {
-                padding: 6px 8px;
-            }
-
-            .filter-actions .btn-sm {
-                font-size: 10px;
-                padding: 3px 6px;
-            }
-
-            .filter-stats {
-                font-size: 9px;
-            }
-
-            .fullscreen-btn,
-            .fullscreen-btn-exit {
-                width: 30px;
-                height: 30px;
-                font-size: 12px;
-                padding: 4px 6px;
-                right: 5px;
-                bottom: 5px;
-            }
-
-            .direction-controls {
-                min-width: 180px;
-                max-width: 250px;
-                padding: 8px 10px;
-                bottom: 50px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 95%;
-            }
-
-            .direction-controls .route-info {
-                font-size: 10px;
-            }
-
-            #routeSteps {
-                max-height: 80px;
-                font-size: 10px;
-            }
-
-            .search-result-item {
-                padding: 4px 8px;
-            }
-
-            .search-result-title {
-                font-size: 11px;
-            }
-
-            .search-result-subtitle {
-                font-size: 9px;
-            }
-
-            .search-result-actions .btn-sm {
-                font-size: 8px;
-                padding: 1px 4px;
-            }
-
-            .location-toast {
-                font-size: 10px;
-                padding: 4px 10px;
-                bottom: 50px;
-            }
-
-            .filter-scroll-container {
-                max-height: calc(75vh - 70px);
-            }
-
-            .text-muted {
-                font-size: 7px;
-            }
-
-            .dropdown-divider {
-                margin: 2px 6px;
-            }
-
-            .search-tab-btn {
-                font-size: 10px;
-                padding: 6px 0;
-            }
-
-            .filter-field-group label {
-                font-size: 9px;
-            }
-
-            .filter-field-group input {
-                font-size: 10px;
-                padding: 3px 6px;
-            }
-        }
-
-        /* Touch-friendly improvements */
-        @media (hover: none) and (pointer: coarse) {
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                min-height: 44px;
-                min-width: 44px;
-            }
-
-            .form-select-sm {
-                font-size: 14px;
-                padding: 6px 8px;
-                min-height: 38px;
-            }
-
-            select[multiple] {
-                min-height: 60px;
-            }
-
-            .filter-actions .btn-sm {
-                min-height: 38px;
-                font-size: 13px;
-            }
-
-            .search-result-actions .btn-sm {
-                min-height: 30px;
-                font-size: 11px;
-                padding: 4px 10px;
-            }
         }
     </style>
 @endpush
