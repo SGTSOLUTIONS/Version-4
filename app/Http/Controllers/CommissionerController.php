@@ -502,7 +502,25 @@ class CommissionerController extends Controller
         $nextWardId = ($currentIndex !== false && isset($accessibleWardIds[$currentIndex + 1]))
             ? $accessibleWardIds[$currentIndex + 1]
             : null;
-
+return response()->json([
+    'success' => true,
+    'ward' => $ward,
+    'polygons' => $polygons,
+    'points' => $points,
+    'lines' => $lines,
+    'polygonDatas' => $polygonDatas,
+    'pointDatas' => $pointDatas,
+    'misData' => $misData,
+    'uniqueRoadNames' => $uniqueRoadNames,
+    'analytics' => $analytics,
+    'buildingVariations' => $buildingVariations,
+    'buildingData' => $buildingData,
+    'availableUsages' => $availableUsages,
+    'areaStats' => $areaStats,
+    'accessibleWards' => $accessibleWards,
+    'currentIndex' => $currentIndex,
+    'nextWardId' => $nextWardId,
+], 200);
         return view('excecutive.mapview', compact(
             'ward',
             'polygons',
