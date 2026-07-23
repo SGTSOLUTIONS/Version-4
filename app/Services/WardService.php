@@ -767,7 +767,7 @@ class WardService
         DB::table($tableName)->insert([
             'gisid'       => $gisid,
             'type'        => $layerType,
-            'coordinates' => json_encode($coordinates),
+            'coordinates' => [$coordinates],
             'road_name'   => null,
             'created_at'  => now(),
             'updated_at'  => now(),
