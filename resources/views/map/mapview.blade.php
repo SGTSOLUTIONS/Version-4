@@ -2186,9 +2186,9 @@
                     loadLinesToSource();
                     loadPointsToSource();
                     buildSearchIndex();
-
-                }
  console.log("searchIndex",searchIndex);
+                }
+
                 loadPolygonsToSource();
                 loadLinesToSource();
                 loadPointsToSource();
