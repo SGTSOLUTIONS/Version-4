@@ -509,7 +509,7 @@
             padding: 12px 16px;
             border-top: 1px solid #e9ecef;
             background: #f8f9fa;
-            position: sticky;
+            /* position: sticky; */
             bottom: 0;
             z-index: 10;
             border-radius: 0 0 12px 12px;
