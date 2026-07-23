@@ -148,9 +148,11 @@
             0% {
                 opacity: 1;
             }
+
             50% {
                 opacity: 0.5;
             }
+
             100% {
                 opacity: 1;
             }
@@ -196,6 +198,15 @@
             display: none;
             flex-direction: column;
             overflow: hidden;
+        }
+
+        @media (max-width: 350px) {
+            .filter-dropdown {
+                width: calc(100vw - 20px);
+                max-width: 330px;
+                left: 10px;
+                right: 10px;
+            }
         }
 
         .layer-dropdown.active,
@@ -2068,7 +2079,7 @@
                 });
                 $('#visibleCount').text(visible);
                 $('#filterStats').html(
-                `Showing: <strong>${visible}</strong> of <strong>${total}</strong> features`);
+                    `Showing: <strong>${visible}</strong> of <strong>${total}</strong> features`);
             }
 
             // ─── EVENT HANDLERS ───
