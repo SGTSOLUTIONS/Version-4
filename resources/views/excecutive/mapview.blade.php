@@ -73,10 +73,10 @@
         }
 
         /* ───────────────────────────────────────────────
-                                   Control stack — every floating control on the map
-                                   shares one flex column so they can never overlap,
-                                   regardless of how many are shown/hidden.
-                                ─────────────────────────────────────────────── */
+                                       Control stack — every floating control on the map
+                                       shares one flex column so they can never overlap,
+                                       regardless of how many are shown/hidden.
+                                    ─────────────────────────────────────────────── */
         .map-controls-stack {
             position: absolute;
             right: 30px;
@@ -482,70 +482,71 @@
             background: #0d6efd;
             color: #fff;
         }
+
         /* Filter Dropdown Styles */
-.filter-toggle-btn {
-    background: white;
-    border-radius: 8px;
-    padding: 10px 12px;
-    cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-    font-size: 18px;
-    transition: all 0.2s;
-    border: none;
-    color: #333;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        .filter-toggle-btn {
+            background: white;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+            border: none;
+            color: #333;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-.filter-toggle-btn:hover {
-    background: #f0f0f0;
-    transform: scale(1.05);
-}
+        .filter-toggle-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
 
-.filter-toggle-btn.active-filter {
-    color: #0d6efd;
-}
+        .filter-toggle-btn.active-filter {
+            color: #0d6efd;
+        }
 
-.filter-dropdown::-webkit-scrollbar {
-    width: 6px;
-}
+        .filter-dropdown::-webkit-scrollbar {
+            width: 6px;
+        }
 
-.filter-dropdown::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 3px;
-}
+        .filter-dropdown::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
 
-.filter-dropdown::-webkit-scrollbar-thumb:hover {
-    background: #999;
-}
+        .filter-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
 
-.filter-option:hover {
-    background: #f0f8ff;
-}
+        .filter-option:hover {
+            background: #f0f8ff;
+        }
 
-.filter-option input[type="checkbox"]:checked {
-    accent-color: #0d6efd;
-}
+        .filter-option input[type="checkbox"]:checked {
+            accent-color: #0d6efd;
+        }
 
-.filter-range .form-range {
-    height: 6px;
-}
+        .filter-range .form-range {
+            height: 6px;
+        }
 
-.filter-range .form-range::-webkit-slider-thumb {
-    background: #0d6efd;
-}
+        .filter-range .form-range::-webkit-slider-thumb {
+            background: #0d6efd;
+        }
 
-.scrollable-options::-webkit-scrollbar {
-    width: 4px;
-}
+        .scrollable-options::-webkit-scrollbar {
+            width: 4px;
+        }
 
-.scrollable-options::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 2px;
-}
+        .scrollable-options::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+        }
     </style>
 @endpush
 
