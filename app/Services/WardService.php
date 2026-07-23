@@ -781,10 +781,13 @@ class WardService
                 'updated_at'  => now(),
             ]);
 
+            $lines = DB::table($tableName)->get();
+
             return [
                 'status'  => true,
-                'message' => 'Line created successfully',
-                'gisid'   => $gisid
+                'gisid'   => $gisid,
+                'message' => 'Polygon stored successfully',
+                'lines' => $lines
             ];
         } catch (\Exception $e) {
 

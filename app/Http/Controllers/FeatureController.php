@@ -53,7 +53,6 @@ class FeatureController extends Controller
             $layerType = trim($request->layer_type);
 
             switch ($layerType) {
-
                 case 'Polygon':
                     $result = $this->wardService->storeSinglePolygon([
                         'ward_id'   => $wardId,
@@ -69,7 +68,6 @@ class FeatureController extends Controller
                         'feature'   => $request->feature,
                     ]);
                     break;
-
 
                 default:
                     return response()->json([
