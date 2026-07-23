@@ -1163,7 +1163,7 @@
         </div>
     </div>
     <div class="modal fade" id="buildingDataModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-sm modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header"
                     style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border-bottom: none;">
