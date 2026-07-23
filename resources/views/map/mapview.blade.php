@@ -3642,6 +3642,7 @@
                 }
 
                 function searchGIS(value) {
+                    console.log("search",value);
                     const v = value.toString().toLowerCase().trim();
                     if (!v) return [];
                     return searchIndex.filter(item =>
