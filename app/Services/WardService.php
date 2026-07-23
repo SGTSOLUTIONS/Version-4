@@ -749,46 +749,53 @@ class WardService
         }
     }
     public function createSingleLine(array $data)
-{
-    try {
+    {
+        try {
 
-        $wardId     = $data['ward_id'];
-        $layerType  = $data['layer_type'];
-        $coordinates = $data['feature'];
+            $wardId      = $data['ward_id'];
+            $layerType   = $data['layer_type'];
+            $coordinates = $data['feature'];
 
-        $tableName = 'lines_' . $wardId;
+            $tableName = 'lines_' . $wardId;
 
-        if (!Schema::hasTable($tableName)) {
-            $this->createLineTable($wardId);
+            if (!Schema::hasTable($tableName)) {
+                $this->createLineTable($wardId);
+            }
+
+            $gisid = $this->generateLineGISID($tableName);
+
+            // If feature comes as JSON string, convert to array
+            if (is_string($coordinates)) {
+                $coordinates = json_decode($coordinates, true);
+            }
+
+            // Wrap one more level
+            $coordinates = [$coordinates];
+
+            DB::table($tableName)->insert([
+                'gisid'       => $gisid,
+                'type'        => $layerType,
+                'coordinates' => json_encode($coordinates),
+                'road_name'   => null,
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            return [
+                'status'  => true,
+                'message' => 'Line created successfully',
+                'gisid'   => $gisid
+            ];
+        } catch (\Exception $e) {
+
+            Log::error($e->getMessage());
+
+            return [
+                'status'  => false,
+                'message' => $e->getMessage()
+            ];
         }
-
-        $gisid = $this->generateLineGISID($tableName);
-
-        DB::table($tableName)->insert([
-            'gisid'       => $gisid,
-            'type'        => $layerType,
-            'coordinates' => [$coordinates],
-            'road_name'   => null,
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
-
-        return [
-            'status'  => true,
-            'message' => 'Line created successfully',
-            'gisid'   => $gisid
-        ];
-
-    } catch (\Exception $e) {
-
-        Log::error('createSingleLine : '.$e->getMessage());
-
-        return [
-            'status'  => false,
-            'message' => $e->getMessage()
-        ];
     }
-}
     /**
      * Generate unique GIS ID for line
      */
