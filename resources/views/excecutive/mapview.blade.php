@@ -158,7 +158,7 @@
             display: none;
             position: absolute;
             right: 0;
-            top: 0px;
+            top: 2px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -1058,151 +1058,7 @@
             const $stack = $('#mapControlsStack');
 
             // ─── CONTROLS INJECTION ───
-
-            // 1. LAYER SWITCHER
-            $stack.append(`
-                <div class="custom-layer-switcher">
-                    <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
-                    <div class="layer-dropdown" id="layerDropdown">
-                        <div class="dropdown-header">Base Maps</div>
-                        <div class="layer-dropdown-item active" data-layer-type="base" data-layer="OpenStreetMap">
-                            <div class="layer-icon"><i class="bi bi-map"></i></div>
-                            <div class="layer-name">OpenStreetMap</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Satellite">
-                            <div class="layer-icon"><i class="bi bi-satellite"></i></div>
-                            <div class="layer-name">Satellite</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Street View">
-                            <div class="layer-icon"><i class="bi bi-signpost-2"></i></div>
-                            <div class="layer-name">Street View</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <div class="dropdown-header">Overlays</div>
-                        <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Drone View">
-                            <div class="layer-icon"><i class="bi bi-camera-drone"></i></div>
-                            <div class="layer-name">Drone View</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <div class="dropdown-header">Vector Layers</div>
-                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Polygons">
-                            <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
-                            <div class="layer-name">Polygons</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Lines">
-                            <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
-                            <div class="layer-name">Lines</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                    </div>
-                </div>
-            `);
-
-            // 2. LOCATION SWITCHER
-            $stack.append(`
-                <div class="custom-location-switcher">
-                    <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
-                    <div class="location-dropdown" id="locationDropdown">
-                        <div class="dropdown-header">Location Tools</div>
-                        <div class="location-dropdown-item" id="liveLocationItem">
-                            <div class="location-item-icon"><i class="bi bi-crosshair2"></i></div>
-                            <div class="location-item-name">Live Location</div>
-                            <div class="location-item-badge" id="liveLocationBadge">OFF</div>
-                        </div>
-                        <div class="location-dropdown-item" id="trackMeItem">
-                            <div class="location-item-icon"><i class="bi bi-broadcast"></i></div>
-                            <div class="location-item-name">Track Me</div>
-                            <div class="location-item-badge" id="trackMeBadge">OFF</div>
-                        </div>
-                        <div class="location-dropdown-item" id="zoomToExtentItem">
-                            <div class="location-item-icon"><i class="bi bi-arrows-angle-expand"></i></div>
-                            <div class="location-item-name">Zoom to Extent</div>
-                        </div>
-                        <div class="location-dropdown-item" id="clearRouteItem">
-                            <div class="location-item-icon"><i class="bi bi-x-circle"></i></div>
-                            <div class="location-item-name">Clear Route</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="location-toast" id="locationToast"></div>
-            `);
-
-            // 3. SEARCH SWITCHER
-            $stack.append(`
-                <div class="custom-search-switcher">
-                    <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
-                    <div class="search-dropdown" id="searchDropdown">
-                        <div class="d-flex border-bottom">
-                            <button type="button" class="btn btn-sm flex-fill search-tab-btn active" data-tab="quick">Quick Search</button>
-                            <button type="button" class="btn btn-sm flex-fill search-tab-btn" data-tab="filter">Filter</button>
-                        </div>
-                        <div class="search-tab-pane" id="quickSearchTab">
-                            <div class="p-3">
-                                <input type="text" id="gisSearchInput" class="form-control" placeholder="Search by GIS ID, Assessment, Owner...">
-                            </div>
-                            <div id="searchResults" class="search-results-container"></div>
-                        </div>
-                        <div class="search-tab-pane" id="filterTab" style="display:none;">
-                            <div class="p-3">
-                                <div class="filter-field-group">
-                                    <label>Assessment Number</label>
-                                    <input type="text" id="filterAssessment" class="form-control" placeholder="Enter assessment number...">
-                                </div>
-                                <div class="filter-field-group">
-                                    <label>Old Assessment</label>
-                                    <input type="text" id="filterOldAssessment" class="form-control" placeholder="Enter old assessment...">
-                                </div>
-                                <div class="filter-field-group">
-                                    <label>Owner Name</label>
-                                    <input type="text" id="filterOwnerName" class="form-control" placeholder="Enter owner name...">
-                                </div>
-                                <div class="filter-field-group">
-                                    <label>Phone Number</label>
-                                    <input type="text" id="filterPhoneNumber" class="form-control" placeholder="Enter phone number...">
-                                </div>
-                                <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn">
-                                    <i class="bi bi-search me-1"></i>Search
-                                </button>
-                            </div>
-                            <div id="filterResults" class="search-results-container"></div>
-                        </div>
-                    </div>
-                </div>
-            `);
-
-            // 4. LABEL TOGGLE
-            $stack.append(`
-                <div class="custom-label-toggle">
-                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
-                        <i class="bi bi-fonts"></i>
-                    </button>
-                </div>
-            `);
-
-            // 5. LEGEND TOGGLE
-            $stack.append(`
-                <div class="custom-legend-toggle">
-                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
-                        <i class="bi bi-list-ul"></i>
-                    </button>
-                </div>
-            `);
-
-            // 6. 3D TOGGLE
-            $stack.append(`
-                <div class="custom-3d-toggle">
-                    <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
-                        <i class="bi bi-box"></i>
-                    </button>
-                </div>
-            `);
-
-            // 7. FILTER TOGGLE
+  // 7. FILTER TOGGLE
             $stack.append(`
                 <div class="custom-filter-toggle">
                     <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
@@ -1354,6 +1210,150 @@
                     </div>
                 </div>
             `);
+
+            // 1. LAYER SWITCHER
+            $stack.append(`
+                <div class="custom-layer-switcher">
+                    <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
+                    <div class="layer-dropdown" id="layerDropdown">
+                        <div class="dropdown-header">Base Maps</div>
+                        <div class="layer-dropdown-item active" data-layer-type="base" data-layer="OpenStreetMap">
+                            <div class="layer-icon"><i class="bi bi-map"></i></div>
+                            <div class="layer-name">OpenStreetMap</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Satellite">
+                            <div class="layer-icon"><i class="bi bi-satellite"></i></div>
+                            <div class="layer-name">Satellite</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item" data-layer-type="base" data-layer="Street View">
+                            <div class="layer-icon"><i class="bi bi-signpost-2"></i></div>
+                            <div class="layer-name">Street View</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">Overlays</div>
+                        <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Drone View">
+                            <div class="layer-icon"><i class="bi bi-camera-drone"></i></div>
+                            <div class="layer-name">Drone View</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">Vector Layers</div>
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Polygons">
+                            <div class="layer-icon"><i class="bi bi-pentagon"></i></div>
+                            <div class="layer-name">Polygons</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Lines">
+                            <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
+                            <div class="layer-name">Lines</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            // 2. LOCATION SWITCHER
+            $stack.append(`
+                <div class="custom-location-switcher">
+                    <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
+                    <div class="location-dropdown" id="locationDropdown">
+                        <div class="dropdown-header">Location Tools</div>
+                        <div class="location-dropdown-item" id="liveLocationItem">
+                            <div class="location-item-icon"><i class="bi bi-crosshair2"></i></div>
+                            <div class="location-item-name">Live Location</div>
+                            <div class="location-item-badge" id="liveLocationBadge">OFF</div>
+                        </div>
+                        <div class="location-dropdown-item" id="trackMeItem">
+                            <div class="location-item-icon"><i class="bi bi-broadcast"></i></div>
+                            <div class="location-item-name">Track Me</div>
+                            <div class="location-item-badge" id="trackMeBadge">OFF</div>
+                        </div>
+                        <div class="location-dropdown-item" id="zoomToExtentItem">
+                            <div class="location-item-icon"><i class="bi bi-arrows-angle-expand"></i></div>
+                            <div class="location-item-name">Zoom to Extent</div>
+                        </div>
+                        <div class="location-dropdown-item" id="clearRouteItem">
+                            <div class="location-item-icon"><i class="bi bi-x-circle"></i></div>
+                            <div class="location-item-name">Clear Route</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="location-toast" id="locationToast"></div>
+            `);
+
+            // 3. SEARCH SWITCHER
+            $stack.append(`
+                <div class="custom-search-switcher">
+                    <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
+                    <div class="search-dropdown" id="searchDropdown">
+                        <div class="d-flex border-bottom">
+                            <button type="button" class="btn btn-sm flex-fill search-tab-btn active" data-tab="quick">Quick Search</button>
+                            <button type="button" class="btn btn-sm flex-fill search-tab-btn" data-tab="filter">Filter</button>
+                        </div>
+                        <div class="search-tab-pane" id="quickSearchTab">
+                            <div class="p-3">
+                                <input type="text" id="gisSearchInput" class="form-control" placeholder="Search by GIS ID, Assessment, Owner...">
+                            </div>
+                            <div id="searchResults" class="search-results-container"></div>
+                        </div>
+                        <div class="search-tab-pane" id="filterTab" style="display:none;">
+                            <div class="p-3">
+                                <div class="filter-field-group">
+                                    <label>Assessment Number</label>
+                                    <input type="text" id="filterAssessment" class="form-control" placeholder="Enter assessment number...">
+                                </div>
+                                <div class="filter-field-group">
+                                    <label>Old Assessment</label>
+                                    <input type="text" id="filterOldAssessment" class="form-control" placeholder="Enter old assessment...">
+                                </div>
+                                <div class="filter-field-group">
+                                    <label>Owner Name</label>
+                                    <input type="text" id="filterOwnerName" class="form-control" placeholder="Enter owner name...">
+                                </div>
+                                <div class="filter-field-group">
+                                    <label>Phone Number</label>
+                                    <input type="text" id="filterPhoneNumber" class="form-control" placeholder="Enter phone number...">
+                                </div>
+                                <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn">
+                                    <i class="bi bi-search me-1"></i>Search
+                                </button>
+                            </div>
+                            <div id="filterResults" class="search-results-container"></div>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            // 4. LABEL TOGGLE
+            $stack.append(`
+                <div class="custom-label-toggle">
+                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
+                        <i class="bi bi-fonts"></i>
+                    </button>
+                </div>
+            `);
+
+            // 5. LEGEND TOGGLE
+            $stack.append(`
+                <div class="custom-legend-toggle">
+                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
+                        <i class="bi bi-list-ul"></i>
+                    </button>
+                </div>
+            `);
+
+            // 6. 3D TOGGLE
+            $stack.append(`
+                <div class="custom-3d-toggle">
+                    <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
+                        <i class="bi bi-box"></i>
+                    </button>
+                </div>
+            `);
+
 
             // 8. FULLSCREEN BUTTONS
             $mapContainer.append(`
