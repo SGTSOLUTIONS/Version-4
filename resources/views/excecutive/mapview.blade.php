@@ -192,7 +192,7 @@
 
         .filter-dropdown {
             width: 420px;
-            max-height: 85vh;
+            /* max-height: 85vh; */
             display: none;
             flex-direction: column;
             overflow: hidden;
