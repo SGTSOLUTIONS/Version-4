@@ -225,7 +225,6 @@
         <button class="ol-header-toggle" id="olToggleBtn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
             <i class="bi bi-list"></i>
         </button>
-
         <nav class="ol-breadcrumb" aria-label="Breadcrumb">
 
             <i class="bi bi-chevron-right"></i>
