@@ -1097,7 +1097,16 @@
             let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
             let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
             let ward = @json($ward ?? [], JSON_HEX_TAG);
-
+            const usageColors = {
+                'RESIDENTIAL': '#4CAF50',
+                'COMMERCIAL': '#2196F3',
+                'INDUSTRIAL': '#FF9800',
+                'INSTITUTIONAL': '#9C27B0',
+                'MIXED': '#F44336',
+                'GOVERNMENT': '#607D8B',
+                'VACANT': '#FFD700',
+                'OTHER': '#9E9E9E'
+            };
             // ─── IMAGE EXTENT ───
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
                 {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
@@ -1185,9 +1194,13 @@
                 const sqft = feature.get('sqfeet') || '0';
                 const polygonData = polygonDatas.find(d => d.gisid == gisid);
 
-                const isFlagged = !!polygonData;
-                const strokeColor = isFlagged ? '#dc3545' : '#0d6efd';
-                const fillColor = isFlagged ? 'rgba(220, 53, 69, 0.15)' : 'rgba(13, 110, 253, 0.15)';
+                // Get building usage from polygonData or feature
+                const buildingUsage = polygonData?.building_usage || feature.get('building_usage') || 'OTHER';
+
+                // Get color from usageColors or use default
+                const strokeColor = usageColors[buildingUsage] || '#0d6efd';
+                const fillColor = polygonData ? `${strokeColor}33` :
+                'rgba(13, 110, 253, 0.15)'; // 33 = 20% opacity in hex
 
                 const showLabels = $('#labelToggleBtn').hasClass('active-label');
 
@@ -2448,44 +2461,52 @@
                 const allSets = [areaGisids, usageGisids, zoneGisids, constructionGisids, buildingTypeGisids,
                         ugdGisids, amenitiesGisids
                     ]
-                    .filter(set => set !== null); // drop filters that are "all" / not active
+                    .filter(set => set !== null);
 
                 let finalGisids;
                 if (allSets.length === 0) {
-                    finalGisids =
-                        null; // no filters active at all (shouldn't happen, anyFilterActive already checked)
+                    finalGisids = null;
                 } else {
                     finalGisids = allSets.reduce((acc, set) => {
                         return new Set([...acc].filter(gisid => set.has(gisid)));
                     });
                 }
 
-                // ── STEP 3: apply styles based on membership in finalGisids ──
+                // ── STEP 3: CLEAR source and add ONLY filtered polygons ──
+                polygonSource.clear();
+
+                // If we have filtered GISIDs, add only those polygons
+                if (finalGisids && finalGisids.size > 0) {
+                    polygons.forEach(poly => {
+                        if (finalGisids.has(poly.gisid)) {
+                            try {
+                                let coords = JSON.parse(poly.coordinates);
+                                const feature = new ol.Feature({
+                                    geometry: new ol.geom.Polygon([coords]),
+                                    gisid: poly.gisid,
+                                    type: 'polygon',
+                                    sqfeet: poly.sqfeet || '0',
+                                    assessment: poly.assessment || '',
+                                    old_assessment: poly.old_assessment || '',
+                                    owner_name: poly.owner_name || '',
+                                    phone_number: poly.phone_number || '',
+                                    originalData: poly
+                                });
+                                feature.setId(poly.gisid);
+                                feature.setStyle(createPolygonStyle(feature));
+                                polygonSource.addFeature(feature);
+                            } catch (e) {
+                                console.error('polygon parse error:', e);
+                            }
+                        }
+                    });
+                }
+
                 const allFeatures = polygonSource.getFeatures();
-                let visibleCount = 0;
-
-                allFeatures.forEach(feature => {
-                    const gisid = feature.get('gisid');
-                    const passesFilters = finalGisids ? finalGisids.has(gisid) : true;
-
-                    if (passesFilters) {
-                        feature.setStyle(createPolygonStyle(feature));
-                        visibleCount++;
-                    } else {
-                        feature.setStyle(new ol.style.Style({
-                            stroke: new ol.style.Stroke({
-                                color: 'rgba(200,200,200,0.2)',
-                                width: 1
-                            }),
-                            fill: new ol.style.Fill({
-                                color: 'rgba(200,200,200,0.05)'
-                            })
-                        }));
-                    }
-                });
+                const visibleCount = allFeatures.length;
+                const total = polygons.length;
 
                 $('#visibleCount').text(visibleCount);
-                const total = allFeatures.length;
                 $('#filterStats').html(
                     `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
 
@@ -2495,6 +2516,8 @@
                 const hiddenCount = total - visibleCount;
                 if (hiddenCount > 0) {
                     showToast(`🔍 Filter applied: ${visibleCount} visible, ${hiddenCount} hidden`, 3000);
+                } else if (visibleCount === 0) {
+                    showToast(`⚠️ No features match the selected filters`, 3000);
                 } else {
                     showToast(`✅ All ${visibleCount} features match the selected filters`, 2000);
                 }
@@ -2513,11 +2536,33 @@
                 $('#maxArea').val(10000);
                 $('#areaRange').val(5000);
 
-                const allFeatures = polygonSource.getFeatures();
-                allFeatures.forEach(feature => {
-                    feature.setStyle(createPolygonStyle(feature));
+                // ── CLEAR source and RELOAD ALL polygons ──
+                polygonSource.clear();
+
+                // Reload all polygons
+                polygons.forEach(poly => {
+                    try {
+                        let coords = JSON.parse(poly.coordinates);
+                        const feature = new ol.Feature({
+                            geometry: new ol.geom.Polygon([coords]),
+                            gisid: poly.gisid,
+                            type: 'polygon',
+                            sqfeet: poly.sqfeet || '0',
+                            assessment: poly.assessment || '',
+                            old_assessment: poly.old_assessment || '',
+                            owner_name: poly.owner_name || '',
+                            phone_number: poly.phone_number || '',
+                            originalData: poly
+                        });
+                        feature.setId(poly.gisid);
+                        feature.setStyle(createPolygonStyle(feature));
+                        polygonSource.addFeature(feature);
+                    } catch (e) {
+                        console.error('polygon parse error:', e);
+                    }
                 });
 
+                const allFeatures = polygonSource.getFeatures();
                 $('#visibleCount').text(allFeatures.length);
                 $('#filterStats').html(
                     `Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`
