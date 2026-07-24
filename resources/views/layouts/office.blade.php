@@ -34,11 +34,11 @@
 
 
     </style>
-<!-- In the head section -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
+    <!-- In the head section -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.2.4/ol.css">
 
-<!-- Before closing body tag -->
-<script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
+    <!-- Before closing body tag -->
+    <script src="https://cdn.jsdelivr.net/npm/ol@v9.2.4/dist/ol.js"></script>
     @stack('styles')
 </head>
 
@@ -65,33 +65,38 @@
         {{-- Navigation --}}
         <nav class="ol-nav">
 
+            {{-- ================= OVERVIEW ================= --}}
             <div class="ol-nav-section">Overview</div>
 
             @auth
+
+                {{-- Dashboard --}}
                 <a href="{{ route(Auth::user()->role . '.dashboard') }}" class="ol-nav-item">
-                    <i class="bi bi-home-1x2"></i>
+                    <i class="bi bi-house-door"></i>
                     <span class="ol-nav-label">Dashboard</span>
                 </a>
 
-                {{-- Surveyor Menu --}}
+                {{-- ================= SURVEYOR ================= --}}
                 @if (Auth::user()->role == 'surveyor')
                     <a href="{{ route('surveyor.status') }}" class="ol-nav-item">
-                        <i class="bi bi-clipboard-data"></i>
+                        <i class="bi bi-clipboard-check"></i>
                         <span class="ol-nav-label">Survey Status</span>
                     </a>
+
                     <a href="{{ route('teamleader.map') }}" class="ol-nav-item">
                         <i class="bi bi-map"></i>
-                        <span class="ol-nav-label">Map</span>
+                        <span class="ol-nav-label">Map View</span>
                     </a>
-                    {{-- Admin Menu --}}
+
+                    {{-- ================= ADMIN ================= --}}
                 @elseif(Auth::user()->role == 'admin')
                     <a href="{{ route('admin.corporations.index') }}" class="ol-nav-item">
-                        <i class="bi bi-info-circle"></i>
+                        <i class="bi bi-building"></i>
                         <span class="ol-nav-label">Corporation Info</span>
                     </a>
 
                     <a href="{{ route('admin.zones.index') }}" class="ol-nav-item">
-                        <i class="bi bi-map"></i>
+                        <i class="bi bi-hexagon"></i>
                         <span class="ol-nav-label">Zones</span>
                     </a>
 
@@ -100,71 +105,60 @@
                         <span class="ol-nav-label">Wards</span>
                     </a>
 
-                    <a href="#" class="ol-nav-item">
-                        <i class="bi bi-bar-chart-line"></i>
-                        <span class="ol-nav-label">Analytics</span>
+                    <a href="{{ route('teamleader.map') }}" class="ol-nav-item">
+                        <i class="bi bi-map"></i>
+                        <span class="ol-nav-label">Map View</span>
                     </a>
-                    <div class="ol-nav-section">User</div>
 
-                    <a href="{{ route('admin.users.index') }}" class="ol-nav-item">
-                        <i class="bi bi-person"></i>
-                        <span class="ol-nav-label">User</span>
-                    </a>
-                     <a href="{{ route('admin.teams.index') }}" class="ol-nav-item">
-                        <i class="bi bi-person"></i>
-                        <span class="ol-nav-label">T    eam</span>
-                    </a>
-                    </div>
-
-                    <div class="ol-nav-section">Revenue</div>
+                    {{-- ================= REVENUE ================= --}}
+                    <div class="ol-nav-section">Revenue Management</div>
 
                     <a href="#" class="ol-nav-item">
-                        <i class="bi bi-currency-rupee"></i>
-                        <span class="ol-nav-label">Collections</span>
-                    </a>
-
-                    <a href="#" class="ol-nav-item">
-                        <i class="bi bi-clipboard2-data"></i>
+                        <i class="bi bi-clipboard-check"></i>
                         <span class="ol-nav-label">Assessments</span>
                     </a>
 
                     <a href="#" class="ol-nav-item">
-                        <i class="bi bi-credit-card-2-front"></i>
-                        <span class="ol-nav-label">Payments</span>
+                        <i class="bi bi-cash-stack"></i>
+                        <span class="ol-nav-label">Revenue Collection</span>
                     </a>
 
                     <a href="#" class="ol-nav-item">
-                        <i class="bi bi-file-earmark-text"></i>
-                        <span class="ol-nav-label">Demand Notices</span>
-                    </a>
-
-                    <div class="ol-nav-section">Records</div>
-
-                    <a href="#" class="ol-nav-item">
-                        <i class="bi bi-people"></i>
-                        <span class="ol-nav-label">Taxpayers</span>
-                    </a>
-
-                    <a href="#" class="ol-nav-item">
-                        <i class="bi bi-house-door"></i>
+                        <i class="bi bi-house"></i>
                         <span class="ol-nav-label">Properties</span>
                     </a>
 
                     <a href="#" class="ol-nav-item">
-                        <i class="bi bi-patch-check"></i>
-                        <span class="ol-nav-label">Certificates</span>
+                        <i class="bi bi-person-x"></i>
+                        <span class="ol-nav-label">Defaulters</span>
                     </a>
 
-                    <div class="ol-nav-section">Administration</div>
-
                     <a href="#" class="ol-nav-item">
-                        <i class="bi bi-file-earmark-bar-graph"></i>
+                        <i class="bi bi-file-earmark-text"></i>
                         <span class="ol-nav-label">Reports</span>
                     </a>
 
                     <a href="#" class="ol-nav-item">
-                        <i class="bi bi-person-badge"></i>
-                        <span class="ol-nav-label">Users</span>
+                        <i class="bi bi-bar-chart-line"></i>
+                        <span class="ol-nav-label">Analytics</span>
+                    </a>
+
+                    {{-- ================= SYSTEM ================= --}}
+                    <div class="ol-nav-section">System</div>
+
+                    <a href="{{ route('admin.users.index') }}" class="ol-nav-item">
+                        <i class="bi bi-people"></i>
+                        <span class="ol-nav-label">User Management</span>
+                    </a>
+
+                    <a href="{{ route('admin.teams.index') }}" class="ol-nav-item">
+                        <i class="bi bi-diagram-3"></i>
+                        <span class="ol-nav-label">Teams</span>
+                    </a>
+
+                    <a href="#" class="ol-nav-item">
+                        <i class="bi bi-journal-text"></i>
+                        <span class="ol-nav-label">System Logs</span>
                     </a>
 
                     <a href="#" class="ol-nav-item">
@@ -172,34 +166,41 @@
                         <span class="ol-nav-label">Settings</span>
                     </a>
 
-                    <a href="#" class="ol-nav-item">
-                        <i class="bi bi-shield-check"></i>
-                        <span class="ol-nav-label">Audit Log</span>
-                    </a>
+                    {{-- ================= TEAM LEADER ================= --}}
                 @elseif(Auth::user()->role == 'teamleader')
                     <a href="{{ route('teamleader.map') }}" class="ol-nav-item">
                         <i class="bi bi-map"></i>
-                        <span class="ol-nav-label">Map</span>
+                        <span class="ol-nav-label">Map View</span>
                     </a>
-                 @elseif(Auth::user()->role == 'commissioner')
+
+                    {{-- ================= COMMISSIONER ================= --}}
+                @elseif(Auth::user()->role == 'commissioner')
                     <a href="{{ route('teamleader.map') }}" class="ol-nav-item">
                         <i class="bi bi-map"></i>
-                        <span class="ol-nav-label">Map</span>
+                        <span class="ol-nav-label">Map View</span>
                     </a>
+
                     <a href="{{ route('commissioner.corporations.index') }}" class="ol-nav-item">
-                        <i class="bi bi-info-circle"></i>
+                        <i class="bi bi-building"></i>
                         <span class="ol-nav-label">Corporation Info</span>
                     </a>
 
                     <a href="{{ route('commissioner.zones.index') }}" class="ol-nav-item">
-                        <i class="bi bi-map"></i>
+                        <i class="bi bi-hexagon"></i>
                         <span class="ol-nav-label">Zones</span>
                     </a>
+
                     <a href="{{ route('commissioner.wards.index') }}" class="ol-nav-item">
                         <i class="bi bi-grid-3x3-gap"></i>
                         <span class="ol-nav-label">Wards</span>
                     </a>
+
+                    <a href="#" class="ol-nav-item">
+                        <i class="bi bi-bar-chart-line"></i>
+                        <span class="ol-nav-label">Analytics</span>
+                    </a>
                 @endif
+
             @endauth
 
         </nav>
