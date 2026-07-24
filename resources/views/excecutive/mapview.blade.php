@@ -1200,7 +1200,7 @@
                 // Get color from usageColors or use default
                 const strokeColor = usageColors[buildingUsage] || '#0d6efd';
                 const fillColor = polygonData ? `${strokeColor}33` :
-                'rgba(13, 110, 253, 0.15)'; // 33 = 20% opacity in hex
+                    'rgba(13, 110, 253, 0.15)'; // 33 = 20% opacity in hex
 
                 const showLabels = $('#labelToggleBtn').hasClass('active-label');
 
@@ -2694,23 +2694,73 @@
                 polygonLayer.changed();
             });
 
-            // Legend Toggle
             $('#legendToggleBtn').on('click', function() {
+
+                const usageLegend = Object.entries(usageColors).map(([usage, color]) => `
+                    <div style="display:flex;align-items:center;margin-bottom:8px;">
+                        <span style="
+                            display:inline-block;
+                            width:20px;
+                            height:20px;
+                            background:${color};
+                            border:2px solid #fff;
+                            border-radius:4px;
+                            margin-right:10px;
+                            box-shadow:0 0 2px rgba(0,0,0,0.4);
+                        "></span>
+                        <strong>${usage}</strong>
+                    </div>
+                `).join('');
+
                 Swal.fire({
-                    title: 'Infrastructure Legend',
+                    title: 'Infrastructure & Usage Legend',
+                    width: 500,
                     html: `
-                        <div style="text-align:left;">
-                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(13,110,253,0.15);border:2px solid #0d6efd;margin-right:10px;"></span> Polygons (Land Parcels)</div>
-                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(220,53,69,0.15);border:2px solid #dc3545;margin-right:10px;"></span> Flagged Parcels</div>
-                            <div><span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span> Lines (Roads)</div>
-                            <div><span style="display:inline-block;width:20px;height:20px;background:rgba(0,0,0,0.3);border-radius:4px;margin-right:10px;"></span> Drone View</div>
-                            <hr>
-                            <div><span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span> Current Location</div>
-                            <div><span style="display:inline-block;width:20px;height:4px;background:#dc3545;border-radius:2px;margin-right:10px;"></span> Track Route</div>
+                    <div style="text-align:left;font-size:14px;">
+
+                        <h6 style="margin-bottom:10px;color:#0d6efd;">Map Layers</h6>
+
+                        <div style="display:flex;align-items:center;margin-bottom:8px;">
+                            <span style="display:inline-block;width:20px;height:20px;background:rgba(13,110,253,0.15);border:2px solid #0d6efd;border-radius:4px;margin-right:10px;"></span>
+                            Polygons (Land Parcels)
                         </div>
-                    `,
+
+                        <div style="display:flex;align-items:center;margin-bottom:8px;">
+                            <span style="display:inline-block;width:20px;height:20px;background:rgba(220,53,69,0.15);border:2px solid #dc3545;border-radius:4px;margin-right:10px;"></span>
+                            Flagged Parcels
+                        </div>
+
+                        <div style="display:flex;align-items:center;margin-bottom:8px;">
+                            <span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span>
+                            Lines (Roads)
+                        </div>
+
+                        <div style="display:flex;align-items:center;margin-bottom:8px;">
+                            <span style="display:inline-block;width:20px;height:20px;background:rgba(0,0,0,0.3);border-radius:4px;margin-right:10px;"></span>
+                            Drone View
+                        </div>
+
+                        <div style="display:flex;align-items:center;margin-bottom:8px;">
+                            <span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span>
+                            Current Location
+                        </div>
+
+                        <div style="display:flex;align-items:center;margin-bottom:8px;">
+                            <span style="display:inline-block;width:20px;height:4px;background:#dc3545;border-radius:2px;margin-right:10px;"></span>
+                            Track Route
+                        </div>
+
+                        <hr style="margin:15px 0;">
+
+                        <h6 style="margin-bottom:10px;color:#198754;">Building Usage Colors</h6>
+
+                        ${usageLegend}
+
+                    </div>
+                `,
                     icon: 'info',
-                    confirmButtonText: 'Close'
+                    confirmButtonText: 'Close',
+                    confirmButtonColor: '#0d6efd'
                 });
             });
 
