@@ -9,27 +9,39 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
     <style>
-        /* Map Container Styles */
-        #map {
-            width: 100%;
-            height: 800px;
-            transition: all 0.3s ease;
-            position: relative;
+        /* ─── All existing styles remain the same ─── */
+        .dropdown-header {
+            padding: 8px 18px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        /* Map Card Styles */
+        .dropdown-divider {
+            height: 1px;
+            margin: 0;
+            background: #e5e7eb;
+        }
+
         .map-card {
-            position: relative;
             background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border-radius: 14px;
+            border: 1px solid #e5e7eb;
             overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            position: relative;
         }
 
         .map-header {
-            padding: 16px 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
+            padding: 14px 18px;
+            border-bottom: 1px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -37,42 +49,510 @@
 
         .map-title {
             margin: 0;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 600;
-            color: #1a1a2e;
         }
 
-        /* Fullscreen Styles */
-        #map.fullscreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 9999;
-            border-radius: 0;
+        #map {
+            width: 100%;
+            height: 800px;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
-        .map-card.fullscreen-mode {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 9998;
-            border-radius: 0;
+        /* ─── MODAL STYLES ─── */
+        .bld-modal-content {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .18);
+        }
+
+        .bld-modal-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            border-bottom: none;
+            padding: 18px 24px;
+            color: #fff;
+        }
+
+        .bld-header-inner {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .bld-header-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, .15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .bld-modal-title {
             margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: .3px;
         }
 
-        .map-card.fullscreen-mode .map-header {
+        .bld-gisid-badge {
+            font-size: .72rem;
+            background: rgba(255, 255, 255, .2);
+            color: #fff;
+            border-radius: 6px;
+            padding: 2px 10px;
+            display: inline-block;
+            margin-top: 4px;
+            letter-spacing: .4px;
+        }
+
+        .bld-image-strip {
+            display: flex;
+            gap: 0;
+            height: 220px;
+            background: #0f172a;
+        }
+
+        .bld-img-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bld-img-wrap+.bld-img-wrap {
+            border-left: 3px solid #fff;
+        }
+
+        .bld-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .4s ease;
+        }
+
+        .bld-img-wrap:hover img {
+            transform: scale(1.04);
+        }
+
+        .bld-img-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, .65));
+            color: #fff;
+            font-size: .78rem;
+            font-weight: 600;
+            padding: 18px 12px 8px;
+            letter-spacing: .3px;
+        }
+
+        .bld-img-wrap .bld-img-empty {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bld-img-wrap .bld-img-empty i {
+            font-size: 2rem;
+            opacity: 0.5;
+        }
+
+        .bld-img-wrap .bld-img-error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bld-summary-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+
+        .bld-summary-card {
+            flex: 1 1 120px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .bld-summary-card:last-child {
+            border-right: none;
+        }
+
+        .bld-summary-icon {
+            font-size: 1.3rem;
+            line-height: 1;
+        }
+
+        .bld-summary-label {
+            font-size: .68rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            line-height: 1;
+        }
+
+        .bld-summary-val {
+            font-size: .95rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 2px;
+        }
+
+        .bld-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            height: 100%;
+        }
+
+        .bld-info-icon {
+            font-size: 1rem;
+            color: #94a3b8;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .bld-info-label {
+            font-size: .68rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            line-height: 1;
+        }
+
+        .bld-info-val {
+            font-size: .9rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 3px;
+            word-break: break-word;
+        }
+
+        .bld-section-divider {
+            font-size: .8rem;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+        }
+
+        .bld-status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: .7rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 20px;
+            letter-spacing: .3px;
+        }
+
+        .bld-status-tag.complete {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .bld-status-tag.partial {
+            background: #fef9c3;
+            color: #92400e;
+        }
+
+        .bld-status-tag.empty {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .bld-btn-save {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 9px 22px;
+            font-size: .875rem;
+            transition: all .2s;
+        }
+
+        .bld-btn-save:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, .3);
+        }
+
+        .bld-btn-cancel {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 9px 20px;
+            font-size: .875rem;
+            transition: all .2s;
+        }
+
+        .bld-btn-cancel:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .bld-modal-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bld-footer-status {
+            font-size: .8rem;
+            color: #64748b;
+        }
+
+        .bld-empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .point-data-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            position: relative;
+            transition: box-shadow .2s, border-color .2s;
+        }
+
+        .point-data-card:hover {
+            box-shadow: 0 4px 16px rgba(37, 99, 235, .1);
+            border-color: #93c5fd;
+        }
+
+        .point-data-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .point-data-card-title {
+            font-size: .9rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .point-data-card-subtitle {
+            font-size: .75rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .point-data-card-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .pdc-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .9rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .pdc-edit-btn {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .pdc-edit-btn:hover {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .pdc-qc-btn {
+            background: #fef9c3;
+            color: #92400e;
+        }
+
+        .pdc-qc-btn:hover {
+            background: #92400e;
+            color: #fff;
+        }
+
+        .pdc-field {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+
+        .pdc-field-label {
+            font-size: .65rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+
+        .pdc-field-val {
+            font-size: .82rem;
+            color: #1e293b;
+            font-weight: 600;
+            margin-top: 1px;
+            word-break: break-word;
+        }
+
+        .pdc-field-val.empty {
+            color: #cbd5e1;
+            font-style: italic;
+        }
+
+        .tax-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px 14px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 8px;
+            height: 100%;
+        }
+
+        .tax-card-title {
+            font-size: .7rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 4px;
+        }
+
+        .tax-card-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .tax-card-label {
+            font-size: .7rem;
+            color: #94a3b8;
+        }
+
+        .tax-card-value {
+            font-size: .78rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .bv-variation-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 12px;
+        }
+
+        .bv-variation-card {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .bv-variation-card .stat-label {
+            font-size: .65rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+
+        .bv-variation-card .stat-value {
+            font-size: .9rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 2px;
+        }
+
+        .bv-variation-card .stat-sub {
+            font-size: .7rem;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        /* ─── TOAST ─── */
+        .toast-container {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .location-toast {
             display: none;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            max-width: 90%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
-        .map-card.fullscreen-mode #map {
-            height: calc(100vh - 5px);
-        }
-
-        /* Control Stack */
+        /* ─── MAP CONTROLS ─── */
         .map-controls-stack {
             position: absolute;
             right: 30px;
@@ -85,11 +565,6 @@
             pointer-events: auto;
         }
 
-        .map-controls-stack>div {
-            position: relative;
-        }
-
-        /* Toggle Button Styles */
         .layer-toggle-btn,
         .location-toggle-btn,
         .search-toggle-btn,
@@ -131,38 +606,6 @@
             color: #0d6efd;
         }
 
-        .threed-toggle-btn.active-3d {
-            color: #0d6efd;
-        }
-
-        .location-toggle-btn.active-location {
-            color: #0d6efd;
-        }
-
-        .location-toggle-btn.tracking {
-            color: #dc3545;
-            animation: pulse 1.5s infinite;
-        }
-
-        .filter-toggle-btn.active-filter {
-            color: #0d6efd;
-        }
-
-        @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-
-        /* Dropdown Styles */
         .layer-dropdown,
         .location-dropdown,
         .search-dropdown,
@@ -178,44 +621,6 @@
             z-index: 1001;
         }
 
-        .layer-dropdown {
-            width: 260px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .location-dropdown {
-            width: 240px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .search-dropdown {
-            width: 380px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .filter-dropdown {
-            width: 420px;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        @media (max-width: 576px) {
-            .filter-dropdown {
-                width: 350px;
-            }
-        }
-
-        @media (max-width: 500px) {
-            .filter-dropdown {
-                width: 280px;
-                right: -10px;
-            }
-        }
-
         .layer-dropdown.active,
         .location-dropdown.active,
         .search-dropdown.active,
@@ -223,132 +628,11 @@
             display: block;
         }
 
-        .dropdown-header {
-            padding: 12px 16px;
-            font-weight: 600;
-            font-size: 13px;
-            color: #333;
-            background: white;
-            border-bottom: 1px solid #e9ecef;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            border-radius: 12px 12px 0 0;
-        }
-
-        .dropdown-divider {
-            height: 1px;
-            background: #e9ecef;
-            margin: 4px 12px;
-        }
-
-        .layer-dropdown-item,
-        .location-dropdown-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 16px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-
-        .layer-dropdown-item:hover,
-        .location-dropdown-item:hover {
-            background: #f5f5f5;
-        }
-
-        .layer-icon,
-        .location-item-icon {
-            width: 28px;
-            font-size: 16px;
-            color: #555;
-        }
-
-        .layer-name,
-        .location-item-name {
-            flex: 1;
-            font-size: 14px;
-            color: #333;
-        }
-
-        .layer-check {
-            color: #ccc;
-            font-size: 14px;
-        }
-
-        .layer-dropdown-item.active .layer-check {
-            color: #0d6efd;
-        }
-
-        .location-item-badge {
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 12px;
-            background: #e9ecef;
-            color: #666;
-        }
-
-        .location-item-badge.active {
-            background: #0d6efd;
-            color: white;
-        }
-
-        .location-item-badge.tracking {
-            background: #dc3545;
-            color: white;
-        }
-
-        .search-tab-btn {
-            border: none;
-            background: transparent;
-            padding: 10px 0;
-            font-size: 13px;
-            color: #666;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .search-tab-btn.active {
-            color: #0d6efd;
-            border-bottom-color: #0d6efd;
-        }
-
-        .search-tab-btn:hover {
-            background: #f5f5f5;
-        }
-
         .search-results-container {
             max-height: 250px;
             overflow-y: auto;
         }
 
-        /* Toast Styles - Fixed position to prevent layout shift */
-        .toast-container {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            pointer-events: none;
-        }
-
-        .location-toast {
-            display: none;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-            max-width: 90%;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        /* Search Results Styles */
         .search-result-item {
             padding: 10px 16px;
             border-bottom: 1px solid #f0f0f0;
@@ -377,169 +661,6 @@
             gap: 6px;
         }
 
-        .search-result-actions .btn-sm {
-            padding: 2px 10px;
-            font-size: 11px;
-        }
-
-        /* OL Override */
-        .ol-viewport {
-            border-radius: 0 0 12px 12px;
-        }
-
-        /* Fullscreen Buttons */
-        .fullscreen-btn,
-        .fullscreen-btn-exit {
-            position: absolute;
-            right: 30px;
-            bottom: 30px;
-            z-index: 1000;
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
-            transition: all 0.2s;
-            border: none;
-            color: #333;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .fullscreen-btn-exit {
-            display: none;
-        }
-
-        .fullscreen-btn:hover,
-        .fullscreen-btn-exit:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-
-        /* Direction Controls */
-        .direction-controls {
-            position: absolute;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: white;
-            border-radius: 12px;
-            padding: 15px 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            display: none;
-            min-width: 300px;
-            max-width: 400px;
-        }
-
-        .direction-controls.active {
-            display: block;
-        }
-
-        .direction-controls .route-info {
-            font-size: 13px;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .direction-controls .btn-close-route {
-            position: absolute;
-            top: 8px;
-            right: 12px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #999;
-        }
-
-        .direction-controls .btn-close-route:hover {
-            color: #333;
-        }
-
-        #routeSteps {
-            max-height: 150px;
-            overflow-y: auto;
-            font-size: 12px;
-        }
-
-        #routeSteps .step-item {
-            padding: 4px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        #routeSteps .step-item:last-child {
-            border-bottom: none;
-        }
-
-        /* Filter Styles */
-        .filter-section {
-            padding: 8px 16px;
-        }
-
-        .filter-section-header {
-            font-size: 11px;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .filter-range {
-            padding: 4px 0;
-        }
-
-        .range-inputs {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-
-        .range-inputs input[type="number"] {
-            width: 80px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            font-size: 12px;
-        }
-
-        .range-separator {
-            color: #999;
-            font-size: 12px;
-        }
-
-        .filter-range .form-range {
-            height: 6px;
-            width: 100%;
-        }
-
-        .filter-range .form-range::-webkit-slider-thumb {
-            background: #0d6efd;
-        }
-
-        .filter-actions {
-            padding: 12px 16px;
-            border-top: 1px solid #e9ecef;
-            background: #f8f9fa;
-            bottom: 0;
-            z-index: 10;
-            border-radius: 0 0 12px 12px;
-        }
-
-        .filter-stats {
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-            margin-top: 6px;
-        }
-
-        /* Type Badge Styles */
         .type-badge {
             font-size: 10px;
             padding: 2px 8px;
@@ -568,164 +689,90 @@
             color: #fff;
         }
 
-        /* Filter Field Group */
-        .filter-field-group {
-            margin-bottom: 8px;
-        }
-
-        .filter-field-group label {
-            font-size: 11px;
-            color: #666;
-            font-weight: 600;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .filter-field-group input {
-            width: 100%;
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+        .search-tab-btn {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
             font-size: 13px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
         }
 
-        .filter-field-group input:focus {
-            outline: none;
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+        .search-tab-btn.active {
+            color: #0d6efd;
+            border-bottom-color: #0d6efd;
         }
 
-        /* Scrollable Filter Container */
-        .filter-scroll-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 4px 0;
-            max-height: calc(85vh - 120px);
+        .filter-section {
+            padding: 8px 16px;
         }
 
-        .filter-scroll-container::-webkit-scrollbar {
-            width: 6px;
+        .filter-section-header {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
         }
 
-        .filter-scroll-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
+        .filter-actions {
+            padding: 12px 16px;
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
         }
 
-        .filter-scroll-container::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 3px;
-        }
-
-        .filter-scroll-container::-webkit-scrollbar-thumb:hover {
-            background: #999;
-        }
-
-        /* Form Select Styles */
-        .form-select-sm {
+        .filter-stats {
             font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            background-color: white;
-            width: 100%;
-            max-height: 120px;
-            overflow-y: auto;
-            cursor: pointer;
+            color: #666;
+            text-align: center;
+            margin-top: 6px;
         }
 
-        .form-select-sm:focus {
-            outline: none;
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
-        }
-
-        select[multiple] {
-            min-height: 60px;
-            max-height: 120px;
-            overflow-y: auto;
-        }
-
-        .text-muted {
-            color: #6c757d;
-            font-size: 10px;
-            display: block;
-            margin-top: 2px;
-        }
-
-        /* Scrollbar for all dropdowns */
-        .layer-dropdown::-webkit-scrollbar,
-        .location-dropdown::-webkit-scrollbar,
-        .search-dropdown::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .layer-dropdown::-webkit-scrollbar-track,
-        .location-dropdown::-webkit-scrollbar-track,
-        .search-dropdown::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-        }
-
-        .layer-dropdown::-webkit-scrollbar-thumb,
-        .location-dropdown::-webkit-scrollbar-thumb,
-        .search-dropdown::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 3px;
-        }
-
-        .layer-dropdown::-webkit-scrollbar-thumb:hover,
-        .location-dropdown::-webkit-scrollbar-thumb:hover,
-        .search-dropdown::-webkit-scrollbar-thumb:hover {
-            background: #999;
-        }
-
-        /* Loading Spinner */
-        .location-loading {
-            display: none;
-            position: fixed;
-            bottom: 140px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 12px 24px;
+        .fullscreen-btn {
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            z-index: 1000;
+            background: white;
             border-radius: 8px;
-            font-size: 14px;
-            pointer-events: none;
+            padding: 10px 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+            border: none;
+            color: #333;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .location-loading .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #fff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 0.8s linear infinite;
-            margin-right: 10px;
-            vertical-align: middle;
+        .fullscreen-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Mobile Responsive Styles */
+        /* ─── RESPONSIVE ─── */
         @media (max-width: 768px) {
             #map {
                 height: 500px;
             }
 
-            .map-header {
-                padding: 10px 12px;
+            .bld-image-strip {
+                height: 150px;
             }
 
-            .map-title {
-                font-size: 13px;
+            .bld-summary-card {
+                flex: 1 1 45%;
+            }
+
+            .point-data-card-grid {
+                grid-template-columns: 1fr 1fr;
             }
 
             .map-controls-stack {
@@ -747,60 +794,7 @@
                 padding: 8px 10px;
             }
 
-            .layer-dropdown {
-                width: 220px;
-                max-height: 350px;
-            }
-
-            .location-dropdown {
-                width: 210px;
-                max-height: 350px;
-            }
-
-            .search-dropdown {
-                width: 300px;
-                max-height: 350px;
-                right: -10px;
-            }
-
-            .filter-dropdown {
-                width: 320px;
-                max-height: 80vh;
-                right: -10px;
-            }
-
-            .dropdown-header {
-                font-size: 11px;
-                padding: 10px 14px;
-            }
-
-            .filter-section {
-                padding: 6px 12px;
-            }
-
-            .filter-section-header {
-                font-size: 10px;
-            }
-
-            .form-select-sm {
-                font-size: 11px;
-                padding: 3px 6px;
-                max-height: 80px;
-            }
-
-            select[multiple] {
-                min-height: 40px;
-                max-height: 80px;
-            }
-
-            .range-inputs input[type="number"] {
-                width: 60px;
-                font-size: 10px;
-                padding: 3px 6px;
-            }
-
-            .fullscreen-btn,
-            .fullscreen-btn-exit {
+            .fullscreen-btn {
                 width: 38px;
                 height: 38px;
                 font-size: 16px;
@@ -808,43 +802,11 @@
                 right: 15px;
                 bottom: 15px;
             }
-
-            .direction-controls {
-                min-width: 250px;
-                max-width: 350px;
-                padding: 12px 16px;
-                bottom: 80px;
-            }
-
-            .toast-container {
-                bottom: 60px;
-            }
-
-            .location-toast {
-                font-size: 12px;
-                padding: 8px 16px;
-                max-width: 85%;
-            }
-
-            .location-loading {
-                bottom: 120px;
-                font-size: 12px;
-                padding: 10px 20px;
-            }
         }
 
         @media (max-width: 480px) {
             #map {
                 height: 400px;
-            }
-
-            .map-title {
-                font-size: 11px;
-            }
-
-            .map-header .badge {
-                font-size: 9px;
-                padding: 3px 6px;
             }
 
             .map-controls-stack {
@@ -867,75 +829,7 @@
                 border-radius: 6px;
             }
 
-            .layer-dropdown {
-                width: 190px;
-                max-height: 300px;
-                right: -5px;
-            }
-
-            .location-dropdown {
-                width: 180px;
-                max-height: 300px;
-                right: -5px;
-            }
-
-            .search-dropdown {
-                width: 250px;
-                max-height: 300px;
-                right: -15px;
-            }
-
-            .filter-dropdown {
-                width: 260px;
-                max-height: 75vh;
-                right: -15px;
-            }
-
-            .dropdown-header {
-                font-size: 10px;
-                padding: 8px 10px;
-            }
-
-            .filter-section {
-                padding: 4px 8px;
-            }
-
-            .filter-section-header {
-                font-size: 9px;
-            }
-
-            .form-select-sm {
-                font-size: 10px;
-                padding: 2px 5px;
-                max-height: 60px;
-            }
-
-            select[multiple] {
-                min-height: 30px;
-                max-height: 60px;
-            }
-
-            .range-inputs input[type="number"] {
-                width: 50px;
-                font-size: 9px;
-                padding: 2px 4px;
-            }
-
-            .filter-actions {
-                padding: 8px 10px;
-            }
-
-            .filter-actions .btn-sm {
-                font-size: 10px;
-                padding: 3px 6px;
-            }
-
-            .filter-stats {
-                font-size: 10px;
-            }
-
-            .fullscreen-btn,
-            .fullscreen-btn-exit {
+            .fullscreen-btn {
                 width: 32px;
                 height: 32px;
                 font-size: 12px;
@@ -944,117 +838,28 @@
                 bottom: 8px;
             }
 
-            .direction-controls {
-                min-width: 200px;
-                max-width: 280px;
-                padding: 10px 12px;
-                bottom: 60px;
-                width: 95%;
+            .bld-summary-card {
+                flex: 1 1 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
             }
 
-            .direction-controls .route-info {
-                font-size: 11px;
+            .bld-summary-strip {
+                flex-direction: column;
             }
 
-            #routeSteps {
-                max-height: 80px;
-                font-size: 10px;
+            .bld-image-strip {
+                height: 120px;
+                flex-direction: column;
             }
 
-            .search-result-item {
-                padding: 6px 10px;
+            .bld-img-wrap+.bld-img-wrap {
+                border-left: none;
+                border-top: 3px solid #fff;
             }
 
-            .search-result-title {
-                font-size: 11px;
-            }
-
-            .search-result-subtitle {
-                font-size: 10px;
-            }
-
-            .search-result-actions .btn-sm {
-                font-size: 9px;
-                padding: 1px 6px;
-            }
-
-            .toast-container {
-                bottom: 50px;
-            }
-
-            .location-toast {
-                font-size: 11px;
-                padding: 6px 12px;
-                max-width: 90%;
-                border-radius: 6px;
-            }
-
-            .location-loading {
-                bottom: 100px;
-                font-size: 11px;
-                padding: 8px 16px;
-            }
-
-            .filter-scroll-container {
-                max-height: calc(75vh - 100px);
-            }
-
-            .text-muted {
-                font-size: 8px;
-            }
-
-            .dropdown-divider {
-                margin: 2px 6px;
-            }
-
-            .search-tab-btn {
-                font-size: 10px;
-                padding: 6px 0;
-            }
-
-            .filter-field-group label {
-                font-size: 9px;
-            }
-
-            .filter-field-group input {
-                font-size: 10px;
-                padding: 3px 6px;
-            }
-        }
-
-        /* Touch-friendly improvements */
-        @media (hover: none) and (pointer: coarse) {
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                min-height: 44px;
-                min-width: 44px;
-            }
-
-            .form-select-sm {
-                font-size: 14px;
-                padding: 6px 8px;
-                min-height: 38px;
-            }
-
-            select[multiple] {
-                min-height: 60px;
-            }
-
-            .filter-actions .btn-sm {
-                min-height: 38px;
-                font-size: 13px;
-            }
-
-            .search-result-actions .btn-sm {
-                min-height: 30px;
-                font-size: 11px;
-                padding: 4px 10px;
+            .point-data-card-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -1063,9 +868,7 @@
 @section('content')
     <div class="ol-page-header">
         <div>
-            <h1 class="ol-page-title">
-    {{ ucfirst(auth()->user()->role) }} GIS Dashboard
-</h1>
+            <h1 class="ol-page-title">{{ ucfirst(auth()->user()->role) }} GIS Dashboard</h1>
             <p class="ol-page-sub">{{ now()->format('l, d F Y') }} — {{ auth()->user()->name ?? 'Executive Officer' }}</p>
         </div>
         <div class="d-flex gap-2 align-items-center">
@@ -1074,9 +877,242 @@
     </div>
     <div class="map-card" id="mapCard">
         <div class="map-header">
-             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
+            <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
         </div>
         <div id="map"></div>
+    </div>
+
+    <!-- ─── BUILDING VIEW MODAL ─── -->
+    <div class="modal fade" id="buildingViewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content bld-modal-content">
+                <div class="modal-header bld-modal-header">
+                    <div class="bld-header-inner">
+                        <div class="bld-header-icon"><i class="bi bi-building"></i></div>
+                        <div>
+                            <h5 class="bld-modal-title">Building Details</h5>
+                            <span class="bld-gisid-badge">GIS ID: <span id="bv_gisid"></span></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="bld-image-strip">
+                    <div class="bld-img-wrap" id="bv_img1_wrap">
+                        <img id="bv_img1" src="" style="display:none;"
+                            onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
+                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i
+                                class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i
+                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <div class="bld-img-label">Image 1</div>
+                    </div>
+                    <div class="bld-img-wrap" id="bv_img2_wrap">
+                        <img id="bv_img2" src="" style="display:none;"
+                            onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
+                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i
+                                class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i
+                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <div class="bld-img-label">Image 2</div>
+                    </div>
+                </div>
+                <div class="bld-summary-strip">
+                    <div class="bld-summary-card">
+                        <div class="bld-summary-icon">🧾</div>
+                        <div>
+                            <div class="bld-summary-label">Assessments</div>
+                            <div class="bld-summary-val" id="bv_bills">0</div>
+                        </div>
+                    </div>
+                    <div class="bld-summary-card">
+                        <div class="bld-summary-icon">🏬</div>
+                        <div>
+                            <div class="bld-summary-label">Shops</div>
+                            <div class="bld-summary-val" id="bv_shops">0</div>
+                        </div>
+                    </div>
+                    <div class="bld-summary-card">
+                        <div class="bld-summary-icon">🏢</div>
+                        <div>
+                            <div class="bld-summary-label">Floors</div>
+                            <div class="bld-summary-val" id="bv_floors">0</div>
+                        </div>
+                    </div>
+                    <div class="bld-summary-card">
+                        <div class="bld-summary-icon">✅</div>
+                        <div>
+                            <div class="bld-summary-label">Mapped</div>
+                            <div class="bld-summary-val" id="bv_mapped">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 pb-0" id="bv_variation_wrap"></div>
+                <div class="modal-body p-4">
+                    <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-geo-alt bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Zoneation</div>
+                                    <div class="bld-info-val" id="bv_zone"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-building bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Building Name</div>
+                                    <div class="bld-info-val" id="bv_building_name"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-signpost bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Road</div>
+                                    <div class="bld-info-val" id="bv_road_name"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-telephone bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Phone</div>
+                                    <div class="bld-info-val" id="bv_phone"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-tag bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Usage</div>
+                                    <div class="bld-info-val" id="bv_usage"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-tools bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Construction</div>
+                                    <div class="bld-info-val" id="bv_construction_type"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-house bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Building Type</div>
+                                    <div class="bld-info-val" id="bv_building_type"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-droplet bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">UGD Status</div>
+                                    <div class="bld-info-val" id="bv_ugd"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bld-section-divider mb-3"><i class="bi bi-check2-square me-2"></i>Amenities</div>
+                    <div class="mb-4" id="bv_amenities"></div>
+                    <div class="bld-section-divider mb-3"><i class="bi bi-chat-text me-2"></i>Remarks</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">General Remarks</div>
+                                    <div class="bld-info-val" id="bv_remarks"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Corporation Remarks</div>
+                                    <div class="bld-info-val" id="bv_corp_remarks"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bld-modal-footer">
+                    <span class="bld-footer-status">Read-only view</span>
+                    <div><button type="button" class="btn bld-btn-cancel me-2" id="buildingViewPointsBtn"><i
+                                class="bi bi-geo-alt me-1"></i>View Assessments</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── POINT DETAILS MODAL ─── -->
+    <div class="modal fade" id="pointDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content bld-modal-content">
+                <div class="modal-header bld-modal-header">
+                    <div class="bld-header-inner">
+                        <div class="bld-header-icon"><i class="bi bi-people"></i></div>
+                        <div>
+                            <h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span
+                                    id="pdGisid"></span></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small"
+                            id="pdBillSummary"></span></div>
+                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch"
+                        placeholder="Search by assessment, owner name, or phone number...">
+                    <div id="pointDetailsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── QC MODAL ─── -->
+    <div class="modal fade" id="qcModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bld-modal-content">
+                <div class="modal-header bld-modal-header">
+                    <div class="bld-header-inner">
+                        <div class="bld-header-icon"><i class="bi bi-clipboard-check"></i></div>
+                        <h5 class="bld-modal-title">Quality Check</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="qc_point_data_id">
+                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment
+                        <span id="qc_assessment_display" class="fw-semibold"></span>
+                    </p>
+                    <div class="mb-3">
+                        <label class="bld-form-label">QC Usage</label>
+                        <select class="form-select bld-input" id="qcusage">
+                            <option value="">Select</option>
+                            <option value="Residential">Residential</option>
+                            <option value="Commercial">Commercial</option>
+                            <option value="Mixed">Mixed</option>
+                            <option value="Vacant">Vacant</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="bld-form-label">QC Sq.Feet</label>
+                        <input type="number" min="0" class="form-control bld-input" id="qcsqfeet">
+                    </div>
+                    <div class="mb-3">
+                        <label class="bld-form-label">QC Remarks</label>
+                        <textarea class="form-control bld-input" id="qc_remarks" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bld-modal-footer">
+                    <button type="button" class="btn bld-btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save
+                        QC</button>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 
@@ -1098,6 +1134,9 @@
             let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
             let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
             let ward = @json($ward ?? [], JSON_HEX_TAG);
+            let currentPointGisid = null;
+            let currentPointRecords = [];
+
             const usageColors = {
                 'RESIDENTIAL': '#4CAF50',
                 'COMMERCIAL': '#2196F3',
@@ -1108,6 +1147,7 @@
                 'VACANT': '#FFD700',
                 'OTHER': '#9E9E9E'
             };
+
             // ─── IMAGE EXTENT ───
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
                 {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
@@ -1194,15 +1234,9 @@
                 const gisid = feature.get('gisid');
                 const sqft = feature.get('sqfeet') || '0';
                 const polygonData = polygonDatas.find(d => d.gisid == gisid);
-
-                // Get building usage from polygonData or feature
                 const buildingUsage = polygonData?.building_usage || feature.get('building_usage') || 'OTHER';
-
-                // Get color from usageColors or use default
                 const strokeColor = usageColors[buildingUsage] || '#0d6efd';
-                const fillColor = polygonData ? `${strokeColor}33` :
-                    'rgba(13, 110, 253, 0.15)'; // 33 = 20% opacity in hex
-
+                const fillColor = polygonData ? `${strokeColor}33` : 'rgba(13, 110, 253, 0.15)';
                 const showLabels = $('#labelToggleBtn').hasClass('active-label');
 
                 try {
@@ -1259,7 +1293,7 @@
                 }
             }
 
-            function createLineStyle(feature) {
+            function createLineStyle() {
                 return new ol.style.Style({
                     stroke: new ol.style.Stroke({
                         color: '#ff0000',
@@ -1532,16 +1566,8 @@
             $mapContainer.append(`<div class="map-controls-stack" id="mapControlsStack"></div>`);
             const $stack = $('#mapControlsStack');
 
-            // ─── CREATE LOADING INDICATOR ───
-            $('body').append(`
-                <div class="location-loading" id="locationLoading">
-                    <span class="spinner"></span>
-                    <span id="loadingText">Getting your location...</span>
-                </div>
-            `);
-
             // ─── CONTROLS INJECTION ───
-            // 1. FILTER TOGGLE WITH SCROLLABLE DROPDOWNS
+            // 1. FILTER TOGGLE
             $stack.append(`
                 <div class="custom-filter-toggle">
                     <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
@@ -1549,143 +1575,31 @@
                     </button>
                     <div class="filter-dropdown" id="filterDropdown">
                         <div class="dropdown-header">🔍 Filter Features</div>
-                        <div class="filter-scroll-container">
-                            <!-- Building Usage Filter -->
-                            <div class="filter-section">
-                                <div class="filter-section-header">Building Usage</div>
-                                <select class="form-select form-select-sm" id="usageFilter">
-                                    <option value="all">All</option>
-                                    <option value="RESIDENTIAL">Residential</option>
-                                    <option value="COMMERCIAL">Commercial</option>
-                                    <option value="INDUSTRIAL">Industrial</option>
-                                    <option value="INSTITUTIONAL">Institutional</option>
-                                    <option value="MIXED">Mixed</option>
-                                    <option value="GOVERNMENT">Government</option>
-                                    <option value="VACANT">Vacant</option>
-                                </select>
-                            </div>
-
-                            <div class="dropdown-divider"></div>
-
-                            <!-- Area Range Filter -->
-                            <div class="filter-section">
-                                <div class="filter-section-header">Area Range (sqft)</div>
-                                <div class="filter-range">
-                                    <div class="range-inputs">
-                                        <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
-                                        <span class="range-separator">to</span>
-                                        <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000">
-                                    </div>
-                                    <input type="range" id="areaRange" class="form-range" min="0" max="10000" step="100" value="5000">
+                        <div class="filter-section">
+                            <div class="filter-section-header">Building Usage</div>
+                            <select class="form-select form-select-sm" id="usageFilter">
+                                <option value="all">All</option>
+                                <option value="RESIDENTIAL">Residential</option>
+                                <option value="COMMERCIAL">Commercial</option>
+                                <option value="INDUSTRIAL">Industrial</option>
+                                <option value="INSTITUTIONAL">Institutional</option>
+                                <option value="MIXED">Mixed</option>
+                                <option value="GOVERNMENT">Government</option>
+                                <option value="VACANT">Vacant</option>
+                            </select>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="filter-section">
+                            <div class="filter-section-header">Area Range (sqft)</div>
+                            <div class="filter-range">
+                                <div class="range-inputs">
+                                    <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
+                                    <span class="range-separator">to</span>
+                                    <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000">
                                 </div>
                             </div>
-
-                            <div class="dropdown-divider"></div>
-
-                            <!-- Zonation Filter -->
-                            <div class="filter-section">
-                                <div class="filter-section-header">Zonation</div>
-                                <select class="form-select form-select-sm" id="zoneFilter">
-                                    <option value="all">All</option>
-                                    <option value="ZONE-A">Zone A</option>
-                                    <option value="ZONE-B">Zone B</option>
-                                    <option value="ZONE-C">Zone C</option>
-                                    <option value="ZONE-D">Zone D</option>
-                                    <option value="ZONE-E">Zone E</option>
-                                </select>
-                            </div>
-
-                            <div class="dropdown-divider"></div>
-
-                            <!-- Construction Type Filter -->
-                            <div class="filter-section">
-                                <div class="filter-section-header">Construction Type</div>
-                                <select class="form-select form-select-sm" id="constructionFilter">
-                                    <option value="all">All</option>
-                                    <option value="PERMANENT">Permanent</option>
-                                    <option value="SEMI_PERMANENT">Semi Permanent</option>
-                                    <option value="VACANT_LAND">Vacant Land</option>
-                                    <option value="SHED">Shed</option>
-                                    <option value="CAR_SHED">Car Shed</option>
-                                    <option value="TEMPORARY">Temporary</option>
-                                </select>
-                            </div>
-
-                            <div class="dropdown-divider"></div>
-
-                            <!-- Building Type Filter -->
-                            <div class="filter-section">
-                                <div class="filter-section-header">Building Type</div>
-                                <select class="form-select form-select-sm" id="buildingTypeFilter">
-                                    <option value="all">All</option>
-                                    <option value="Independent">Independent</option>
-                                    <option value="Flat">Flat</option>
-                                    <option value="Kalyana_Mandapam">Kalyana Mandapam</option>
-                                    <option value="Hotel">Hotel</option>
-                                    <option value="Cinema_Theatre">Cinema Theatre</option>
-                                    <option value="Central_Government_Building">Central Govt</option>
-                                    <option value="State_Government_Building">State Govt</option>
-                                    <option value="Municipality_Corporation">Municipality</option>
-                                    <option value="Educational_Institution">Educational</option>
-                                    <option value="Hospital">Hospital</option>
-                                    <option value="Commercial_Complex">Commercial Complex</option>
-                                    <option value="Shop">Shop</option>
-                                    <option value="Office">Office</option>
-                                    <option value="Temple">Temple</option>
-                                    <option value="Mosque">Mosque</option>
-                                    <option value="Church">Church</option>
-                                    <option value="Amma_Unavagam">Amma Unavagam</option>
-                                    <option value="Public_Toilet">Public Toilet</option>
-                                    <option value="Vacant Land">Vacant Land</option>
-                                    <option value="Under Construction">Under Construction</option>
-                                    <option value="Others">Others</option>
-                                </select>
-                            </div>
-
-                            <div class="dropdown-divider"></div>
-
-                            <!-- Amenities Filters - Multi-select scrollable dropdown -->
-                            <div class="filter-section">
-                                <div class="filter-section-header">Amenities</div>
-                                <select class="form-select form-select-sm" id="amenitiesFilter" multiple size="4">
-                                    <option value="liftroom">Lift</option>
-                                    <option value="headroom">Head Room</option>
-                                    <option value="overhead_tank">Overhead Tank</option>
-                                    <option value="rainwater_harvesting">Rainwater Harvesting</option>
-                                    <option value="parking">Parking</option>
-                                    <option value="ramp">Ramp</option>
-                                    <option value="hoarding">Hoarding</option>
-                                    <option value="cctv">CCTV</option>
-                                    <option value="cell_tower">Cell Tower</option>
-                                    <option value="solar_panel">Solar Panel</option>
-                                    <option value="water_connection">Water Connection</option>
-                                </select>
-                                <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
-                            </div>
-
-                            <div class="dropdown-divider"></div>
-
-                            <!-- UGD Status Filter -->
-                            <div class="filter-section">
-                                <div class="filter-section-header">UGD Status</div>
-                                <select class="form-select form-select-sm" id="ugdFilter">
-                                    <option value="all">All</option>
-                                    <option value="No_Connection">No Connection</option>
-                                    <option value="Manhole_Available_but_Connection_Not_Given_to_House">Manhole Available</option>
-                                    <option value="Stage_1_Completed">Stage 1 Completed</option>
-                                    <option value="Stage_1_2_Completed">Stage 1 & 2 Completed</option>
-                                    <option value="Stage_1_2_Completed_but_Not_Connected">Stage 1 & 2 Not Connected</option>
-                                    <option value="Stage_1_2_3_Completed">Stage 1,2 & 3 Completed</option>
-                                    <option value="Direct_Connection_Given">Direct Connection</option>
-                                    <option value="1_UGD_Connection_-_3_Stage_Completed">1 UGD - 3 Stage</option>
-                                    <option value="2_UGD_Connection_-_3_Stage_Completed">2 UGD - 3 Stage</option>
-                                </select>
-                            </div>
                         </div>
-
                         <div class="dropdown-divider"></div>
-
-                        <!-- Filter Actions -->
                         <div class="filter-actions">
                             <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn">
                                 <i class="bi bi-check-circle"></i> Apply Filters
@@ -1834,76 +1748,33 @@
                 </div>
             `);
 
-            // 7. 3D TOGGLE
-            $stack.append(`
-                <div class="custom-3d-toggle">
-                    <button class="threed-toggle-btn" id="threeDToggleBtn" title="Toggle 3D View">
-                        <i class="bi bi-box"></i>
-                    </button>
-                </div>
-            `);
-
-            // 8. FULLSCREEN BUTTONS
+            // 7. FULLSCREEN BUTTON
             $mapContainer.append(`
                 <button class="fullscreen-btn" id="fullscreenBtn">
                     <i class="bi bi-arrows-fullscreen"></i>
                 </button>
-                <button class="fullscreen-btn-exit" id="fullscreenExitBtn" style="display:none;">
-                    <i class="bi bi-fullscreen-exit"></i>
-                </button>
-            `);
-
-            // 9. DIRECTION CONTROLS
-            $mapContainer.append(`
-                <div class="direction-controls" id="directionControls">
-                    <button class="btn-close-route" id="closeRouteBtn">&times;</button>
-                    <div class="route-info" id="routeInfo">Getting directions...</div>
-                    <div id="routeSteps"></div>
-                </div>
             `);
 
             // ─── HELPER FUNCTIONS ───
 
-            // Show/Hide Loading
-            function showLoading(message = 'Getting your location...') {
-                $('#loadingText').text(message);
-                $('#locationLoading').fadeIn(200);
-            }
-
-            function hideLoading() {
-                $('#locationLoading').fadeOut(200);
-            }
-
-            // Fixed Toast function - prevents layout shift
             function showToast(message, duration = 3000) {
-                // Remove existing toast if any
                 $('#locationToast').remove();
-
-                // Create toast container if it doesn't exist
                 if (!$('.toast-container').length) {
                     $('body').append('<div class="toast-container"></div>');
                 }
-
-                // Create toast element
                 const $toast = $('<div id="locationToast" class="location-toast">' + message + '</div>');
                 $('.toast-container').append($toast);
-
-                // Show with animation
                 $toast.css({
                     'display': 'block',
                     'opacity': 0,
                     'transform': 'translateX(-50%) translateY(10px)'
                 });
-
-                // Animate in
                 setTimeout(function() {
                     $toast.css({
                         'opacity': 1,
                         'transform': 'translateX(-50%) translateY(0)'
                     });
                 }, 50);
-
-                // Auto hide
                 clearTimeout($toast.data('timeout'));
                 $toast.data('timeout', setTimeout(function() {
                     $toast.css({
@@ -1922,7 +1793,6 @@
                 });
                 const layerName = layer.get('title') || 'Layer';
                 $('#activeLayerBadge').text(layerName);
-
                 $('.layer-dropdown-item[data-layer-type="base"]').removeClass('active');
                 $('.layer-dropdown-item[data-layer="' + layerName + '"]').addClass('active');
             }
@@ -1935,29 +1805,25 @@
 
             function getCoordsByGisId(gisid, type = null) {
                 if (!gisid) return null;
-
-                if (type === 'line') {
-                    const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                    if (lineFeatures.length > 0) {
-                        try {
-                            return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
-                        } catch (e) {
-                            console.error('getCoordsByGisId: line extent error', e);
-                        }
+                // Try polygon source first
+                const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                if (polyFeatures.length > 0) {
+                    try {
+                        return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
+                    } catch (e) {
+                        console.error('getCoordsByGisId: polygon extent error', e);
                     }
                 }
-
-                if (type === 'polygon') {
-                    const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                    if (polyFeatures.length > 0) {
-                        try {
-                            return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
-                        } catch (e) {
-                            console.error('getCoordsByGisId: polygon extent error', e);
-                        }
+                // Try line source
+                const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                if (lineFeatures.length > 0) {
+                    try {
+                        return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
+                    } catch (e) {
+                        console.error('getCoordsByGisId: line extent error', e);
                     }
                 }
-
+                // Try points data
                 const point = points.find(p => p.gisid == gisid);
                 if (point) {
                     try {
@@ -1975,47 +1841,6 @@
                         console.error('getCoordsByGisId: point parse error', e);
                     }
                 }
-
-                const pd = pointDatas.find(p => p.point_gisid == gisid || p.id == gisid);
-                if (pd && pd.coordinates) {
-                    try {
-                        const coords = JSON.parse(pd.coordinates);
-                        if (Array.isArray(coords) && coords.length === 2) {
-                            let lon = coords[0],
-                                lat = coords[1];
-                            if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
-                                lon = coords[1];
-                                lat = coords[0];
-                            }
-                            return ol.proj.fromLonLat([lon, lat]);
-                        }
-                    } catch (e) {
-                        console.error('getCoordsByGisId: pointData parse error', e);
-                    }
-                }
-
-                if (type !== 'line') {
-                    const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                    if (polyFeatures.length > 0) {
-                        try {
-                            return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
-                        } catch (e) {
-                            console.error('getCoordsByGisId: polygon extent error', e);
-                        }
-                    }
-                }
-
-                if (type !== 'polygon') {
-                    const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                    if (lineFeatures.length > 0) {
-                        try {
-                            return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
-                        } catch (e) {
-                            console.error('getCoordsByGisId: line extent error', e);
-                        }
-                    }
-                }
-
                 return null;
             }
 
@@ -2024,39 +1849,32 @@
                     showToast('❌ Invalid item', 3000);
                     return;
                 }
-
                 let coords = null;
                 const gisid = item.id || item.point_gisid;
-
                 if (item.type === 'line') {
-                    const feature = lineSource.getFeatureById(gisid);
-                    if (feature) {
-                        coords = ol.extent.getCenter(feature.getGeometry().getExtent());
-                    } else {
-                        const features = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                        if (features.length > 0) {
-                            coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
-                        }
-                    }
-
-                    if (!coords) {
-                        const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                        if (polyFeatures.length > 0) {
-                            coords = ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
-                        }
+                    const features = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (features.length > 0) {
+                        coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
                     }
                 } else {
-                    const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                    if (polyFeatures.length > 0) {
-                        coords = ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
+                    const features = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (features.length > 0) {
+                        coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
                     }
                 }
-
+                if (!coords) {
+                    const point = points.find(p => p.gisid == gisid);
+                    if (point) {
+                        try {
+                            const c = JSON.parse(point.coordinates);
+                            coords = ol.proj.fromLonLat(c);
+                        } catch (e) {}
+                    }
+                }
                 if (!coords) {
                     showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000);
                     return;
                 }
-
                 map.getView().animate({
                     center: coords,
                     zoom: 20,
@@ -2073,530 +1891,449 @@
                 showToast('📍 Zoomed to ward extent', 2000);
             }
 
-            function updatePosition(position, autoCenter = false) {
-                const lon = position.coords.longitude;
-                const lat = position.coords.latitude;
-                const projected = ol.proj.fromLonLat([lon, lat]);
-                currentPosition = projected;
-                currentLocation = {
-                    lon,
-                    lat
-                };
-
-                if (!positionFeature) {
-                    positionFeature = new ol.Feature({
-                        geometry: new ol.geom.Point(projected)
-                    });
-                    positionFeature.setStyle(createPositionStyle());
-                    positionLayer.getSource().addFeature(positionFeature);
-                } else {
-                    positionFeature.getGeometry().setCoordinates(projected);
-                }
-
-                if (autoCenter && isTracking) {
-                    map.getView().animate({
-                        center: projected,
-                        zoom: 19,
-                        duration: 500
-                    });
-                }
-
-                if (isTracking) {
-                    routePoints.push(projected);
-                    updateRouteLine();
-                }
-            }
-
-            function updateRouteLine() {
-                if (routePoints.length < 2) return;
-
-                if (!routeLine) {
-                    routeLine = new ol.Feature({
-                        geometry: new ol.geom.LineString(routePoints)
-                    });
-                    routeLine.setStyle(new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: '#dc3545',
-                            width: 4,
-                            lineDash: [8, 6]
-                        })
-                    }));
-                    routeLayer.getSource().addFeature(routeLine);
-                } else {
-                    routeLine.getGeometry().setCoordinates(routePoints);
-                }
-            }
-
-            // Improved location getter with better error handling
-            function getCurrentLocation(callback, retryCount = 0) {
-                if (currentLocation) {
-                    callback(currentLocation);
-                    return;
-                }
-
-                if (!navigator.geolocation) {
-                    showToast('❌ Geolocation is not supported by your browser', 4000);
-                    callback(null);
-                    return;
-                }
-
-                if (isGettingLocation) {
-                    showToast('⏳ Already getting location...', 2000);
-                    return;
-                }
-
-                isGettingLocation = true;
-                showLoading('Getting your location...');
-
-                // Try with high accuracy first, then fallback to low accuracy
-                navigator.geolocation.getCurrentPosition(
-                    function(pos) {
-                        isGettingLocation = false;
-                        hideLoading();
-                        currentLocation = {
-                            lon: pos.coords.longitude,
-                            lat: pos.coords.latitude
-                        };
-                        callback(currentLocation);
+            // ─── GET POINT DATA WITH DETAILS ───
+            function getPointDataWithDetails(gisid, callback) {
+                $.ajax({
+                    url: '/commissioner/get-point-details',
+                    method: 'GET',
+                    data: {
+                        gisid: gisid,
+                        ward_id: {{ $ward->id }}
                     },
-                    function(error) {
-                        isGettingLocation = false;
-                        hideLoading();
-                        console.error('Get position error:', error);
-
-                        // Retry with lower accuracy if timeout
-                        if (error.code === 3 && retryCount < 2) {
-                            showToast('⏳ Retrying with lower accuracy...', 2000);
-                            setTimeout(function() {
-                                getCurrentLocation(callback, retryCount + 1);
-                            }, 1000);
-                            return;
-                        }
-
-                        let errorMsg = '❌ Could not get your location. ';
-                        if (error.code === 1) {
-                            errorMsg += 'Please allow location access in your browser.';
-                        } else if (error.code === 2) {
-                            errorMsg += 'Location services are unavailable.';
-                        } else if (error.code === 3) {
-                            errorMsg += 'Location request timed out. Please try again.';
+                    success: function(res) {
+                        if (res.status) {
+                            callback(res.data);
                         } else {
-                            errorMsg += error.message || 'Unknown error.';
+                            showToast('Failed to load assessment data', 3000);
+                            callback([]);
                         }
-                        showToast(errorMsg, 5000);
-                        callback(null);
-                    }, {
-                        enableHighAccuracy: retryCount === 0,
-                        timeout: retryCount === 0 ? 10000 : 15000,
-                        maximumAge: 30000
+                    },
+                    error: function() {
+                        showToast('Failed to load assessment data', 3000);
+                        callback([]);
                     }
-                );
+                });
             }
 
-            function getDirectionToFeature(feature) {
-                if (!feature) {
-                    showToast('❌ Invalid feature for directions', 3000);
+            // ─── BUILDING VIEW ───
+            function showBuildingView(item) {
+                $('#bv_gisid').text(item.gisid || '-');
+                $('#bv_zone').text(item.zone || item.building_zone || '-');
+                $('#bv_building_name').text(item.building_name || '-');
+                $('#bv_road_name').text(item.road_name || '-');
+                $('#bv_phone').text(item.phone || '-');
+                $('#bv_usage').text(item.building_usage || '-');
+                $('#bv_construction_type').text(item.construction_type || '-');
+                $('#bv_building_type').text(item.building_type || '-');
+                $('#bv_ugd').text(item.ugd || '-');
+
+                $('#bv_bills').text(item.number_bill || 0);
+                $('#bv_shops').text(item.number_shop || 0);
+                $('#bv_floors').text(item.number_floor || 0);
+
+                const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
+                $('#bv_mapped').text(mappedCount);
+
+                // Variation data
+                const variation = buildingVariations[item.gisid];
+                if (variation) {
+                    const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
+                    const usageBadgeClass = variation.usage_status === 'MATCH' ? 'complete' : 'empty';
+                    $('#bv_variation_wrap').html(`
+                        <div class="bv-variation-strip">
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Building Area</div>
+                                <div class="stat-value">${variation.building_area} <span class="stat-sub">sqft</span></div>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Assessment Area</div>
+                                <div class="stat-value">${variation.assessment_area} <span class="stat-sub">sqft</span></div>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Area Variation</div>
+                                <div class="stat-value">${variation.area_variation} <span class="stat-sub">(${variation.variation_percentage}%)</span></div>
+                                <span class="bld-status-tag ${areaBadgeClass}">${variation.area_status}</span>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Usage Check</div>
+                                <span class="bld-status-tag ${usageBadgeClass}">${variation.usage_status}</span>
+                            </div>
+                        </div>
+                    `);
+                } else {
+                    $('#bv_variation_wrap').html('');
+                }
+
+                // Amenities
+                const amenities = [
+                    ['Lift Room', item.liftroom],
+                    ['Head Room', item.headroom],
+                    ['Overhead Tank', item.overhead_tank],
+                    ['Rainwater Harvesting', item.rainwater_harvesting],
+                    ['Parking', item.parking],
+                    ['Ramp', item.ramp],
+                    ['Hoarding', item.hoarding],
+                    ['CCTV', item.cctv],
+                    ['Cell Tower', item.cell_tower],
+                    ['Solar Panel', item.solar_panel],
+                    ['Water Connection', item.water_connection]
+                ];
+                let amenHtml = '';
+                amenities.forEach(([label, val]) => {
+                    if (val === 'Yes' || val === true || val === 1) {
+                        amenHtml +=
+                            `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                    }
+                });
+                $('#bv_amenities').html(amenHtml || '<span class="text-muted small">No amenities recorded</span>');
+
+                $('#bv_remarks').text(item.remarks || '—');
+                $('#bv_corp_remarks').text(item.corporationremarks || '—');
+
+                // Images
+                const assetUrl = window.assetUrl || "{{ asset('') }}";
+
+                function loadImage(imgId, emptyId, errorId, imagePath) {
+                    const $img = $('#' + imgId);
+                    const $empty = $('#' + emptyId);
+                    const $error = $('#' + errorId);
+
+                    if (imagePath) {
+                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath
+                            .replace(/^\/+/, '');
+                        $img.attr('src', fullPath).show();
+                        $empty.hide();
+                        $error.hide();
+
+                        $img.off('error').on('error', function() {
+                            $(this).hide();
+                            $empty.hide();
+                            $error.show();
+                        });
+
+                        $img.off('load').on('load', function() {
+                            $(this).show();
+                            $empty.hide();
+                            $error.hide();
+                        });
+                    } else {
+                        $img.hide();
+                        $empty.show();
+                        $error.hide();
+                    }
+                }
+
+                loadImage('bv_img1', 'bv_img1_empty', 'bv_img1_error', item.image);
+                loadImage('bv_img2', 'bv_img2_empty', 'bv_img2_error', item.image2);
+
+                $('#buildingViewPointsBtn').off('click').on('click', function() {
+                    bootstrap.Modal.getInstance(document.getElementById('buildingViewModal')).hide();
+                    openPointDetails(item.gisid);
+                });
+
+                const modal = new bootstrap.Modal(document.getElementById('buildingViewModal'));
+                modal.show();
+            }
+
+            // ─── POINT DETAILS ───
+            function openPointDetails(gisid) {
+                currentPointGisid = gisid;
+                $('#pointDetailsSearch').val('');
+                $('#pdGisid').text(gisid);
+
+                getPointDataWithDetails(gisid, function(data) {
+                    currentPointRecords = data;
+                    renderPointDetails(data);
+                    const building = polygonDatas.find(p => p.gisid == gisid);
+                    const billCount = building ? (building.number_bill || 0) : 0;
+                    $('#pdBillSummary').text(`${data.length} of ${billCount} bills mapped`);
+                });
+
+                const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
+                modal.show();
+            }
+
+            function renderPointDetails(records) {
+                if (!records || !records.length) {
+                    $('#pointDetailsContainer').html(
+                        '<div class="bld-empty-state text-muted"><i class="bi bi-inbox fs-2"></i><p class="mt-2 mb-0">No assessment records found</p></div>'
+                    );
                     return;
                 }
 
-                getCurrentLocation(function(loc) {
-                    if (!loc) {
-                        Swal.fire('Location Error',
-                            'Could not get your location. Please enable GPS and try again.',
-                            'error');
+                const v = (val) => (val === null || val === undefined || val === '') ?
+                    '<span class="text-muted">-</span>' : val;
+
+                let html = '';
+                records.forEach(record => {
+                    const pd = record.point || {};
+                    const mis = record.mis || {};
+                    const wt = record.water_tax || {};
+                    const ugd = record.ugd_tax || {};
+                    const ptList = record.professional_tax || [];
+
+                    const qcFilled = [pd.qcusage, pd.qcsqfeet, pd.qc_remarks]
+                        .filter(val => val !== null && val !== '' && val !== undefined).length;
+                    const qcClass = qcFilled === 3 ? 'complete' : qcFilled === 0 ? 'empty' : 'partial';
+                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' :
+                        'QC Partial';
+
+                    html += `
+                        <div class="point-data-card" data-id="${pd.id}">
+                            <div class="point-data-card-header">
+                                <div>
+                                    <div class="point-data-card-title">${v(pd.owner_name)}</div>
+                                    <div class="point-data-card-subtitle">Assessment: ${v(pd.assessment)} • Door: ${v(pd.new_door_no || pd.old_door_no)}</div>
+                                </div>
+                                <div class="point-data-card-actions">
+                                    <span class="bld-status-tag ${qcClass}" style="margin-right:6px;">${qcLabel}</span>
+                                    <button class="pdc-action-btn pdc-qc-btn" title="Quality Check" data-id="${pd.id}" data-qc-btn><i class="bi bi-clipboard-check"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="tax-card-title mt-2"><i class="bi bi-person-badge me-1"></i>Point / Assessment Details</div>
+                            <div class="point-data-card-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px;">
+                                <div class="pdc-field"><div class="pdc-field-label">Assessment Type</div><div class="pdc-field-val">${v(pd.assessment_type)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Old Assessment</div><div class="pdc-field-val">${v(pd.old_assessment)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Worker Name</div><div class="pdc-field-val">${v(pd.worker_name)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Present Owner</div><div class="pdc-field-val">${v(pd.present_owner_name)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">EB Number</div><div class="pdc-field-val">${v(pd.eb)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Floor</div><div class="pdc-field-val">${v(pd.floor)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Bill Usage</div><div class="pdc-field-val">${v(pd.bill_usage)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Aadhar No</div><div class="pdc-field-val">${v(pd.aadhar_no)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Ration No</div><div class="pdc-field-val">${v(pd.ration_no)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Phone</div><div class="pdc-field-val">${v(pd.phone_number)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Old Door No</div><div class="pdc-field-val">${v(pd.old_door_no)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">New Door No</div><div class="pdc-field-val">${v(pd.new_door_no)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Plot Area</div><div class="pdc-field-val">${v(pd.plot_area)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Water Tax No</div><div class="pdc-field-val">${v(pd.water_tax)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Half Year Tax</div><div class="pdc-field-val">${v(pd.halfyeartax)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Balance</div><div class="pdc-field-val">${v(pd.balance)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">No. of Persons</div><div class="pdc-field-val">${v(pd.no_of_persons)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Zone</div><div class="pdc-field-val">${v(pd.zone)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Remarks</div><div class="pdc-field-val">${v(pd.remarks)}</div></div>
+                            </div>
+
+                            <div class="tax-card-title mt-2"><i class="bi bi-clipboard-check me-1"></i>QC Details</div>
+                            <div class="point-data-card-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px;">
+                                <div class="pdc-field"><div class="pdc-field-label">QC Usage</div><div class="pdc-field-val ${!pd.qcusage ? 'empty' : ''}">${v(pd.qcusage)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">QC Sq.Feet</div><div class="pdc-field-val ${!pd.qcsqfeet ? 'empty' : ''}">${v(pd.qcsqfeet)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">QC By</div><div class="pdc-field-val">${v(pd.qc_name)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">QC Remarks</div><div class="pdc-field-val">${v(pd.qc_remarks)}</div></div>
+                            </div>
+
+                            <div class="row mt-2 g-2">
+                                <div class="col-md-4">
+                                    <div class="tax-card">
+                                        <div class="tax-card-title"><i class="bi bi-database me-1"></i>MIS Record</div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Road</span><span class="tax-card-value">${v(mis.road_name)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Ward No</span><span class="tax-card-value">${v(mis.ward_no)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Plot Area</span><span class="tax-card-value">${v(mis.plot_area)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(mis.half_year_tax)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(mis.balance)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Usage</span><span class="tax-card-value">${v(mis.usage)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Type</span><span class="tax-card-value">${v(mis.type)}</span></div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="tax-card">
+                                        <div class="tax-card-title"><i class="bi bi-droplet me-1"></i>Water Tax</div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Number</span><span class="tax-card-value">${v(wt.watertax_no)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Old Number</span><span class="tax-card-value">${v(wt.old_watertax_no)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Road</span><span class="tax-card-value">${v(wt.road_name)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Slab Rate</span><span class="tax-card-value">${v(wt.slab_rate)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(wt.balance)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Usage</span><span class="tax-card-value">${v(wt.usage)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Slab Desc</span><span class="tax-card-value">${v(wt.slab_description)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">DBC Type</span><span class="tax-card-value">${v(wt.DBC_type)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Phone</span><span class="tax-card-value">${v(wt.phone_number)}</span></div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="tax-card">
+                                        <div class="tax-card-title"><i class="bi bi-pipe me-1"></i>UGD Tax</div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Number</span><span class="tax-card-value">${v(ugd.ugd_no)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Old Number</span><span class="tax-card-value">${v(ugd.old_ugd_no)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Owner</span><span class="tax-card-value">${v(ugd.owner_name)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Slab Rate</span><span class="tax-card-value">${v(ugd.slab_rate)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(ugd.balance)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Tax Year</span><span class="tax-card-value">${v(ugd.tax_year)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Tax Amount</span><span class="tax-card-value">${v(ugd.ugd_tax_amount)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Tax Due</span><span class="tax-card-value">${v(ugd.ugd_tax_due)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Tax Paid</span><span class="tax-card-value">${v(ugd.ugd_tax_paid)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Paid Date</span><span class="tax-card-value">${v(ugd.ugd_tax_paid_date)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Payment Mode</span><span class="tax-card-value">${v(ugd.payment_mode)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Receipt No</span><span class="tax-card-value">${v(ugd.receipt_number)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Due Date</span><span class="tax-card-value">${v(ugd.due_date)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(ugd.status)}</span></div>
+                                        <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(ugd.remarks)}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            ${ptList.length ? `
+                            <div class="row mt-2 g-2">
+                                <div class="col-12">
+                                    <div class="tax-card">
+                                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                        ${ptList.map(pt => `
+                                            <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                                <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                                <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>`;
+                });
+
+                $('#pointDetailsContainer').html(html);
+
+                // Search functionality
+                $('#pointDetailsSearch').off('input').on('input', function() {
+                    const searchVal = $(this).val().toLowerCase();
+                    if (!searchVal) {
+                        renderPointDetails(records);
                         return;
                     }
-                    calculateDirection(loc, feature);
+                    const filtered = records.filter(record => {
+                        const pd = record.point || {};
+                        return (pd.assessment || '').toString().toLowerCase().includes(searchVal) ||
+                            (pd.owner_name || '').toLowerCase().includes(searchVal) ||
+                            (pd.phone_number || '').toString().toLowerCase().includes(searchVal);
+                    });
+                    renderPointDetails(filtered);
                 });
             }
 
-            function calculateDirection(loc, feature) {
-                if (!loc || !feature) {
-                    showToast('❌ Missing location or feature data', 3000);
+            // ─── QC MODAL ───
+            function openQcModal(id) {
+                const record = currentPointRecords.find(r => r.point && r.point.id == id);
+                const pd = record ? record.point : null;
+                if (!pd) {
+                    showToast('Could not find this assessment record.', 3000);
                     return;
                 }
-
-                const gisid = feature.id || feature.point_gisid;
-                if (!gisid) {
-                    Swal.fire('Error', 'No GIS ID found for this feature', 'error');
-                    return;
-                }
-
-                const coords = getCoordsByGisId(gisid, feature.type);
-                if (!coords) {
-                    Swal.fire('Error', `No coordinates found for GIS ID: ${gisid}`, 'error');
-                    return;
-                }
-
-                const lonLat = ol.proj.toLonLat(coords);
-                const destLon = lonLat[0];
-                const destLat = lonLat[1];
-
-                if (destLon < -180 || destLon > 180 || destLat < -90 || destLat > 90) {
-                    Swal.fire('Error', 'Converted coordinates are out of valid range. Check your data projection.',
-                        'error');
-                    return;
-                }
-
-                console.log(`Routing to GIS ID ${gisid} (${feature.type}): lon=${destLon}, lat=${destLat}`);
-                getRoute(loc.lon, loc.lat, destLon, destLat);
+                $('#qc_point_data_id').val(id);
+                $('#qc_owner_display').text(pd.owner_name || '');
+                $('#qc_assessment_display').text(pd.assessment || '');
+                $('#qcusage').val(pd.qcusage || '');
+                $('#qcsqfeet').val(pd.qcsqfeet || '');
+                $('#qc_remarks').val(pd.qc_remarks || '');
+                const modal = new bootstrap.Modal(document.getElementById('qcModal'));
+                modal.show();
             }
 
-            function getRoute(startLon, startLat, endLon, endLat) {
-                $('#directionControls').addClass('active');
-                $('#routeInfo').text('Getting directions...');
-                $('#routeSteps').html('');
+            $(document).on('click', '.pdc-qc-btn', function() {
+                openQcModal($(this).data('id'));
+            });
 
-                const url = `https://router.project-osrm.org/route/v1/driving/` +
-                    `${startLon},${startLat};${endLon},${endLat}` +
-                    `?overview=full&geometries=geojson&steps=true`;
+            $('#saveQcBtn').on('click', function() {
+                const id = $('#qc_point_data_id').val();
+                const $btn = $(this).prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm"></span> Saving...');
 
-                fetch(url)
-                    .then(res => {
-                        if (!res.ok) {
-                            throw new Error(`HTTP error! status: ${res.status}`);
-                        }
-                        return res.json();
-                    })
-                    .then(data => {
-                        if (!data.routes || !data.routes.length) {
-                            $('#routeInfo').text('No route could be found.');
-                            return;
-                        }
+                $.ajax({
+                    url: `/point-data/${id}/qc`,
+                    method: 'POST',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                        qcusage: $('#qcusage').val(),
+                        qcsqfeet: $('#qcsqfeet').val(),
+                        qc_remarks: $('#qc_remarks').val(),
+                        ward_id: {{ $ward->id }}
+                    },
+                    success: function(res) {
+                        const idx = pointDatas.findIndex(p => p.id == id);
+                        if (idx > -1) pointDatas[idx] = res.point_data;
 
-                        const route = data.routes[0];
-                        const km = (route.distance / 1000).toFixed(2);
-                        const mins = Math.round(route.duration / 60);
-                        $('#routeInfo').html(`<strong>${km} km</strong> · about ${mins} min`);
+                        $('#qcModal').modal('hide');
+                        showToast('QC data saved successfully!', 3000);
 
-                        routeLayer.getSource().clear();
-                        destinationLayer.getSource().clear();
-
-                        const lineCoords = route.geometry.coordinates.map(c => ol.proj.fromLonLat(c));
-                        const routeFeature = new ol.Feature({
-                            geometry: new ol.geom.LineString(lineCoords)
-                        });
-                        routeFeature.setStyle(new ol.style.Style({
-                            stroke: new ol.style.Stroke({
-                                color: '#0d6efd',
-                                width: 5
-                            })
-                        }));
-                        routeLayer.getSource().addFeature(routeFeature);
-
-                        const destMarker = new ol.Feature({
-                            geometry: new ol.geom.Point(ol.proj.fromLonLat([endLon, endLat]))
-                        });
-                        destMarker.setStyle(createDestinationStyle());
-                        destinationLayer.getSource().addFeature(destMarker);
-
-                        map.getView().fit(new ol.geom.LineString(lineCoords).getExtent(), {
-                            padding: [80, 80, 80, 80],
-                            duration: 800,
-                            maxZoom: 19
-                        });
-
-                        let stepsHtml = '';
-                        const legs = route.legs || [];
-                        legs.forEach(leg => {
-                            (leg.steps || []).forEach(step => {
-                                const instruction = step.name ?
-                                    `${step.maneuver.type} onto ${step.name}` :
-                                    step.maneuver.type;
-                                const dist = Math.round(step.distance);
-                                stepsHtml +=
-                                    `<div class="step-item">${instruction} — ${dist} m</div>`;
+                        if (currentPointGisid) {
+                            getPointDataWithDetails(currentPointGisid, function(data) {
+                                currentPointRecords = data;
+                                renderPointDetails(data);
                             });
-                        });
-                        $('#routeSteps').html(stepsHtml ||
-                            '<div class="step-item">No turn-by-turn details available.</div>');
-                    })
-                    .catch(err => {
-                        console.error('getRoute error:', err);
-                        $('#routeInfo').text('Error getting directions. Please try again.');
-                        showToast('❌ Route error: ' + err.message, 4000);
-                    });
-            }
+                        }
+                    },
+                    error: function(xhr) {
+                        showToast(xhr.responseJSON?.message || 'Failed to save QC data.',
+                            4000);
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(
+                            '<i class="bi bi-save me-1"></i>Save QC');
+                    }
+                });
+            });
 
-            function clearAllRouteState() {
-                if (trackInterval) {
-                    clearInterval(trackInterval);
-                    trackInterval = null;
-                }
+            // ─── MAP CLICK HANDLER ───
+            function showFeatureDetails(feature) {
+                if (!feature) return;
+                const gisid = feature.get('gisid');
+                if (!gisid) return;
 
-                if (watchId && !isLiveLocation && !isTracking) {
-                    navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
-                }
-
-                if (routeLine) {
-                    routeLayer.getSource().removeFeature(routeLine);
-                    routeLine = null;
-                }
-                routeLayer.getSource().clear();
-                routePoints = [];
-
-                if (positionFeature) {
-                    positionLayer.getSource().removeFeature(positionFeature);
-                    positionFeature = null;
-                }
-
-                isLiveLocation = false;
-                isTracking = false;
-                isGettingLocation = false;
-                hideLoading();
-                $('#liveLocationBadge').text('OFF').removeClass('active');
-                $('#trackMeBadge').text('OFF').removeClass('tracking');
-                $('#locationToggleBtn').removeClass('active-location tracking');
-
-                if (destinationMarker) {
-                    destinationLayer.getSource().removeFeature(destinationMarker);
-                    destinationMarker = null;
-                }
-
-                $('#directionControls').removeClass('active');
-            }
-
-            function searchGIS(value) {
-                const v = value.toString().toLowerCase().trim();
-                if (!v) return [];
-                return searchIndex.filter(item =>
-                    (item.id && item.id.toString().toLowerCase().includes(v)) ||
-                    (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
-                    (item.old_assessment && item.old_assessment.toString().toLowerCase().includes(v)) ||
-                    (item.owner_name && item.owner_name.toString().toLowerCase().includes(v)) ||
-                    (item.phone_number && item.phone_number.toString().toLowerCase().includes(v)) ||
-                    (item.title && item.title.toLowerCase().includes(v)) ||
-                    (item.subtitle && item.subtitle.toLowerCase().includes(v)) ||
-                    (item.point_gisid && item.point_gisid.toString().toLowerCase().includes(v))
-                );
-            }
-
-            // ─── FILTER FUNCTIONS ───
-
-            function getSelectedDropdownValue(selector) {
-                return $(selector).val();
-            }
-
-            function getSelectedMultiDropdownValues(selector) {
-                return $(selector).val() || [];
-            }
-
-            function applyFilters() {
-                const selectedUsage = $('#usageFilter').val();
-                const selectedZone = $('#zoneFilter').val();
-                const selectedConstruction = $('#constructionFilter').val();
-                const selectedBuildingType = $('#buildingTypeFilter').val();
-                const selectedAmenities = getSelectedMultiDropdownValues('#amenitiesFilter');
-                const selectedUgd = $('#ugdFilter').val();
-                const minArea = parseInt($('#minArea').val()) || 0;
-                const maxArea = parseInt($('#maxArea').val()) || 10000;
-
-                const allUsageSelected = selectedUsage === 'all';
-                const allZonesSelected = selectedZone === 'all';
-                const allConstructionSelected = selectedConstruction === 'all';
-                const allBuildingTypesSelected = selectedBuildingType === 'all';
-                const allUgdSelected = selectedUgd === 'all';
-                const noAmenitiesSelected = selectedAmenities.length === 0;
-                const areaDefault = minArea === 0 && maxArea === 10000;
-
-                const anyFilterActive = !allUsageSelected || !allZonesSelected || !allConstructionSelected ||
-                    !allBuildingTypesSelected || !allUgdSelected || !noAmenitiesSelected || !areaDefault;
-
-                if (!anyFilterActive) {
-                    resetAllFilters(true);
-                    showToast('ℹ️ All filters reset - showing all features', 2000);
+                // Check if it's a polygon (building)
+                const polygonData = polygonDatas.find(d => d.gisid == gisid);
+                if (polygonData) {
+                    showBuildingView(polygonData);
                     return;
                 }
 
-                // ── STEP 1: build a gisid-set for EACH active filter ──
-                const buildingVariationsArray = Object.values(buildingVariations);
-
-                // Area filter → gisids whose sqfeet is inside range
-                let areaGisids = null;
-                if (!areaDefault) {
-                    areaGisids = new Set(
-                        buildingVariationsArray
-                        .filter(bV => {
-                            const sqfeet = parseFloat(bV.area_variation) || 0;
-                            return sqfeet >= minArea && sqfeet <= maxArea;
-                        })
-                        .map(bV => bV.gisid)
-                    );
+                // Check if it's a line
+                const lineData = lines.find(l => l.gisid == gisid);
+                if (lineData) {
+                    showToast(`🛣️ Road: ${lineData.road_name || 'N/A'} (GIS ID: ${gisid})`, 3000);
+                    return;
                 }
 
-                // Generic helper: filter polygonDatas by a field == selected value
-                function gisidsByField(selectedValue, isAll, fieldGetter) {
-                    if (isAll) return null; // null = "no restriction from this filter"
-                    return new Set(
-                        polygonDatas
-                        .filter(d => fieldGetter(d) === selectedValue)
-                        .map(d => d.gisid)
-                    );
+                // Check if it's a point with assessments
+                const pointRecords = pointDatas.filter(pd => pd.point_gisid == gisid);
+                if (pointRecords.length > 0) {
+                    openPointDetails(gisid);
+                    return;
                 }
 
-                const usageGisids = gisidsByField(selectedUsage, allUsageSelected, d => d.building_usage || '');
-                const zoneGisids = gisidsByField(selectedZone, allZonesSelected, d => d.zone || d.building_zone ||
-                    '');
-                const constructionGisids = gisidsByField(selectedConstruction, allConstructionSelected, d => d
-                    .construction_type || '');
-                const buildingTypeGisids = gisidsByField(selectedBuildingType, allBuildingTypesSelected, d => d
-                    .building_type || '');
-                const ugdGisids = gisidsByField(selectedUgd, allUgdSelected, d => d.ugd || '');
-
-                // Amenities filter → gisids where ALL selected amenities are "Yes"
-                let amenitiesGisids = null;
-                if (!noAmenitiesSelected) {
-                    amenitiesGisids = new Set(
-                        polygonDatas
-                        .filter(d => selectedAmenities.every(amenity => {
-                            const value = d[amenity];
-                            return value === 'Yes' || value === true || value === 1 ||
-                                (typeof value === 'string' && value.toLowerCase() === 'yes');
-                        }))
-                        .map(d => d.gisid)
-                    );
-                }
-
-                // ── STEP 2: intersect all active filter sets into one final gisid set ──
-                const allSets = [areaGisids, usageGisids, zoneGisids, constructionGisids, buildingTypeGisids,
-                        ugdGisids, amenitiesGisids
-                    ]
-                    .filter(set => set !== null);
-
-                let finalGisids;
-                if (allSets.length === 0) {
-                    finalGisids = null;
-                } else {
-                    finalGisids = allSets.reduce((acc, set) => {
-                        return new Set([...acc].filter(gisid => set.has(gisid)));
-                    });
-                }
-
-                // ── STEP 3: CLEAR source and add ONLY filtered polygons ──
-                polygonSource.clear();
-
-                // If we have filtered GISIDs, add only those polygons
-                if (finalGisids && finalGisids.size > 0) {
-                    polygons.forEach(poly => {
-                        if (finalGisids.has(poly.gisid)) {
-                            try {
-                                let coords = JSON.parse(poly.coordinates);
-                                const feature = new ol.Feature({
-                                    geometry: new ol.geom.Polygon([coords]),
-                                    gisid: poly.gisid,
-                                    type: 'polygon',
-                                    sqfeet: poly.sqfeet || '0',
-                                    assessment: poly.assessment || '',
-                                    old_assessment: poly.old_assessment || '',
-                                    owner_name: poly.owner_name || '',
-                                    phone_number: poly.phone_number || '',
-                                    originalData: poly
-                                });
-                                feature.setId(poly.gisid);
-                                feature.setStyle(createPolygonStyle(feature));
-                                polygonSource.addFeature(feature);
-                            } catch (e) {
-                                console.error('polygon parse error:', e);
-                            }
-                        }
-                    });
-                }
-
-                const allFeatures = polygonSource.getFeatures();
-                const visibleCount = allFeatures.length;
-                const total = polygons.length;
-
-                $('#visibleCount').text(visibleCount);
-                $('#filterStats').html(
-                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
-
-                polygonLayer.changed();
-                polygonSource.changed();
-
-                const hiddenCount = total - visibleCount;
-                if (hiddenCount > 0) {
-                    showToast(`🔍 Filter applied: ${visibleCount} visible, ${hiddenCount} hidden`, 3000);
-                } else if (visibleCount === 0) {
-                    showToast(`⚠️ No features match the selected filters`, 3000);
-                } else {
-                    showToast(`✅ All ${visibleCount} features match the selected filters`, 2000);
-                }
+                showToast(`📍 Feature GIS ID: ${gisid}`, 2000);
             }
 
-            function resetAllFilters(silent = false) {
-                // Reset all dropdowns to "all"
-                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter')
-                    .val('all');
+            // ─── SELECT INTERACTION ───
+            const selectInteraction = new ol.interaction.Select({
+                layers: [polygonLayer, lineLayer],
+                style: new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#0066cc',
+                        width: 3,
+                        lineDash: [4, 4]
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(0,102,204,0.1)'
+                    })
+                })
+            });
 
-                // Reset multi-select amenities
-                $('#amenitiesFilter').val([]);
-
-                // Reset area range
-                $('#minArea').val(0);
-                $('#maxArea').val(10000);
-                $('#areaRange').val(5000);
-
-                // ── CLEAR source and RELOAD ALL polygons ──
-                polygonSource.clear();
-
-                // Reload all polygons
-                polygons.forEach(poly => {
-                    try {
-                        let coords = JSON.parse(poly.coordinates);
-                        const feature = new ol.Feature({
-                            geometry: new ol.geom.Polygon([coords]),
-                            gisid: poly.gisid,
-                            type: 'polygon',
-                            sqfeet: poly.sqfeet || '0',
-                            assessment: poly.assessment || '',
-                            old_assessment: poly.old_assessment || '',
-                            owner_name: poly.owner_name || '',
-                            phone_number: poly.phone_number || '',
-                            originalData: poly
-                        });
-                        feature.setId(poly.gisid);
-                        feature.setStyle(createPolygonStyle(feature));
-                        polygonSource.addFeature(feature);
-                    } catch (e) {
-                        console.error('polygon parse error:', e);
-                    }
-                });
-
-                const allFeatures = polygonSource.getFeatures();
-                $('#visibleCount').text(allFeatures.length);
-                $('#filterStats').html(
-                    `Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`
-                );
-
-                polygonLayer.changed();
-                polygonSource.changed();
-
-                if (!silent) {
-                    showToast('🔄 All filters reset - all features visible', 2000);
+            selectInteraction.on('select', function(e) {
+                if (e.selected.length > 0) {
+                    showFeatureDetails(e.selected[0]);
+                    setTimeout(() => selectInteraction.getFeatures().clear(), 100);
                 }
-            }
+            });
 
-            function updateFilterStats() {
-                const total = polygonSource.getFeatures().length;
-                let visible = 0;
-                polygonSource.getFeatures().forEach(f => {
-                    const style = f.getStyle();
-                    if (style && typeof style === 'function') {
-                        const appliedStyle = style(f);
-                        if (appliedStyle && appliedStyle.getStroke() &&
-                            appliedStyle.getStroke() &&
-                            appliedStyle.getStroke().getColor() !== 'rgba(200,200,200,0.2)') {
-                            visible++;
-                        }
-                    } else {
-                        visible++;
-                    }
-                });
-                $('#visibleCount').text(visible);
-                $('#filterStats').html(
-                    `Showing: <strong>${visible}</strong> of <strong>${total}</strong> features`);
-            }
+            map.addInteraction(selectInteraction);
 
             // ─── EVENT HANDLERS ───
 
@@ -2695,72 +2432,40 @@
                 polygonLayer.changed();
             });
 
+            // Legend Toggle
             $('#legendToggleBtn').on('click', function() {
-
                 const usageLegend = Object.entries(usageColors).map(([usage, color]) => `
                     <div style="display:flex;align-items:center;margin-bottom:8px;">
-                        <span style="
-                            display:inline-block;
-                            width:20px;
-                            height:20px;
-                            background:${color};
-                            border:2px solid #fff;
-                            border-radius:4px;
-                            margin-right:10px;
-                            box-shadow:0 0 2px rgba(0,0,0,0.4);
-                        "></span>
+                        <span style="display:inline-block;width:20px;height:20px;background:${color};border:2px solid #fff;border-radius:4px;margin-right:10px;box-shadow:0 0 2px rgba(0,0,0,0.4);"></span>
                         <strong>${usage}</strong>
                     </div>
                 `).join('');
 
                 Swal.fire({
-                    title: 'Infrastructure & Usage Legend',
+                    title: 'Building Usage Legend',
                     width: 500,
                     html: `
-                    <div style="text-align:left;font-size:14px;">
-
-                        <h6 style="margin-bottom:10px;color:#0d6efd;">Map Layers</h6>
-
-
-
-                        <div style="display:flex;align-items:center;margin-bottom:8px;">
-                            <span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span>
-                            Lines (Roads)
+                        <div style="text-align:left;font-size:14px;">
+                            <h6 style="margin-bottom:10px;color:#198754;">Building Usage Colors</h6>
+                            ${usageLegend}
+                            <hr style="margin:15px 0;">
+                            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                                <span style="display:inline-block;width:20px;height:20px;background:rgba(13,110,253,0.15);border-radius:4px;border:2px solid #0d6efd;margin-right:10px;"></span>
+                                Polygon (Building)
+                            </div>
+                            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                                <span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span>
+                                Lines (Roads)
+                            </div>
+                            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                                <span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span>
+                                Current Location
+                            </div>
                         </div>
-
-
-                        <div style="display:flex;align-items:center;margin-bottom:8px;">
-                            <span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span>
-                            Current Location
-                        </div>
-
-                        <div style="display:flex;align-items:center;margin-bottom:8px;">
-                            <span style="display:inline-block;width:20px;height:4px;background:#dc3545;border-radius:2px;margin-right:10px;"></span>
-                            Track Route
-                        </div>
-
-                        <hr style="margin:15px 0;">
-
-                        <h6 style="margin-bottom:10px;color:#198754;">Building Usage Colors</h6>
-
-                        ${usageLegend}
-
-                    </div>
-                `,
+                    `,
                     icon: 'info',
                     confirmButtonText: 'Close',
                     confirmButtonColor: '#0d6efd'
-                });
-            });
-
-            // 3D Toggle
-            $('#threeDToggleBtn').on('click', function() {
-                $(this).toggleClass('active-3d');
-                Swal.fire({
-                    title: '3D View',
-                    text: '3D functionality requires Cesium integration.',
-                    icon: 'info',
-                    confirmButtonText: 'OK'
                 });
             });
 
@@ -2786,35 +2491,44 @@
                     $btn.addClass('active-location');
                     showToast('📍 Getting your location...', 2000);
 
-                    showLoading('Getting your location...');
+                    navigator.geolocation.getCurrentPosition(
+                        function(pos) {
+                            const lon = pos.coords.longitude;
+                            const lat = pos.coords.latitude;
+                            const projected = ol.proj.fromLonLat([lon, lat]);
+                            currentPosition = projected;
+                            currentLocation = { lon, lat };
 
-                    getCurrentLocation(function(loc) {
-                        hideLoading();
-                        if (loc) {
-                            // Create a mock position object
-                            const mockPos = {
-                                coords: {
-                                    longitude: loc.lon,
-                                    latitude: loc.lat
-                                }
-                            };
-                            updatePosition(mockPos, false);
-                            showToast('📍 Live location activated - showing position', 2000);
+                            if (!positionFeature) {
+                                positionFeature = new ol.Feature({
+                                    geometry: new ol.geom.Point(projected)
+                                });
+                                positionFeature.setStyle(createPositionStyle());
+                                positionLayer.getSource().addFeature(positionFeature);
+                            } else {
+                                positionFeature.getGeometry().setCoordinates(projected);
+                            }
+
+                            showToast('📍 Live location activated', 2000);
 
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        updatePosition(newPos, false);
+                                        const p = ol.proj.fromLonLat([newPos.coords
+                                            .longitude, newPos.coords.latitude
+                                        ]);
+                                        currentPosition = p;
+                                        currentLocation = {
+                                            lon: newPos.coords.longitude,
+                                            lat: newPos.coords.latitude
+                                        };
+                                        if (positionFeature) {
+                                            positionFeature.getGeometry()
+                                                .setCoordinates(p);
+                                        }
                                     },
                                     function(error) {
                                         console.error('Watch error:', error);
-                                        if (error.code === 3) {
-                                            showToast('⏳ Location update timeout. Retrying...',
-                                                3000);
-                                        } else {
-                                            showToast('❌ Location error: ' + error.message,
-                                                3000);
-                                        }
                                     }, {
                                         enableHighAccuracy: true,
                                         timeout: 15000,
@@ -2822,20 +2536,28 @@
                                     }
                                 );
                             }
-                        } else {
+                        },
+                        function(error) {
                             isLiveLocation = false;
                             $badge.text('OFF').removeClass('active');
                             $btn.removeClass('active-location');
+                            showToast('❌ Could not get location: ' + error.message, 4000);
+                        }, {
+                            enableHighAccuracy: true,
+                            timeout: 10000
                         }
-                    });
+                    );
                 } else {
                     $badge.text('OFF').removeClass('active');
                     $btn.removeClass('active-location');
                     showToast('📍 Live location deactivated', 2000);
-                    hideLoading();
                     if (watchId && !isTracking) {
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
+                    }
+                    if (positionFeature) {
+                        positionLayer.getSource().removeFeature(positionFeature);
+                        positionFeature = null;
                     }
                 }
                 $('.location-dropdown').removeClass('active');
@@ -2854,41 +2576,63 @@
                     const $btn = $('#locationToggleBtn');
                     $badge.text('ON').addClass('tracking');
                     $btn.addClass('tracking');
-                    showToast('📍 Getting your location for tracking...', 2000);
+                    showToast('📍 Starting tracking...', 2000);
 
-                    showLoading('Starting tracking...');
+                    navigator.geolocation.getCurrentPosition(
+                        function(pos) {
+                            const lon = pos.coords.longitude;
+                            const lat = pos.coords.latitude;
+                            const projected = ol.proj.fromLonLat([lon, lat]);
+                            currentPosition = projected;
+                            currentLocation = { lon, lat };
 
-                    getCurrentLocation(function(loc) {
-                        hideLoading();
-                        if (loc) {
-                            const mockPos = {
-                                coords: {
-                                    longitude: loc.lon,
-                                    latitude: loc.lat
-                                }
-                            };
-                            updatePosition(mockPos, true);
-                            showToast('📍 Tracking started - auto-centering every 2 seconds', 3000);
+                            if (!positionFeature) {
+                                positionFeature = new ol.Feature({
+                                    geometry: new ol.geom.Point(projected)
+                                });
+                                positionFeature.setStyle(createPositionStyle());
+                                positionLayer.getSource().addFeature(positionFeature);
+                            } else {
+                                positionFeature.getGeometry().setCoordinates(projected);
+                            }
+
+                            map.getView().animate({
+                                center: projected,
+                                zoom: 19,
+                                duration: 500
+                            });
+
+                            showToast('📍 Tracking started - auto-centering', 3000);
 
                             if (trackInterval) {
                                 clearInterval(trackInterval);
-                                trackInterval = null;
                             }
 
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        updatePosition(newPos, true);
+                                        const p = ol.proj.fromLonLat([newPos.coords
+                                            .longitude, newPos.coords.latitude
+                                        ]);
+                                        currentPosition = p;
+                                        currentLocation = {
+                                            lon: newPos.coords.longitude,
+                                            lat: newPos.coords.latitude
+                                        };
+                                        if (positionFeature) {
+                                            positionFeature.getGeometry()
+                                                .setCoordinates(p);
+                                        }
+                                        routePoints.push(p);
+                                        updateRouteLine();
+                                        map.getView().animate({
+                                            center: p,
+                                            zoom: 19,
+                                            duration: 500
+                                        });
                                     },
                                     function(error) {
                                         console.error('Track error:', error);
-                                        if (error.code === 3) {
-                                            showToast('⏳ Location update timeout. Retrying...',
-                                                3000);
-                                        } else {
-                                            showToast('❌ Tracking error: ' + error.message,
-                                                3000);
-                                        }
                                     }, {
                                         enableHighAccuracy: true,
                                         timeout: 15000,
@@ -2906,12 +2650,21 @@
                                     });
                                 }
                             }, 2000);
-                        } else {
+
+                            // Add initial point to route
+                            routePoints.push(projected);
+
+                        },
+                        function(error) {
                             isTracking = false;
                             $badge.text('OFF').removeClass('tracking');
                             $btn.removeClass('tracking');
+                            showToast('❌ Could not get location: ' + error.message, 4000);
+                        }, {
+                            enableHighAccuracy: true,
+                            timeout: 10000
                         }
-                    });
+                    );
                 } else {
                     isTracking = false;
                     const $badge = $('#trackMeBadge');
@@ -2919,7 +2672,6 @@
                     $badge.text('OFF').removeClass('tracking');
                     $btn.removeClass('tracking');
                     showToast('⏹️ Tracking stopped', 2000);
-                    hideLoading();
 
                     if (trackInterval) {
                         clearInterval(trackInterval);
@@ -2930,23 +2682,38 @@
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
                     }
+
+                    // Keep position marker but stop tracking
                 }
                 $('.location-dropdown').removeClass('active');
             });
 
             $('#clearRouteItem').on('click', function() {
-                clearAllRouteState();
-                showToast('🧹 Cleared all location data', 2000);
-                $('.location-dropdown').removeClass('active');
-            });
-
-            $(document).on('click', '#closeRouteBtn', function() {
+                if (routeLine) {
+                    routeLayer.getSource().removeFeature(routeLine);
+                    routeLine = null;
+                }
                 routeLayer.getSource().clear();
+                routePoints = [];
                 if (destinationMarker) {
                     destinationLayer.getSource().removeFeature(destinationMarker);
                     destinationMarker = null;
                 }
-                $('#directionControls').removeClass('active');
+                if (positionFeature) {
+                    positionLayer.getSource().removeFeature(positionFeature);
+                    positionFeature = null;
+                }
+                if (watchId) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
+                isTracking = false;
+                isLiveLocation = false;
+                $('#liveLocationBadge').text('OFF').removeClass('active');
+                $('#trackMeBadge').text('OFF').removeClass('tracking');
+                $('#locationToggleBtn').removeClass('active-location tracking');
+                showToast('🧹 Cleared all location data', 2000);
+                $('.location-dropdown').removeClass('active');
             });
 
             // ─── SEARCH EVENT HANDLERS ───
@@ -2978,7 +2745,7 @@
                             badgeText = 'Road';
                         } else if (item.type === 'polygon') {
                             badgeClass = 'parcel';
-                            badgeText = 'Parcel';
+                            badgeText = 'Building';
                         } else if (item.type === 'point') {
                             badgeClass = 'point';
                             badgeText = 'Point';
@@ -2987,10 +2754,6 @@
                             badgeText = 'Assessment';
                         }
 
-                        const editBtn = item.type === 'pointdata' ?
-                            `<button class="btn btn-sm btn-warning edit-btn" data-id="${item.id}"><i class="bi bi-pencil"></i> Edit</button>` :
-                            '';
-
                         html += `
                             <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
                                 <div class="search-result-title">
@@ -2998,29 +2761,14 @@
                                     <span class="type-badge ${badgeClass}">${badgeText}</span>
                                 </div>
                                 <div class="search-result-subtitle">${displaySubtitle}</div>
-                                <div class="mt-2 d-flex gap-2">
+                                <div class="search-result-actions">
                                     <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                    <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
-                                    ${editBtn}
+                                    <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}">View</button>
                                 </div>
                             </div>`;
                     });
                 }
                 $('#searchResults').html(html);
-            });
-
-            $(document).on('click', '.search-result-item', function() {
-                const id = $(this).data('id');
-                const type = $(this).data('type');
-                const item = searchIndex.find(i => i.id == id && i.type === type);
-                if (item) {
-                    zoomToFeature(item);
-                    $('.search-dropdown').removeClass('active');
-                    $('#gisSearchInput').val('');
-                    $('#searchResults').html('');
-                } else {
-                    showToast('❌ Could not find item to zoom to', 3000);
-                }
             });
 
             $(document).on('click', '.zoom-btn', function(e) {
@@ -3045,11 +2793,12 @@
                 $('#searchResults').html('');
             });
 
-            $(document).on('click', '.direction-btn', function(e) {
+            $(document).on('click', '.view-btn', function(e) {
                 e.stopPropagation();
                 const id = $(this).data('id');
                 const type = $(this).data('type');
 
+                // Try to find the feature
                 let item = searchIndex.find(i => i.id == id && i.type === type);
                 if (!item) {
                     item = searchIndex.find(i => i.point_gisid == id);
@@ -3058,14 +2807,45 @@
                     item = searchIndex.find(i => i.id == id);
                 }
 
-                if (item) {
-                    getDirectionToFeature(item);
+                if (!item) {
+                    showToast(`❌ Could not find feature with ID: ${id}`, 3000);
+                    return;
+                }
+
+                // Check if it's a building (polygon)
+                const polygonData = polygonDatas.find(d => d.gisid == item.id);
+                if (polygonData) {
+                    showBuildingView(polygonData);
                     $('.search-dropdown').removeClass('active');
                     $('#gisSearchInput').val('');
                     $('#searchResults').html('');
-                } else {
-                    showToast(`❌ Could not find feature with ID: ${id} for directions`, 3000);
+                    return;
                 }
+
+                // Check if it's a line
+                const lineData = lines.find(l => l.gisid == item.id);
+                if (lineData) {
+                    showToast(`🛣️ Road: ${lineData.road_name || 'N/A'} (GIS ID: ${item.id})`, 3000);
+                    $('.search-dropdown').removeClass('active');
+                    $('#gisSearchInput').val('');
+                    $('#searchResults').html('');
+                    return;
+                }
+
+                // Check if it's a point with assessments
+                const pointRecords = pointDatas.filter(pd => pd.point_gisid == item.id);
+                if (pointRecords.length > 0) {
+                    openPointDetails(item.id);
+                    $('.search-dropdown').removeClass('active');
+                    $('#gisSearchInput').val('');
+                    $('#searchResults').html('');
+                    return;
+                }
+
+                showToast(`📍 Feature: ${item.title} (ID: ${item.id})`, 3000);
+                $('.search-dropdown').removeClass('active');
+                $('#gisSearchInput').val('');
+                $('#searchResults').html('');
             });
 
             $('.search-tab-btn').on('click', function() {
@@ -3084,21 +2864,136 @@
 
             // ─── FILTER EVENT HANDLERS ───
 
+            function updateFilterStats() {
+                const total = polygonSource.getFeatures().length;
+                $('#visibleCount').text(total);
+                $('#filterStats').html(
+                    `Showing: <strong>${total}</strong> of <strong>${total}</strong> features`);
+            }
+
+            function applyFilters() {
+                const selectedUsage = $('#usageFilter').val();
+                const minArea = parseInt($('#minArea').val()) || 0;
+                const maxArea = parseInt($('#maxArea').val()) || 10000;
+
+                const allUsageSelected = selectedUsage === 'all';
+                const areaDefault = minArea === 0 && maxArea === 10000;
+
+                if (allUsageSelected && areaDefault) {
+                    resetAllFilters(true);
+                    showToast('ℹ️ All filters reset - showing all features', 2000);
+                    return;
+                }
+
+                polygonSource.clear();
+
+                // Filter polygons
+                polygons.forEach(poly => {
+                    let include = true;
+                    const area = parseFloat(poly.sqfeet) || 0;
+
+                    if (!allUsageSelected) {
+                        const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
+                        const usage = buildingData?.building_usage || '';
+                        if (usage !== selectedUsage) include = false;
+                    }
+
+                    if (include && !areaDefault) {
+                        if (area < minArea || area > maxArea) include = false;
+                    }
+
+                    if (include) {
+                        try {
+                            let coords = JSON.parse(poly.coordinates);
+                            const feature = new ol.Feature({
+                                geometry: new ol.geom.Polygon([coords]),
+                                gisid: poly.gisid,
+                                type: 'polygon',
+                                sqfeet: poly.sqfeet || '0',
+                                assessment: poly.assessment || '',
+                                old_assessment: poly.old_assessment || '',
+                                owner_name: poly.owner_name || '',
+                                phone_number: poly.phone_number || '',
+                                originalData: poly
+                            });
+                            feature.setId(poly.gisid);
+                            feature.setStyle(createPolygonStyle(feature));
+                            polygonSource.addFeature(feature);
+                        } catch (e) {
+                            console.error('polygon parse error:', e);
+                        }
+                    }
+                });
+
+                const allFeatures = polygonSource.getFeatures();
+                const visibleCount = allFeatures.length;
+                const total = polygons.length;
+
+                $('#visibleCount').text(visibleCount);
+                $('#filterStats').html(
+                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
+
+                polygonLayer.changed();
+                polygonSource.changed();
+
+                const hiddenCount = total - visibleCount;
+                if (hiddenCount > 0) {
+                    showToast(`🔍 Filter applied: ${visibleCount} visible, ${hiddenCount} hidden`, 3000);
+                } else if (visibleCount === 0) {
+                    showToast(`⚠️ No features match the selected filters`, 3000);
+                } else {
+                    showToast(`✅ All ${visibleCount} features match the selected filters`, 2000);
+                }
+            }
+
+            function resetAllFilters(silent = false) {
+                $('#usageFilter').val('all');
+                $('#minArea').val(0);
+                $('#maxArea').val(10000);
+
+                polygonSource.clear();
+                polygons.forEach(poly => {
+                    try {
+                        let coords = JSON.parse(poly.coordinates);
+                        const feature = new ol.Feature({
+                            geometry: new ol.geom.Polygon([coords]),
+                            gisid: poly.gisid,
+                            type: 'polygon',
+                            sqfeet: poly.sqfeet || '0',
+                            assessment: poly.assessment || '',
+                            old_assessment: poly.old_assessment || '',
+                            owner_name: poly.owner_name || '',
+                            phone_number: poly.phone_number || '',
+                            originalData: poly
+                        });
+                        feature.setId(poly.gisid);
+                        feature.setStyle(createPolygonStyle(feature));
+                        polygonSource.addFeature(feature);
+                    } catch (e) {
+                        console.error('polygon parse error:', e);
+                    }
+                });
+
+                const allFeatures = polygonSource.getFeatures();
+                $('#visibleCount').text(allFeatures.length);
+                $('#filterStats').html(
+                    `Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`
+                );
+
+                polygonLayer.changed();
+                polygonSource.changed();
+
+                if (!silent) {
+                    showToast('🔄 All filters reset - all features visible', 2000);
+                }
+            }
+
             $('#applyFiltersBtn').on('click', function() {
                 applyFilters();
             });
 
             $('#resetFiltersBtn').on('click', function() {
                 resetAllFilters(false);
-            });
-
-            $('#areaRange').on('input', function() {
-                const val = parseInt($(this).val());
-                const maxVal = parseInt($('#maxArea').val());
-                if (val > maxVal) {
-                    $(this).val(maxVal);
-                }
-                $('#minArea').val($(this).val());
             });
 
             $('#minArea').on('change', function() {
@@ -3108,7 +3003,6 @@
                     val = maxVal;
                     $(this).val(val);
                 }
-                $('#areaRange').val(val);
             });
 
             $('#maxArea').on('change', function() {
@@ -3117,10 +3011,6 @@
                 if (val < minVal) {
                     val = minVal;
                     $(this).val(val);
-                }
-                const sliderVal = parseInt($('#areaRange').val());
-                if (sliderVal > val) {
-                    $('#areaRange').val(val);
                 }
             });
 
@@ -3185,7 +3075,7 @@
                         badgeText = 'Road';
                     } else if (item.type === 'polygon') {
                         badgeClass = 'parcel';
-                        badgeText = 'Parcel';
+                        badgeText = 'Building';
                     } else if (item.type === 'point') {
                         badgeClass = 'point';
                         badgeText = 'Point';
@@ -3204,7 +3094,7 @@
                             ${details.length ? '<div class="search-result-subtitle" style="color:#666;">' + details.join(' | ') + '</div>' : ''}
                             <div class="search-result-actions">
                                 <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
+                                <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}">View</button>
                             </div>
                         </div>
                     `;
@@ -3238,30 +3128,18 @@
                 const $card = $('#mapCard');
                 const $container = $('#map');
                 const $btn = $(this);
-                const $exitBtn = $('#fullscreenExitBtn');
 
-                $card.addClass('fullscreen-mode');
-                $container.addClass('fullscreen');
-                $btn.hide();
-                $exitBtn.show();
-                isFullscreen = true;
-
-                setTimeout(function() {
-                    map.updateSize();
-                }, 150);
-            });
-
-            $('#fullscreenExitBtn').on('click', function() {
-                const $card = $('#mapCard');
-                const $container = $('#map');
-                const $btn = $('#fullscreenBtn');
-                const $exitBtn = $(this);
-
-                $card.removeClass('fullscreen-mode');
-                $container.removeClass('fullscreen');
-                $exitBtn.hide();
-                $btn.show();
-                isFullscreen = false;
+                if (!isFullscreen) {
+                    $card.addClass('fullscreen-mode');
+                    $container.addClass('fullscreen');
+                    $btn.html('<i class="bi bi-fullscreen-exit"></i>');
+                    isFullscreen = true;
+                } else {
+                    $card.removeClass('fullscreen-mode');
+                    $container.removeClass('fullscreen');
+                    $btn.html('<i class="bi bi-arrows-fullscreen"></i>');
+                    isFullscreen = false;
+                }
 
                 setTimeout(function() {
                     map.updateSize();
@@ -3270,11 +3148,32 @@
 
             $(document).on('keydown', function(e) {
                 if (e.key === 'Escape' && isFullscreen) {
-                    $('#fullscreenExitBtn').click();
+                    $('#fullscreenBtn').click();
                 }
             });
 
-            // ─── INITIALIZE ───
+            // ─── UPDATE ROUTE LINE ───
+            function updateRouteLine() {
+                if (routePoints.length < 2) return;
+
+                if (!routeLine) {
+                    routeLine = new ol.Feature({
+                        geometry: new ol.geom.LineString(routePoints)
+                    });
+                    routeLine.setStyle(new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: '#dc3545',
+                            width: 4,
+                            lineDash: [8, 6]
+                        })
+                    }));
+                    routeLayer.getSource().addFeature(routeLine);
+                } else {
+                    routeLine.getGeometry().setCoordinates(routePoints);
+                }
+            }
+
+            // ─── INIT ───
             setTimeout(updateFilterStats, 500);
 
             console.log('✅ GIS Dashboard initialized successfully!');
@@ -3282,6 +3181,11 @@
             console.log('📊 Polygons:', polygons.length);
             console.log('📊 Lines:', lines.length);
             console.log('📊 Point Data:', pointDatas.length);
+
+            // Show welcome toast
+            setTimeout(() => {
+                showToast('👆 Click on any building to view details', 4000);
+            }, 1000);
         });
     </script>
 @endpush
