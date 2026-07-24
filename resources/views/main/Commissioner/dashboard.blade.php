@@ -9,43 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap"
         rel="stylesheet">
     <style>
-        /* ══════════════════════════════════════════════
-                   DESIGN TOKENS — Government Revenue Portal
-                   ══════════════════════════════════════════════ */
-        :root {
-            --font-display: 'Merriweather', Georgia, serif;
-            --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
-            --gov-green: #0f6b47;
-            --gov-green-dark: #0a4530;
-            --gov-green-light: #1a8a5a;
-            --gov-green-tint: #eaf4ef;
-            --gov-gold: #a9741a;
-            --gov-gold-tint: #faf3e6;
-
-            --ink-900: #0e2019;
-            --ink-700: #38473f;
-            --ink-500: #6b7972;
-            --ink-300: #c7d0cb;
-
-            --bg-page: #f0f4f2;
-            --surface: #ffffff;
-            --border: #dfe4e1;
-            --border-strong: #c7d0cb;
-
-            --status-blue: #1d4ed8;
-            --status-red: #b91c1c;
-            --status-gold: #a9741a;
-            --status-purple: #5b21b6;
-            --status-teal: #0e7c72;
-
-            --shadow-sm: 0 2px 8px rgba(10, 69, 48, 0.08);
-            --shadow-md: 0 4px 16px rgba(10, 69, 48, 0.12);
-            --shadow-lg: 0 8px 32px rgba(10, 69, 48, 0.16);
-            --shadow-xl: 0 12px 48px rgba(10, 69, 48, 0.20);
-            --shadow-glow: 0 0 40px rgba(15, 107, 71, 0.15);
-        }
 
         body {
             background: var(--bg-page);
@@ -1573,7 +1537,7 @@
                                 @endphp
                                 <tr>
                                     <td style="font-weight:700; color:var(--ink-900);">
-                                        <a href="{{ route('commissioner.ward.showmap', $w['ward_id']) }}">
+                                        <a href="{{ route('commissioner.ward.showmap', $w['ward_id']) }}" style="color:var(--ink-900);">
                                             Ward {{ $w['ward_no'] }}
                                         </a>
                                     </td>
