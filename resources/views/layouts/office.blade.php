@@ -58,8 +58,8 @@
                 <i class="bi bi-building-check"></i>
             </div>
             <div class="ol-brand-text">
-                <div class="ol-brand-sub">SIRS</div>
-                <div class="ol-brand-sub-text">Spatial Revenue <br> Intelligent System</div>
+                <div class="ol-brand-sub">SRIS</div>
+                <div class="ol-brand-sub-text">spatial revenue <br> intelligent system</div>
 
             </div>
         </div>
