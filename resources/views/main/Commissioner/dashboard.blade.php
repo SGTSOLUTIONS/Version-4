@@ -380,13 +380,45 @@
                                            HIERARCHY LEDGER
                                            ══════════════════════════════════════════════ */
         .ledger-flow {
-            display: flex;
-            align-items: stretch;
-            background: var(--surface);
-            border: 2px solid var(--gov-green);
-            border-radius: 10px;
-            overflow: hidden;
-        }
+    display: flex;
+    align-items: stretch;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%);
+    border: 1px solid rgba(15, 107, 71, 0.18);
+    border-radius: 14px;
+    overflow: hidden;
+
+    /* Modern Shadow */
+    box-shadow:
+        0 4px 12px rgba(15, 107, 71, 0.08),
+        0 10px 30px rgba(15, 107, 71, 0.12);
+
+    transition: all .3s ease;
+    position: relative;
+}
+
+.ledger-flow:hover {
+    transform: translateY(-3px);
+    box-shadow:
+        0 8px 20px rgba(15, 107, 71, 0.15),
+        0 16px 40px rgba(15, 107, 71, 0.18);
+}
+
+/* Top Accent Line */
+.ledger-flow::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(
+        90deg,
+        #0a4530,
+        #0f6b47,
+        #37b24d,
+        #9be15d
+    );
+}
 
         .ledger-step {
             flex: 1;
