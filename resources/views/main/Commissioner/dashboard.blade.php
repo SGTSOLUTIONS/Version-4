@@ -409,8 +409,8 @@
 
         .ledger-step .step-label {
             font-family: var(--font-body);
-            font-size: 0.72rem;
-            color: var(--ink-500);
+            font-size: 0.82rem;
+            color: green;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             font-weight: 600;
