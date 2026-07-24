@@ -2396,17 +2396,18 @@
                 }
 
                 // ── STEP 1: build a gisid-set for EACH active filter ──
-console.log("buildingVariations",buildingVariations);
+                const buildingVariationsArray = Object.values(buildingVariations);
+
                 // Area filter → gisids whose sqfeet is inside range
                 let areaGisids = null;
                 if (!areaDefault) {
                     areaGisids = new Set(
-                        buildingVariations
+                        buildingVariationsArray
                         .filter(bV => {
                             const sqfeet = parseFloat(bV.area_variation) || 0;
                             return sqfeet >= minArea && sqfeet <= maxArea;
                         })
-                        .map(p => p.gisid)
+                        .map(bV => bV.gisid)
                     );
                 }
 
@@ -2452,7 +2453,7 @@ console.log("buildingVariations",buildingVariations);
                 let finalGisids;
                 if (allSets.length === 0) {
                     finalGisids =
-                    null; // no filters active at all (shouldn't happen, anyFilterActive already checked)
+                        null; // no filters active at all (shouldn't happen, anyFilterActive already checked)
                 } else {
                     finalGisids = allSets.reduce((acc, set) => {
                         return new Set([...acc].filter(gisid => set.has(gisid)));
