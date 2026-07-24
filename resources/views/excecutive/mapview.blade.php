@@ -2401,9 +2401,9 @@
                 let areaGisids = null;
                 if (!areaDefault) {
                     areaGisids = new Set(
-                        polygons
-                        .filter(p => {
-                            const sqfeet = parseFloat(p.sqfeet) || 0;
+                        buildingVariations
+                        .filter(bV => {
+                            const sqfeet = parseFloat(bV.area_variation) || 0;
                             return sqfeet >= minArea && sqfeet <= maxArea;
                         })
                         .map(p => p.gisid)
@@ -2452,7 +2452,7 @@
                 let finalGisids;
                 if (allSets.length === 0) {
                     finalGisids =
-                        null; // no filters active at all (shouldn't happen, anyFilterActive already checked)
+                    null; // no filters active at all (shouldn't happen, anyFilterActive already checked)
                 } else {
                     finalGisids = allSets.reduce((acc, set) => {
                         return new Set([...acc].filter(gisid => set.has(gisid)));
