@@ -136,9 +136,11 @@
             0% {
                 opacity: 1;
             }
+
             50% {
                 opacity: 0.5;
             }
+
             100% {
                 opacity: 1;
             }
@@ -1169,6 +1171,7 @@
 
         /* Touch-friendly */
         @media (hover: none) and (pointer: coarse) {
+
             .layer-toggle-btn,
             .location-toggle-btn,
             .search-toggle-btn,
@@ -1976,10 +1979,9 @@
                                     <div class="range-inputs">
                                         <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
                                         <span class="range-separator">to</span>
-                                        <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000">
+                                        <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="0">
                                     </div>
-                                    <input type="range" id="areaRange" class="form-range" min="0" max="10000" step="100" value="5000">
-                                </div>
+                                   </div>
                             </div>
 
                             <div class="dropdown-divider"></div>
@@ -2718,11 +2720,11 @@
                             </div>
 
                             ${ptList.length ? `
-                            <div class="row mt-2 g-2">
-                                <div class="col-12">
-                                    <div class="tax-card">
-                                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                        ${ptList.map(pt => `
+                                <div class="row mt-2 g-2">
+                                    <div class="col-12">
+                                        <div class="tax-card">
+                                            <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                            ${ptList.map(pt => `
                                             <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
@@ -2737,10 +2739,10 @@
                                                 <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                             </div>
                                         `).join('')}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            ` : ''}
+                                ` : ''}
                         </div>`;
                 });
 
@@ -3037,7 +3039,10 @@
                             const lat = pos.coords.latitude;
                             const projected = ol.proj.fromLonLat([lon, lat]);
                             currentPosition = projected;
-                            currentLocation = { lon, lat };
+                            currentLocation = {
+                                lon,
+                                lat
+                            };
 
                             if (!positionFeature) {
                                 positionFeature = new ol.Feature({
@@ -3124,7 +3129,10 @@
                             const lat = pos.coords.latitude;
                             const projected = ol.proj.fromLonLat([lon, lat]);
                             currentPosition = projected;
-                            currentLocation = { lon, lat };
+                            currentLocation = {
+                                lon,
+                                lat
+                            };
 
                             if (!positionFeature) {
                                 positionFeature = new ol.Feature({
@@ -3408,6 +3416,7 @@
             }
 
             function applyFilters() {
+                // ─── GET FILTER VALUES ───
                 const selectedUsage = $('#usageFilter').val();
                 const usageVariation = $('#usageVariationFilter').val();
                 const areaVariation = $('#areaVariationFilter').val();
@@ -3421,8 +3430,9 @@
                 const selectedFloor = $('#floorFilter').val();
                 const selectedShop = $('#shopFilter').val();
                 const minArea = parseInt($('#minArea').val()) || 0;
-                const maxArea = parseInt($('#maxArea').val()) || 10000;
+                const maxArea = parseInt($('#maxArea').val()) || 0;
 
+                // ─── CHECK IF ANY FILTER ACTIVE ───
                 const allUsageSelected = selectedUsage === 'all';
                 const allZonesSelected = selectedZone === 'all';
                 const allConstructionSelected = selectedConstruction === 'all';
@@ -3435,7 +3445,7 @@
                 const allUsageVariationSelected = usageVariation === 'all';
                 const allAreaVariationSelected = areaVariation === 'all';
                 const noAmenitiesSelected = selectedAmenities.length === 0;
-                const areaDefault = minArea === 0 && maxArea === 10000;
+                const areaDefault = minArea === 0 && maxArea === 0;
 
                 const anyFilterActive = !allUsageSelected || !allZonesSelected || !allConstructionSelected ||
                     !allBuildingTypesSelected || !allUgdSelected || !allSurveyStatusSelected ||
@@ -3449,6 +3459,258 @@
                     return;
                 }
 
+                // ─── STEP 1: COLLECT GIS IDs FROM EACH FILTER ───
+                let filteredGisids = new Set();
+
+                // ─── 1A: USAGE FILTER ───
+                let usageGisids = null;
+                if (!allUsageSelected) {
+                    usageGisids = new Set(
+                        polygonDatas
+                        .filter(d => d.building_usage === selectedUsage)
+                        .map(d => d.gisid)
+                    );
+                }
+
+                // ─── 1B: USAGE VARIATION FILTER ───
+                let usageVariationGisids = null;
+                if (!allUsageVariationSelected) {
+                    if (usageVariation === 'match') {
+                        usageVariationGisids = new Set(
+                            Object.values(buildingVariations)
+                            .filter(v => v.usage_status === 'MATCH')
+                            .map(v => v.gisid)
+                        );
+                    } else if (usageVariation === 'variation') {
+                        usageVariationGisids = new Set(
+                            Object.values(buildingVariations)
+                            .filter(v => v.usage_status === 'VARIATION')
+                            .map(v => v.gisid)
+                        );
+                    } else if (usageVariation === 'unmapped') {
+                        // Get all polygon gisids that are NOT in buildingVariations
+                        const variationGisids = new Set(Object.keys(buildingVariations));
+                        usageVariationGisids = new Set(
+                            polygons
+                            .filter(p => !variationGisids.has(p.gisid))
+                            .map(p => p.gisid)
+                        );
+                    }
+                }
+
+                // ─── 1C: AREA VARIATION FILTER ───
+                let areaVariationGisids = null;
+                if (!allAreaVariationSelected) {
+                    if (areaVariation === 'match') {
+                        areaVariationGisids = new Set(
+                            Object.values(buildingVariations)
+                            .filter(v => v.area_status === 'MATCH')
+                            .map(v => v.gisid)
+                        );
+                    } else if (areaVariation === 'variation') {
+                        areaVariationGisids = new Set(
+                            Object.values(buildingVariations)
+                            .filter(v => v.area_status === 'VARIATION')
+                            .map(v => v.gisid)
+                        );
+                    } else if (areaVariation === 'high_variation') {
+                        areaVariationGisids = new Set(
+                            Object.values(buildingVariations)
+                            .filter(v => parseFloat(v.variation_percentage) > 20)
+                            .map(v => v.gisid)
+                        );
+                    } else if (areaVariation === 'low_variation') {
+                        areaVariationGisids = new Set(
+                            Object.values(buildingVariations)
+                            .filter(v => parseFloat(v.variation_percentage) < 5 && parseFloat(v
+                                .variation_percentage) > 0)
+                            .map(v => v.gisid)
+                        );
+                    }
+                }
+
+                // ─── 1D: ZONE FILTER ───
+                let zoneGisids = null;
+                if (!allZonesSelected) {
+                    zoneGisids = new Set(
+                        polygonDatas
+                        .filter(d => (d.zone || d.building_zone) === selectedZone)
+                        .map(d => d.gisid)
+                    );
+                }
+
+                // ─── 1E: CONSTRUCTION FILTER ───
+                let constructionGisids = null;
+                if (!allConstructionSelected) {
+                    constructionGisids = new Set(
+                        polygonDatas
+                        .filter(d => d.construction_type === selectedConstruction)
+                        .map(d => d.gisid)
+                    );
+                }
+
+                // ─── 1F: BUILDING TYPE FILTER ───
+                let buildingTypeGisids = null;
+                if (!allBuildingTypesSelected) {
+                    buildingTypeGisids = new Set(
+                        polygonDatas
+                        .filter(d => d.building_type === selectedBuildingType)
+                        .map(d => d.gisid)
+                    );
+                }
+
+                // ─── 1G: AMENITIES FILTER ───
+                let amenitiesGisids = null;
+                if (!noAmenitiesSelected) {
+                    amenitiesGisids = new Set(
+                        polygonDatas
+                        .filter(d => {
+                            return selectedAmenities.every(amenity => {
+                                const value = d[amenity];
+                                return value === 'Yes' || value === true || value === 1 ||
+                                    (typeof value === 'string' && value.toLowerCase() === 'yes');
+                            });
+                        })
+                        .map(d => d.gisid)
+                    );
+                }
+
+                // ─── 1H: UGD FILTER ───
+                let ugdGisids = null;
+                if (!allUgdSelected) {
+                    ugdGisids = new Set(
+                        polygonDatas
+                        .filter(d => d.ugd === selectedUgd)
+                        .map(d => d.gisid)
+                    );
+                }
+
+                // ─── 1I: SURVEY STATUS FILTER ───
+                let surveyStatusGisids = null;
+                if (!allSurveyStatusSelected) {
+                    if (selectedSurveyStatus === 'surveyed') {
+                        surveyStatusGisids = new Set(polygonDatas.map(d => d.gisid));
+                    } else if (selectedSurveyStatus === 'not_surveyed') {
+                        const surveyedGisids = new Set(polygonDatas.map(d => d.gisid));
+                        surveyStatusGisids = new Set(
+                            polygons
+                            .filter(p => !surveyedGisids.has(p.gisid))
+                            .map(p => p.gisid)
+                        );
+                    } else if (selectedSurveyStatus === 'partially_surveyed') {
+                        surveyStatusGisids = new Set(
+                            polygonDatas
+                            .filter(d => {
+                                const pointCount = pointDatas.filter(pd => pd.point_gisid === d.gisid)
+                                    .length;
+                                return pointCount > 0 && pointCount < (d.number_bill || 0);
+                            })
+                            .map(d => d.gisid)
+                        );
+                    }
+                }
+
+                // ─── 1J: ASSESSMENT COUNT FILTER ───
+                let assessmentCountGisids = null;
+                if (!allAssessmentCountSelected) {
+                    const gisidPointCount = {};
+                    pointDatas.forEach(pd => {
+                        gisidPointCount[pd.point_gisid] = (gisidPointCount[pd.point_gisid] || 0) + 1;
+                    });
+
+                    assessmentCountGisids = new Set(
+                        polygons
+                        .filter(p => {
+                            const count = gisidPointCount[p.gisid] || 0;
+                            if (selectedAssessmentCount === 'zero') return count === 0;
+                            if (selectedAssessmentCount === 'one') return count === 1;
+                            if (selectedAssessmentCount === 'two') return count === 2;
+                            if (selectedAssessmentCount === 'three_plus') return count >= 3;
+                            return false;
+                        })
+                        .map(p => p.gisid)
+                    );
+                }
+
+                // ─── 1K: FLOOR FILTER ───
+                let floorGisids = null;
+                if (!allFloorSelected) {
+                    floorGisids = new Set(
+                        polygonDatas
+                        .filter(d => {
+                            const floors = parseInt(d.number_floor) || 0;
+                            if (selectedFloor === '0') return floors === 0;
+                            if (selectedFloor === '1') return floors === 1;
+                            if (selectedFloor === '2') return floors === 2;
+                            if (selectedFloor === '3') return floors === 3;
+                            if (selectedFloor === '4') return floors >= 4;
+                            return false;
+                        })
+                        .map(d => d.gisid)
+                    );
+                }
+
+                // ─── 1L: SHOP FILTER ───
+                let shopGisids = null;
+                if (!allShopSelected) {
+                    shopGisids = new Set(
+                        polygonDatas
+                        .filter(d => {
+                            const shops = parseInt(d.number_shop) || 0;
+                            if (selectedShop === '0') return shops === 0;
+                            if (selectedShop === '1') return shops === 1;
+                            if (selectedShop === '2') return shops === 2;
+                            if (selectedShop === '3') return shops >= 3;
+                            return false;
+                        })
+                        .map(d => d.gisid)
+                    );
+                }
+
+                // ─── 1M: AREA RANGE FILTER ───
+                let areaGisids = null;
+                if (!areaDefault) {
+                    areaGisids = new Set(
+                        polygons
+                        .filter(p => {
+                            const area = parseFloat(p.sqfeet) || 0;
+                            return area >= minArea && area <= maxArea;
+                        })
+                        .map(p => p.gisid)
+                    );
+                }
+
+                // ─── STEP 2: INTERSECT ALL FILTER SETS ───
+                const allFilterSets = [
+                    usageGisids,
+                    usageVariationGisids,
+                    areaVariationGisids,
+                    zoneGisids,
+                    constructionGisids,
+                    buildingTypeGisids,
+                    amenitiesGisids,
+                    ugdGisids,
+                    surveyStatusGisids,
+                    assessmentCountGisids,
+                    floorGisids,
+                    shopGisids,
+                    areaGisids
+                ].filter(set => set !== null);
+
+                // Start with all polygon gisids
+                let finalGisids = new Set(polygons.map(p => p.gisid));
+
+                // Intersect with each filter set
+                allFilterSets.forEach(filterSet => {
+                    if (filterSet.size > 0) {
+                        finalGisids = new Set([...finalGisids].filter(gisid => filterSet.has(gisid)));
+                    } else {
+                        // If any filter set is empty, no results
+                        finalGisids = new Set();
+                    }
+                });
+
+                // ─── STEP 3: CLEAR SOURCE AND ADD FILTERED POLYGONS ───
                 polygonSource.clear();
 
                 let totalBuildings = 0;
@@ -3456,126 +3718,11 @@
                 let variationCount = 0;
 
                 polygons.forEach(poly => {
-                    let include = true;
-                    const area = parseFloat(poly.sqfeet) || 0;
-                    const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
-                    const variation = buildingVariations[poly.gisid];
-
-                    // Usage Filter
-                    if (!allUsageSelected) {
-                        const usage = buildingData?.building_usage || '';
-                        if (usage !== selectedUsage) include = false;
-                    }
-
-                    // Usage Variation Filter
-                    if (include && !allUsageVariationSelected) {
-                        if (!variation) {
-                            if (usageVariation === 'match' || usageVariation === 'variation') include = false;
-                        } else {
-                            if (usageVariation === 'match' && variation.usage_status !== 'MATCH') include = false;
-                            if (usageVariation === 'variation' && variation.usage_status !== 'VARIATION') include =
-                            false;
-                            if (usageVariation === 'unmapped' && variation.usage_status) include = false;
-                        }
-                    }
-
-                    // Area Variation Filter
-                    if (include && !allAreaVariationSelected) {
-                        if (!variation) {
-                            if (areaVariation === 'match' || areaVariation === 'variation') include = false;
-                        } else {
-                            const varPercent = parseFloat(variation.variation_percentage) || 0;
-                            if (areaVariation === 'match' && variation.area_status !== 'MATCH') include = false;
-                            if (areaVariation === 'variation' && variation.area_status !== 'VARIATION') include =
-                            false;
-                            if (areaVariation === 'high_variation' && varPercent <= 20) include = false;
-                            if (areaVariation === 'low_variation' && (varPercent >= 5 || varPercent === 0)) include =
-                                false;
-                        }
-                    }
-
-                    // Zone Filter
-                    if (include && !allZonesSelected) {
-                        const zone = buildingData?.zone || buildingData?.building_zone || '';
-                        if (zone !== selectedZone) include = false;
-                    }
-
-                    // Construction Filter
-                    if (include && !allConstructionSelected) {
-                        const construction = buildingData?.construction_type || '';
-                        if (construction !== selectedConstruction) include = false;
-                    }
-
-                    // Building Type Filter
-                    if (include && !allBuildingTypesSelected) {
-                        const buildingType = buildingData?.building_type || '';
-                        if (buildingType !== selectedBuildingType) include = false;
-                    }
-
-                    // Amenities Filter
-                    if (include && !noAmenitiesSelected) {
-                        const hasAllAmenities = selectedAmenities.every(amenity => {
-                            const value = buildingData?.[amenity];
-                            return value === 'Yes' || value === true || value === 1 ||
-                                (typeof value === 'string' && value.toLowerCase() === 'yes');
-                        });
-                        if (!hasAllAmenities) include = false;
-                    }
-
-                    // UGD Filter
-                    if (include && !allUgdSelected) {
-                        const ugd = buildingData?.ugd || '';
-                        if (ugd !== selectedUgd) include = false;
-                    }
-
-                    // Survey Status Filter
-                    if (include && !allSurveyStatusSelected) {
-                        const hasSurvey = !!buildingData;
-                        if (selectedSurveyStatus === 'surveyed' && !hasSurvey) include = false;
-                        if (selectedSurveyStatus === 'not_surveyed' && hasSurvey) include = false;
-                        if (selectedSurveyStatus === 'partially_surveyed') {
-                            const pointCount = pointDatas.filter(pd => pd.point_gisid == poly.gisid).length;
-                            if (!hasSurvey || pointCount === 0 || pointCount >= (buildingData?.number_bill || 0)) {
-                                include = false;
-                            }
-                        }
-                    }
-
-                    // Assessment Count Filter
-                    if (include && !allAssessmentCountSelected) {
-                        const pointCount = pointDatas.filter(pd => pd.point_gisid == poly.gisid).length;
-                        if (selectedAssessmentCount === 'zero' && pointCount > 0) include = false;
-                        if (selectedAssessmentCount === 'one' && pointCount !== 1) include = false;
-                        if (selectedAssessmentCount === 'two' && pointCount !== 2) include = false;
-                        if (selectedAssessmentCount === 'three_plus' && pointCount < 3) include = false;
-                    }
-
-                    // Floor Filter
-                    if (include && !allFloorSelected) {
-                        const floors = parseInt(buildingData?.number_floor) || 0;
-                        if (selectedFloor === '0' && floors > 0) include = false;
-                        if (selectedFloor === '1' && floors !== 1) include = false;
-                        if (selectedFloor === '2' && floors !== 2) include = false;
-                        if (selectedFloor === '3' && floors !== 3) include = false;
-                        if (selectedFloor === '4' && floors < 4) include = false;
-                    }
-
-                    // Shop Filter
-                    if (include && !allShopSelected) {
-                        const shops = parseInt(buildingData?.number_shop) || 0;
-                        if (selectedShop === '0' && shops > 0) include = false;
-                        if (selectedShop === '1' && shops !== 1) include = false;
-                        if (selectedShop === '2' && shops !== 2) include = false;
-                        if (selectedShop === '3' && shops < 3) include = false;
-                    }
-
-                    // Area Filter
-                    if (include && !areaDefault) {
-                        if (area < minArea || area > maxArea) include = false;
-                    }
-
-                    if (include) {
+                    if (finalGisids.has(poly.gisid)) {
                         totalBuildings++;
+                        const buildingData = polygonDatas.find(d => d.gisid === poly.gisid);
+                        const variation = buildingVariations[poly.gisid];
+
                         if (buildingData) surveyedCount++;
                         if (variation && variation.usage_status === 'VARIATION') variationCount++;
 
@@ -3601,8 +3748,8 @@
                     }
                 });
 
-                const allFeatures = polygonSource.getFeatures();
-                const visibleCount = allFeatures.length;
+                // ─── STEP 4: UPDATE UI ───
+                const visibleCount = polygonSource.getFeatures().length;
                 const total = polygons.length;
 
                 $('#visibleCount').text(visibleCount);
@@ -3616,8 +3763,8 @@
                 $('#statTotal').text(total);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(total - polygonDatas.length);
-                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION')
-                    .length);
+                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status ===
+                    'VARIATION').length);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -3642,10 +3789,10 @@
 
                 // Reset area range
                 $('#minArea').val(0);
-                $('#maxArea').val(10000);
-                $('#areaRange').val(5000);
+                $('#maxArea').val(0);
+                $('#areaRange').val(0);
 
-                // Reload all polygons
+                // ─── CLEAR SOURCE AND ADD ALL POLYGONS ───
                 polygonSource.clear();
                 polygons.forEach(poly => {
                     try {
@@ -3669,6 +3816,7 @@
                     }
                 });
 
+                // ─── UPDATE UI ───
                 const allFeatures = polygonSource.getFeatures();
                 $('#visibleCount').text(allFeatures.length);
                 $('#totalCount').text(allFeatures.length);
@@ -3681,8 +3829,8 @@
                 $('#statTotal').text(polygons.length);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(polygons.length - polygonDatas.length);
-                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION')
-                    .length);
+                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status ===
+                    'VARIATION').length);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -3700,37 +3848,25 @@
                 resetAllFilters(false);
             });
 
-            // Area range slider sync
-            $('#areaRange').on('input', function() {
-                const val = parseInt($(this).val());
-                const maxVal = parseInt($('#maxArea').val());
-                if (val > maxVal) {
-                    $(this).val(maxVal);
-                }
-                $('#minArea').val($(this).val());
-            });
 
             $('#minArea').on('change', function() {
                 let val = parseInt($(this).val()) || 0;
-                const maxVal = parseInt($('#maxArea').val()) || 10000;
+                const maxVal = parseInt($('#maxArea').val()) || 0;
                 if (val > maxVal) {
                     val = maxVal;
                     $(this).val(val);
                 }
-                $('#areaRange').val(val);
+
             });
 
             $('#maxArea').on('change', function() {
-                let val = parseInt($(this).val()) || 10000;
+                let val = parseInt($(this).val()) || 0;
                 const minVal = parseInt($('#minArea').val()) || 0;
                 if (val < minVal) {
                     val = minVal;
                     $(this).val(val);
                 }
-                const sliderVal = parseInt($('#areaRange').val());
-                if (sliderVal > val) {
-                    $('#areaRange').val(val);
-                }
+
             });
 
             // ─── FILTER SEARCH ───
