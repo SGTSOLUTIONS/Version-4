@@ -228,7 +228,7 @@
         <nav class="ol-breadcrumb" aria-label="Breadcrumb">
 
             <i class="bi bi-chevron-right"></i>
-            <span class="page-title">@yield('page_title', 'Dashboard')</span>
+            <span class="page-title">{{ ucfirst(auth()->user()->role) }} GIS Dashboard</span>
         </nav>
 
         <div class="ol-header-actions">
