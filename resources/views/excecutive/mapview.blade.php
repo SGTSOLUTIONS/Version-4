@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
     <style>
-        /* ─── All existing styles remain the same ─── */
+        /* ─── Base Styles ─── */
         .dropdown-header {
             padding: 8px 18px;
             font-size: 0.75rem;
@@ -48,12 +48,6 @@
             background: #f8f9fa;
         }
 
-        .map-title {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
         #map {
             width: 100%;
             height: 800px;
@@ -61,7 +55,7 @@
             position: relative;
         }
 
-        /* ─── MAP CONTROLS STACK ─── */
+        /* ─── Map Controls Stack ─── */
         .map-controls-stack {
             position: absolute;
             right: 20px;
@@ -73,7 +67,7 @@
             pointer-events: auto;
         }
 
-        /* ─── TOGGLE BUTTON STYLES ─── */
+        /* ─── Toggle Buttons ─── */
         .layer-toggle-btn,
         .location-toggle-btn,
         .search-toggle-btn,
@@ -119,12 +113,6 @@
             border-color: #0d6efd;
         }
 
-        .threed-toggle-btn.active-3d {
-            color: #0d6efd;
-            background: #e3f0ff;
-            border-color: #0d6efd;
-        }
-
         .location-toggle-btn.active-location {
             color: #0d6efd;
             background: #e3f0ff;
@@ -144,12 +132,6 @@
             border-color: #0d6efd;
         }
 
-        .legend-toggle-btn.active-legend {
-            color: #0d6efd;
-            background: #e3f0ff;
-            border-color: #0d6efd;
-        }
-
         @keyframes pulse {
             0% {
                 opacity: 1;
@@ -162,7 +144,7 @@
             }
         }
 
-        /* ─── DROPDOWN STYLES ─── */
+        /* ─── Dropdowns ─── */
         .layer-dropdown,
         .location-dropdown,
         .search-dropdown,
@@ -202,10 +184,99 @@
         }
 
         .filter-dropdown {
-            min-width: 320px;
+            min-width: 350px;
             max-height: 80vh;
+            overflow: hidden;
         }
 
+        /* ─── Filter Scroll Container ─── */
+        .filter-scroll-container {
+            max-height: 55vh;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .filter-scroll-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .filter-scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .filter-scroll-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .filter-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        .filter-section {
+            padding: 8px 16px;
+        }
+
+        .filter-section-header {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .filter-range {
+            padding: 4px 0;
+        }
+
+        .range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .range-inputs input[type="number"] {
+            width: 80px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 12px;
+        }
+
+        .range-separator {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .filter-actions {
+            padding: 12px 16px;
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .filter-stats {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        .filter-stats strong {
+            color: #0d6efd;
+        }
+
+        .text-muted {
+            font-size: 10px;
+            color: #6c757d;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* ─── Layer Dropdown Items ─── */
         .layer-dropdown-item,
         .location-dropdown-item {
             display: flex;
@@ -261,7 +332,7 @@
             color: white;
         }
 
-        /* ─── SEARCH STYLES ─── */
+        /* ─── Search Styles ─── */
         .search-tab-btn {
             border: none;
             background: transparent;
@@ -369,64 +440,7 @@
             box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
         }
 
-        /* ─── FILTER SECTION ─── */
-        .filter-section {
-            padding: 8px 16px;
-        }
-
-        .filter-section-header {
-            font-size: 11px;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .filter-range {
-            padding: 4px 0;
-        }
-
-        .range-inputs {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-
-        .range-inputs input[type="number"] {
-            width: 80px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            font-size: 12px;
-        }
-
-        .range-separator {
-            color: #999;
-            font-size: 12px;
-        }
-
-        .filter-actions {
-            padding: 12px 16px;
-            border-top: 1px solid #e9ecef;
-            background: #f8f9fa;
-            border-radius: 0 0 12px 12px;
-        }
-
-        .filter-actions .btn {
-            font-size: 13px;
-            padding: 6px 12px;
-        }
-
-        .filter-stats {
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-            margin-top: 6px;
-        }
-
-        /* ─── TOAST ─── */
+        /* ─── Toast ─── */
         .toast-container {
             position: fixed;
             bottom: 80px;
@@ -453,7 +467,7 @@
             -webkit-backdrop-filter: blur(10px);
         }
 
-        /* ─── FULLSCREEN ─── */
+        /* ─── Fullscreen ─── */
         .fullscreen-btn {
             position: absolute;
             right: 20px;
@@ -510,7 +524,7 @@
             height: calc(100vh - 5px);
         }
 
-        /* ─── MODAL STYLES ─── */
+        /* ─── Modal Styles ─── */
         .bld-modal-content {
             border: none;
             border-radius: 20px;
@@ -960,7 +974,34 @@
             color: #94a3b8;
         }
 
-        /* ─── RESPONSIVE ─── */
+        /* ─── Quick Stats ─── */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 8px 16px;
+            padding: 12px;
+            font-size: 12px;
+        }
+
+        .quick-stats .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .quick-stats .stat-item strong {
+            color: #1e293b;
+        }
+
+        .quick-stats .stat-item .stat-value {
+            color: #0d6efd;
+            font-weight: 600;
+        }
+
+        /* ─── Responsive ─── */
         @media (max-width: 768px) {
             #map {
                 height: 500px;
@@ -1006,7 +1047,7 @@
             }
 
             .filter-dropdown {
-                min-width: 280px;
+                min-width: 300px;
                 right: -10px;
             }
 
@@ -1019,6 +1060,10 @@
             }
 
             .point-data-card-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .quick-stats {
                 grid-template-columns: 1fr 1fr;
             }
         }
@@ -1069,7 +1114,7 @@
             }
 
             .filter-dropdown {
-                min-width: 240px;
+                min-width: 260px;
                 right: -15px;
                 max-height: 70vh;
             }
@@ -1116,19 +1161,13 @@
                 width: 100%;
             }
 
-            .filter-actions .btn {
-                font-size: 12px;
-                padding: 5px 10px;
-            }
-
-            .range-inputs input[type="number"] {
-                width: 60px;
+            .quick-stats {
+                grid-template-columns: 1fr 1fr;
                 font-size: 10px;
-                padding: 3px 6px;
             }
         }
 
-        /* Touch-friendly improvements */
+        /* Touch-friendly */
         @media (hover: none) and (pointer: coarse) {
             .layer-toggle-btn,
             .location-toggle-btn,
@@ -1151,11 +1190,6 @@
                 font-size: 12px;
                 padding: 4px 12px;
             }
-
-            .filter-actions .btn {
-                min-height: 38px;
-                font-size: 13px;
-            }
         }
     </style>
 @endpush
@@ -1173,7 +1207,7 @@
     <div class="map-card" id="mapCard">
         <div class="map-header">
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
-            <span class="text-muted small" id="featureCountBadge">Features: 0</span>
+            <span class="text-muted small" id="featureCountBadge">Buildings: 0</span>
         </div>
         <div id="map"></div>
     </div>
@@ -1509,7 +1543,7 @@
             // ─── SEARCH INDEX ───
             let searchIndex = [];
 
-            // ─── LOCATION TRACKING VARIABLES ───
+            // ─── LOCATION TRACKING ───
             let watchId = null;
             let isTracking = false;
             let isLiveLocation = false;
@@ -1772,6 +1806,7 @@
                 });
                 console.log('📊 Polygons loaded:', polygonSource.getFeatures().length);
                 updateFeatureCount();
+                updateQuickStats();
             }
 
             function loadLineSource() {
@@ -1811,6 +1846,15 @@
             function updateFeatureCount() {
                 const count = polygonSource.getFeatures().length;
                 $('#featureCountBadge').text(`Buildings: ${count}`);
+            }
+
+            function updateQuickStats() {
+                $('#statTotal').text(polygons.length);
+                $('#statSurveyed').text(polygonDatas.length);
+                $('#statUnsurveyed').text(polygons.length - polygonDatas.length);
+                const variationCount = Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION')
+                    .length;
+                $('#statVariation').text(variationCount);
             }
 
             loadPolygonSource();
@@ -1869,7 +1913,7 @@
             const $stack = $('#mapControlsStack');
 
             // ─── CONTROLS INJECTION ───
-            // 1. FILTER TOGGLE
+            // 1. FILTER TOGGLE WITH FULL SCROLLABLE CONTAINER
             $stack.append(`
                 <div class="custom-filter-toggle">
                     <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
@@ -1877,7 +1921,8 @@
                     </button>
                     <div class="filter-dropdown" id="filterDropdown">
                         <div class="dropdown-header">🔍 Filter Features</div>
-                        <div class="filter-scroll-container" style="max-height:60vh;overflow-y:auto;">
+                        <div class="filter-scroll-container">
+                            <!-- Building Usage Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Building Usage</div>
                                 <select class="form-select form-select-sm" id="usageFilter">
@@ -1889,9 +1934,42 @@
                                     <option value="MIXED">Mixed</option>
                                     <option value="GOVERNMENT">Government</option>
                                     <option value="VACANT">Vacant</option>
+                                    <option value="OTHER">Other</option>
                                 </select>
                             </div>
+
                             <div class="dropdown-divider"></div>
+
+                            <!-- Usage Variation Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Usage Variation</div>
+                                <select class="form-select form-select-sm" id="usageVariationFilter">
+                                    <option value="all">All Buildings</option>
+                                    <option value="match">Matching Only</option>
+                                    <option value="variation">With Variation Only</option>
+                                    <option value="unmapped">Unmapped Buildings</option>
+                                </select>
+                                <small class="text-muted">Compare building usage with assessment records</small>
+                            </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Area Variation Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Area Variation</div>
+                                <select class="form-select form-select-sm" id="areaVariationFilter">
+                                    <option value="all">All Buildings</option>
+                                    <option value="match">Matching Only</option>
+                                    <option value="variation">With Variation Only</option>
+                                    <option value="high_variation">High Variation (>20%)</option>
+                                    <option value="low_variation">Low Variation (<5%)</option>
+                                </select>
+                                <small class="text-muted">Compare building area with assessment area</small>
+                            </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Area Range Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Area Range (sqft)</div>
                                 <div class="filter-range">
@@ -1900,11 +1978,15 @@
                                         <span class="range-separator">to</span>
                                         <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000">
                                     </div>
+                                    <input type="range" id="areaRange" class="form-range" min="0" max="10000" step="100" value="5000">
                                 </div>
                             </div>
+
                             <div class="dropdown-divider"></div>
+
+                            <!-- Zonation Filter -->
                             <div class="filter-section">
-                                <div class="filter-section-header">Zone</div>
+                                <div class="filter-section-header">Zonation</div>
                                 <select class="form-select form-select-sm" id="zoneFilter">
                                     <option value="all">All</option>
                                     <option value="ZONE-A">Zone A</option>
@@ -1912,9 +1994,14 @@
                                     <option value="ZONE-C">Zone C</option>
                                     <option value="ZONE-D">Zone D</option>
                                     <option value="ZONE-E">Zone E</option>
+                                    <option value="ZONE-F">Zone F</option>
+                                    <option value="ZONE-G">Zone G</option>
                                 </select>
                             </div>
+
                             <div class="dropdown-divider"></div>
+
+                            <!-- Construction Type Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Construction Type</div>
                                 <select class="form-select form-select-sm" id="constructionFilter">
@@ -1923,22 +2010,153 @@
                                     <option value="SEMI_PERMANENT">Semi Permanent</option>
                                     <option value="VACANT_LAND">Vacant Land</option>
                                     <option value="SHED">Shed</option>
+                                    <option value="CAR_SHED">Car Shed</option>
+                                    <option value="TEMPORARY">Temporary</option>
+                                    <option value="UNDER_CONSTRUCTION">Under Construction</option>
                                 </select>
                             </div>
+
                             <div class="dropdown-divider"></div>
+
+                            <!-- Building Type Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Building Type</div>
+                                <select class="form-select form-select-sm" id="buildingTypeFilter">
+                                    <option value="all">All</option>
+                                    <option value="Independent">Independent</option>
+                                    <option value="Flat">Flat</option>
+                                    <option value="Kalyana_Mandapam">Kalyana Mandapam</option>
+                                    <option value="Hotel">Hotel</option>
+                                    <option value="Cinema_Theatre">Cinema Theatre</option>
+                                    <option value="Central_Government_Building">Central Govt</option>
+                                    <option value="State_Government_Building">State Govt</option>
+                                    <option value="Municipality_Corporation">Municipality</option>
+                                    <option value="Educational_Institution">Educational</option>
+                                    <option value="Hospital">Hospital</option>
+                                    <option value="Commercial_Complex">Commercial Complex</option>
+                                    <option value="Shop">Shop</option>
+                                    <option value="Office">Office</option>
+                                    <option value="Temple">Temple</option>
+                                    <option value="Mosque">Mosque</option>
+                                    <option value="Church">Church</option>
+                                    <option value="Amma_Unavagam">Amma Unavagam</option>
+                                    <option value="Public_Toilet">Public Toilet</option>
+                                    <option value="Vacant Land">Vacant Land</option>
+                                    <option value="Under Construction">Under Construction</option>
+                                    <option value="Others">Others</option>
+                                </select>
+                            </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Amenities Filters -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Amenities</div>
+                                <select class="form-select form-select-sm" id="amenitiesFilter" multiple size="4">
+                                    <option value="liftroom">Lift</option>
+                                    <option value="headroom">Head Room</option>
+                                    <option value="overhead_tank">Overhead Tank</option>
+                                    <option value="rainwater_harvesting">Rainwater Harvesting</option>
+                                    <option value="parking">Parking</option>
+                                    <option value="ramp">Ramp</option>
+                                    <option value="hoarding">Hoarding</option>
+                                    <option value="cctv">CCTV</option>
+                                    <option value="cell_tower">Cell Tower</option>
+                                    <option value="solar_panel">Solar Panel</option>
+                                    <option value="water_connection">Water Connection</option>
+                                </select>
+                                <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
+                            </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- UGD Status Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">UGD Status</div>
                                 <select class="form-select form-select-sm" id="ugdFilter">
                                     <option value="all">All</option>
                                     <option value="No_Connection">No Connection</option>
-                                    <option value="Manhole_Available">Manhole Available</option>
+                                    <option value="Manhole_Available_but_Connection_Not_Given_to_House">Manhole Available</option>
                                     <option value="Stage_1_Completed">Stage 1 Completed</option>
                                     <option value="Stage_1_2_Completed">Stage 1 & 2 Completed</option>
+                                    <option value="Stage_1_2_Completed_but_Not_Connected">Stage 1 & 2 Not Connected</option>
+                                    <option value="Stage_1_2_3_Completed">Stage 1,2 & 3 Completed</option>
                                     <option value="Direct_Connection_Given">Direct Connection</option>
+                                    <option value="1_UGD_Connection_-_3_Stage_Completed">1 UGD - 3 Stage</option>
+                                    <option value="2_UGD_Connection_-_3_Stage_Completed">2 UGD - 3 Stage</option>
                                 </select>
                             </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Survey Status Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Survey Status</div>
+                                <select class="form-select form-select-sm" id="surveyStatusFilter">
+                                    <option value="all">All</option>
+                                    <option value="surveyed">Surveyed</option>
+                                    <option value="not_surveyed">Not Surveyed</option>
+                                    <option value="partially_surveyed">Partially Surveyed</option>
+                                </select>
+                            </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Assessment Count Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Assessment Count</div>
+                                <select class="form-select form-select-sm" id="assessmentCountFilter">
+                                    <option value="all">All</option>
+                                    <option value="zero">No Assessments</option>
+                                    <option value="one">1 Assessment</option>
+                                    <option value="two">2 Assessments</option>
+                                    <option value="three_plus">3+ Assessments</option>
+                                </select>
+                            </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Floor Count Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Number of Floors</div>
+                                <select class="form-select form-select-sm" id="floorFilter">
+                                    <option value="all">All</option>
+                                    <option value="0">Ground Floor Only</option>
+                                    <option value="1">1 Floor</option>
+                                    <option value="2">2 Floors</option>
+                                    <option value="3">3 Floors</option>
+                                    <option value="4">4+ Floors</option>
+                                </select>
+                            </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Shop Count Filter -->
+                            <div class="filter-section">
+                                <div class="filter-section-header">Number of Shops</div>
+                                <select class="form-select form-select-sm" id="shopFilter">
+                                    <option value="all">All</option>
+                                    <option value="0">No Shops</option>
+                                    <option value="1">1 Shop</option>
+                                    <option value="2">2 Shops</option>
+                                    <option value="3">3+ Shops</option>
+                                </select>
+                            </div>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Quick Stats -->
+                            <div class="quick-stats" id="quickStats">
+                                <div class="stat-item"><strong>Total:</strong> <span class="stat-value" id="statTotal">0</span></div>
+                                <div class="stat-item"><strong>Surveyed:</strong> <span class="stat-value" id="statSurveyed">0</span></div>
+                                <div class="stat-item"><strong>Unsurveyed:</strong> <span class="stat-value" id="statUnsurveyed">0</span></div>
+                                <div class="stat-item"><strong>With Variation:</strong> <span class="stat-value" id="statVariation">0</span></div>
+                            </div>
                         </div>
+
                         <div class="dropdown-divider"></div>
+
+                        <!-- Filter Actions -->
                         <div class="filter-actions">
                             <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn">
                                 <i class="bi bi-check-circle"></i> Apply Filters
@@ -1947,7 +2165,7 @@
                                 <i class="bi bi-arrow-counterclockwise"></i> Reset All
                             </button>
                             <div class="filter-stats mt-2" id="filterStats">
-                                <span>Showing: <strong id="visibleCount">0</strong> features</span>
+                                <span>Showing: <strong id="visibleCount">0</strong> of <strong id="totalCount">0</strong> features</span>
                             </div>
                         </div>
                     </div>
@@ -3177,31 +3395,53 @@
                 }
             });
 
-            // ─── FILTER EVENT HANDLERS ───
+            // ─── FILTER FUNCTIONS ───
 
             function updateFilterStats() {
                 const total = polygonSource.getFeatures().length;
                 $('#visibleCount').text(total);
+                $('#totalCount').text(polygons.length);
                 $('#filterStats').html(
-                    `Showing: <strong>${total}</strong> of <strong>${total}</strong> features`);
+                    `Showing: <strong>${total}</strong> of <strong>${polygons.length}</strong> features`);
+                updateFeatureCount();
+                updateQuickStats();
             }
 
             function applyFilters() {
                 const selectedUsage = $('#usageFilter').val();
+                const usageVariation = $('#usageVariationFilter').val();
+                const areaVariation = $('#areaVariationFilter').val();
                 const selectedZone = $('#zoneFilter').val();
                 const selectedConstruction = $('#constructionFilter').val();
+                const selectedBuildingType = $('#buildingTypeFilter').val();
+                const selectedAmenities = $('#amenitiesFilter').val() || [];
                 const selectedUgd = $('#ugdFilter').val();
+                const selectedSurveyStatus = $('#surveyStatusFilter').val();
+                const selectedAssessmentCount = $('#assessmentCountFilter').val();
+                const selectedFloor = $('#floorFilter').val();
+                const selectedShop = $('#shopFilter').val();
                 const minArea = parseInt($('#minArea').val()) || 0;
                 const maxArea = parseInt($('#maxArea').val()) || 10000;
 
                 const allUsageSelected = selectedUsage === 'all';
                 const allZonesSelected = selectedZone === 'all';
                 const allConstructionSelected = selectedConstruction === 'all';
+                const allBuildingTypesSelected = selectedBuildingType === 'all';
                 const allUgdSelected = selectedUgd === 'all';
+                const allSurveyStatusSelected = selectedSurveyStatus === 'all';
+                const allAssessmentCountSelected = selectedAssessmentCount === 'all';
+                const allFloorSelected = selectedFloor === 'all';
+                const allShopSelected = selectedShop === 'all';
+                const allUsageVariationSelected = usageVariation === 'all';
+                const allAreaVariationSelected = areaVariation === 'all';
+                const noAmenitiesSelected = selectedAmenities.length === 0;
                 const areaDefault = minArea === 0 && maxArea === 10000;
 
                 const anyFilterActive = !allUsageSelected || !allZonesSelected || !allConstructionSelected ||
-                    !allUgdSelected || !areaDefault;
+                    !allBuildingTypesSelected || !allUgdSelected || !allSurveyStatusSelected ||
+                    !allAssessmentCountSelected || !allFloorSelected || !allShopSelected ||
+                    !allUsageVariationSelected || !allAreaVariationSelected ||
+                    !noAmenitiesSelected || !areaDefault;
 
                 if (!anyFilterActive) {
                     resetAllFilters(true);
@@ -3211,44 +3451,134 @@
 
                 polygonSource.clear();
 
+                let totalBuildings = 0;
+                let surveyedCount = 0;
+                let variationCount = 0;
+
                 polygons.forEach(poly => {
                     let include = true;
                     const area = parseFloat(poly.sqfeet) || 0;
+                    const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
+                    const variation = buildingVariations[poly.gisid];
 
-                    // Usage filter
+                    // Usage Filter
                     if (!allUsageSelected) {
-                        const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const usage = buildingData?.building_usage || '';
                         if (usage !== selectedUsage) include = false;
                     }
 
-                    // Zone filter
+                    // Usage Variation Filter
+                    if (include && !allUsageVariationSelected) {
+                        if (!variation) {
+                            if (usageVariation === 'match' || usageVariation === 'variation') include = false;
+                        } else {
+                            if (usageVariation === 'match' && variation.usage_status !== 'MATCH') include = false;
+                            if (usageVariation === 'variation' && variation.usage_status !== 'VARIATION') include =
+                            false;
+                            if (usageVariation === 'unmapped' && variation.usage_status) include = false;
+                        }
+                    }
+
+                    // Area Variation Filter
+                    if (include && !allAreaVariationSelected) {
+                        if (!variation) {
+                            if (areaVariation === 'match' || areaVariation === 'variation') include = false;
+                        } else {
+                            const varPercent = parseFloat(variation.variation_percentage) || 0;
+                            if (areaVariation === 'match' && variation.area_status !== 'MATCH') include = false;
+                            if (areaVariation === 'variation' && variation.area_status !== 'VARIATION') include =
+                            false;
+                            if (areaVariation === 'high_variation' && varPercent <= 20) include = false;
+                            if (areaVariation === 'low_variation' && (varPercent >= 5 || varPercent === 0)) include =
+                                false;
+                        }
+                    }
+
+                    // Zone Filter
                     if (include && !allZonesSelected) {
-                        const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const zone = buildingData?.zone || buildingData?.building_zone || '';
                         if (zone !== selectedZone) include = false;
                     }
 
-                    // Construction filter
+                    // Construction Filter
                     if (include && !allConstructionSelected) {
-                        const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const construction = buildingData?.construction_type || '';
                         if (construction !== selectedConstruction) include = false;
                     }
 
-                    // UGD filter
+                    // Building Type Filter
+                    if (include && !allBuildingTypesSelected) {
+                        const buildingType = buildingData?.building_type || '';
+                        if (buildingType !== selectedBuildingType) include = false;
+                    }
+
+                    // Amenities Filter
+                    if (include && !noAmenitiesSelected) {
+                        const hasAllAmenities = selectedAmenities.every(amenity => {
+                            const value = buildingData?.[amenity];
+                            return value === 'Yes' || value === true || value === 1 ||
+                                (typeof value === 'string' && value.toLowerCase() === 'yes');
+                        });
+                        if (!hasAllAmenities) include = false;
+                    }
+
+                    // UGD Filter
                     if (include && !allUgdSelected) {
-                        const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const ugd = buildingData?.ugd || '';
                         if (ugd !== selectedUgd) include = false;
                     }
 
-                    // Area filter
+                    // Survey Status Filter
+                    if (include && !allSurveyStatusSelected) {
+                        const hasSurvey = !!buildingData;
+                        if (selectedSurveyStatus === 'surveyed' && !hasSurvey) include = false;
+                        if (selectedSurveyStatus === 'not_surveyed' && hasSurvey) include = false;
+                        if (selectedSurveyStatus === 'partially_surveyed') {
+                            const pointCount = pointDatas.filter(pd => pd.point_gisid == poly.gisid).length;
+                            if (!hasSurvey || pointCount === 0 || pointCount >= (buildingData?.number_bill || 0)) {
+                                include = false;
+                            }
+                        }
+                    }
+
+                    // Assessment Count Filter
+                    if (include && !allAssessmentCountSelected) {
+                        const pointCount = pointDatas.filter(pd => pd.point_gisid == poly.gisid).length;
+                        if (selectedAssessmentCount === 'zero' && pointCount > 0) include = false;
+                        if (selectedAssessmentCount === 'one' && pointCount !== 1) include = false;
+                        if (selectedAssessmentCount === 'two' && pointCount !== 2) include = false;
+                        if (selectedAssessmentCount === 'three_plus' && pointCount < 3) include = false;
+                    }
+
+                    // Floor Filter
+                    if (include && !allFloorSelected) {
+                        const floors = parseInt(buildingData?.number_floor) || 0;
+                        if (selectedFloor === '0' && floors > 0) include = false;
+                        if (selectedFloor === '1' && floors !== 1) include = false;
+                        if (selectedFloor === '2' && floors !== 2) include = false;
+                        if (selectedFloor === '3' && floors !== 3) include = false;
+                        if (selectedFloor === '4' && floors < 4) include = false;
+                    }
+
+                    // Shop Filter
+                    if (include && !allShopSelected) {
+                        const shops = parseInt(buildingData?.number_shop) || 0;
+                        if (selectedShop === '0' && shops > 0) include = false;
+                        if (selectedShop === '1' && shops !== 1) include = false;
+                        if (selectedShop === '2' && shops !== 2) include = false;
+                        if (selectedShop === '3' && shops < 3) include = false;
+                    }
+
+                    // Area Filter
                     if (include && !areaDefault) {
                         if (area < minArea || area > maxArea) include = false;
                     }
 
                     if (include) {
+                        totalBuildings++;
+                        if (buildingData) surveyedCount++;
+                        if (variation && variation.usage_status === 'VARIATION') variationCount++;
+
                         try {
                             let coords = JSON.parse(poly.coordinates);
                             const feature = new ol.Feature({
@@ -3276,9 +3606,18 @@
                 const total = polygons.length;
 
                 $('#visibleCount').text(visibleCount);
+                $('#totalCount').text(total);
                 $('#filterStats').html(
-                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
+                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`
+                );
                 $('#featureCountBadge').text(`Buildings: ${visibleCount}`);
+
+                // Update quick stats
+                $('#statTotal').text(total);
+                $('#statSurveyed').text(polygonDatas.length);
+                $('#statUnsurveyed').text(total - polygonDatas.length);
+                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION')
+                    .length);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -3289,18 +3628,24 @@
                 } else if (visibleCount === 0) {
                     showToast(`⚠️ No features match the selected filters`, 3000);
                 } else {
-                    showToast(`✅ All ${visibleCount} features match the selected filters`, 2000);
+                    showToast(`✅ ${visibleCount} features match the selected filters`, 2000);
                 }
             }
 
             function resetAllFilters(silent = false) {
-                $('#usageFilter').val('all');
-                $('#zoneFilter').val('all');
-                $('#constructionFilter').val('all');
-                $('#ugdFilter').val('all');
+                // Reset all dropdowns
+                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter')
+                    .val('all');
+                $('#usageVariationFilter, #areaVariationFilter, #assessmentCountFilter, #floorFilter, #shopFilter')
+                    .val('all');
+                $('#amenitiesFilter').val([]);
+
+                // Reset area range
                 $('#minArea').val(0);
                 $('#maxArea').val(10000);
+                $('#areaRange').val(5000);
 
+                // Reload all polygons
                 polygonSource.clear();
                 polygons.forEach(poly => {
                     try {
@@ -3326,10 +3671,18 @@
 
                 const allFeatures = polygonSource.getFeatures();
                 $('#visibleCount').text(allFeatures.length);
+                $('#totalCount').text(allFeatures.length);
                 $('#filterStats').html(
                     `Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`
                 );
                 $('#featureCountBadge').text(`Buildings: ${allFeatures.length}`);
+
+                // Update quick stats
+                $('#statTotal').text(polygons.length);
+                $('#statSurveyed').text(polygonDatas.length);
+                $('#statUnsurveyed').text(polygons.length - polygonDatas.length);
+                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION')
+                    .length);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -3347,6 +3700,16 @@
                 resetAllFilters(false);
             });
 
+            // Area range slider sync
+            $('#areaRange').on('input', function() {
+                const val = parseInt($(this).val());
+                const maxVal = parseInt($('#maxArea').val());
+                if (val > maxVal) {
+                    $(this).val(maxVal);
+                }
+                $('#minArea').val($(this).val());
+            });
+
             $('#minArea').on('change', function() {
                 let val = parseInt($(this).val()) || 0;
                 const maxVal = parseInt($('#maxArea').val()) || 10000;
@@ -3354,6 +3717,7 @@
                     val = maxVal;
                     $(this).val(val);
                 }
+                $('#areaRange').val(val);
             });
 
             $('#maxArea').on('change', function() {
@@ -3363,9 +3727,13 @@
                     val = minVal;
                     $(this).val(val);
                 }
+                const sliderVal = parseInt($('#areaRange').val());
+                if (sliderVal > val) {
+                    $('#areaRange').val(val);
+                }
             });
 
-            // ─── FILTER SEARCH EVENT HANDLERS ───
+            // ─── FILTER SEARCH ───
 
             $('#applyFilterBtn').on('click', function() {
                 const assessment = $('#filterAssessment').val().toLowerCase().trim();
