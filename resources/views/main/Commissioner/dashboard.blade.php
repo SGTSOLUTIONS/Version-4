@@ -52,18 +52,37 @@
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-
-            /* Background Image setup */
-            background-image: url("{{ asset('city-banner.jpg') }}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-
-            color: #333;
+            background: linear-gradient(180deg, var(--gov-green-dark), var(--gov-green));
+            color: #fff;
             border-radius: 10px;
             padding: 1rem 1.4rem;
             margin-bottom: 1.25rem;
             flex-wrap: wrap;
+            background-image: url("{{ asset('city-banner.jpg') }}");
+            background-size: cover;
+            background-position: left center;
+            background-repeat: no-repeat;
+            position: relative;
+            min-height: 80px;
+            /* Ensures enough height to show the image */
+        }
+
+        .gov-letterhead::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 69, 48, 0.75);
+            border-radius: 10px;
+            z-index: 0;
+        }
+
+        .gov-letterhead .identity,
+        .gov-letterhead .meta {
+            position: relative;
+            z-index: 1;
         }
 
         .gov-letterhead .identity {
