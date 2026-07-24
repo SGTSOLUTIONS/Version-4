@@ -111,13 +111,13 @@
         .gov-letterhead .org-name {
             font-family: var(--font-display);
             font-weight: 700;
-            font-size: 1.05rem;
+            font-size: 1.5rem;
             line-height: 1.2;
         }
 
         .gov-letterhead .org-sub {
             font-family: var(--font-body);
-            font-size: 0.72rem;
+            font-size: 0.92rem;
             letter-spacing: 0.06em;
             text-transform: uppercase;
             color: rgba(255, 255, 255, 0.95);
@@ -330,7 +330,7 @@
 
         .gov-page-sub {
             font-family: var(--font-body);
-            color: var(--ink-500);
+            color: var(--gov-green-dark);
             margin: 0.15rem 0 0 0;
             font-size: 0.85rem;
         }
@@ -383,7 +383,7 @@
             display: flex;
             align-items: stretch;
             background: var(--surface);
-            border: 1px solid var(--border);
+            border: 2px solid var(--gov-green-dark);
             border-radius: 10px;
             overflow: hidden;
         }
@@ -874,7 +874,6 @@
         </div>
         <div class="meta">
             <span class="gov-status-chip"><span class="dot"></span> System Live</span>
-            <br>
             <a href="#" class="gov-export-btn"><i class="bi bi-file-earmark-arrow-down"></i> Export Report</a>
         </div>
     </div>
