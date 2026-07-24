@@ -1064,18 +1064,8 @@
     <div class="ol-page-header">
         <div>
             <h1 class="ol-page-title">
-                @if (auth()->user()->role == 'admin')
-                    Admin GIS Dashboard
-                @elseif(auth()->user()->role == 'executive')
-                    Executive GIS Dashboard
-                @elseif(auth()->user()->role == 'surveyor')
-                    Surveyor GIS Dashboard
-                @elseif(auth()->user()->role == 'viewer')
-                    Viewer GIS Dashboard
-                @else
-                    GIS Dashboard
-                @endif
-            </h1>
+    {{ ucfirst(auth()->user()->role) }} GIS Dashboard
+</h1>
             <p class="ol-page-sub">{{ now()->format('l, d F Y') }} — {{ auth()->user()->name ?? 'Executive Officer' }}</p>
         </div>
         <div class="d-flex gap-2 align-items-center">
@@ -1084,17 +1074,7 @@
     </div>
     <div class="map-card" id="mapCard">
         <div class="map-header">
-            <h5 class="map-title"><i class="bi bi-geo-alt-fill text-primary me-2"></i> @if (auth()->user()->role == 'admin')
-                    Admin GIS Dashboard
-                @elseif(auth()->user()->role == 'executive')
-                    Executive GIS Dashboard
-                @elseif(auth()->user()->role == 'surveyor')
-                    Surveyor GIS Dashboard
-                @elseif(auth()->user()->role == 'viewer')
-                    Viewer GIS Dashboard
-                @else
-                    GIS Dashboard
-                @endif</h5>
+            <h5 class="map-title"><i class="bi bi-geo-alt-fill text-primary me-2"></i>{{ ucfirst(auth()->user()->role) }} GIS Dashboard</h5>
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
         </div>
         <div id="map"></div>
