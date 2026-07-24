@@ -232,14 +232,14 @@
         .gov-breadcrumb {
             font-family: var(--font-body);
             font-size: 0.75rem;
-            color: var(--ink-500);
+            color: var(--ink-700);
             margin-bottom: 0.5rem;
             letter-spacing: 0.03em;
             font-weight: 500;
         }
 
         .gov-breadcrumb a {
-            color: var(--ink-500);
+            color: var(--ink-700);
             text-decoration: none;
             transition: color 0.3s ease;
         }
@@ -304,7 +304,7 @@
         .gov-page-date {
             font-family: var(--font-mono);
             font-size: 0.75rem;
-            color: var(--ink-500);
+            color: var(--ink-700);
             text-align: right;
             font-weight: 600;
         }
@@ -484,7 +484,7 @@
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: var(--ink-500);
+            color: var(--ink-700);
             font-weight: 700;
         }
 
@@ -562,7 +562,7 @@
         .gov-card-meta {
             font-family: var(--font-mono);
             font-size: 0.7rem;
-            color: var(--ink-500);
+            color: var(--ink-700);
             font-weight: 600;
             background: var(--bg-page);
             padding: 0.2rem 0.8rem;
@@ -737,7 +737,7 @@
 
         .zone-register .zone-officer {
             font-size: 0.78rem;
-            color: var(--ink-500);
+            color: var(--ink-700);
             margin-top: 0.1rem;
             font-weight: 600;
         }
@@ -754,7 +754,7 @@
 
         .zone-register .zone-stats span {
             font-size: 0.75rem;
-            color: var(--ink-500);
+            color: var(--ink-700);
             font-weight: 600;
         }
 
@@ -778,7 +778,7 @@
             padding: 0.15rem 0.6rem;
             border-radius: 50px;
             border: 1px solid var(--border);
-            color: var(--ink-500);
+            color: var(--ink-700);
             background: var(--bg-page);
             transition: all 0.3s ease;
         }
@@ -917,7 +917,7 @@
 
         .log-entry .log-time {
             font-size: 0.68rem;
-            color: var(--ink-500);
+            color: var(--ink-700);
             font-family: var(--font-mono);
             white-space: nowrap;
             font-weight: 600;
