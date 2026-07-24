@@ -52,7 +52,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            background: var(--gov-green-dark);
+           background: linear-gradient(to right, var(--gov-green-dark), var(--gov-green), #1a7a52);
             /* Full green background */
             color: #fff;
             border-radius: 10px;
