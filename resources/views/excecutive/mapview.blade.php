@@ -2396,7 +2396,7 @@
                 }
 
                 // ── STEP 1: build a gisid-set for EACH active filter ──
-
+console.log("buildingVariations",buildingVariations);
                 // Area filter → gisids whose sqfeet is inside range
                 let areaGisids = null;
                 if (!areaDefault) {
