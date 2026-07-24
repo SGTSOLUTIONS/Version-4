@@ -383,7 +383,7 @@
             display: flex;
             align-items: stretch;
             background: var(--surface);
-            border: 2px solid var(--gov-green-dark);
+            border: 2px solid var(--gov-green);
             border-radius: 10px;
             overflow: hidden;
         }
