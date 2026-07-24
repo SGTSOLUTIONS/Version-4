@@ -58,7 +58,9 @@
                 <i class="bi bi-building-check"></i>
             </div>
             <div class="ol-brand-text">
-                <div class="ol-brand-sub">Tamil Nadu Gov.</div>
+                <div class="ol-brand-sub">SIRS</div>
+                <div class="ol-brand-sub-text">Spatial Revenue <br> Intelligent System</div>
+
             </div>
         </div>
 
@@ -66,7 +68,7 @@
         <nav class="ol-nav">
 
             {{-- ================= OVERVIEW ================= --}}
-            <div class="ol-nav-section">Overview</div>
+            <div class="ol-nav-section">Main Menu</div>
 
             @auth
 
