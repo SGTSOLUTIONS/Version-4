@@ -10,8 +10,8 @@
         rel="stylesheet">
     <style>
         /* ══════════════════════════════════════════════
-                                   DESIGN TOKENS — Government Revenue Portal
-                                   ══════════════════════════════════════════════ */
+                                       DESIGN TOKENS — Government Revenue Portal
+                                       ══════════════════════════════════════════════ */
         :root {
             --font-display: 'Merriweather', Georgia, serif;
             --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -45,161 +45,153 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   OFFICIAL LETTERHEAD BAR
-                                   ══════════════════════════════════════════════ */
-        .gov-letterhead {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            background: var(--gov-green-dark);
-            color: #fff;
-            border-radius: 10px;
-            padding: 0;
-            margin-bottom: 1.25rem;
-            min-height: 100px;
-            overflow: hidden;
-        }
+                                       OFFICIAL LETTERHEAD BAR
+                                       ══════════════════════════════════════════════ */
+       .gov-letterhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--gov-green-dark); /* Full green background */
+    color: #fff;
+    border-radius: 10px;
+    padding: 1rem 1.4rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    min-height: 100px;
+    position: relative;
+    overflow: hidden;
+}
 
-        /* Right side image */
-        .gov-letterhead .right-image {
-            flex: 0 0 35%;
-            /* Fixed width for image - 35% of container */
-            height: 100%;
-            min-height: 100px;
-            background-image: url("{{ asset('city-banner.jpg') }}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            border-radius: 0 10px 10px 0;
-            /* Round only right corners */
-            order: 2;
-            /* Pushes image to the right */
-        }
+/* Image on LEFT side with LOW OPACITY */
+.gov-letterhead::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%; /* Image covers left 40% */
+    height: 100%;
+    background-image: url("{{ asset('city-banner.jpg') }}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.15; /* LOW OPACITY - like watermark */
+    z-index: 0;
+    border-radius: 10px 0 0 10px;
+}
 
-        /* Content on the left side */
-        .gov-letterhead .content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem 1.4rem;
-            gap: 1rem;
-            flex-wrap: wrap;
-            order: 1;
-            /* Content on the left */
-        }
+/* All content on TOP of the image */
+.gov-letterhead .identity,
+.gov-letterhead .meta {
+    position: relative;
+    z-index: 1;
+}
 
-        .gov-letterhead .identity {
-            display: flex;
-            align-items: center;
-            gap: 0.9rem;
-        }
+.gov-letterhead .identity {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
 
-        .gov-letterhead .seal {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.55);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
+.gov-letterhead .seal {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
 
-        .gov-letterhead .org-name {
-            font-family: var(--font-display);
-            font-weight: 700;
-            font-size: 1.05rem;
-            line-height: 1.2;
-        }
+.gov-letterhead .org-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    line-height: 1.2;
+}
 
-        .gov-letterhead .org-sub {
-            font-family: var(--font-body);
-            font-size: 0.72rem;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.95);
-            margin-top: 0.1rem;
-        }
+.gov-letterhead .org-sub {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.95);
+    margin-top: 0.1rem;
+}
 
-        .gov-letterhead .meta {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            font-family: var(--font-body);
-        }
+.gov-letterhead .meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-body);
+    margin-left: auto;
+}
 
-        .gov-status-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 0.35rem 0.75rem;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
+.gov-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
 
-        .gov-status-chip .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #6ee7b7;
-            box-shadow: 0 0 0 3px rgba(110, 231, 183, 0.25);
-        }
+.gov-status-chip .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6ee7b7;
+    box-shadow: 0 0 0 3px rgba(110, 231, 183, 0.25);
+}
 
-        .gov-export-btn {
-            background: #fff;
-            color: var(--gov-green-dark);
-            border: none;
-            padding: 0.5rem 1.1rem;
-            border-radius: 7px;
-            font-weight: 600;
-            font-size: 0.78rem;
-            font-family: var(--font-body);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
+.gov-export-btn {
+    background: #fff;
+    color: var(--gov-green-dark);
+    border: none;
+    padding: 0.5rem 1.1rem;
+    border-radius: 7px;
+    font-weight: 600;
+    font-size: 0.78rem;
+    font-family: var(--font-body);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
 
-        .gov-export-btn:hover {
-            background: var(--gov-gold-tint);
-            color: var(--gov-green-dark);
-        }
+.gov-export-btn:hover {
+    background: var(--gov-gold-tint);
+    color: var(--gov-green-dark);
+}
 
-        /* Responsive - Stack on mobile */
-        @media (max-width: 768px) {
-            .gov-letterhead {
-                flex-direction: column;
-            }
+/* Responsive */
+@media (max-width: 768px) {
+    .gov-letterhead {
+        flex-direction: column;
+        text-align: center;
+    }
 
-            .gov-letterhead .right-image {
-                flex: 0 0 120px;
-                width: 100%;
-                border-radius: 0 0 10px 10px;
-                order: 2;
-            }
+    .gov-letterhead::before {
+        width: 100%;
+        border-radius: 10px;
+        opacity: 0.1;
+    }
 
-            .gov-letterhead .content {
-                order: 1;
-                flex-direction: column;
-                text-align: center;
-            }
+    .gov-letterhead .identity {
+        flex-direction: column;
+    }
 
-            .gov-letterhead .identity {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .gov-letterhead .meta {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-        }
+    .gov-letterhead .meta {
+        margin-left: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
 
         .gov-letterhead .identity,
         .gov-letterhead .meta {
@@ -289,8 +281,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   BREADCRUMB + PAGE TITLE
-                                   ══════════════════════════════════════════════ */
+                                       BREADCRUMB + PAGE TITLE
+                                       ══════════════════════════════════════════════ */
         .gov-breadcrumb {
             font-family: var(--font-body);
             font-size: 0.72rem;
@@ -348,8 +340,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   SECTION EYEBROWS
-                                   ══════════════════════════════════════════════ */
+                                       SECTION EYEBROWS
+                                       ══════════════════════════════════════════════ */
         .gov-section {
             margin-bottom: 1.75rem;
         }
@@ -382,8 +374,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   HIERARCHY LEDGER
-                                   ══════════════════════════════════════════════ */
+                                       HIERARCHY LEDGER
+                                       ══════════════════════════════════════════════ */
         .ledger-flow {
             display: flex;
             align-items: stretch;
@@ -432,8 +424,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   KPI CARDS
-                                   ══════════════════════════════════════════════ */
+                                       KPI CARDS
+                                       ══════════════════════════════════════════════ */
         .kpi-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -494,8 +486,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   OFFICIAL CARD
-                                   ══════════════════════════════════════════════ */
+                                       OFFICIAL CARD
+                                       ══════════════════════════════════════════════ */
         .gov-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -547,8 +539,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   TABLES
-                                   ══════════════════════════════════════════════ */
+                                       TABLES
+                                       ══════════════════════════════════════════════ */
         .gov-table {
             width: 100%;
             border-collapse: collapse;
@@ -593,8 +585,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   BADGES
-                                   ══════════════════════════════════════════════ */
+                                       BADGES
+                                       ══════════════════════════════════════════════ */
         .gov-badge {
             padding: 0.2rem 0.6rem;
             border-radius: 4px;
@@ -631,8 +623,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   ZONE REGISTER CARDS
-                                   ══════════════════════════════════════════════ */
+                                       ZONE REGISTER CARDS
+                                       ══════════════════════════════════════════════ */
         .zone-register {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -717,8 +709,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   ACTION REGISTRY
-                                   ══════════════════════════════════════════════ */
+                                       ACTION REGISTRY
+                                       ══════════════════════════════════════════════ */
         .action-registry {
             display: flex;
             flex-direction: column;
@@ -766,8 +758,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   ACTIVITY LOG
-                                   ══════════════════════════════════════════════ */
+                                       ACTIVITY LOG
+                                       ══════════════════════════════════════════════ */
         .log-entry {
             display: flex;
             gap: 0.75rem;
@@ -810,8 +802,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   ERROR STATE
-                                   ══════════════════════════════════════════════ */
+                                       ERROR STATE
+                                       ══════════════════════════════════════════════ */
         .gov-error {
             text-align: center;
             padding: 3rem 1rem;
@@ -840,8 +832,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                   RESPONSIVE
-                                   ══════════════════════════════════════════════ */
+                                       RESPONSIVE
+                                       ══════════════════════════════════════════════ */
         @media (max-width: 768px) {
             .ledger-flow {
                 flex-direction: column;
@@ -868,25 +860,19 @@
 
     {{-- ══════════════════════════ OFFICIAL LETTERHEAD ══════════════════════════ --}}
     <div class="gov-letterhead">
-    <!-- Content - LEFT SIDE -->
-    <div class="content">
-        <div class="identity">
-            <div class="seal"><i class="bi bi-shield-check"></i></div>
-            <div>
-                <div class="org-name">
-                    {{ isset($corporation) && $corporation ? $corporation->name : 'Municipal Corporation' }}
-                </div>
-                <div class="org-sub">Revenue &amp; Assessment Management Portal</div>
+    <div class="identity">
+        <div class="seal"><i class="bi bi-shield-check"></i></div>
+        <div>
+            <div class="org-name">
+                {{ isset($corporation) && $corporation ? $corporation->name : 'Municipal Corporation' }}
             </div>
-        </div>
-        <div class="meta">
-            <span class="gov-status-chip"><span class="dot"></span> System Live</span>
-            <a href="#" class="gov-export-btn"><i class="bi bi-file-earmark-arrow-down"></i> Export Report</a>
+            <div class="org-sub">Revenue &amp; Assessment Management Portal</div>
         </div>
     </div>
-
-    <!-- Image - RIGHT SIDE -->
-    <div class="right-image"></div>
+    <div class="meta">
+        <span class="gov-status-chip"><span class="dot"></span> System Live</span>
+        <a href="#" class="gov-export-btn"><i class="bi bi-file-earmark-arrow-down"></i> Export Report</a>
+    </div>
 </div>
 
     @if (isset($error))
