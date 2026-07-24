@@ -675,7 +675,7 @@
 
         .bld-summary-label {
             font-size: .68rem;
-            color: #64748b;
+            color: #000000;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: .4px;
