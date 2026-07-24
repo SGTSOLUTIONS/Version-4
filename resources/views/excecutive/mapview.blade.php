@@ -45,6 +45,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: #f8f9fa;
         }
 
         .map-title {
@@ -58,6 +59,455 @@
             height: 800px;
             transition: all 0.3s ease;
             position: relative;
+        }
+
+        /* ─── MAP CONTROLS STACK ─── */
+        .map-controls-stack {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        /* ─── TOGGLE BUTTON STYLES ─── */
+        .layer-toggle-btn,
+        .location-toggle-btn,
+        .search-toggle-btn,
+        .label-toggle-btn,
+        .legend-toggle-btn,
+        .threed-toggle-btn,
+        .filter-toggle-btn {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+            color: #333;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1001;
+            background: #ffffff;
+        }
+
+        .layer-toggle-btn:hover,
+        .location-toggle-btn:hover,
+        .search-toggle-btn:hover,
+        .label-toggle-btn:hover,
+        .legend-toggle-btn:hover,
+        .threed-toggle-btn:hover,
+        .filter-toggle-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .label-toggle-btn.active-label {
+            color: #0d6efd;
+            background: #e3f0ff;
+            border-color: #0d6efd;
+        }
+
+        .threed-toggle-btn.active-3d {
+            color: #0d6efd;
+            background: #e3f0ff;
+            border-color: #0d6efd;
+        }
+
+        .location-toggle-btn.active-location {
+            color: #0d6efd;
+            background: #e3f0ff;
+            border-color: #0d6efd;
+        }
+
+        .location-toggle-btn.tracking {
+            color: #dc3545;
+            background: #fde8e8;
+            border-color: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+
+        .filter-toggle-btn.active-filter {
+            color: #0d6efd;
+            background: #e3f0ff;
+            border-color: #0d6efd;
+        }
+
+        .legend-toggle-btn.active-legend {
+            color: #0d6efd;
+            background: #e3f0ff;
+            border-color: #0d6efd;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* ─── DROPDOWN STYLES ─── */
+        .layer-dropdown,
+        .location-dropdown,
+        .search-dropdown,
+        .filter-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 48px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            padding: 0;
+            z-index: 1001;
+            min-width: 240px;
+            max-width: 380px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .layer-dropdown.active,
+        .location-dropdown.active,
+        .search-dropdown.active,
+        .filter-dropdown.active {
+            display: block;
+        }
+
+        .layer-dropdown {
+            min-width: 220px;
+        }
+
+        .location-dropdown {
+            min-width: 200px;
+        }
+
+        .search-dropdown {
+            min-width: 320px;
+        }
+
+        .filter-dropdown {
+            min-width: 320px;
+            max-height: 80vh;
+        }
+
+        .layer-dropdown-item,
+        .location-dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .layer-dropdown-item:hover,
+        .location-dropdown-item:hover {
+            background: #f5f5f5;
+        }
+
+        .layer-icon,
+        .location-item-icon {
+            width: 28px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .layer-name,
+        .location-item-name {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .layer-check {
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .layer-dropdown-item.active .layer-check {
+            color: #0d6efd;
+        }
+
+        .location-item-badge {
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 12px;
+            background: #e9ecef;
+            color: #666;
+        }
+
+        .location-item-badge.active {
+            background: #0d6efd;
+            color: white;
+        }
+
+        .location-item-badge.tracking {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* ─── SEARCH STYLES ─── */
+        .search-tab-btn {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 13px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .search-tab-btn.active {
+            color: #0d6efd;
+            border-bottom-color: #0d6efd;
+        }
+
+        .search-tab-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .search-results-container {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .search-result-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: default;
+        }
+
+        .search-result-item:hover {
+            background: #f8f9fa;
+        }
+
+        .search-result-title {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .search-result-subtitle {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .search-result-actions {
+            margin-top: 6px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .type-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+
+        .type-badge.road {
+            background: #0dcaf0;
+            color: #000;
+        }
+
+        .type-badge.parcel {
+            background: #198754;
+            color: #fff;
+        }
+
+        .type-badge.point {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .type-badge.assessment {
+            background: #0d6efd;
+            color: #fff;
+        }
+
+        .filter-field-group {
+            margin-bottom: 10px;
+        }
+
+        .filter-field-group label {
+            font-size: 11px;
+            color: #666;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .filter-field-group input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .filter-field-group input:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+        }
+
+        /* ─── FILTER SECTION ─── */
+        .filter-section {
+            padding: 8px 16px;
+        }
+
+        .filter-section-header {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .filter-range {
+            padding: 4px 0;
+        }
+
+        .range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .range-inputs input[type="number"] {
+            width: 80px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 12px;
+        }
+
+        .range-separator {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .filter-actions {
+            padding: 12px 16px;
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .filter-actions .btn {
+            font-size: 13px;
+            padding: 6px 12px;
+        }
+
+        .filter-stats {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        /* ─── TOAST ─── */
+        .toast-container {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .location-toast {
+            display: none;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            max-width: 90%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* ─── FULLSCREEN ─── */
+        .fullscreen-btn {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            z-index: 1000;
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            font-size: 18px;
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+            color: #333;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #map.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            border-radius: 0;
+        }
+
+        .map-card.fullscreen-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9998;
+            border-radius: 0;
+            margin: 0;
+        }
+
+        .map-card.fullscreen-mode .map-header {
+            display: none;
+        }
+
+        .map-card.fullscreen-mode #map {
+            height: calc(100vh - 5px);
         }
 
         /* ─── MODAL STYLES ─── */
@@ -344,11 +794,6 @@
             color: #64748b;
         }
 
-        .bld-empty-state {
-            text-align: center;
-            padding: 40px 20px;
-        }
-
         .point-data-card {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -402,16 +847,6 @@
             font-size: .9rem;
             cursor: pointer;
             transition: all .2s;
-        }
-
-        .pdc-edit-btn {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
-        .pdc-edit-btn:hover {
-            background: #2563eb;
-            color: #fff;
         }
 
         .pdc-qc-btn {
@@ -525,242 +960,54 @@
             color: #94a3b8;
         }
 
-        /* ─── TOAST ─── */
-        .toast-container {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            pointer-events: none;
-        }
-
-        .location-toast {
-            display: none;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-            max-width: 90%;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        /* ─── MAP CONTROLS ─── */
-        .map-controls-stack {
-            position: absolute;
-            right: 30px;
-            top: 20px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            pointer-events: auto;
-        }
-
-        .layer-toggle-btn,
-        .location-toggle-btn,
-        .search-toggle-btn,
-        .label-toggle-btn,
-        .legend-toggle-btn,
-        .threed-toggle-btn,
-        .filter-toggle-btn {
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 20px;
-            transition: all 0.2s;
-            border: none;
-            color: #333;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 1001;
-        }
-
-        .layer-toggle-btn:hover,
-        .location-toggle-btn:hover,
-        .search-toggle-btn:hover,
-        .label-toggle-btn:hover,
-        .legend-toggle-btn:hover,
-        .threed-toggle-btn:hover,
-        .filter-toggle-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-
-        .label-toggle-btn.active-label {
-            color: #0d6efd;
-        }
-
-        .layer-dropdown,
-        .location-dropdown,
-        .search-dropdown,
-        .filter-dropdown {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 2px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            padding: 0;
-            z-index: 1001;
-        }
-
-        .layer-dropdown.active,
-        .location-dropdown.active,
-        .search-dropdown.active,
-        .filter-dropdown.active {
-            display: block;
-        }
-
-        .search-results-container {
-            max-height: 250px;
-            overflow-y: auto;
-        }
-
-        .search-result-item {
-            padding: 10px 16px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: default;
-        }
-
-        .search-result-item:hover {
-            background: #f8f9fa;
-        }
-
-        .search-result-title {
-            font-weight: 500;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .search-result-subtitle {
-            font-size: 12px;
-            color: #888;
-            margin-top: 2px;
-        }
-
-        .search-result-actions {
-            margin-top: 6px;
-            display: flex;
-            gap: 6px;
-        }
-
-        .type-badge {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 12px;
-            margin-left: 6px;
-            font-weight: 600;
-        }
-
-        .type-badge.road {
-            background: #0dcaf0;
-            color: #000;
-        }
-
-        .type-badge.parcel {
-            background: #198754;
-            color: #fff;
-        }
-
-        .type-badge.point {
-            background: #ffc107;
-            color: #000;
-        }
-
-        .type-badge.assessment {
-            background: #0d6efd;
-            color: #fff;
-        }
-
-        .search-tab-btn {
-            border: none;
-            background: transparent;
-            padding: 10px 0;
-            font-size: 13px;
-            color: #666;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .search-tab-btn.active {
-            color: #0d6efd;
-            border-bottom-color: #0d6efd;
-        }
-
-        .filter-section {
-            padding: 8px 16px;
-        }
-
-        .filter-section-header {
-            font-size: 11px;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .filter-actions {
-            padding: 12px 16px;
-            border-top: 1px solid #e9ecef;
-            background: #f8f9fa;
-            border-radius: 0 0 12px 12px;
-        }
-
-        .filter-stats {
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-            margin-top: 6px;
-        }
-
-        .fullscreen-btn {
-            position: absolute;
-            right: 30px;
-            bottom: 30px;
-            z-index: 1000;
-            background: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-            font-size: 18px;
-            transition: all 0.2s;
-            border: none;
-            color: #333;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .fullscreen-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-        }
-
         /* ─── RESPONSIVE ─── */
         @media (max-width: 768px) {
             #map {
                 height: 500px;
+            }
+
+            .map-controls-stack {
+                right: 12px;
+                top: 12px;
+                gap: 6px;
+            }
+
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 15px;
+                padding: 8px;
+                border-radius: 8px;
+            }
+
+            .fullscreen-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 15px;
+                padding: 8px;
+                right: 12px;
+                bottom: 12px;
+            }
+
+            .layer-dropdown,
+            .location-dropdown {
+                min-width: 180px;
+            }
+
+            .search-dropdown {
+                min-width: 280px;
+                right: -10px;
+            }
+
+            .filter-dropdown {
+                min-width: 280px;
+                right: -10px;
             }
 
             .bld-image-strip {
@@ -773,34 +1020,6 @@
 
             .point-data-card-grid {
                 grid-template-columns: 1fr 1fr;
-            }
-
-            .map-controls-stack {
-                right: 15px;
-                top: 15px;
-                gap: 8px;
-            }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 16px;
-                padding: 8px 10px;
-            }
-
-            .fullscreen-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 16px;
-                padding: 8px 10px;
-                right: 15px;
-                bottom: 15px;
             }
         }
 
@@ -822,20 +1041,37 @@
             .legend-toggle-btn,
             .threed-toggle-btn,
             .filter-toggle-btn {
-                width: 32px;
-                height: 32px;
+                width: 34px;
+                height: 34px;
                 font-size: 13px;
-                padding: 6px 8px;
+                padding: 6px;
                 border-radius: 6px;
             }
 
             .fullscreen-btn {
-                width: 32px;
-                height: 32px;
-                font-size: 12px;
-                padding: 6px 8px;
+                width: 34px;
+                height: 34px;
+                font-size: 13px;
+                padding: 6px;
                 right: 8px;
                 bottom: 8px;
+            }
+
+            .layer-dropdown,
+            .location-dropdown {
+                min-width: 160px;
+                right: -5px;
+            }
+
+            .search-dropdown {
+                min-width: 240px;
+                right: -15px;
+            }
+
+            .filter-dropdown {
+                min-width: 240px;
+                right: -15px;
+                max-height: 70vh;
             }
 
             .bld-summary-card {
@@ -861,6 +1097,65 @@
             .point-data-card-grid {
                 grid-template-columns: 1fr;
             }
+
+            .point-data-card-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .point-data-card-actions {
+                justify-content: flex-start;
+            }
+
+            .search-result-actions {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .search-result-actions .btn-sm {
+                width: 100%;
+            }
+
+            .filter-actions .btn {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+
+            .range-inputs input[type="number"] {
+                width: 60px;
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .fullscreen-btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .search-result-actions .btn-sm {
+                min-height: 34px;
+                font-size: 12px;
+                padding: 4px 12px;
+            }
+
+            .filter-actions .btn {
+                min-height: 38px;
+                font-size: 13px;
+            }
         }
     </style>
 @endpush
@@ -878,6 +1173,7 @@
     <div class="map-card" id="mapCard">
         <div class="map-header">
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
+            <span class="text-muted small" id="featureCountBadge">Features: 0</span>
         </div>
         <div id="map"></div>
     </div>
@@ -1475,6 +1771,7 @@
                     }
                 });
                 console.log('📊 Polygons loaded:', polygonSource.getFeatures().length);
+                updateFeatureCount();
             }
 
             function loadLineSource() {
@@ -1509,6 +1806,11 @@
                     }
                 });
                 console.log('📊 Lines loaded:', lineSource.getFeatures().length);
+            }
+
+            function updateFeatureCount() {
+                const count = polygonSource.getFeatures().length;
+                $('#featureCountBadge').text(`Buildings: ${count}`);
             }
 
             loadPolygonSource();
@@ -1575,28 +1877,65 @@
                     </button>
                     <div class="filter-dropdown" id="filterDropdown">
                         <div class="dropdown-header">🔍 Filter Features</div>
-                        <div class="filter-section">
-                            <div class="filter-section-header">Building Usage</div>
-                            <select class="form-select form-select-sm" id="usageFilter">
-                                <option value="all">All</option>
-                                <option value="RESIDENTIAL">Residential</option>
-                                <option value="COMMERCIAL">Commercial</option>
-                                <option value="INDUSTRIAL">Industrial</option>
-                                <option value="INSTITUTIONAL">Institutional</option>
-                                <option value="MIXED">Mixed</option>
-                                <option value="GOVERNMENT">Government</option>
-                                <option value="VACANT">Vacant</option>
-                            </select>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <div class="filter-section">
-                            <div class="filter-section-header">Area Range (sqft)</div>
-                            <div class="filter-range">
-                                <div class="range-inputs">
-                                    <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
-                                    <span class="range-separator">to</span>
-                                    <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000">
+                        <div class="filter-scroll-container" style="max-height:60vh;overflow-y:auto;">
+                            <div class="filter-section">
+                                <div class="filter-section-header">Building Usage</div>
+                                <select class="form-select form-select-sm" id="usageFilter">
+                                    <option value="all">All</option>
+                                    <option value="RESIDENTIAL">Residential</option>
+                                    <option value="COMMERCIAL">Commercial</option>
+                                    <option value="INDUSTRIAL">Industrial</option>
+                                    <option value="INSTITUTIONAL">Institutional</option>
+                                    <option value="MIXED">Mixed</option>
+                                    <option value="GOVERNMENT">Government</option>
+                                    <option value="VACANT">Vacant</option>
+                                </select>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="filter-section">
+                                <div class="filter-section-header">Area Range (sqft)</div>
+                                <div class="filter-range">
+                                    <div class="range-inputs">
+                                        <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
+                                        <span class="range-separator">to</span>
+                                        <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="10000">
+                                    </div>
                                 </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="filter-section">
+                                <div class="filter-section-header">Zone</div>
+                                <select class="form-select form-select-sm" id="zoneFilter">
+                                    <option value="all">All</option>
+                                    <option value="ZONE-A">Zone A</option>
+                                    <option value="ZONE-B">Zone B</option>
+                                    <option value="ZONE-C">Zone C</option>
+                                    <option value="ZONE-D">Zone D</option>
+                                    <option value="ZONE-E">Zone E</option>
+                                </select>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="filter-section">
+                                <div class="filter-section-header">Construction Type</div>
+                                <select class="form-select form-select-sm" id="constructionFilter">
+                                    <option value="all">All</option>
+                                    <option value="PERMANENT">Permanent</option>
+                                    <option value="SEMI_PERMANENT">Semi Permanent</option>
+                                    <option value="VACANT_LAND">Vacant Land</option>
+                                    <option value="SHED">Shed</option>
+                                </select>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="filter-section">
+                                <div class="filter-section-header">UGD Status</div>
+                                <select class="form-select form-select-sm" id="ugdFilter">
+                                    <option value="all">All</option>
+                                    <option value="No_Connection">No Connection</option>
+                                    <option value="Manhole_Available">Manhole Available</option>
+                                    <option value="Stage_1_Completed">Stage 1 Completed</option>
+                                    <option value="Stage_1_2_Completed">Stage 1 & 2 Completed</option>
+                                    <option value="Direct_Connection_Given">Direct Connection</option>
+                                </select>
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
@@ -1742,7 +2081,7 @@
             // 6. LEGEND TOGGLE
             $stack.append(`
                 <div class="custom-legend-toggle">
-                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Infrastructure Legend">
+                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Legend">
                         <i class="bi bi-list-ul"></i>
                     </button>
                 </div>
@@ -1805,25 +2144,18 @@
 
             function getCoordsByGisId(gisid, type = null) {
                 if (!gisid) return null;
-                // Try polygon source first
                 const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
                 if (polyFeatures.length > 0) {
                     try {
                         return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
-                    } catch (e) {
-                        console.error('getCoordsByGisId: polygon extent error', e);
-                    }
+                    } catch (e) {}
                 }
-                // Try line source
                 const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
                 if (lineFeatures.length > 0) {
                     try {
                         return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
-                    } catch (e) {
-                        console.error('getCoordsByGisId: line extent error', e);
-                    }
+                    } catch (e) {}
                 }
-                // Try points data
                 const point = points.find(p => p.gisid == gisid);
                 if (point) {
                     try {
@@ -1837,9 +2169,7 @@
                             }
                             return ol.proj.fromLonLat([lon, lat]);
                         }
-                    } catch (e) {
-                        console.error('getCoordsByGisId: point parse error', e);
-                    }
+                    } catch (e) {}
                 }
                 return null;
             }
@@ -1851,15 +2181,14 @@
                 }
                 let coords = null;
                 const gisid = item.id || item.point_gisid;
-                if (item.type === 'line') {
-                    const features = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                    if (features.length > 0) {
-                        coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
-                    }
-                } else {
-                    const features = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                    if (features.length > 0) {
-                        coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
+                const features = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                if (features.length > 0) {
+                    coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
+                }
+                if (!coords) {
+                    const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
+                    if (lineFeatures.length > 0) {
+                        coords = ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
                     }
                 }
                 if (!coords) {
@@ -1934,7 +2263,6 @@
                 const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
                 $('#bv_mapped').text(mappedCount);
 
-                // Variation data
                 const variation = buildingVariations[item.gisid];
                 if (variation) {
                     const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
@@ -1964,7 +2292,6 @@
                     $('#bv_variation_wrap').html('');
                 }
 
-                // Amenities
                 const amenities = [
                     ['Lift Room', item.liftroom],
                     ['Head Room', item.headroom],
@@ -1990,7 +2317,6 @@
                 $('#bv_remarks').text(item.remarks || '—');
                 $('#bv_corp_remarks').text(item.corporationremarks || '—');
 
-                // Images
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
 
                 function loadImage(imgId, emptyId, errorId, imagePath) {
@@ -2202,7 +2528,6 @@
 
                 $('#pointDetailsContainer').html(html);
 
-                // Search functionality
                 $('#pointDetailsSearch').off('input').on('input', function() {
                     const searchVal = $(this).val().toLowerCase();
                     if (!searchVal) {
@@ -2287,21 +2612,18 @@
                 const gisid = feature.get('gisid');
                 if (!gisid) return;
 
-                // Check if it's a polygon (building)
                 const polygonData = polygonDatas.find(d => d.gisid == gisid);
                 if (polygonData) {
                     showBuildingView(polygonData);
                     return;
                 }
 
-                // Check if it's a line
                 const lineData = lines.find(l => l.gisid == gisid);
                 if (lineData) {
                     showToast(`🛣️ Road: ${lineData.road_name || 'N/A'} (GIS ID: ${gisid})`, 3000);
                     return;
                 }
 
-                // Check if it's a point with assessments
                 const pointRecords = pointDatas.filter(pd => pd.point_gisid == gisid);
                 if (pointRecords.length > 0) {
                     openPointDetails(gisid);
@@ -2651,7 +2973,6 @@
                                 }
                             }, 2000);
 
-                            // Add initial point to route
                             routePoints.push(projected);
 
                         },
@@ -2682,8 +3003,6 @@
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
                     }
-
-                    // Keep position marker but stop tracking
                 }
                 $('.location-dropdown').removeClass('active');
             });
@@ -2798,7 +3117,6 @@
                 const id = $(this).data('id');
                 const type = $(this).data('type');
 
-                // Try to find the feature
                 let item = searchIndex.find(i => i.id == id && i.type === type);
                 if (!item) {
                     item = searchIndex.find(i => i.point_gisid == id);
@@ -2812,7 +3130,6 @@
                     return;
                 }
 
-                // Check if it's a building (polygon)
                 const polygonData = polygonDatas.find(d => d.gisid == item.id);
                 if (polygonData) {
                     showBuildingView(polygonData);
@@ -2822,7 +3139,6 @@
                     return;
                 }
 
-                // Check if it's a line
                 const lineData = lines.find(l => l.gisid == item.id);
                 if (lineData) {
                     showToast(`🛣️ Road: ${lineData.road_name || 'N/A'} (GIS ID: ${item.id})`, 3000);
@@ -2832,7 +3148,6 @@
                     return;
                 }
 
-                // Check if it's a point with assessments
                 const pointRecords = pointDatas.filter(pd => pd.point_gisid == item.id);
                 if (pointRecords.length > 0) {
                     openPointDetails(item.id);
@@ -2873,13 +3188,22 @@
 
             function applyFilters() {
                 const selectedUsage = $('#usageFilter').val();
+                const selectedZone = $('#zoneFilter').val();
+                const selectedConstruction = $('#constructionFilter').val();
+                const selectedUgd = $('#ugdFilter').val();
                 const minArea = parseInt($('#minArea').val()) || 0;
                 const maxArea = parseInt($('#maxArea').val()) || 10000;
 
                 const allUsageSelected = selectedUsage === 'all';
+                const allZonesSelected = selectedZone === 'all';
+                const allConstructionSelected = selectedConstruction === 'all';
+                const allUgdSelected = selectedUgd === 'all';
                 const areaDefault = minArea === 0 && maxArea === 10000;
 
-                if (allUsageSelected && areaDefault) {
+                const anyFilterActive = !allUsageSelected || !allZonesSelected || !allConstructionSelected ||
+                    !allUgdSelected || !areaDefault;
+
+                if (!anyFilterActive) {
                     resetAllFilters(true);
                     showToast('ℹ️ All filters reset - showing all features', 2000);
                     return;
@@ -2887,17 +3211,39 @@
 
                 polygonSource.clear();
 
-                // Filter polygons
                 polygons.forEach(poly => {
                     let include = true;
                     const area = parseFloat(poly.sqfeet) || 0;
 
+                    // Usage filter
                     if (!allUsageSelected) {
                         const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const usage = buildingData?.building_usage || '';
                         if (usage !== selectedUsage) include = false;
                     }
 
+                    // Zone filter
+                    if (include && !allZonesSelected) {
+                        const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
+                        const zone = buildingData?.zone || buildingData?.building_zone || '';
+                        if (zone !== selectedZone) include = false;
+                    }
+
+                    // Construction filter
+                    if (include && !allConstructionSelected) {
+                        const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
+                        const construction = buildingData?.construction_type || '';
+                        if (construction !== selectedConstruction) include = false;
+                    }
+
+                    // UGD filter
+                    if (include && !allUgdSelected) {
+                        const buildingData = polygonDatas.find(d => d.gisid == poly.gisid);
+                        const ugd = buildingData?.ugd || '';
+                        if (ugd !== selectedUgd) include = false;
+                    }
+
+                    // Area filter
                     if (include && !areaDefault) {
                         if (area < minArea || area > maxArea) include = false;
                     }
@@ -2932,6 +3278,7 @@
                 $('#visibleCount').text(visibleCount);
                 $('#filterStats').html(
                     `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
+                $('#featureCountBadge').text(`Buildings: ${visibleCount}`);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -2948,6 +3295,9 @@
 
             function resetAllFilters(silent = false) {
                 $('#usageFilter').val('all');
+                $('#zoneFilter').val('all');
+                $('#constructionFilter').val('all');
+                $('#ugdFilter').val('all');
                 $('#minArea').val(0);
                 $('#maxArea').val(10000);
 
@@ -2979,6 +3329,7 @@
                 $('#filterStats').html(
                     `Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`
                 );
+                $('#featureCountBadge').text(`Buildings: ${allFeatures.length}`);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -3173,6 +3524,22 @@
                 }
             }
 
+            // ─── SEARCH GIS ───
+            function searchGIS(value) {
+                const v = value.toString().toLowerCase().trim();
+                if (!v) return [];
+                return searchIndex.filter(item =>
+                    (item.id && item.id.toString().toLowerCase().includes(v)) ||
+                    (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
+                    (item.old_assessment && item.old_assessment.toString().toLowerCase().includes(v)) ||
+                    (item.owner_name && item.owner_name.toString().toLowerCase().includes(v)) ||
+                    (item.phone_number && item.phone_number.toString().toLowerCase().includes(v)) ||
+                    (item.title && item.title.toLowerCase().includes(v)) ||
+                    (item.subtitle && item.subtitle.toLowerCase().includes(v)) ||
+                    (item.point_gisid && item.point_gisid.toString().toLowerCase().includes(v))
+                );
+            }
+
             // ─── INIT ───
             setTimeout(updateFilterStats, 500);
 
@@ -3182,7 +3549,6 @@
             console.log('📊 Lines:', lines.length);
             console.log('📊 Point Data:', pointDatas.length);
 
-            // Show welcome toast
             setTimeout(() => {
                 showToast('👆 Click on any building to view details', 4000);
             }, 1000);
