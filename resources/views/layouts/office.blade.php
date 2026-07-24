@@ -69,7 +69,7 @@
 
             @auth
                 <a href="{{ route(Auth::user()->role . '.dashboard') }}" class="ol-nav-item">
-                    <i class="bi bi-grid-1x2"></i>
+                    <i class="bi bi-home-1x2"></i>
                     <span class="ol-nav-label">Dashboard</span>
                 </a>
 
