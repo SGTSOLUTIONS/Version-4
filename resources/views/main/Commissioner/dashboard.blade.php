@@ -54,7 +54,7 @@
             gap: 1rem;
 
             /* Background Image setup */
-            background-image: url('city-banner.jpg');
+            background-image: url("{{ asset('city-banner.jpg') }}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
