@@ -2745,7 +2745,7 @@
                                             } else {
                                                 fieldElement.after(
                                                     `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
-                                                    );
+                                                );
                                             }
                                         }
                                     });
@@ -2806,7 +2806,7 @@
                                             } else {
                                                 fieldElement.after(
                                                     `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
-                                                    );
+                                                );
                                             }
                                         }
                                     });
@@ -3781,10 +3781,10 @@
                 pointDatas.forEach(pd => {
                     try {
                         searchIndex.push({
-                            id: pd.gisid,
+                            id: pd.point_gisid,
                             point_gisid: pd.point_gisid,
                             type: 'pointdata',
-                            title: `GIS ID: ${pd.gisid}`,
+                            title: `GIS ID: ${pd.point_gisid}`,
                             subtitle: `Assessment: ${pd.assessment} | Point GIS ID: ${pd.point_gisid}`,
 
                             geometryType: 'point',
@@ -3792,7 +3792,7 @@
                             old_assessment: pd.old_assessment,
                             owner_name: pd.owner_name,
                             phone_number: pd.phone_number,
-                            searchText: `${pd.gisid} ${pd.assessment} ${pd.old_assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''} ${pd.point_gisid} assessment point`
+                            searchText: `${pd.point_gisid} ${pd.assessment} ${pd.old_assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''} ${pd.point_gisid} assessment point`
                         });
                     } catch (e) {
                         console.error('Error parsing pointData:', e);
@@ -4699,140 +4699,141 @@
                 $(this).closest('.professional-card').remove();
             });
 
-         $(document).on('click', '.edit-btn', function(e) {
-    e.stopPropagation();
-    const id = $(this).data('id');
-    loadPointDataForEdit(id);
-    $('#searchDropdown').removeClass('show');
-    $('#searchToggleBtn').removeClass('active-search');
-});
+            $(document).on('click', '.edit-btn', function(e) {
+                e.stopPropagation();
+                const id = $(this).data('id');
+                loadPointDataForEdit(id);
+                $('#searchDropdown').removeClass('show');
+                $('#searchToggleBtn').removeClass('active-search');
+            });
 
-// ✅ FIX: Add 'function' keyword
-function loadPointDataForEdit(id) {
-    // Show loading indicator
-    showFlashMessage('Loading data...', 'info');
+            // ✅ FIX: Add 'function' keyword
+            function loadPointDataForEdit(id) {
+                // Show loading indicator
+                showFlashMessage('Loading data...', 'info');
 
-    console.log('Loading point data for edit, ID:', id);
+                console.log('Loading point data for edit, ID:', id);
 
-    $.ajax({
-        url: `/point-data/${id}`,
-        method: 'GET',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(res) {
-            console.log('Edit response:', res);
+                $.ajax({
+                    url: `/point-data/${id}`,
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        console.log('Edit response:', res);
 
-            if (!res.success) {
-                showFlashMessage(res.message || 'Failed to load data', 'error');
-                return;
-            }
+                        if (!res.success) {
+                            showFlashMessage(res.message || 'Failed to load data', 'error');
+                            return;
+                        }
 
-            const pd = res.point_data;
-            const wt = res.water_tax;
-            const ugd = res.ugd_tax;
-            const pts = res.professional || [];
+                        const pd = res.point_data;
+                        const wt = res.water_tax;
+                        const ugd = res.ugd_tax;
+                        const pts = res.professional || [];
 
-            // Check if we have the data
-            if (!pd) {
-                showFlashMessage('No data found for this record', 'error');
-                return;
-            }
+                        // Check if we have the data
+                        if (!pd) {
+                            showFlashMessage('No data found for this record', 'error');
+                            return;
+                        }
 
-            const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
-            modal.show();
-            $('#pointDetailsTabs button:first').tab('show');
+                        const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
+                        modal.show();
+                        $('#pointDetailsTabs button:first').tab('show');
 
-            // ✅ MARK EDIT MODE - Store the ID
-            $('#pointDetailsForm').attr('data-edit-id', pd.id);
+                        // ✅ MARK EDIT MODE - Store the ID
+                        $('#pointDetailsForm').attr('data-edit-id', pd.id);
 
-            // ✅ Change button text for edit mode
-            $('#savePointDetails').html('<i class="bi bi-pencil-square me-1"></i>Update Point Data');
+                        // ✅ Change button text for edit mode
+                        $('#savePointDetails').html(
+                            '<i class="bi bi-pencil-square me-1"></i>Update Point Data');
 
-            // ─── BASIC INFO ───
-            $('#point_gisid').val(pd.point_gisid || '');
-            $('#assessment_type').val(pd.assessment_type || '');
-            $('#assessment').val(pd.assessment || '');
-            $('#old_assessment').val(pd.old_assessment || '');
-            $('#zone').val(pd.zone || '');
-            $('#owner_name').val(pd.owner_name || '');
-            $('#present_owner_name').val(pd.present_owner_name || '');
-            $('#phone_number').val(pd.phone_number || '');
-            $('#old_door_no').val(pd.old_door_no || '');
-            $('#new_door_no').val(pd.new_door_no || '');
-            $('#aadhar_no').val(pd.aadhar_no || '');
-            $('#ration_no').val(pd.ration_no || '');
-            $('#floor').val(pd.floor || '');
-            $('#number_persons').val(pd.no_of_persons || '');
-            $('#bill_usage').val(pd.bill_usage || '');
-            $('#eb').val(pd.eb || '');
-            $('#worker_name').val(pd.worker_name || '');
-            $('#remarks').val(pd.remarks || '');
+                        // ─── BASIC INFO ───
+                        $('#point_gisid').val(pd.point_gisid || '');
+                        $('#assessment_type').val(pd.assessment_type || '');
+                        $('#assessment').val(pd.assessment || '');
+                        $('#old_assessment').val(pd.old_assessment || '');
+                        $('#zone').val(pd.zone || '');
+                        $('#owner_name').val(pd.owner_name || '');
+                        $('#present_owner_name').val(pd.present_owner_name || '');
+                        $('#phone_number').val(pd.phone_number || '');
+                        $('#old_door_no').val(pd.old_door_no || '');
+                        $('#new_door_no').val(pd.new_door_no || '');
+                        $('#aadhar_no').val(pd.aadhar_no || '');
+                        $('#ration_no').val(pd.ration_no || '');
+                        $('#floor').val(pd.floor || '');
+                        $('#number_persons').val(pd.no_of_persons || '');
+                        $('#bill_usage').val(pd.bill_usage || '');
+                        $('#eb').val(pd.eb || '');
+                        $('#worker_name').val(pd.worker_name || '');
+                        $('#remarks').val(pd.remarks || '');
 
-            // ─── WATER TAX ───
-            if (wt) {
-                $('#watertax_no').val(wt.watertax_no || '');
-                $('#old_watertax_no').val(wt.old_watertax_no || '');
-                $('#water_usage').val(wt.usage || '');
-                $('#water_DBC_type').val(wt.DBC_type || '');
-                $('#water_slab_description').val(wt.slab_description || '');
-            } else {
-                $('#watertax_no').val('');
-                $('#old_watertax_no').val('');
-                $('#water_usage').val('');
-                $('#water_DBC_type').val('');
-                $('#water_slab_description').val('');
-            }
+                        // ─── WATER TAX ───
+                        if (wt) {
+                            $('#watertax_no').val(wt.watertax_no || '');
+                            $('#old_watertax_no').val(wt.old_watertax_no || '');
+                            $('#water_usage').val(wt.usage || '');
+                            $('#water_DBC_type').val(wt.DBC_type || '');
+                            $('#water_slab_description').val(wt.slab_description || '');
+                        } else {
+                            $('#watertax_no').val('');
+                            $('#old_watertax_no').val('');
+                            $('#water_usage').val('');
+                            $('#water_DBC_type').val('');
+                            $('#water_slab_description').val('');
+                        }
 
-            // ─── UGD TAX ───
-            if (ugd) {
-                $('#ugd_no').val(ugd.ugd_no || '');
-                $('#old_ugd_no').val(ugd.old_ugd_no || '');
-                $('#ugd_usage').val(ugd.usage || '');
-                $('#ugd_DBC_type').val(ugd.DBC_type || '');
-                $('#ugd_slab_description').val(ugd.slab_description || '');
-            } else {
-                $('#ugd_no').val('');
-                $('#old_ugd_no').val('');
-                $('#ugd_usage').val('');
-                $('#ugd_DBC_type').val('');
-                $('#ugd_slab_description').val('');
-            }
+                        // ─── UGD TAX ───
+                        if (ugd) {
+                            $('#ugd_no').val(ugd.ugd_no || '');
+                            $('#old_ugd_no').val(ugd.old_ugd_no || '');
+                            $('#ugd_usage').val(ugd.usage || '');
+                            $('#ugd_DBC_type').val(ugd.DBC_type || '');
+                            $('#ugd_slab_description').val(ugd.slab_description || '');
+                        } else {
+                            $('#ugd_no').val('');
+                            $('#old_ugd_no').val('');
+                            $('#ugd_usage').val('');
+                            $('#ugd_DBC_type').val('');
+                            $('#ugd_slab_description').val('');
+                        }
 
-            // ─── PROFESSIONAL TAX ───
-            $('#professionalContainer').empty();
-            ptIndex = 0;
+                        // ─── PROFESSIONAL TAX ───
+                        $('#professionalContainer').empty();
+                        ptIndex = 0;
 
-            if (pts && pts.length > 0) {
-                pts.forEach(function(pt) {
-                    addProfessionalCard(pt);
+                        if (pts && pts.length > 0) {
+                            pts.forEach(function(pt) {
+                                addProfessionalCard(pt);
+                            });
+                        }
+
+                        // Clear any previous validation errors
+                        $('.is-invalid').removeClass('is-invalid');
+                        $('.invalid-feedback').remove();
+                        $('.error-message').html('');
+
+                        showFlashMessage('Data loaded for editing', 'success');
+                    },
+                    error: function(xhr) {
+                        console.error('Edit load error:', xhr);
+
+                        let errorMsg = 'Failed to load record for editing.';
+
+                        if (xhr.status === 404) {
+                            errorMsg = 'Record not found. It may have been deleted.';
+                        } else if (xhr.status === 500) {
+                            errorMsg = 'Server error. Please try again.';
+                        } else if (xhr.responseJSON?.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+
+                        showFlashMessage(errorMsg, 'error');
+                    }
                 });
             }
-
-            // Clear any previous validation errors
-            $('.is-invalid').removeClass('is-invalid');
-            $('.invalid-feedback').remove();
-            $('.error-message').html('');
-
-            showFlashMessage('Data loaded for editing', 'success');
-        },
-        error: function(xhr) {
-            console.error('Edit load error:', xhr);
-
-            let errorMsg = 'Failed to load record for editing.';
-
-            if (xhr.status === 404) {
-                errorMsg = 'Record not found. It may have been deleted.';
-            } else if (xhr.status === 500) {
-                errorMsg = 'Server error. Please try again.';
-            } else if (xhr.responseJSON?.message) {
-                errorMsg = xhr.responseJSON.message;
-            }
-
-            showFlashMessage(errorMsg, 'error');
-        }
-    });
-}
 
 
 
