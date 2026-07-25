@@ -1693,8 +1693,8 @@
                                                 class="text-danger">*</span></label>
                                         <select class="form-select" id="bill_usage" name="bill_usage" required>
                                             <option value="">Select</option>
-                                            <option value="Residential">Residential</option>
-                                            <option value="Commercial">Commercial</option>
+                                            <option value="RESIDENTIAL">Residential</option>
+                                            <option value="COMMERCIAL">Commercial</option>
                                         </select>
                                         <div class="invalid-feedback">Please select bill usage type.</div>
                                     </div>
