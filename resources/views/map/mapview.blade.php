@@ -2863,7 +2863,6 @@
                 });
             });
 
-            // ─── Form Submission ───
             $(document).ready(function() {
                 $('#buildingForm').on('submit', function(e) {
                     e.preventDefault();
@@ -2874,16 +2873,27 @@
 
                     // Show loading state
                     const submitBtn = $("#buildingsubmitBtn");
+                    const originalHtml = submitBtn.html();
                     submitBtn.prop('disabled', true).html(
                         '<i class="fas fa-spinner fa-spin me-2"></i>Saving...');
 
                     // Prepare form data
                     const formData = new FormData(this);
-
-                    // Add action type (create or update)
                     const gisid = $("#building_gisid").val();
                     formData.append('action', gisid ? 'update' : 'create');
                     formData.append('_token', $('input[name="_token"]').val());
+
+                    // Function to reset button
+                    function resetButton() {
+                        submitBtn.prop('disabled', false).html(originalHtml ||
+                            '<i class="fas fa-save me-2"></i>Save Building Data');
+                    }
+
+                    // Safety timeout - reset button after 30 seconds
+                    const timeoutId = setTimeout(function() {
+                        resetButton();
+                        showNotification('Request timed out. Please try again.', 'warning');
+                    }, 30000);
 
                     // Send AJAX request
                     $.ajax({
@@ -2893,14 +2903,14 @@
                         processData: false,
                         contentType: false,
                         success: function(response) {
+                            clearTimeout(timeoutId);
                             if (response.success) {
                                 // Show success message
                                 showFlashMessage('Building data saved successfully!',
                                     'success');
                                 if (response) {
                                     polygonDatas = response.polygonDatas ??
-                                        polygonDatas;
-
+                                    polygonDatas;
                                     reloadAllSources();
                                 }
                                 setTimeout(() => {
@@ -2908,17 +2918,21 @@
                                         document.getElementById(
                                             'buildingDataModal'));
                                     if (modal) modal.hide();
+                                    resetButton();
                                 }, 1500);
                             } else {
                                 showFlashMessage(response.message ||
-                                    'Error saving datas', 'error');
+                                    'Error saving data', 'error');
+                                resetButton();
                             }
                         },
                         error: function(xhr) {
+                            clearTimeout(timeoutId);
                             let errorMessage = 'An error occurred while saving.';
+
                             if (xhr.status === 422) {
                                 // Validation errors
-                                const errors = xhr.responseJSON.errors;
+                                const errors = xhr.responseJSON?.errors;
                                 if (errors) {
                                     // Display validation errors
                                     $.each(errors, function(field, messages) {
@@ -2932,17 +2946,23 @@
                                     });
                                     errorMessage = 'Please fix the validation errors.';
                                 }
-                            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            } else if (xhr.responseJSON?.message) {
                                 errorMessage = xhr.responseJSON.message;
+                            } else if (xhr.status === 0) {
+                                errorMessage =
+                                    'Network error. Please check your connection.';
+                            } else if (xhr.status === 500) {
+                                errorMessage = 'Server error. Please try again later.';
                             }
 
                             showNotification(errorMessage, 'error');
+                            resetButton();
                         },
                         complete: function() {
-                            // Reset button
-                            submitBtn.prop('disabled', false).html(
-                                '<i class="fas fa-save me-2"></i>Save Building Data'
-                            );
+                            // This will also run, but we already handle reset in success/error
+                            // Keep as backup
+                            clearTimeout(timeoutId);
+                            resetButton();
                         }
                     });
                 });
