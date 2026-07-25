@@ -453,7 +453,7 @@
         }
 
         .kpi-card .kpi-value {
-            font-family: var(--font-display);
+            /* font-family: var(--font-display); */
             font-size: 1.8rem;
             font-weight: 900;
             color: var(--ink-900);
