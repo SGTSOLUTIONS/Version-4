@@ -1216,168 +1216,193 @@
     </div>
 
     <!-- ─── BUILDING VIEW MODAL ─── -->
-    <div class="modal fade" id="buildingViewModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
-            <div class="modal-content bld-modal-content">
-                <div class="modal-header bld-modal-header">
-                    <div class="bld-header-inner">
-                        <div class="bld-header-icon"><i class="bi bi-building"></i></div>
-                        <div>
-                            <h5 class="bld-modal-title">Building Details</h5>
-                            <span class="bld-gisid-badge">GIS ID: <span id="bv_gisid"></span></span>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="bld-image-strip">
-                    <div class="bld-img-wrap" id="bv_img1_wrap">
-                        <img id="bv_img1" src="" style="display:none;"
-                            onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
-                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i
-                                class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i
-                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
-                        <div class="bld-img-label">Image 1</div>
-                    </div>
-                    <div class="bld-img-wrap" id="bv_img2_wrap">
-                        <img id="bv_img2" src="" style="display:none;"
-                            onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
-                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i
-                                class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i
-                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
-                        <div class="bld-img-label">Image 2</div>
+    <!-- ─── BUILDING VIEW MODAL ─── -->
+<div class="modal fade" id="buildingViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content bld-modal-content">
+            <div class="modal-header bld-modal-header">
+                <div class="bld-header-inner">
+                    <div class="bld-header-icon"><i class="bi bi-building"></i></div>
+                    <div>
+                        <h5 class="bld-modal-title">Building Details</h5>
+                        <span class="bld-gisid-badge">GIS ID: <span id="bv_gisid"></span></span>
                     </div>
                 </div>
-                <div class="bld-summary-strip">
-                    <div class="bld-summary-card">
-                        <div class="bld-summary-icon">🧾</div>
-                        <div>
-                            <div class="bld-summary-label">Assessments</div>
-                            <div class="bld-summary-val" id="bv_bills">0</div>
-                        </div>
-                    </div>
-                    <div class="bld-summary-card">
-                        <div class="bld-summary-icon">🏬</div>
-                        <div>
-                            <div class="bld-summary-label">Shops</div>
-                            <div class="bld-summary-val" id="bv_shops">0</div>
-                        </div>
-                    </div>
-                    <div class="bld-summary-card">
-                        <div class="bld-summary-icon">🏢</div>
-                        <div>
-                            <div class="bld-summary-label">Floors</div>
-                            <div class="bld-summary-val" id="bv_floors">0</div>
-                        </div>
-                    </div>
-                    <div class="bld-summary-card">
-                        <div class="bld-summary-icon">✅</div>
-                        <div>
-                            <div class="bld-summary-label">Mapped</div>
-                            <div class="bld-summary-val" id="bv_mapped">0</div>
-                        </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- ─── IMAGE STRIP ─── -->
+            <div class="bld-image-strip">
+                <div class="bld-img-wrap" id="bv_img1_wrap">
+                    <img id="bv_img1" src="" style="display:none;"
+                        onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
+                    <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
+                    <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                    <div class="bld-img-label">Image 1</div>
+                </div>
+                <div class="bld-img-wrap" id="bv_img2_wrap">
+                    <img id="bv_img2" src="" style="display:none;"
+                        onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
+                    <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
+                    <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                    <div class="bld-img-label">Image 2</div>
+                </div>
+            </div>
+
+            <!-- ─── SUMMARY STRIP ─── -->
+            <div class="bld-summary-strip">
+                <div class="bld-summary-card">
+                    <div class="bld-summary-icon">🧾</div>
+                    <div>
+                        <div class="bld-summary-label">Assessments</div>
+                        <div class="bld-summary-val" id="bv_bills">0</div>
                     </div>
                 </div>
-                <div class="p-3 pb-0" id="bv_variation_wrap"></div>
-                <div class="modal-body p-4">
-                    <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-3">
-                            <div class="bld-info-row"><i class="bi bi-geo-alt bld-info-icon"></i>
-                                <div>
-                                    <div class="bld-info-label">Zoneation</div>
-                                    <div class="bld-info-val" id="bv_zone"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="bld-info-row"><i class="bi bi-building bld-info-icon"></i>
-                                <div>
-                                    <div class="bld-info-label">Building Name</div>
-                                    <div class="bld-info-val" id="bv_building_name"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="bld-info-row"><i class="bi bi-signpost bld-info-icon"></i>
-                                <div>
-                                    <div class="bld-info-label">Road</div>
-                                    <div class="bld-info-val" id="bv_road_name"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="bld-info-row"><i class="bi bi-telephone bld-info-icon"></i>
-                                <div>
-                                    <div class="bld-info-label">Phone</div>
-                                    <div class="bld-info-val" id="bv_phone"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="bld-info-row"><i class="bi bi-tag bld-info-icon"></i>
-                                <div>
-                                    <div class="bld-info-label">Usage</div>
-                                    <div class="bld-info-val" id="bv_usage"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="bld-info-row"><i class="bi bi-tools bld-info-icon"></i>
-                                <div>
-                                    <div class="bld-info-label">Construction</div>
-                                    <div class="bld-info-val" id="bv_construction_type"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="bld-info-row"><i class="bi bi-house bld-info-icon"></i>
-                                <div>
-                                    <div class="bld-info-label">Building Type</div>
-                                    <div class="bld-info-val" id="bv_building_type"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="bld-info-row"><i class="bi bi-droplet bld-info-icon"></i>
-                                <div>
-                                    <div class="bld-info-label">UGD Status</div>
-                                    <div class="bld-info-val" id="bv_ugd"></div>
-                                </div>
+                <div class="bld-summary-card">
+                    <div class="bld-summary-icon">🏬</div>
+                    <div>
+                        <div class="bld-summary-label">Shops</div>
+                        <div class="bld-summary-val" id="bv_shops">0</div>
+                    </div>
+                </div>
+                <div class="bld-summary-card">
+                    <div class="bld-summary-icon">🏢</div>
+                    <div>
+                        <div class="bld-summary-label">Floors</div>
+                        <div class="bld-summary-val" id="bv_floors">0</div>
+                    </div>
+                </div>
+                <div class="bld-summary-card">
+                    <div class="bld-summary-icon">✅</div>
+                    <div>
+                        <div class="bld-summary-label">Mapped</div>
+                        <div class="bld-summary-val" id="bv_mapped">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── SCROLLABLE BODY ─── -->
+            <div class="modal-body bld-scrollable-body" style="max-height: 60vh; overflow-y: auto; padding: 20px 24px;">
+
+                <!-- Variation Section -->
+                <div id="bv_variation_wrap"></div>
+
+                <!-- Basic Information -->
+                <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="bld-info-row"><i class="bi bi-geo-alt bld-info-icon"></i>
+                            <div>
+                                <div class="bld-info-label">Zoneation</div>
+                                <div class="bld-info-val" id="bv_zone"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="bld-section-divider mb-3"><i class="bi bi-check2-square me-2"></i>Amenities</div>
-                    <div class="mb-4" id="bv_amenities"></div>
-                    <div class="bld-section-divider mb-3"><i class="bi bi-chat-text me-2"></i>Remarks</div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
-                                <div>
-                                    <div class="bld-info-label">General Remarks</div>
-                                    <div class="bld-info-val" id="bv_remarks"></div>
-                                </div>
+                    <div class="col-md-3">
+                        <div class="bld-info-row"><i class="bi bi-building bld-info-icon"></i>
+                            <div>
+                                <div class="bld-info-label">Building Name</div>
+                                <div class="bld-info-val" id="bv_building_name"></div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
-                                <div>
-                                    <div class="bld-info-label">Corporation Remarks</div>
-                                    <div class="bld-info-val" id="bv_corp_remarks"></div>
-                                </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bld-info-row"><i class="bi bi-signpost bld-info-icon"></i>
+                            <div>
+                                <div class="bld-info-label">Road</div>
+                                <div class="bld-info-val" id="bv_road_name"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bld-info-row"><i class="bi bi-telephone bld-info-icon"></i>
+                            <div>
+                                <div class="bld-info-label">Phone</div>
+                                <div class="bld-info-val" id="bv_phone"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bld-info-row"><i class="bi bi-tag bld-info-icon"></i>
+                            <div>
+                                <div class="bld-info-label">Usage</div>
+                                <div class="bld-info-val" id="bv_usage"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bld-info-row"><i class="bi bi-tools bld-info-icon"></i>
+                            <div>
+                                <div class="bld-info-label">Construction</div>
+                                <div class="bld-info-val" id="bv_construction_type"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bld-info-row"><i class="bi bi-house bld-info-icon"></i>
+                            <div>
+                                <div class="bld-info-label">Building Type</div>
+                                <div class="bld-info-val" id="bv_building_type"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bld-info-row"><i class="bi bi-droplet bld-info-icon"></i>
+                            <div>
+                                <div class="bld-info-label">UGD Status</div>
+                                <div class="bld-info-val" id="bv_ugd"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bld-modal-footer">
-                    <span class="bld-footer-status">Read-only view</span>
-                    <div><button type="button" class="btn bld-btn-cancel me-2" id="buildingViewPointsBtn"><i
-                                class="bi bi-geo-alt me-1"></i>View Assessments</button></div>
+
+                <!-- Amenities -->
+                <div class="bld-section-divider mb-3"><i class="bi bi-check2-square me-2"></i>Amenities</div>
+                <div class="mb-4" id="bv_amenities"></div>
+
+                <!-- Remarks -->
+                <div class="bld-section-divider mb-3"><i class="bi bi-chat-text me-2"></i>Remarks</div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
+                            <div>
+                                <div class="bld-info-label">General Remarks</div>
+                                <div class="bld-info-val" id="bv_remarks"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
+                            <div>
+                                <div class="bld-info-label">Corporation Remarks</div>
+                                <div class="bld-info-val" id="bv_corp_remarks"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── ASSESSMENT DETAILS SECTION ─── -->
+                <div class="bld-section-divider mt-4 mb-3"><i class="bi bi-people me-2"></i>Assessment Details</div>
+                <div id="bv_assessment_list">
+                    <!-- Assessment records will be injected here by JavaScript -->
+                </div>
+            </div>
+
+            <!-- ─── FOOTER ─── -->
+            <div class="modal-footer bld-modal-footer">
+                <span class="bld-footer-status">Read-only view</span>
+                <div>
+                    <button type="button" class="btn bld-btn-cancel me-2" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Close
+                    </button>
+                    <button type="button" class="btn bld-btn-save" id="buildingViewPointsBtn">
+                        <i class="bi bi-geo-alt me-1"></i>View Assessments
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
     <!-- ─── POINT DETAILS MODAL ─── -->
     <div class="modal fade" id="pointDetailsModal" tabindex="-1" aria-hidden="true">
@@ -2466,6 +2491,7 @@
 
             // ─── BUILDING VIEW ───
             function showBuildingView(item) {
+                // ─── SET BASIC FIELDS ───
                 $('#bv_gisid').text(item.gisid || '-');
                 $('#bv_zone').text(item.zone || item.building_zone || '-');
                 $('#bv_building_name').text(item.building_name || '-');
@@ -2483,6 +2509,7 @@
                 const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
                 $('#bv_mapped').text(mappedCount);
 
+                // ─── VARIATION ───
                 const variation = buildingVariations[item.gisid];
                 if (variation) {
                     const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
@@ -2512,6 +2539,7 @@
                     $('#bv_variation_wrap').html('');
                 }
 
+                // ─── AMENITIES ───
                 const amenities = [
                     ['Lift Room', item.liftroom],
                     ['Head Room', item.headroom],
@@ -2528,15 +2556,16 @@
                 let amenHtml = '';
                 amenities.forEach(([label, val]) => {
                     if (val === 'Yes' || val === true || val === 1) {
-                        amenHtml +=
-                            `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                        amenHtml += `<span class="bld-status-tag complete me-1"><i class="bi bi-check-circle"></i> ${label}</span>`;
                     }
                 });
                 $('#bv_amenities').html(amenHtml || '<span class="text-muted small">No amenities recorded</span>');
 
+                // ─── REMARKS ───
                 $('#bv_remarks').text(item.remarks || '—');
                 $('#bv_corp_remarks').text(item.corporationremarks || '—');
 
+                // ─── IMAGES ───
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
 
                 function loadImage(imgId, emptyId, errorId, imagePath) {
@@ -2545,8 +2574,7 @@
                     const $error = $('#' + errorId);
 
                     if (imagePath) {
-                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath
-                            .replace(/^\/+/, '');
+                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath.replace(/^\/+/, '');
                         $img.attr('src', fullPath).show();
                         $empty.hide();
                         $error.hide();
@@ -2572,6 +2600,10 @@
                 loadImage('bv_img1', 'bv_img1_empty', 'bv_img1_error', item.image);
                 loadImage('bv_img2', 'bv_img2_empty', 'bv_img2_error', item.image2);
 
+                // ─── LOAD ASSESSMENT DETAILS ───
+                loadAssessmentDetails(item.gisid);
+
+                // ─── BUTTON HANDLERS ───
                 $('#buildingViewPointsBtn').off('click').on('click', function() {
                     bootstrap.Modal.getInstance(document.getElementById('buildingViewModal')).hide();
                     openPointDetails(item.gisid);
@@ -2579,6 +2611,121 @@
 
                 const modal = new bootstrap.Modal(document.getElementById('buildingViewModal'));
                 modal.show();
+            }
+
+            // ─── NEW FUNCTION: LOAD ASSESSMENT DETAILS ───
+            function loadAssessmentDetails(gisid) {
+                const $container = $('#bv_assessment_list');
+
+                // Find assessment records for this building
+                const assessments = pointDatas.filter(pd => pd.point_gisid == gisid);
+
+                if (!assessments || assessments.length === 0) {
+                    $container.html(`
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            <span>No assessment records found for this building</span>
+                        </div>
+                    `);
+                    return;
+                }
+
+                let html = '';
+                assessments.forEach((pd, index) => {
+                    const v = (val) => (val === null || val === undefined || val === '') ?
+                        '<span class="text-muted">-</span>' : val;
+
+                    // Determine QC status
+                    const qcFilled = [pd.qcusage, pd.qcsqfeet, pd.qc_remarks]
+                        .filter(val => val !== null && val !== '' && val !== undefined).length;
+                    const qcClass = qcFilled === 3 ? 'complete' : qcFilled === 0 ? 'empty' : 'partial';
+                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' : 'QC Partial';
+
+                    html += `
+                        <div class="point-data-card" data-id="${pd.id}" style="margin-bottom: 16px;">
+                            <div class="point-data-card-header">
+                                <div>
+                                    <div class="point-data-card-title">
+                                        Assessment #${index + 1}: ${v(pd.assessment)}
+                                        <span class="bld-status-tag ${qcClass}" style="margin-left: 10px;">${qcLabel}</span>
+                                    </div>
+                                    <div class="point-data-card-subtitle">
+                                        Owner: ${v(pd.owner_name)} • Door: ${v(pd.new_door_no || pd.old_door_no)}
+                                    </div>
+                                </div>
+                                <div class="point-data-card-actions">
+                                    <button class="pdc-action-btn pdc-qc-btn" title="Quality Check" data-id="${pd.id}" data-qc-btn>
+                                        <i class="bi bi-clipboard-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin: 10px 0;">
+                                <div class="pdc-field"><div class="pdc-field-label">Assessment Type</div><div class="pdc-field-val">${v(pd.assessment_type)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Old Assessment</div><div class="pdc-field-val">${v(pd.old_assessment)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Worker Name</div><div class="pdc-field-val">${v(pd.worker_name)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Present Owner</div><div class="pdc-field-val">${v(pd.present_owner_name)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">EB Number</div><div class="pdc-field-val">${v(pd.eb)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Floor</div><div class="pdc-field-val">${v(pd.floor)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Bill Usage</div><div class="pdc-field-val">${v(pd.bill_usage)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Aadhar No</div><div class="pdc-field-val">${v(pd.aadhar_no)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Ration No</div><div class="pdc-field-val">${v(pd.ration_no)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Phone</div><div class="pdc-field-val">${v(pd.phone_number)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Plot Area</div><div class="pdc-field-val">${v(pd.plot_area)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Water Tax No</div><div class="pdc-field-val">${v(pd.water_tax)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Half Year Tax</div><div class="pdc-field-val">${v(pd.halfyeartax)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Balance</div><div class="pdc-field-val">${v(pd.balance)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">No. of Persons</div><div class="pdc-field-val">${v(pd.no_of_persons)}</div></div>
+                                <div class="pdc-field"><div class="pdc-field-label">Zone</div><div class="pdc-field-val">${v(pd.zone)}</div></div>
+                            </div>
+
+                            <!-- QC Details -->
+                            <div style="background: #f8fafc; border-radius: 8px; padding: 10px; margin: 8px 0; border: 1px solid #e5e7eb;">
+                                <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px;">
+                                    <i class="bi bi-clipboard-check me-1"></i>QC Details
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px;">
+                                    <div><span style="font-size: 0.65rem; color: #94a3b8;">QC Usage</span><br><span style="font-weight: 600;">${v(pd.qcusage)}</span></div>
+                                    <div><span style="font-size: 0.65rem; color: #94a3b8;">QC Sq.Feet</span><br><span style="font-weight: 600;">${v(pd.qcsqfeet)}</span></div>
+                                    <div><span style="font-size: 0.65rem; color: #94a3b8;">QC By</span><br><span style="font-weight: 600;">${v(pd.qc_name)}</span></div>
+                                    <div style="grid-column: 1 / -1;"><span style="font-size: 0.65rem; color: #94a3b8;">QC Remarks</span><br><span style="font-weight: 600;">${v(pd.qc_remarks)}</span></div>
+                                </div>
+                            </div>
+
+                            <!-- Tax Details -->
+                            ${pd.tax_details ? `
+                                <div style="background: #f8fafc; border-radius: 8px; padding: 10px; margin: 8px 0; border: 1px solid #e5e7eb;">
+                                    <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px;">
+                                        <i class="bi bi-cash-stack me-1"></i>Tax Details
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px;">
+                                        ${pd.tax_details.map(tax => `
+                                            <div>
+                                                <span style="font-size: 0.65rem; color: #94a3b8;">${tax.label}</span>
+                                                <br><span style="font-weight: 600;">${v(tax.value)}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            <!-- Remarks -->
+                            ${pd.remarks ? `
+                                <div style="background: #fef9c3; border-radius: 8px; padding: 8px 12px; margin: 6px 0; border: 1px solid #fcd34d;">
+                                    <span style="font-size: 0.65rem; font-weight: 700; color: #92400e;">Remarks:</span>
+                                    <span style="font-size: 0.8rem;">${v(pd.remarks)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+
+                $container.html(html);
+
+                // Re-bind QC button events
+                $container.find('[data-qc-btn]').on('click', function() {
+                    openQcModal($(this).data('id'));
+                });
             }
 
             // ─── POINT DETAILS ───
