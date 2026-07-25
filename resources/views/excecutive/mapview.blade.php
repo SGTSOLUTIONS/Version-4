@@ -1217,186 +1217,195 @@
 
     <!-- ─── BUILDING VIEW MODAL ─── -->
     <!-- ─── BUILDING VIEW MODAL ─── -->
-<div class="modal fade" id="buildingViewModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
-        <div class="modal-content bld-modal-content">
-            <div class="modal-header bld-modal-header">
-                <div class="bld-header-inner">
-                    <div class="bld-header-icon"><i class="bi bi-building"></i></div>
+    <div class="modal fade" id="buildingViewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content bld-modal-content">
+                <div class="modal-header bld-modal-header">
+                    <div class="bld-header-inner">
+                        <div class="bld-header-icon"><i class="bi bi-building"></i></div>
+                        <div>
+                            <h5 class="bld-modal-title">Building Details</h5>
+                            <span class="bld-gisid-badge">GIS ID: <span id="bv_gisid"></span></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- ─── IMAGE STRIP ─── -->
+                <div class="bld-image-strip">
+                    <div class="bld-img-wrap" id="bv_img1_wrap">
+                        <img id="bv_img1" src="" style="display:none;"
+                            onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
+                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i
+                                class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i
+                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <div class="bld-img-label">Image 1</div>
+                    </div>
+                    <div class="bld-img-wrap" id="bv_img2_wrap">
+                        <img id="bv_img2" src="" style="display:none;"
+                            onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
+                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i
+                                class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i
+                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <div class="bld-img-label">Image 2</div>
+                    </div>
+                </div>
+
+                <!-- ─── SCROLLABLE BODY ─── -->
+                <div class="modal-body" style="max-height: 65vh; overflow-y: auto; padding: 20px 24px;">
+
+                    <!-- Quick Summary -->
+                    <div class="bld-summary-strip"
+                        style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px; margin-bottom: 20px;">
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                            <div class="bld-summary-icon">🧾</div>
+                            <div>
+                                <div class="bld-summary-label">Assessments</div>
+                                <div class="bld-summary-val" id="bv_bills">0</div>
+                            </div>
+                        </div>
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                            <div class="bld-summary-icon">🏬</div>
+                            <div>
+                                <div class="bld-summary-label">Shops</div>
+                                <div class="bld-summary-val" id="bv_shops">0</div>
+                            </div>
+                        </div>
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                            <div class="bld-summary-icon">🏢</div>
+                            <div>
+                                <div class="bld-summary-label">Floors</div>
+                                <div class="bld-summary-val" id="bv_floors">0</div>
+                            </div>
+                        </div>
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
+                            <div class="bld-summary-icon">✅</div>
+                            <div>
+                                <div class="bld-summary-label">Mapped</div>
+                                <div class="bld-summary-val" id="bv_mapped">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Variation Section -->
+                    <div id="bv_variation_wrap" style="margin-bottom: 20px;"></div>
+
+                    <!-- Basic Information -->
+                    <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-geo-alt bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Zoneation</div>
+                                    <div class="bld-info-val" id="bv_zone"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-building bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Building Name</div>
+                                    <div class="bld-info-val" id="bv_building_name"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-signpost bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Road</div>
+                                    <div class="bld-info-val" id="bv_road_name"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-telephone bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Phone</div>
+                                    <div class="bld-info-val" id="bv_phone"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-tag bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Usage</div>
+                                    <div class="bld-info-val" id="bv_usage"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-tools bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Construction</div>
+                                    <div class="bld-info-val" id="bv_construction_type"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-house bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Building Type</div>
+                                    <div class="bld-info-val" id="bv_building_type"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bld-info-row"><i class="bi bi-droplet bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">UGD Status</div>
+                                    <div class="bld-info-val" id="bv_ugd"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Amenities -->
+                    <div class="bld-section-divider mb-3"><i class="bi bi-check2-square me-2"></i>Amenities</div>
+                    <div class="mb-4" id="bv_amenities" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+
+                    <!-- Remarks -->
+                    <div class="bld-section-divider mb-3"><i class="bi bi-chat-text me-2"></i>Remarks</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">General Remarks</div>
+                                    <div class="bld-info-val" id="bv_remarks"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
+                                <div>
+                                    <div class="bld-info-label">Corporation Remarks</div>
+                                    <div class="bld-info-val" id="bv_corp_remarks"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── FOOTER ─── -->
+                <div class="modal-footer bld-modal-footer">
+                    <span class="bld-footer-status">Read-only view</span>
                     <div>
-                        <h5 class="bld-modal-title">Building Details</h5>
-                        <span class="bld-gisid-badge">GIS ID: <span id="bv_gisid"></span></span>
+                        <button type="button" class="btn bld-btn-cancel me-2" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Close
+                        </button>
+                        <button type="button" class="btn bld-btn-save" id="buildingViewPointsBtn">
+                            <i class="bi bi-people me-1"></i>View Assessments
+                        </button>
                     </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-
-            <!-- ─── IMAGE STRIP ─── -->
-            <div class="bld-image-strip">
-                <div class="bld-img-wrap" id="bv_img1_wrap">
-                    <img id="bv_img1" src="" style="display:none;"
-                        onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
-                    <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
-                    <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
-                    <div class="bld-img-label">Image 1</div>
-                </div>
-                <div class="bld-img-wrap" id="bv_img2_wrap">
-                    <img id="bv_img2" src="" style="display:none;"
-                        onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
-                    <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
-                    <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
-                    <div class="bld-img-label">Image 2</div>
-                </div>
-            </div>
-
-            <!-- ─── SCROLLABLE BODY ─── -->
-            <div class="modal-body" style="max-height: 65vh; overflow-y: auto; padding: 20px 24px;">
-
-                <!-- Quick Summary -->
-                <div class="bld-summary-strip" style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px; margin-bottom: 20px;">
-                    <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
-                        <div class="bld-summary-icon">🧾</div>
-                        <div>
-                            <div class="bld-summary-label">Assessments</div>
-                            <div class="bld-summary-val" id="bv_bills">0</div>
-                        </div>
-                    </div>
-                    <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
-                        <div class="bld-summary-icon">🏬</div>
-                        <div>
-                            <div class="bld-summary-label">Shops</div>
-                            <div class="bld-summary-val" id="bv_shops">0</div>
-                        </div>
-                    </div>
-                    <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
-                        <div class="bld-summary-icon">🏢</div>
-                        <div>
-                            <div class="bld-summary-label">Floors</div>
-                            <div class="bld-summary-val" id="bv_floors">0</div>
-                        </div>
-                    </div>
-                    <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
-                        <div class="bld-summary-icon">✅</div>
-                        <div>
-                            <div class="bld-summary-label">Mapped</div>
-                            <div class="bld-summary-val" id="bv_mapped">0</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Variation Section -->
-                <div id="bv_variation_wrap" style="margin-bottom: 20px;"></div>
-
-                <!-- Basic Information -->
-                <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
-                <div class="row g-3 mb-4">
-                    <div class="col-md-3">
-                        <div class="bld-info-row"><i class="bi bi-geo-alt bld-info-icon"></i>
-                            <div>
-                                <div class="bld-info-label">Zoneation</div>
-                                <div class="bld-info-val" id="bv_zone"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="bld-info-row"><i class="bi bi-building bld-info-icon"></i>
-                            <div>
-                                <div class="bld-info-label">Building Name</div>
-                                <div class="bld-info-val" id="bv_building_name"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="bld-info-row"><i class="bi bi-signpost bld-info-icon"></i>
-                            <div>
-                                <div class="bld-info-label">Road</div>
-                                <div class="bld-info-val" id="bv_road_name"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="bld-info-row"><i class="bi bi-telephone bld-info-icon"></i>
-                            <div>
-                                <div class="bld-info-label">Phone</div>
-                                <div class="bld-info-val" id="bv_phone"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="bld-info-row"><i class="bi bi-tag bld-info-icon"></i>
-                            <div>
-                                <div class="bld-info-label">Usage</div>
-                                <div class="bld-info-val" id="bv_usage"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="bld-info-row"><i class="bi bi-tools bld-info-icon"></i>
-                            <div>
-                                <div class="bld-info-label">Construction</div>
-                                <div class="bld-info-val" id="bv_construction_type"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="bld-info-row"><i class="bi bi-house bld-info-icon"></i>
-                            <div>
-                                <div class="bld-info-label">Building Type</div>
-                                <div class="bld-info-val" id="bv_building_type"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="bld-info-row"><i class="bi bi-droplet bld-info-icon"></i>
-                            <div>
-                                <div class="bld-info-label">UGD Status</div>
-                                <div class="bld-info-val" id="bv_ugd"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Amenities -->
-                <div class="bld-section-divider mb-3"><i class="bi bi-check2-square me-2"></i>Amenities</div>
-                <div class="mb-4" id="bv_amenities" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
-
-                <!-- Remarks -->
-                <div class="bld-section-divider mb-3"><i class="bi bi-chat-text me-2"></i>Remarks</div>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
-                            <div>
-                                <div class="bld-info-label">General Remarks</div>
-                                <div class="bld-info-val" id="bv_remarks"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="bld-info-row"><i class="bi bi-chat-left-text bld-info-icon"></i>
-                            <div>
-                                <div class="bld-info-label">Corporation Remarks</div>
-                                <div class="bld-info-val" id="bv_corp_remarks"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ─── FOOTER ─── -->
-            <div class="modal-footer bld-modal-footer">
-                <span class="bld-footer-status">Read-only view</span>
-                <div>
-                    <button type="button" class="btn bld-btn-cancel me-2" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-1"></i>Close
-                    </button>
-                    <button type="button" class="btn bld-btn-save" id="buildingViewPointsBtn">
-                        <i class="bi bi-people me-1"></i>View Assessments
-                    </button>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- ─── POINT DETAILS MODAL ─── -->
     <div class="modal fade" id="pointDetailsModal" tabindex="-1" aria-hidden="true">
@@ -2483,31 +2492,31 @@
                 });
             }
 
-           function showBuildingView(item) {
-    // ─── SET BASIC FIELDS ───
-    $('#bv_gisid').text(item.gisid || '-');
-    $('#bv_zone').text(item.zone || item.building_zone || '-');
-    $('#bv_building_name').text(item.building_name || '-');
-    $('#bv_road_name').text(item.road_name || '-');
-    $('#bv_phone').text(item.phone || '-');
-    $('#bv_usage').text(item.building_usage || '-');
-    $('#bv_construction_type').text(item.construction_type || '-');
-    $('#bv_building_type').text(item.building_type || '-');
-    $('#bv_ugd').text(item.ugd || '-');
+            function showBuildingView(item) {
+                // ─── SET BASIC FIELDS ───
+                $('#bv_gisid').text(item.gisid || '-');
+                $('#bv_zone').text(item.zone || item.building_zone || '-');
+                $('#bv_building_name').text(item.building_name || '-');
+                $('#bv_road_name').text(item.road_name || '-');
+                $('#bv_phone').text(item.phone || '-');
+                $('#bv_usage').text(item.building_usage || '-');
+                $('#bv_construction_type').text(item.construction_type || '-');
+                $('#bv_building_type').text(item.building_type || '-');
+                $('#bv_ugd').text(item.ugd || '-');
 
-    $('#bv_bills').text(item.number_bill || 0);
-    $('#bv_shops').text(item.number_shop || 0);
-    $('#bv_floors').text(item.number_floor || 0);
+                $('#bv_bills').text(item.number_bill || 0);
+                $('#bv_shops').text(item.number_shop || 0);
+                $('#bv_floors').text(item.number_floor || 0);
 
-    const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
-    $('#bv_mapped').text(mappedCount);
+                const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
+                $('#bv_mapped').text(mappedCount);
 
-    // ─── VARIATION ───
-    const variation = buildingVariations[item.gisid];
-    if (variation) {
-        const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
-        const usageBadgeClass = variation.usage_status === 'MATCH' ? 'complete' : 'empty';
-        $('#bv_variation_wrap').html(`
+                // ─── VARIATION ───
+                const variation = buildingVariations[item.gisid];
+                if (variation) {
+                    const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
+                    const usageBadgeClass = variation.usage_status === 'MATCH' ? 'complete' : 'empty';
+                    $('#bv_variation_wrap').html(`
             <div class="bv-variation-strip" style="display: flex; flex-wrap: wrap; gap: 12px; background: #f8fafc; border-radius: 10px; padding: 12px 16px; border: 1px solid #e5e7eb;">
                 <div class="bv-variation-card" style="flex: 1; min-width: 120px;">
                     <div class="stat-label" style="font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;">Building Area</div>
@@ -2528,82 +2537,85 @@
                 </div>
             </div>
         `);
-    } else {
-        $('#bv_variation_wrap').html('');
-    }
+                } else {
+                    $('#bv_variation_wrap').html('');
+                }
 
-    // ─── AMENITIES ───
-    const amenities = [
-        ['Lift Room', item.liftroom],
-        ['Head Room', item.headroom],
-        ['Overhead Tank', item.overhead_tank],
-        ['Rainwater Harvesting', item.rainwater_harvesting],
-        ['Parking', item.parking],
-        ['Ramp', item.ramp],
-        ['Hoarding', item.hoarding],
-        ['CCTV', item.cctv],
-        ['Cell Tower', item.cell_tower],
-        ['Solar Panel', item.solar_panel],
-        ['Water Connection', item.water_connection]
-    ];
-    let amenHtml = '';
-    let hasAmenities = false;
-    amenities.forEach(([label, val]) => {
-        if (val === 'Yes' || val === true || val === 1) {
-            hasAmenities = true;
-            amenHtml += `<span class="bld-status-tag complete" style="display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: #dcfce7; color: #15803d; letter-spacing: .3px;"><i class="bi bi-check-circle"></i> ${label}</span>`;
-        }
-    });
-    $('#bv_amenities').html(hasAmenities ? amenHtml : '<span class="text-muted small">No amenities recorded</span>');
+                // ─── AMENITIES ───
+                const amenities = [
+                    ['Lift Room', item.liftroom],
+                    ['Head Room', item.headroom],
+                    ['Overhead Tank', item.overhead_tank],
+                    ['Rainwater Harvesting', item.rainwater_harvesting],
+                    ['Parking', item.parking],
+                    ['Ramp', item.ramp],
+                    ['Hoarding', item.hoarding],
+                    ['CCTV', item.cctv],
+                    ['Cell Tower', item.cell_tower],
+                    ['Solar Panel', item.solar_panel],
+                    ['Water Connection', item.water_connection]
+                ];
+                let amenHtml = '';
+                let hasAmenities = false;
+                amenities.forEach(([label, val]) => {
+                    if (val === 'Yes' || val === true || val === 1) {
+                        hasAmenities = true;
+                        amenHtml +=
+                            `<span class="bld-status-tag complete" style="display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: #dcfce7; color: #15803d; letter-spacing: .3px;"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                    }
+                });
+                $('#bv_amenities').html(hasAmenities ? amenHtml :
+                    '<span class="text-muted small">No amenities recorded</span>');
 
-    // ─── REMARKS ───
-    $('#bv_remarks').text(item.remarks || '—');
-    $('#bv_corp_remarks').text(item.corporationremarks || '—');
+                // ─── REMARKS ───
+                $('#bv_remarks').text(item.remarks || '—');
+                $('#bv_corp_remarks').text(item.corporationremarks || '—');
 
-    // ─── IMAGES ───
-    const assetUrl = window.assetUrl || "{{ asset('') }}";
+                // ─── IMAGES ───
+                const assetUrl = window.assetUrl || "{{ asset('') }}";
 
-    function loadImage(imgId, emptyId, errorId, imagePath) {
-        const $img = $('#' + imgId);
-        const $empty = $('#' + emptyId);
-        const $error = $('#' + errorId);
+                function loadImage(imgId, emptyId, errorId, imagePath) {
+                    const $img = $('#' + imgId);
+                    const $empty = $('#' + emptyId);
+                    const $error = $('#' + errorId);
 
-        if (imagePath) {
-            const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath.replace(/^\/+/, '');
-            $img.attr('src', fullPath).show();
-            $empty.hide();
-            $error.hide();
+                    if (imagePath) {
+                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath
+                            .replace(/^\/+/, '');
+                        $img.attr('src', fullPath).show();
+                        $empty.hide();
+                        $error.hide();
 
-            $img.off('error').on('error', function() {
-                $(this).hide();
-                $empty.hide();
-                $error.show();
-            });
+                        $img.off('error').on('error', function() {
+                            $(this).hide();
+                            $empty.hide();
+                            $error.show();
+                        });
 
-            $img.off('load').on('load', function() {
-                $(this).show();
-                $empty.hide();
-                $error.hide();
-            });
-        } else {
-            $img.hide();
-            $empty.show();
-            $error.hide();
-        }
-    }
+                        $img.off('load').on('load', function() {
+                            $(this).show();
+                            $empty.hide();
+                            $error.hide();
+                        });
+                    } else {
+                        $img.hide();
+                        $empty.show();
+                        $error.hide();
+                    }
+                }
 
-    loadImage('bv_img1', 'bv_img1_empty', 'bv_img1_error', item.image);
-    loadImage('bv_img2', 'bv_img2_empty', 'bv_img2_error', item.image2);
+                loadImage('bv_img1', 'bv_img1_empty', 'bv_img1_error', item.image);
+                loadImage('bv_img2', 'bv_img2_empty', 'bv_img2_error', item.image2);
 
-    // ─── BUTTON HANDLERS ───
-    $('#buildingViewPointsBtn').off('click').on('click', function() {
-        bootstrap.Modal.getInstance(document.getElementById('buildingViewModal')).hide();
-        openPointDetails(item.gisid);
-    });
+                // ─── BUTTON HANDLERS ───
+                $('#buildingViewPointsBtn').off('click').on('click', function() {
+                    bootstrap.Modal.getInstance(document.getElementById('buildingViewModal')).hide();
+                    openPointDetails(item.gisid);
+                });
 
-    const modal = new bootstrap.Modal(document.getElementById('buildingViewModal'));
-    modal.show();
-}
+                const modal = new bootstrap.Modal(document.getElementById('buildingViewModal'));
+                modal.show();
+            }
 
             // ─── POINT DETAILS ───
             function openPointDetails(gisid) {
@@ -2744,11 +2756,11 @@
                             </div>
 
                             ${ptList.length ? `
-                                <div class="row mt-2 g-2">
-                                    <div class="col-12">
-                                        <div class="tax-card">
-                                            <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                            ${ptList.map(pt => `
+                                    <div class="row mt-2 g-2">
+                                        <div class="col-12">
+                                            <div class="tax-card">
+                                                <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                                ${ptList.map(pt => `
                                             <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
@@ -2763,10 +2775,10 @@
                                                 <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                             </div>
                                         `).join('')}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                ` : ''}
+                                    ` : ''}
                         </div>`;
                 });
 

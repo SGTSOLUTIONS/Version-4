@@ -111,21 +111,7 @@ class UserManagementController extends Controller
             ], 422);
         }
 
-        // Validation: Only one team leader per ward
-        if ($request->role === 'teamleader') {
-            $existingLeader = User::where('role', 'teamleader')
-                ->where('corporation_id', $request->corporation_id)
-                ->where('zone_id', $request->zone_id)
-                ->where('ward_id', $request->ward_id)
-                ->first();
 
-            if ($existingLeader) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'A team leader already exists for this ward'
-                ], 422);
-            }
-        }
 
         $profileImagePath = null;
 
@@ -191,22 +177,6 @@ class UserManagementController extends Controller
             ], 404);
         }
 
-        // Validation: Only one team leader per ward
-        if ($request->role === 'teamleader') {
-            $existingLeader = User::where('role', 'teamleader')
-                ->where('corporation_id', $request->corporation_id)
-                ->where('zone_id', $request->zone_id)
-                ->where('ward_id', $request->ward_id)
-                ->where('id', '!=', $id)
-                ->first();
-
-            if ($existingLeader) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'A team leader already exists for this ward'
-                ], 422);
-            }
-        }
 
         // If changing from teamleader to something else, unassign all surveyors
         if ($user->isTeamLeader() && $request->role !== 'teamleader') {
