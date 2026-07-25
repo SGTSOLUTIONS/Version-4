@@ -2657,60 +2657,168 @@
                 $('#professionalContainer').empty();
 
             }
+$('#pointDetailsModal').on('hidden.bs.modal', function() {
+    // Clear edit mode
+    $('#pointDetailsForm').removeAttr('data-edit-id');
 
+    // Reset button text
+    $('#savePointDetails').html('<i class="bi bi-save me-1"></i>Update Point Data');
+
+    // Clear validation states
+    $('.is-invalid').removeClass('is-invalid');
+    $('.invalid-feedback').remove();
+    $('.error-message').html('');
+
+    // Clear professional tax container
+    $('#professionalContainer').empty();
+    ptIndex = 0;
+});
             // Save Point Data
-            $('#savePointDetails').on('click', function() {
+           $('#savePointDetails').on('click', function() {
                 const $form = $('#pointDetailsForm');
                 const editId = $form.attr('data-edit-id');
                 const formData = new FormData(document.getElementById('pointDetailsForm'));
                 formData.append('_token', $('input[name="_token"]').val());
 
-                const $btn = $(this).html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop(
-                    'disabled', true);
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+
+                // Disable button and show loading state
+                $btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+
+                // Function to reset button
+                function resetButton() {
+                    $btn.html(originalHtml).prop('disabled', false);
+                }
+
+                // Safety timeout
+                const timeoutId = setTimeout(function() {
+                    resetButton();
+                    showFlashMessage('Request timed out. Please try again.', 'warning');
+                }, 30000);
 
                 if (editId) {
+                    // ─── UPDATE MODE ───
+                    // Use POST with _method=PUT since your route is PUT
                     formData.append('_method', 'PUT');
+
                     $.ajax({
                         url: `/point-data/${editId}`,
                         method: 'POST', // Laravel method spoofing
                         data: formData,
                         processData: false,
                         contentType: false,
-                        success: function() {
-                            showFlashMessage('Point data updated successfully!', 'success');
-                            $('#pointDetailsModal').modal('hide');
-                            $form.removeAttr('data-edit-id');
-                            reloadAllSources();
+                        success: function(response) {
+                            clearTimeout(timeoutId);
+                            console.log('Update response:', response);
+
+                            if (response.success) {
+                                showFlashMessage('Point data updated successfully!', 'success');
+                                $('#pointDetailsModal').modal('hide');
+                                $form.removeAttr('data-edit-id');
+                                // Reset button text
+                                $('#savePointDetails').html(originalHtml);
+                                reloadAllSources();
+                                resetButton();
+                            } else {
+                                showFlashMessage(response.message || 'Update failed', 'error');
+                                resetButton();
+                            }
                         },
                         error: function(xhr) {
-                            showFlashMessage(xhr.responseJSON?.message || 'Update failed.',
-                                'error');
-                        },
-                        complete: () => $btn.html(
-                            '<i class="bi bi-save me-1"></i>Update Point Data').prop('disabled',
-                            false)
+                            clearTimeout(timeoutId);
+                            console.error('Update error:', xhr);
+
+                            let errorMessage = 'Update failed.';
+
+                            if (xhr.status === 422) {
+                                // Validation errors
+                                const errors = xhr.responseJSON?.errors;
+                                if (errors) {
+                                    $.each(errors, function(field, messages) {
+                                        const fieldElement = $(`#${field}`);
+                                        if (fieldElement.length) {
+                                            fieldElement.addClass('is-invalid');
+                                            const errorDiv = $(`#${field}_error`);
+                                            if (errorDiv.length) {
+                                                errorDiv.html(messages[0]);
+                                            } else {
+                                                fieldElement.after(`<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`);
+                                            }
+                                        }
+                                    });
+                                    errorMessage = 'Please fix the validation errors.';
+                                }
+                            } else if (xhr.responseJSON?.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            } else if (xhr.status === 404) {
+                                errorMessage = 'Record not found. It may have been deleted.';
+                            } else if (xhr.status === 0) {
+                                errorMessage = 'Network error. Please check your connection.';
+                            } else if (xhr.status === 500) {
+                                errorMessage = 'Server error. Please try again later.';
+                            }
+
+                            showFlashMessage(errorMessage, 'error');
+                            resetButton();
+                        }
                     });
                 } else {
+                    // ─── CREATE MODE ───
                     $.ajax({
                         url: '/point-data',
                         method: 'POST',
                         data: formData,
                         processData: false,
                         contentType: false,
-                        success: function() {
-                            showFlashMessage('Point data saved successfully!', 'success');
-                            $('#pointDetailsModal').modal('hide');
-                            reloadAllSources();
+                        success: function(response) {
+                            clearTimeout(timeoutId);
+                            console.log('Create response:', response);
+
+                            if (response.success) {
+                                showFlashMessage('Point data saved successfully!', 'success');
+                                $('#pointDetailsModal').modal('hide');
+                                reloadAllSources();
+                                resetButton();
+                            } else {
+                                showFlashMessage(response.message || 'Save failed', 'error');
+                                resetButton();
+                            }
                         },
-                        error: function() {
-                            showFlashMessage('Failed to save point data.', 'error');
-                        },
-                        complete: () => $btn.html(
-                            '<i class="bi bi-save me-1"></i>Update Point Data').prop('disabled',
-                            false)
+                        error: function(xhr) {
+                            clearTimeout(timeoutId);
+                            console.error('Create error:', xhr);
+
+                            let errorMessage = 'Failed to save point data.';
+
+                            if (xhr.status === 422) {
+                                const errors = xhr.responseJSON?.errors;
+                                if (errors) {
+                                    $.each(errors, function(field, messages) {
+                                        const fieldElement = $(`#${field}`);
+                                        if (fieldElement.length) {
+                                            fieldElement.addClass('is-invalid');
+                                            const errorDiv = $(`#${field}_error`);
+                                            if (errorDiv.length) {
+                                                errorDiv.html(messages[0]);
+                                            } else {
+                                                fieldElement.after(`<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`);
+                                            }
+                                        }
+                                    });
+                                    errorMessage = 'Please fix the validation errors.';
+                                }
+                            } else if (xhr.responseJSON?.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            }
+
+                            showFlashMessage(errorMessage, 'error');
+                            resetButton();
+                        }
                     });
                 }
             });
+
 
             // ─── Polygon Click ───
             function polygonClick(feature) {
@@ -2864,12 +2972,19 @@
             });
 
             $(document).ready(function() {
+                let isSubmitting = false; // Prevent double submission
+
                 $('#buildingForm').on('submit', function(e) {
                     e.preventDefault();
+
+                    // Prevent double submission
+                    if (isSubmitting) return;
+                    isSubmitting = true;
 
                     // Clear previous errors
                     $(".error-message").html("");
                     $(".is-invalid").removeClass("is-invalid");
+                    $(".invalid-feedback").remove(); // Remove any existing invalid feedback
 
                     // Show loading state
                     const submitBtn = $("#buildingsubmitBtn");
@@ -2887,12 +3002,13 @@
                     function resetButton() {
                         submitBtn.prop('disabled', false).html(originalHtml ||
                             '<i class="fas fa-save me-2"></i>Save Building Data');
+                        isSubmitting = false;
                     }
 
                     // Safety timeout - reset button after 30 seconds
                     const timeoutId = setTimeout(function() {
                         resetButton();
-                        showNotification('Request timed out. Please try again.', 'warning');
+                        showFlashMessage('Request timed out. Please try again.', 'warning');
                     }, 30000);
 
                     // Send AJAX request
@@ -2910,7 +3026,7 @@
                                     'success');
                                 if (response) {
                                     polygonDatas = response.polygonDatas ??
-                                    polygonDatas;
+                                        polygonDatas;
                                     reloadAllSources();
                                 }
                                 setTimeout(() => {
@@ -2936,14 +3052,55 @@
                                 if (errors) {
                                     // Display validation errors
                                     $.each(errors, function(field, messages) {
-                                        const errorContainer = $(
-                                            `#${field}_error`);
-                                        if (errorContainer.length) {
-                                            errorContainer.html(messages[0]);
-                                            $(`#${field}`).addClass(
-                                                'is-invalid');
+                                        // Find the field element
+                                        let fieldElement = $(`#${field}`);
+
+                                        // If field not found, try with different ID patterns
+                                        if (!fieldElement.length) {
+                                            // Try with building_ prefix
+                                            fieldElement = $(
+                                                `#building_${field}`);
+                                        }
+                                        if (!fieldElement.length) {
+                                            // Try with _building suffix
+                                            fieldElement = $(
+                                                `#${field}_building`);
+                                        }
+
+                                        if (fieldElement.length) {
+                                            fieldElement.addClass('is-invalid');
+
+                                            // Add error message
+                                            const errorContainer = $(
+                                                `#${field}_error`);
+                                            if (errorContainer.length) {
+                                                errorContainer.html(messages[
+                                                    0]);
+                                            } else {
+                                                // Create error container if it doesn't exist
+                                                const errorDiv = $(
+                                                    `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
+                                                );
+                                                fieldElement.after(errorDiv);
+                                            }
+                                        } else {
+                                            // If field not found, show in a general error container
+                                            console.warn(
+                                                'Field not found for error:',
+                                                field, messages[0]);
                                         }
                                     });
+
+                                    // Show first error at top of form
+                                    const firstError = $('.is-invalid').first();
+                                    if (firstError.length) {
+                                        // Scroll to first error
+                                        $('html, body').animate({
+                                            scrollTop: firstError.offset().top -
+                                                100
+                                        }, 300);
+                                    }
+
                                     errorMessage = 'Please fix the validation errors.';
                                 }
                             } else if (xhr.responseJSON?.message) {
@@ -2955,12 +3112,11 @@
                                 errorMessage = 'Server error. Please try again later.';
                             }
 
-                            showNotification(errorMessage, 'error');
+                            showFlashMessage(errorMessage, 'error');
                             resetButton();
                         },
                         complete: function() {
-                            // This will also run, but we already handle reset in success/error
-                            // Keep as backup
+                            // Backup reset - ensures button is always reset
                             clearTimeout(timeoutId);
                             resetButton();
                         }
@@ -4547,103 +4703,164 @@
                 $('#searchToggleBtn').removeClass('active-search');
             });
 
-            function loadPointDataForEdit(id) {
+            loadPointDataForEdit(id) {
+                // Show loading indicator
+                showFlashMessage('Loading data...', 'info');
+
+                console.log('Loading point data for edit, ID:', id);
+
                 $.ajax({
                     url: `/point-data/${id}`,
                     method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
                     success: function(res) {
+                        console.log('Edit response:', res);
+
                         if (!res.success) {
-                            showFlashMessage(res.message, 'error');
+                            showFlashMessage(res.message || 'Failed to load data', 'error');
                             return;
                         }
 
-                        const pd = res.point_data,
-                            wt = res.water_tax,
-                            ugd = res.ugd_tax,
-                            pts = res.professional;
+                        const pd = res.point_data;
+                        const wt = res.water_tax;
+                        const ugd = res.ugd_tax;
+                        const pts = res.professional || [];
 
-                        const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
+                        // Check if we have the data
+                        if (!pd) {
+                            showFlashMessage('No data found for this record', 'error');
+                            return;
+                        }
+
+                        const modal = new bootstrap.Modal(document.getElementById(
+                            'pointDetailsModal'));
                         modal.show();
                         $('#pointDetailsTabs button:first').tab('show');
 
-                        // mark edit mode
+                        // ✅ MARK EDIT MODE - Store the ID
                         $('#pointDetailsForm').attr('data-edit-id', pd.id);
-                        $('#point_gisid').val(pd.point_gisid);
 
-                        // basic
-                        $('#assessment_type').val(pd.assessment_type);
-                        $('#assessment').val(pd.assessment);
-                        $('#old_assessment').val(pd.old_assessment);
-                        $('#owner_name').val(pd.owner_name);
-                        $('#present_owner_name').val(pd.present_owner_name);
-                        $('#phone_number').val(pd.phone_number);
-                        $('#old_door_no').val(pd.old_door_no);
-                        $('#new_door_no').val(pd.new_door_no);
-                        $('#aadhar_no').val(pd.aadhar_no);
-                        $('#ration_no').val(pd.ration_no);
-                        $('#floor').val(pd.floor);
-                        $('#number_persons').val(pd.no_of_persons);
-                        $('#bill_usage').val(pd.bill_usage);
-                        $('#eb').val(pd.eb);
-                        $('#remarks').val(pd.remarks);
+                        // ✅ Change button text for edit mode
+                        $('#savePointDetails').html(
+                            '<i class="bi bi-pencil-square me-1"></i>Update Point Data');
 
-                        // water
+                        // ─── BASIC INFO ───
+                        $('#point_gisid').val(pd.point_gisid || '');
+                        $('#assessment_type').val(pd.assessment_type || '');
+                        $('#assessment').val(pd.assessment || '');
+                        $('#old_assessment').val(pd.old_assessment || '');
+                        $('#zone').val(pd.zone || '');
+                        $('#owner_name').val(pd.owner_name || '');
+                        $('#present_owner_name').val(pd.present_owner_name || '');
+                        $('#phone_number').val(pd.phone_number || '');
+                        $('#old_door_no').val(pd.old_door_no || '');
+                        $('#new_door_no').val(pd.new_door_no || '');
+                        $('#aadhar_no').val(pd.aadhar_no || '');
+                        $('#ration_no').val(pd.ration_no || '');
+                        $('#floor').val(pd.floor || '');
+                        $('#number_persons').val(pd.no_of_persons || '');
+                        $('#bill_usage').val(pd.bill_usage || '');
+                        $('#eb').val(pd.eb || '');
+                        $('#worker_name').val(pd.worker_name || '');
+                        $('#remarks').val(pd.remarks || '');
+
+                        // ─── WATER TAX ───
                         if (wt) {
-                            $('#watertax_no').val(wt.watertax_no);
-                            $('#old_watertax_no').val(wt.old_watertax_no);
-                            $('#water_usage').val(wt.usage);
-                            $('#water_DBC_type').val(wt.DBC_type);
-                            $('#water_slab_description').val(wt.slab_description);
+                            $('#watertax_no').val(wt.watertax_no || '');
+                            $('#old_watertax_no').val(wt.old_watertax_no || '');
+                            $('#water_usage').val(wt.usage || '');
+                            $('#water_DBC_type').val(wt.DBC_type || '');
+                            $('#water_slab_description').val(wt.slab_description || '');
+                        } else {
+                            $('#watertax_no').val('');
+                            $('#old_watertax_no').val('');
+                            $('#water_usage').val('');
+                            $('#water_DBC_type').val('');
+                            $('#water_slab_description').val('');
                         }
 
-                        // ugd
+                        // ─── UGD TAX ───
                         if (ugd) {
-                            $('#ugd_no').val(ugd.ugd_no);
-                            $('#old_ugd_no').val(ugd.old_ugd_no);
-                            $('#ugd_usage').val(ugd.usage);
-                            $('#ugd_DBC_type').val(ugd.DBC_type);
-                            $('#ugd_slab_description').val(ugd.slab_description);
+                            $('#ugd_no').val(ugd.ugd_no || '');
+                            $('#old_ugd_no').val(ugd.old_ugd_no || '');
+                            $('#ugd_usage').val(ugd.usage || '');
+                            $('#ugd_DBC_type').val(ugd.DBC_type || '');
+                            $('#ugd_slab_description').val(ugd.slab_description || '');
+                        } else {
+                            $('#ugd_no').val('');
+                            $('#old_ugd_no').val('');
+                            $('#ugd_usage').val('');
+                            $('#ugd_DBC_type').val('');
+                            $('#ugd_slab_description').val('');
                         }
 
-                        // professional tax cards
+                        // ─── PROFESSIONAL TAX ───
                         $('#professionalContainer').empty();
                         ptIndex = 0;
-                        (pts || []).forEach(p => addProfessionalCard(p));
+
+                        if (pts && pts.length > 0) {
+                            pts.forEach(function(pt) {
+                                addProfessionalCard(pt);
+                            });
+                        }
+
+                        // Clear any previous validation errors
+                        $('.is-invalid').removeClass('is-invalid');
+                        $('.invalid-feedback').remove();
+                        $('.error-message').html('');
+
+                        showFlashMessage('Data loaded for editing', 'success');
                     },
-                    error: function() {
-                        showFlashMessage('Failed to load record for editing.', 'error');
+                    error: function(xhr) {
+                        console.error('Edit load error:', xhr);
+
+                        let errorMsg = 'Failed to load record for editing.';
+
+                        if (xhr.status === 404) {
+                            errorMsg = 'Record not found. It may have been deleted.';
+                        } else if (xhr.status === 500) {
+                            errorMsg = 'Server error. Please try again.';
+                        } else if (xhr.responseJSON?.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+
+                        showFlashMessage(errorMsg, 'error');
                     }
                 });
             }
 
+
+
             function addProfessionalCard(data = {}) {
                 const idx = ptIndex;
                 const html = `
-        <div class="card mb-3 professional-card" data-index="${idx}">
-            <div class="card-header d-flex justify-content-between">
-                <strong>Professional Tax #${idx + 1}</strong>
-                <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
-            </div>
-            <div class="card-body">
-                <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
-                <div class="row g-3">
-                    <div class="col-md-4"><label>PT Number</label>
-                        <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}"></div>
-                    <div class="col-md-4"><label>Old PT Number</label>
-                        <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}"></div>
-                    <div class="col-md-4"><label>Establishment Name</label>
-                        <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}"></div>
-                    <div class="col-md-4"><label>Profession Type</label>
-                        <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}"></div>
-                    <div class="col-md-4"><label>Employee Count</label>
-                        <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}"></div>
-                    <div class="col-md-4"><label>Half Year Tax</label>
-                        <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}"></div>
-                    <div class="col-md-12"><label>Remarks</label>
-                        <textarea class="form-control" name="professional[${idx}][pt_remarks]">${data.remarks || ''}</textarea></div>
-                </div>
-            </div>
-        </div>`;
+                    <div class="card mb-3 professional-card" data-index="${idx}">
+                        <div class="card-header d-flex justify-content-between">
+                            <strong>Professional Tax #${idx + 1}</strong>
+                            <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
+                        </div>
+                        <div class="card-body">
+                            <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
+                            <div class="row g-3">
+                                <div class="col-md-4"><label>PT Number</label>
+                                    <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}"></div>
+                                <div class="col-md-4"><label>Old PT Number</label>
+                                    <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}"></div>
+                                <div class="col-md-4"><label>Establishment Name</label>
+                                    <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}"></div>
+                                <div class="col-md-4"><label>Profession Type</label>
+                                    <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}"></div>
+                                <div class="col-md-4"><label>Employee Count</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}"></div>
+                                <div class="col-md-4"><label>Half Year Tax</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}"></div>
+                                <div class="col-md-12"><label>Remarks</label>
+                                    <textarea class="form-control" name="professional[${idx}][pt_remarks]">${data.remarks || ''}</textarea></div>
+                            </div>
+                        </div>
+                    </div>`;
                 $('#professionalContainer').append(html);
                 ptIndex++;
             }
