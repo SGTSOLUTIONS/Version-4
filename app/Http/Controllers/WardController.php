@@ -690,6 +690,88 @@ class WardController extends Controller
             ], 500);
         }
     }
+   public function exportAllPolygons($ward_id)
+{
+    try {
+        $polygonTable = "polygons_" . $ward_id;
+
+        // Check if table exists
+        if (!Schema::hasTable($polygonTable)) {
+            return response()->json([
+                "success" => false,
+                "message" => "Polygon table not found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $allBuildings = DB::table($polygonTable)->get();
+
+        if ($allBuildings->isEmpty()) {
+            return response()->json([
+                "success" => false,
+                "message" => "No polygons found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $features = [];
+
+        foreach ($allBuildings as $building) {
+            $coordinates = json_decode($building->coordinates, true);
+
+            if (!$coordinates) {
+                continue;
+            }
+
+            // Convert to valid GeoJSON Polygon
+            if ($building->type == 'Polygon') {
+                // If coordinates are stored as [[x,y],[x,y],...]
+                if (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
+                    $coordinates = [$coordinates];
+                }
+
+                // Close polygon if not closed
+                $ring = &$coordinates[0];
+                if ($ring[0] != end($ring)) {
+                    $ring[] = $ring[0];
+                }
+            }
+
+            $features[] = [
+                "type" => "Feature",
+                "properties" => [
+                    "gisid"  => $building->gisid,
+                    "sqfeet" => $building->sqfeet,
+                    "type"   => $building->type ?? 'Polygon',
+                ],
+                "geometry" => [
+                    "type" => $building->type ?? 'Polygon',
+                    "coordinates" => $coordinates
+                ]
+            ];
+        }
+
+        $geojson = [
+            "type" => "FeatureCollection",
+            "features" => $features
+        ];
+
+        $fileName = "all_polygons_ward_{$ward_id}.geojson";
+
+        return response()->streamDownload(function () use ($geojson) {
+            echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        }, $fileName, [
+            'Content-Type' => 'application/geo+json',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            "success" => false,
+            "message" => $e->getMessage(),
+            "line"    => $e->getLine(),
+            "file"    => $e->getFile(),
+        ], 500);
+    }
+}
     public function missingBuiildingExcel($ward_id)
     {
         try {
