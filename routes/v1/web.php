@@ -73,6 +73,21 @@ Route::middleware(['auth'])->group(function () {
         ->name('wards.missing-bill-pdf');
     Route::get('/wards/{ward_id}/export-all-polygons', [WardController::class, 'exportAllPolygons'])
         ->name('wards.export-all-polygons');
+    // MIS Bill Excel
+    Route::get('/wards/{ward_id}/mis-bill-excel', [WardController::class, 'misBillExcel'])
+        ->name('wards.mis-bill-excel');
+
+    // UGD Tax Excel
+    Route::get('/wards/{ward_id}/ugd-tax-excel', [WardController::class, 'ugdTaxExcel'])
+        ->name('wards.ugd-tax-excel');
+
+    // Water Tax Excel
+    Route::get('/wards/{ward_id}/water-tax-excel', [WardController::class, 'waterTaxExcel'])
+        ->name('wards.water-tax-excel');
+
+    // Professional Tax Excel
+    Route::get('/wards/{ward_id}/professional-tax-excel', [WardController::class, 'professionalTaxExcel'])
+        ->name('wards.professional-tax-excel');
 });
 
 

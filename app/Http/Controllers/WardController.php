@@ -868,8 +868,10 @@ class WardController extends Controller
             }
 
 
-            $fileName = "missing_bill_{$ward_id}.xlsx";
-
+            // File name
+            $fileName = (!empty($roadName) && strtolower($roadName) !== 'all')
+                ? "{$roadName}_missing_{$ward_id}.xlsx"
+                : "missing_bill_{$ward_id}.xlsx";
 
             return Excel::download(
                 new MissingBillExport($missingbill),
@@ -884,8 +886,140 @@ class WardController extends Controller
             ], 500);
         }
     }
+    public function misBillExcel(Request $request, $ward_id)
+    {
+        try {
+            $roadName = $request->query('road_name');
 
+            $ward = Ward::findOrFail($ward_id);
+            $zone = Zone::findOrFail($ward->zone_id);
 
+            $misTable = 'mis_' . $zone->corp_id;
+
+            $query = DB::table($misTable)
+                ->where('ward_no', $ward->ward_no);
+
+            // Filter by road name
+            if (!empty($roadName) && strtolower($roadName) !== 'all') {
+                $query->where('road_name', $roadName);
+            }
+
+            // File name
+            $fileName = (!empty($roadName) && strtolower($roadName) !== 'all')
+                ? "{$roadName}_{$ward_id}.xlsx"
+                : "mis_bill_{$ward_id}.xlsx";
+
+            return Excel::download(
+                new MissingBillExport($query),
+                $fileName
+            );
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+            ], 500);
+        }
+    }
+    public function ugdTaxExcel(Request $request, $ward_id)
+    {
+        try {
+            $roadName = $request->query('road_name');
+
+            $ward = Ward::findOrFail($ward_id);
+            $zone = Zone::findOrFail($ward->zone_id);
+
+            $ugdTable = 'ugd_tax_' . $zone->corp_id;
+
+            $query = DB::table($ugdTable)
+                ->where('ward_no', $ward->ward_no);
+
+            if (!empty($roadName) && strtolower($roadName) !== 'all') {
+                $query->where('road_name', $roadName);
+            }
+
+            $fileName = (!empty($roadName) && strtolower($roadName) !== 'all')
+                ? "{$roadName}_{$ward_id}.xlsx"
+                : "ugd_tax_{$ward_id}.xlsx";
+
+            return Excel::download(
+                new MissingBillExport($query),
+                $fileName
+            );
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+            ], 500);
+        }
+    }
+    public function professionalTaxExcel(Request $request, $ward_id)
+    {
+        try {
+            $roadName = $request->query('road_name');
+
+            $ward = Ward::findOrFail($ward_id);
+            $zone = Zone::findOrFail($ward->zone_id);
+
+            $professionalTable = 'professional_tax_' . $zone->corp_id;
+
+            $query = DB::table($professionalTable)
+                ->where('ward_no', $ward->ward_no);
+
+            if (!empty($roadName) && strtolower($roadName) !== 'all') {
+                $query->where('road_name', $roadName);
+            }
+
+            $fileName = (!empty($roadName) && strtolower($roadName) !== 'all')
+                ? "{$roadName}_{$ward_id}.xlsx"
+                : "professional_tax_{$ward_id}.xlsx";
+
+            return Excel::download(
+                new MissingBillExport($query),
+                $fileName
+            );
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+            ], 500);
+        }
+    }
+    public function waterTaxExcel(Request $request, $ward_id)
+    {
+        try {
+            $roadName = $request->query('road_name');
+
+            $ward = Ward::findOrFail($ward_id);
+            $zone = Zone::findOrFail($ward->zone_id);
+
+            $waterTable = 'water_tax_' . $zone->corp_id;
+
+            $query = DB::table($waterTable)
+                ->where('ward_no', $ward->ward_no);
+
+            if (!empty($roadName) && strtolower($roadName) !== 'all') {
+                $query->where('road_name', $roadName);
+            }
+
+            $fileName = (!empty($roadName) && strtolower($roadName) !== 'all')
+                ? "{$roadName}_{$ward_id}.xlsx"
+                : "water_tax_{$ward_id}.xlsx";
+
+            return Excel::download(
+                new MissingBillExport($query),
+                $fileName
+            );
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+            ], 500);
+        }
+    }
     public function missingBillPdf(Request $request, $ward_id)
     {
         try {
