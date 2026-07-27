@@ -110,12 +110,18 @@ class WardController extends Controller
 
             $wards->getCollection()->transform(function ($ward) {
 
-                $misTableName = 'mis_' . $ward->zone->corp_id;
+                $ward->road_names = [];
 
+                // Check if zone exists
+                if (!$ward->zone) {
+                    $ward->table_error = 'Zone not found';
+                    return $ward;
+                }
+
+                $misTableName = 'mis_' . $ward->zone->corp_id;
                 $ward->mis_table = $misTableName;
 
                 if (Schema::hasTable($misTableName)) {
-
                     $ward->road_names = DB::table($misTableName)
                         ->where('ward_no', $ward->ward_no)
                         ->whereNotNull('road_name')
@@ -125,7 +131,6 @@ class WardController extends Controller
                         ->pluck('road_name')
                         ->toArray();
                 } else {
-                    $ward->road_names = [];
                     $ward->table_error = 'Table not found';
                 }
 
