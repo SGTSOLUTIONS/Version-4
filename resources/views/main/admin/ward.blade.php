@@ -329,7 +329,9 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         transition: all 0.3s ease;
         border: 1px solid #e9ecef;
-        overflow: hidden;
+        /* FIX: removed `overflow: hidden;` — it was clipping the
+           "More" dropdown menu so it appeared to not open at all. */
+        position: relative;
     }
 
     .acard:hover {
@@ -339,6 +341,11 @@
 
     .acard-body {
         padding: 20px;
+        /* If the card had rounded top corners from an image before,
+           round the body/image individually instead of relying on
+           the parent's overflow:hidden. */
+        border-radius: 12px;
+        overflow: visible;
     }
 
     .acard-meta {
@@ -396,6 +403,7 @@
         gap: 8px;
         margin-top: 10px;
         flex-wrap: wrap;
+        position: relative;
     }
 
     .btn-group-actions .btn {
@@ -406,6 +414,7 @@
     .btn-group-actions .dropdown {
         flex: 1;
         min-width: 80px;
+        position: static; /* lets the fixed-position dropdown escape any clipping ancestor */
     }
 
     .btn-group-actions .dropdown-toggle {
@@ -415,10 +424,17 @@
     /* Fix for dropdown menu positioning */
     .dropdown-menu {
         min-width: 220px;
+        z-index: 3000; /* sit above cards, modals' backdrop, etc. */
     }
 
     .dropdown-menu.show {
         display: block;
+    }
+
+    /* Make sure the grid itself never clips a dropdown that
+       is positioned relative to a card near the grid edges */
+    .card-grid {
+        overflow: visible;
     }
 </style>
 @endpush
@@ -684,6 +700,7 @@
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-secondary dropdown-toggle" type="button"
                                                 id="${dropdownId}" data-bs-toggle="dropdown"
+                                                data-bs-display="static"
                                                 aria-expanded="false" title="More Actions">
                                             <i class="bi bi-three-dots-vertical"></i> More
                                         </button>
@@ -752,12 +769,28 @@
                 });
                 $('#wardsGrid').html(html);
 
-                // Re-initialize dropdowns for the new content
-                // This is handled by Bootstrap's dropdown initialization
-                // But we need to make sure the dropdowns work
-                $('.dropdown-toggle').each(function() {
-                    // Remove any existing dropdown events to prevent duplicates
-                    $(this).off('click.bs.dropdown');
+                // FIX: Explicitly (re)initialize every dropdown-toggle as a
+                // Bootstrap Dropdown instance using Popper's `fixed` strategy.
+                // This makes the menu render relative to the viewport instead
+                // of its offset parent, so it can never be clipped by a card,
+                // the grid, or any other ancestor — and it also guarantees
+                // dropdowns work correctly after the grid HTML is replaced
+                // on every AJAX reload (dynamically injected elements are
+                // not auto-initialized by Bootstrap's data-api after being
+                // added to the DOM).
+                document.querySelectorAll('#wardsGrid .dropdown-toggle').forEach(function(el) {
+                    // Dispose of any existing instance first to avoid duplicates
+                    let existing = bootstrap.Dropdown.getInstance(el);
+                    if (existing) {
+                        existing.dispose();
+                    }
+                    new bootstrap.Dropdown(el, {
+                        popperConfig: function(defaultConfig) {
+                            return Object.assign({}, defaultConfig, {
+                                strategy: 'fixed'
+                            });
+                        }
+                    });
                 });
             }
 
