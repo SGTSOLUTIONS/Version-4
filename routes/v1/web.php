@@ -71,8 +71,8 @@ Route::middleware(['auth'])->group(function () {
     ->name('wards.missing-bill-excel');
     Route::get('/wards/{ward_id}/missing-bill-pdf', [WardController::class, 'missingBillPdf'])
     ->name('wards.missing-bill-pdf');
-
-    Route::get('/wards/{ward_id}/missing-building-geojson', [WardController::class, 'exportAllPolygons']);
+    Route::get('/wards/{ward_id}/export-all-polygons', [WardController::class, 'exportAllPolygons'])
+    ->name('wards.export-all-polygons');
 
 });
 
