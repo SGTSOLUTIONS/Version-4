@@ -101,8 +101,26 @@ class WardController extends Controller
                     $q->where('corp_id', $request->corp_id);
                 });
             }
+            $ward = Ward::with('zone')->findOrFail($request->ward_id);
 
+            $corporationId = $ward->zone->corp_id;
+            $misTableName = "mis_{$corporationId}";
             $wards = $query->latest()->paginate(12);
+
+            $wards->getCollection()->transform(function ($ward) {
+
+                $misTableName = 'mis_' . $ward->zone->corp_id;
+
+                $ward->road_names = DB::table($misTableName)
+                    ->where('ward_no', $ward->ward_no)
+                    ->whereNotNull('road_name')
+                    ->where('road_name', '!=', '')
+                    ->distinct()
+                    ->orderBy('road_name')
+                    ->pluck('road_name');
+
+                return $ward;
+            });
 
             return response()->json([
                 'status' => true,
@@ -438,7 +456,7 @@ class WardController extends Controller
                             $request->file('polygon_file')
                         );
                     }
-                     if ($request->hasFile('road_file')) {
+                    if ($request->hasFile('road_file')) {
                         $result = $this->wardService->storeSingleLine(
                             $lineTable,
                             $request->file('road_file')

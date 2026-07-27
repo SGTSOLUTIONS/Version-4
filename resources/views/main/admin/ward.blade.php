@@ -548,6 +548,27 @@
                                         ${ward.status}
                                     </span>
                                 </div>
+                                ${ward.road_names && ward.road_names.length ? `
+                                    <div class="mt-3">
+                                        <label class="form-label small fw-bold">Road Name</label>
+                                        <select class="form-select form-select-sm road-name-select"
+                                                data-ward="${ward.id}">
+                                            <option value="">Select Road</option>
+                                            ${ward.road_names.map(road => `
+                                                <option value="${escapeHtml(road)}">
+                                                    ${escapeHtml(road)}
+                                                </option>
+                                            `).join('')}
+                                        </select>
+                                    </div>
+                                ` : `
+                                    <div class="mt-3">
+                                        <label class="form-label small fw-bold">Road Name</label>
+                                        <select class="form-select form-select-sm" disabled>
+                                            <option>No Roads Found</option>
+                                        </select>
+                                    </div>
+                                `}
                                <div class="d-flex gap-2 mt-3">
                                 <button class="btn btn-sm btn-info flex-fill view-btn" data-id="${ward.id}">
                                     <i class="bi bi-eye"></i> View
