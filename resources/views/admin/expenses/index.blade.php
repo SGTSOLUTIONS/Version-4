@@ -273,6 +273,20 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+
+    // FIX: category/payment method keys ("food", "upi") were shown raw in the UI
+    // instead of their human labels ("Food & Dining", "UPI"). These maps come
+    // straight from the same arrays already passed to the Blade view.
+    const categoryLabels = @json($categories);
+    const paymentMethodLabels = @json($paymentMethods);
+
+    function categoryLabel(key) {
+        return categoryLabels[key] || key || 'N/A';
+    }
+    function paymentMethodLabel(key) {
+        return key ? (paymentMethodLabels[key] || key) : null;
+    }
+
     // Flash Message Function
     function showFlashMessage(message, type = 'success') {
         const container = $('#flashMessageContainer');
@@ -430,7 +444,6 @@ $(document).ready(function() {
             return;
         }
 
-        const assetBase = "{{ asset('') }}";
         let html = '';
 
         $.each(expenses, function(index, expense) {
@@ -447,6 +460,9 @@ $(document).ready(function() {
                 day: 'numeric'
             });
 
+            const catLabel = categoryLabel(expense.category);
+            const payLabel = paymentMethodLabel(expense.payment_method);
+
             html += `
                 <div class="acard">
                     <div class="acard-body">
@@ -457,8 +473,8 @@ $(document).ready(function() {
                         <h5 class="acard-title mb-1">${escapeHtml(expense.title)}</h5>
                         <div class="acard-meta mb-2">
                             <i class="bi bi-tag"></i>
-                            ${escapeHtml(expense.category)}
-                            ${expense.payment_method ? `• <i class="bi bi-credit-card"></i> ${escapeHtml(expense.payment_method)}` : ''}
+                            ${escapeHtml(catLabel)}
+                            ${payLabel ? `• <i class="bi bi-credit-card"></i> ${escapeHtml(payLabel)}` : ''}
                         </div>
                         <p class="acard-desc mb-2">
                             ${expense.description ? escapeHtml(expense.description.substring(0, 60)) + (expense.description.length > 60 ? '...' : '') : 'No description'}
@@ -573,7 +589,12 @@ $(document).ready(function() {
     }
 
     // Filter change events
-    $('#expenseSearch').on('input', function() { loadExpenses(1); });
+    // FIX: search fired an AJAX request on every keystroke — debounced to 400ms.
+    let searchDebounce;
+    $('#expenseSearch').on('input', function() {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => loadExpenses(1), 400);
+    });
     $('#categoryFilter').on('change', function() { loadExpenses(1); });
     $('#statusFilter').on('change', function() { loadExpenses(1); });
     $('#paymentMethodFilter').on('change', function() { loadExpenses(1); });
@@ -603,17 +624,19 @@ $(document).ready(function() {
             success: function(res) {
                 if (res.status && res.data) {
                     const expense = res.data;
+                    const catLabel = categoryLabel(expense.category);
+                    const payLabel = paymentMethodLabel(expense.payment_method) || 'N/A';
                     let html = `
                         <div class="row">
                             <div class="col-md-6">
                                 <p><strong>Title:</strong> ${escapeHtml(expense.title)}</p>
                                 <p><strong>Amount:</strong> ₹${parseFloat(expense.amount).toFixed(2)}</p>
-                                <p><strong>Category:</strong> ${escapeHtml(expense.category)}</p>
+                                <p><strong>Category:</strong> ${escapeHtml(catLabel)}</p>
                                 <p><strong>Date:</strong> ${new Date(expense.expense_date).toLocaleDateString()}</p>
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Status:</strong> <span class="badge bg-${expense.status === 'pending' ? 'warning' : expense.status === 'approved' ? 'success' : 'danger'}">${expense.status}</span></p>
-                                <p><strong>Payment Method:</strong> ${expense.payment_method || 'N/A'}</p>
+                                <p><strong>Payment Method:</strong> ${escapeHtml(payLabel)}</p>
                                 <p><strong>Created By:</strong> ${escapeHtml(expense.user ? expense.user.name : 'N/A')}</p>
                                 <p><strong>Created At:</strong> ${new Date(expense.created_at).toLocaleString()}</p>
                             </div>
@@ -769,13 +792,19 @@ $(document).ready(function() {
         let dateTo = $("#dateTo").val();
         let category = $("#categoryFilter").val();
         let status = $("#statusFilter").val();
+        let paymentMethod = $("#paymentMethodFilter").val();
+        let userId = $("#userFilter").val();
+        let title = $("#expenseSearch").val();
 
         let url = "{{ route('admin.expenses.export') }}" +
             '?type=' + type +
+            (title ? '&title=' + encodeURIComponent(title) : '') +
             (dateFrom ? '&date_from=' + dateFrom : '') +
             (dateTo ? '&date_to=' + dateTo : '') +
             (category ? '&category=' + category : '') +
-            (status ? '&status=' + status : '');
+            (status ? '&status=' + status : '') +
+            (paymentMethod ? '&payment_method=' + paymentMethod : '') +
+            (userId ? '&user_id=' + userId : '');
 
         window.location.href = url;
     };

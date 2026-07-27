@@ -1,7 +1,8 @@
 <?php
 // app/Http/Controllers/Admin/ExpenseController.php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin; // FIX: was App\Http\Controllers — didn't match the folder/file path,
+                                       // which throws "Class not found" if routes reference Admin\ExpenseController
 
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
@@ -19,7 +20,7 @@ class ExpenseController extends Controller
     // Display expense dashboard
     public function index()
     {
-        $users = User::all();
+        $users = User::select('id', 'name')->orderBy('name')->get();
         $categories = $this->getCategories();
         $paymentMethods = $this->getPaymentMethods();
         $statuses = ['pending', 'approved', 'rejected'];
@@ -33,7 +34,6 @@ class ExpenseController extends Controller
         try {
             $query = Expense::with('user');
 
-            // Apply filters
             if ($request->filled('title')) {
                 $query->where('title', 'like', '%' . $request->title . '%');
             }
@@ -62,8 +62,7 @@ class ExpenseController extends Controller
                 $query->whereBetween('amount', [$request->min_amount, $request->max_amount]);
             }
 
-            $expenses = $query->orderBy('expense_date', 'desc')
-                ->paginate(12);
+            $expenses = $query->orderBy('expense_date', 'desc')->paginate(12);
 
             return response()->json([
                 'status' => true,
@@ -89,7 +88,8 @@ class ExpenseController extends Controller
                 'category' => 'required|string',
                 'payment_method' => 'nullable|string',
                 'status' => 'required|in:pending,approved,rejected',
-                'receipt' => 'nullable|image|mimes:jpeg,png,jpg,pdf|max:2048',
+                // FIX: "image" rule rejected PDFs even though mimes allowed them
+                'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
                 'notes' => 'nullable|string'
             ]);
 
@@ -103,10 +103,9 @@ class ExpenseController extends Controller
             $data = $validator->validated();
             $data['user_id'] = auth()->id();
 
-            // Handle receipt upload
             if ($request->hasFile('receipt')) {
                 $file = $request->file('receipt');
-                $filename = time() . '_' . $file->getClientOriginalName();
+                $filename = time() . '_' . preg_replace('/[^A-Za-z0-9._-]/', '_', $file->getClientOriginalName());
                 $path = $file->storeAs('receipts', $filename, 'public');
                 $data['receipt'] = $path;
             }
@@ -157,7 +156,7 @@ class ExpenseController extends Controller
                 'category' => 'required|string',
                 'payment_method' => 'nullable|string',
                 'status' => 'required|in:pending,approved,rejected',
-                'receipt' => 'nullable|image|mimes:jpeg,png,jpg,pdf|max:2048',
+                'receipt' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
                 'notes' => 'nullable|string'
             ]);
 
@@ -170,15 +169,13 @@ class ExpenseController extends Controller
 
             $data = $validator->validated();
 
-            // Handle receipt upload
             if ($request->hasFile('receipt')) {
-                // Delete old receipt
                 if ($expense->receipt && Storage::disk('public')->exists($expense->receipt)) {
                     Storage::disk('public')->delete($expense->receipt);
                 }
 
                 $file = $request->file('receipt');
-                $filename = time() . '_' . $file->getClientOriginalName();
+                $filename = time() . '_' . preg_replace('/[^A-Za-z0-9._-]/', '_', $file->getClientOriginalName());
                 $path = $file->storeAs('receipts', $filename, 'public');
                 $data['receipt'] = $path;
             }
@@ -204,7 +201,6 @@ class ExpenseController extends Controller
         try {
             $expense = Expense::findOrFail($id);
 
-            // Delete receipt
             if ($expense->receipt && Storage::disk('public')->exists($expense->receipt)) {
                 Storage::disk('public')->delete($expense->receipt);
             }
@@ -227,23 +223,26 @@ class ExpenseController extends Controller
     public function statistics(Request $request)
     {
         try {
-            $query = Expense::query();
+            $base = Expense::query();
 
-            // Apply date range filter
             if ($request->filled('date_from') && $request->filled('date_to')) {
-                $query->dateRange($request->date_from, $request->date_to);
+                $base->dateRange($request->date_from, $request->date_to);
             }
 
+            // FIX: the original code reused the SAME $query builder for every aggregate.
+            // select()/groupBy() calls accumulate on a shared builder instance instead of
+            // resetting, so monthly_breakdown ended up grouped by category AND year/month
+            // together, corrupting the numbers. Clone the base query for each aggregate.
             $statistics = [
-                'total_expenses' => $query->count(),
-                'total_amount' => $query->sum('amount'),
-                'average_amount' => $query->avg('amount') ?? 0,
-                'category_breakdown' => $query->select('category')
+                'total_expenses' => (clone $base)->count(),
+                'total_amount' => (clone $base)->sum('amount'),
+                'average_amount' => (clone $base)->avg('amount') ?? 0,
+                'category_breakdown' => (clone $base)->select('category')
                     ->selectRaw('COUNT(*) as count')
                     ->selectRaw('SUM(amount) as total')
                     ->groupBy('category')
                     ->get(),
-                'monthly_breakdown' => $query->selectRaw('YEAR(expense_date) as year')
+                'monthly_breakdown' => (clone $base)->selectRaw('YEAR(expense_date) as year')
                     ->selectRaw('MONTH(expense_date) as month')
                     ->selectRaw('COUNT(*) as count')
                     ->selectRaw('SUM(amount) as total')
@@ -251,7 +250,7 @@ class ExpenseController extends Controller
                     ->orderBy('year', 'desc')
                     ->orderBy('month', 'desc')
                     ->get(),
-                'status_breakdown' => $query->select('status')
+                'status_breakdown' => (clone $base)->select('status')
                     ->selectRaw('COUNT(*) as count')
                     ->selectRaw('SUM(amount) as total')
                     ->groupBy('status')
@@ -276,7 +275,13 @@ class ExpenseController extends Controller
         try {
             $query = Expense::with('user');
 
-            // Apply filters
+            // FIX: export() was ignoring several filters that list() supports
+            // (title, payment_method, user_id), so "export current view" silently
+            // exported a different, broader dataset than what the user was looking at.
+            if ($request->filled('title')) {
+                $query->where('title', 'like', '%' . $request->title . '%');
+            }
+
             if ($request->filled('date_from') && $request->filled('date_to')) {
                 $query->dateRange($request->date_from, $request->date_to);
             }
@@ -289,18 +294,26 @@ class ExpenseController extends Controller
                 $query->where('status', $request->status);
             }
 
-            $expenses = $query->get();
+            if ($request->filled('payment_method')) {
+                $query->where('payment_method', $request->payment_method);
+            }
+
+            if ($request->filled('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
+
+            $expenses = $query->orderBy('expense_date', 'desc')->get();
 
             $exportType = $request->input('type', 'excel');
 
             if ($exportType === 'pdf') {
                 $pdf = PDF::loadView('admin.expenses.pdf', compact('expenses'));
                 return $pdf->download('expenses_' . date('Y-m-d') . '.pdf');
-            } else {
-                return Excel::download(new ExpensesExport($expenses), 'expenses_' . date('Y-m-d') . '.xlsx');
             }
+
+            return Excel::download(new ExpensesExport($expenses), 'expenses_' . date('Y-m-d') . '.xlsx');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to export expenses');
+            return back()->with('error', 'Failed to export expenses: ' . $e->getMessage());
         }
     }
 

@@ -116,10 +116,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('teams/{id}', [TeamManagementController::class, 'destroy'])->name('teams.destroy');
 
 
-  Route::resource('expenses', ExpenseController::class);
-    Route::get('expenses/list', [ExpenseController::class, 'list'])->name('expenses.list');
-    Route::get('expenses/statistics', [ExpenseController::class, 'statistics'])->name('expenses.statistics');
-    Route::get('expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
+Route::get('expenses/list', [ExpenseController::class, 'list'])->name('expenses.list');
+Route::get('expenses/statistics', [ExpenseController::class, 'statistics'])->name('expenses.statistics');
+Route::get('expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
+
+Route::resource('expenses', ExpenseController::class);
 });
 // Add this inside your routes file
 Route::get('/api/corporation/{id}/boundaries', function ($id) {
