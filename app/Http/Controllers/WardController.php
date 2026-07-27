@@ -745,87 +745,60 @@ class WardController extends Controller
         }
     }
     public function missingBillExcel(Request $request, $ward_id)
-{
-    try {
+    {
+        try {
 
-        $roadName = $request->road_name; // A.D.COLONY
-
-        $ward = Ward::find($ward_id);
-        $zone = Zone::find($ward->zone_id);
-
-        $misTable = 'mis_' . $zone->corp_id;
-        $pointDataTable = 'point_data_' . $ward_id;
-
-        $query = DB::table($misTable)
-            ->whereNotIn('assessment', function ($query) use ($pointDataTable, $roadName) {
-
-                $query->select('assessment')
-                    ->from($pointDataTable);
-
-                // Only specific road filter
-                if ($roadName && strtolower($roadName) != 'all') {
-                    $query->where('road_name', $roadName);
-                }
-            });
-
-        $missingbill = $query->get();
+            $roadName = $request->query('road_name');
 
 
-        if ($missingbill->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No missing records found.',
-            ], 404);
-        }
-            // Get column names dynamically from the first row
-            $columns = array_keys((array) $missingbill->first());
+            $ward = Ward::findOrFail($ward_id);
+            $zone = Zone::findOrFail($ward->zone_id);
 
-            $spreadsheet = new Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
 
-            // Header row
-            foreach ($columns as $colIndex => $colName) {
-                $cellCoordinate = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1) . '1';
-                $sheet->setCellValue($cellCoordinate, $colName);
+            $misTable = 'mis_' . $zone->corp_id;
+            $pointDataTable = 'point_data_' . $ward_id;
+
+
+            $query = DB::table($misTable);
+
+
+            // Road filter
+            if ($roadName && strtolower($roadName) != 'all') {
+                $query->where('road_name', $roadName);
             }
 
-            // Data rows
-            $rowNum = 2;
-            foreach ($missingbill as $row) {
-                $row = (array) $row;
-                foreach ($columns as $colIndex => $colName) {
-                    $cellCoordinate = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1) . $rowNum;
-                    $sheet->setCellValue($cellCoordinate, $row[$colName]);
-                }
-                $rowNum++;
+
+            $missingbill = $query
+                ->whereNotIn('assessment', function ($subQuery) use ($pointDataTable) {
+
+                    $subQuery->select('assessment')
+                        ->from($pointDataTable);
+                })
+                ->get();
+
+
+            if ($missingbill->isEmpty()) {
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No missing records found'
+                ], 404);
             }
 
-            // Auto-size every column that has data
-            foreach (range(1, count($columns)) as $colIndex) {
-                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex);
-                $sheet->getColumnDimension($colLetter)->setAutoSize(true);
-            }
 
-            // Bold header row
-            $sheet->getStyle('A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($columns)) . '1')
-                ->getFont()->setBold(true);
+            $fileName = "missing_bill_{$ward_id}.xlsx";
 
-            $fileName = "missing_buildings_{$ward_id}.xlsx";
 
-            $writer = new Xlsx($spreadsheet);
-
-            return response()->streamDownload(function () use ($writer) {
-                $writer->save('php://output');
-            }, $fileName, [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Content-Disposition' => "attachment; filename={$fileName}",
-            ]);
+            return Excel::download(
+                new MissingBillExport($missingbill),
+                $fileName
+            );
         } catch (\Throwable $e) {
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-                'line'    => $e->getLine(),
-                'file'    => $e->getFile(),
+                'line' => $e->getLine()
             ], 500);
         }
     }
