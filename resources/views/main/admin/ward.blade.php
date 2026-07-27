@@ -17,7 +17,6 @@
             <input type="text" id="wardSearch" class="form-control" placeholder="Search by ward number or zone">
         </div>
         <div class="d-flex align-items-center gap-2">
-            {{-- Only show corporation filter for admin --}}
             @if (auth()->user()->role == 'admin')
                 <select id="corporationFilter" class="form-select app-select">
                     <option value="">All Corporations</option>
@@ -315,6 +314,106 @@
 
 @endsection
 
+@push('styles')
+<style>
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+        padding: 10px 0;
+    }
+
+    .acard {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+        overflow: hidden;
+    }
+
+    .acard:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+
+    .acard-body {
+        padding: 20px;
+    }
+
+    .acard-meta {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .acard-meta .dot {
+        width: 4px;
+        height: 4px;
+        background: #6c757d;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 5px;
+    }
+
+    .acard-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #1a1a2e;
+    }
+
+    .acard-desc {
+        color: #495057;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .acard-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .acard-author {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .dropdown-item i {
+        width: 20px;
+    }
+
+    .btn-group-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-group-actions .btn {
+        flex: 1;
+        min-width: 60px;
+    }
+
+    .btn-group-actions .dropdown {
+        flex: 1;
+        min-width: 80px;
+    }
+
+    .btn-group-actions .dropdown-toggle {
+        width: 100%;
+    }
+</style>
+@endpush
+
 @push('scripts')
     <script>
         $(document).ready(function() {
@@ -499,17 +598,9 @@
                         active: 'bg-success',
                         inactive: 'bg-secondary'
                     } [ward.status] || 'bg-secondary';
-                    // <div class="acard-img-wrap">
-                    //     <img src="${imageUrl}"
-                    //          onerror="this.src='${assetBase}images/default-ward.png'">
-                    //     <div class="acard-overlay"></div>
-                    //     <span class="acard-tag">
-                    //         Ward
-                    //     </span>
-                    // </div>
+
                     html += `
                         <div class="acard">
-
                             <div class="acard-body">
                                 <div class="acard-meta">
                                     <i class="bi bi-building"></i>
@@ -525,21 +616,21 @@
                                     Ward ${escapeHtml(ward.ward_no)}
                                 </h3>
                                 ${ward.contact_person ? `
-                                                                    <p class="acard-desc small mb-1">
-                                                                        <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
-                                                                        ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
-                                                                    </p>
-                                                                ` : ''}
+                                    <p class="acard-desc small mb-1">
+                                        <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
+                                        ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
+                                    </p>
+                                ` : ''}
                                 ${ward.phone ? `
-                                                                    <p class="acard-desc small mb-1">
-                                                                        <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
-                                                                    </p>
-                                                                ` : ''}
+                                    <p class="acard-desc small mb-1">
+                                        <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
+                                    </p>
+                                ` : ''}
                                 ${ward.email ? `
-                                                                    <p class="acard-desc small mb-1">
-                                                                        <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
-                                                                    </p>
-                                                                ` : ''}
+                                    <p class="acard-desc small mb-1">
+                                        <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
+                                    </p>
+                                ` : ''}
                                 <div class="acard-footer">
                                     <span class="acard-author">
                                         ${escapeHtml(ward.contact_person || 'No contact')}
@@ -549,99 +640,98 @@
                                     </span>
                                 </div>
                                 ${ward.road_names && ward.road_names.length ? `
-                                                            <div class="mt-3">
-                                                                <label class="form-label small fw-bold">Road Name</label>
-                                                                <select class="form-select form-select-sm road-name-select" id="ward-${ward.id}"
-                                                                        data-ward="${ward.id}">
-                                                                    <option value="all">Select Road</option>
-                                                                    ${ward.road_names.map(road => `
+                                    <div class="mt-3">
+                                        <label class="form-label small fw-bold">Road Name</label>
+                                        <select class="form-select form-select-sm road-name-select" id="ward-${ward.id}"
+                                                data-ward="${ward.id}">
+                                            <option value="all">All Roads</option>
+                                            ${ward.road_names.map(road => `
                                                 <option value="${escapeHtml(road)}">
                                                     ${escapeHtml(road)}
                                                 </option>
                                             `).join('')}
-                                                                </select>
-                                                            </div>
-                                                        ` : `
-                                                            <div class="mt-3">
-                                                                <label class="form-label small fw-bold">Road Name</label>
-                                                                <select class="form-select form-select-sm" disabled>
-                                                                    <option>No Roads Found</option>
-                                                                </select>
-                                                            </div>
-                                                        `}
-                               <div class="d-flex gap-2 mt-3">
-                                <button class="btn btn-sm btn-info flex-fill view-btn" data-id="${ward.id}">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                                <div class="dropdown flex-fill">
-                                    <button class="btn btn-sm btn-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                                        <i class="bi bi-three-dots-vertical"></i> Actions
+                                        </select>
+                                    </div>
+                                ` : `
+                                    <div class="mt-3">
+                                        <label class="form-label small fw-bold">Road Name</label>
+                                        <select class="form-select form-select-sm" disabled>
+                                            <option>No Roads Found</option>
+                                        </select>
+                                    </div>
+                                `}
+
+                                <!-- Action Buttons - Now all visible -->
+                                <div class="btn-group-actions">
+                                    <button class="btn btn-sm btn-info view-btn" data-id="${ward.id}" title="View Ward Details">
+                                        <i class="bi bi-eye"></i> View
                                     </button>
-                                    <ul class="dropdown-menu">
-                                        <li>
-                                            <a class="dropdown-item edit-btn" data-id="${ward.id}" href="#">
-                                                <i class="bi bi-pencil me-2"></i> Edit Ward
-                                            </a>
-                                        </li>
-                                       <li>
-                                            <a class="dropdown-item building-btn" data-id="${ward.id}" href="#">
-                                                <i class="bi bi-download me-2"></i> Download All Buildings (GeoJSON)
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item missing-building-btn" data-id="${ward.id}" href="#">
-                                                <i class="bi bi-geo-alt me-2"></i> Missing Building GeoJSON
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item missing-building-excel-btn" data-id="${ward.id}" href="#">
-                                                <i class="bi bi-file-earmark-excel me-2"></i> Missing Building Excel
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item missing-bill-btn" data-id="${ward.id}" href="#">
-                                                <i class="bi bi-receipt me-2"></i> Missing Bill
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item missing-bill-pdf-btn" data-id="${ward.id}" href="#">
-                                                <i class="bi bi-receipt me-2"></i> Missing Bill pdf
-                                            </a>
-                                        </li>
-                                        <li>
-                                                <a class="dropdown-item mis-bill-downlaod-btn" data-id="${ward.id}" href="#">
-                                                    <i class="bi bi-receipt me-2"></i> MIS Download
+                                    <button class="btn btn-sm btn-primary edit-btn" data-id="${ward.id}" title="Edit Ward">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" title="More Actions">
+                                            <i class="bi bi-three-dots-vertical"></i> More
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item building-btn" data-id="${ward.id}" href="#">
+                                                    <i class="bi bi-download me-2"></i> All Buildings (GeoJSON)
                                                 </a>
                                             </li>
-
+                                            <li>
+                                                <a class="dropdown-item missing-building-btn" data-id="${ward.id}" href="#">
+                                                    <i class="bi bi-geo-alt me-2"></i> Missing Building (GeoJSON)
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item missing-building-excel-btn" data-id="${ward.id}" href="#">
+                                                    <i class="bi bi-file-earmark-excel me-2"></i> Missing Building (Excel)
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item missing-bill-btn" data-id="${ward.id}" href="#">
+                                                    <i class="bi bi-receipt me-2"></i> Missing Bill (Excel)
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item missing-bill-pdf-btn" data-id="${ward.id}" href="#">
+                                                    <i class="bi bi-receipt me-2"></i> Missing Bill (PDF)
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item mis-bill-download-btn" data-id="${ward.id}" href="#">
+                                                    <i class="bi bi-receipt me-2"></i> MIS Bill (Excel)
+                                                </a>
+                                            </li>
                                             <li>
                                                 <a class="dropdown-item ugd-bill-download-btn" data-id="${ward.id}" href="#">
-                                                    <i class="bi bi-droplet me-2"></i> UGD Tax Download
+                                                    <i class="bi bi-droplet me-2"></i> UGD Tax (Excel)
                                                 </a>
                                             </li>
-
                                             <li>
                                                 <a class="dropdown-item water-bill-download-btn" data-id="${ward.id}" href="#">
-                                                    <i class="bi bi-water me-2"></i> Water Tax Download
+                                                    <i class="bi bi-water me-2"></i> Water Tax (Excel)
                                                 </a>
                                             </li>
-
                                             <li>
                                                 <a class="dropdown-item professional-tax-download-btn" data-id="${ward.id}" href="#">
-                                                    <i class="bi bi-briefcase me-2"></i> Professional Tax Download
+                                                    <i class="bi bi-briefcase me-2"></i> Professional Tax (Excel)
                                                 </a>
                                             </li>
-                                        ${userRole === 'admin' ? `
-                                                                        <li><hr class="dropdown-divider"></li>
-                                                                        <li>
-                                                                            <a class="dropdown-item text-danger delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}" href="#">
-                                                                                <i class="bi bi-trash me-2"></i> Delete
-                                                                            </a>
-                                                                        </li>
-                                                                    ` : ''}
-                                    </ul>
+                                            ${userRole === 'admin' ? `
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item text-danger delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}" href="#">
+                                                        <i class="bi bi-trash me-2"></i> Delete Ward
+                                                    </a>
+                                                </li>
+                                            ` : ''}
+                                        </ul>
+                                    </div>
                                 </div>
-                            </div>
                             </div>
                         </div>
                     `;
@@ -755,15 +845,11 @@
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').text('');
 
-                // Reset form fields for proper state
                 @if (auth()->user()->role == 'commissioner')
-                    // For commissioner, corporation is fixed
                     $('#f_corp_id').prop('disabled', true);
-                    // Load zones for the commissioner's corporation
                     let corpId = $('#f_corp_id').val();
                     if (corpId) {
-                        $('#f_zone_id').html('<option value="">Loading zones...</option>').prop('disabled',
-                            true);
+                        $('#f_zone_id').html('<option value="">Loading zones...</option>').prop('disabled', true);
                         let url = "{{ route('admin.zones.byCorporation') }}";
                         $.ajax({
                             url: url,
@@ -782,18 +868,15 @@
                                     });
                                     zoneSelect.prop('disabled', false);
                                 } else {
-                                    zoneSelect.html(
-                                        '<option value="">No zones available</option>');
+                                    zoneSelect.html('<option value="">No zones available</option>');
                                     zoneSelect.prop('disabled', true);
                                 }
                             }
                         });
                     }
                 @else
-                    // For admin, enable corporation selection
                     $('#f_corp_id').prop('disabled', false);
-                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop(
-                        'disabled', true);
+                    $('#f_zone_id').html('<option value="">First select Corporation</option>').prop('disabled', true);
                 @endif
 
                 $('#wardModal').modal('show');
@@ -825,9 +908,7 @@
                     }
                 }
 
-                // For commissioner, ensure corp_id is sent
                 @if (auth()->user()->role == 'commissioner')
-                    // The disabled select still submits its value
                     if (!$('#f_corp_id').val()) {
                         showFlashMessage('Corporation is required', 'error');
                         return false;
@@ -859,11 +940,9 @@
                         if (xhr.status === 422) {
                             let errors = xhr.responseJSON.errors;
                             $.each(errors, function(field, messages) {
-                                // Handle field name mapping for validation errors
                                 let fieldSelector = '[name="' + field + '"]';
                                 let errorId = '#error-' + field;
 
-                                // If field is 'zone', map to 'zone_name'
                                 if (field === 'zone') {
                                     fieldSelector = '[name="zone_name"]';
                                     errorId = '#error-zone_name';
@@ -910,20 +989,17 @@
                         $('#f_corp_id').val(corpId);
 
                         @if (auth()->user()->role == 'admin')
-                            // For admin, trigger change to load zones
                             $('#f_corp_id').trigger('change');
                             setTimeout(() => {
                                 $('#f_zone_id').val(ward.zone_id);
                             }, 500);
                         @else
-                            // For commissioner, zones are already loaded
                             $('#f_zone_id').val(ward.zone_id);
                             $('#f_corp_id').prop('disabled', true);
                         @endif
 
                         $('#f_ward_no').val(ward.ward_no);
 
-                        // Handle zone_name field
                         let zoneNameValue = '';
                         if (ward.zone_name) {
                             zoneNameValue = ward.zone_name;
@@ -965,7 +1041,8 @@
 
             // Delete button - Only for admin
             @if (auth()->user()->role == 'admin')
-                $(document).on('click', '.delete-btn', function() {
+                $(document).on('click', '.delete-btn', function(e) {
+                    e.preventDefault();
                     let id = $(this).data('id');
                     let name = $(this).data('name');
                     $('#deleteWardId').val(id);
@@ -1034,8 +1111,8 @@
                                 <div class="col-12 text-center mb-3">
                                     ${imageUrl ? `<img src="${imageUrl}" alt="${escapeHtml(ward.ward_no)}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 10px;">` :
                                         `<div style="width: 150px; height: 150px; background: #e9ecef; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;">
-                                                                            <i class="bi bi-building fs-1 text-muted"></i>
-                                                                        </div>`}
+                                            <i class="bi bi-building fs-1 text-muted"></i>
+                                        </div>`}
                                 </div>
                                 <div class="col-md-6"><strong>Corporation:</strong><br><p>${escapeHtml(corporationName)}</p></div>
                                 <div class="col-md-6"><strong>Zone:</strong><br><p>${escapeHtml(zoneName)}</p></div>
@@ -1058,93 +1135,80 @@
                 });
             });
 
-            $(document).on('click', '.building-btn', function() {
+            // Download All Buildings (GeoJSON)
+            $(document).on('click', '.building-btn', function(e) {
+                e.preventDefault();
                 let id = $(this).data('id');
                 window.location.href = "/wards/" + id + "/export-all-polygons";
             });
 
-            $(document).on('click', '.download-building-btn', function() {
-
+            // Missing Building (GeoJSON)
+            $(document).on('click', '.missing-building-btn', function(e) {
+                e.preventDefault();
                 let id = $(this).data('id');
-
                 window.location.href = "/wards/" + id + "/missing-building-geojson";
-
             });
-            $(document).on('click', '.missing-building-excel-btn', function() {
 
+            // Missing Building (Excel)
+            $(document).on('click', '.missing-building-excel-btn', function(e) {
+                e.preventDefault();
                 let id = $(this).data('id');
-
                 window.location.href = "/wards/" + id + "/missing-building-excel";
-
             });
 
-            $(document).on('click', '.missing-bill-btn', function() {
-
+            // Missing Bill (Excel)
+            $(document).on('click', '.missing-bill-btn', function(e) {
+                e.preventDefault();
                 let id = $(this).data('id');
-                let roadname = $("#ward-" + id).val();
-
-
-
+                let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/missing-bill-excel?road_name=" +
                     encodeURIComponent(roadname);
-
             });
-            // MIS Download
-            $(document).on('click', '.mis-bill-downlaod-btn', function() {
 
+            // Missing Bill (PDF)
+            $(document).on('click', '.missing-bill-pdf-btn', function(e) {
+                e.preventDefault();
                 let id = $(this).data('id');
-                let roadname = $("#ward-" + id).val();
+                let roadname = $("#ward-" + id).val() || 'all';
+                window.location.href = "/wards/" + id + "/missing-bill-pdf?road_name=" +
+                    encodeURIComponent(roadname);
+            });
 
+            // MIS Download
+            $(document).on('click', '.mis-bill-download-btn', function(e) {
+                e.preventDefault();
+                let id = $(this).data('id');
+                let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/mis-bill-excel?road_name=" +
                     encodeURIComponent(roadname);
-
             });
 
             // UGD Tax Download
-            $(document).on('click', '.ugd-bill-download-btn', function() {
-
+            $(document).on('click', '.ugd-bill-download-btn', function(e) {
+                e.preventDefault();
                 let id = $(this).data('id');
-                let roadname = $("#ward-" + id).val();
-
+                let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/ugd-tax-excel?road_name=" +
                     encodeURIComponent(roadname);
-
             });
 
             // Water Tax Download
-            $(document).on('click', '.water-bill-download-btn', function() {
-
+            $(document).on('click', '.water-bill-download-btn', function(e) {
+                e.preventDefault();
                 let id = $(this).data('id');
-                let roadname = $("#ward-" + id).val();
-
+                let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/water-tax-excel?road_name=" +
                     encodeURIComponent(roadname);
-
             });
 
             // Professional Tax Download
-            $(document).on('click', '.professional-tax-download-btn', function() {
-
+            $(document).on('click', '.professional-tax-download-btn', function(e) {
+                e.preventDefault();
                 let id = $(this).data('id');
-                let roadname = $("#ward-" + id).val();
-
+                let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/professional-tax-excel?road_name=" +
                     encodeURIComponent(roadname);
-
             });
-            $(document).on('click', '.missing-bill-pdf-btn', function() {
-
-                let id = $(this).data('id');
-                let roadname = $("#ward-" + id).val();
-
-
-
-
-                window.location.href = "/wards/" + id + "/missing-bill-pdf?road_name=" +
-                    encodeURIComponent(roadname);
-
-            });
-
 
             // Initial load
             loadWards(1);
