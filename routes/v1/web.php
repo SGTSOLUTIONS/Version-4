@@ -66,14 +66,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])->name('variation.area');
     Route::get('/wards/{wardId}', [WardController::class, 'missingBuiilding'])->name('missing-building');
     Route::get('/wards/{ward_id}/missing-building-excel', [WardController::class, 'missingBuiildingExcel'])
-    ->name('wards.missing-building-excel');
+        ->name('wards.missing-building-excel');
     Route::get('/wards/{ward_id}/missing-bill-excel', [WardController::class, 'missingBillExcel'])
-    ->name('wards.missing-bill-excel');
+        ->name('wards.missing-bill-excel');
     Route::get('/wards/{ward_id}/missing-bill-pdf', [WardController::class, 'missingBillPdf'])
-    ->name('wards.missing-bill-pdf');
+        ->name('wards.missing-bill-pdf');
     Route::get('/wards/{ward_id}/export-all-polygons', [WardController::class, 'exportAllPolygons'])
-    ->name('wards.export-all-polygons');
-
+        ->name('wards.export-all-polygons');
 });
 
 
@@ -116,11 +115,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('teams/{id}', [TeamManagementController::class, 'destroy'])->name('teams.destroy');
 
 
-Route::get('expenses/list', [ExpenseController::class, 'list'])->name('expenses.list');
-Route::get('expenses/statistics', [ExpenseController::class, 'statistics'])->name('expenses.statistics');
-Route::get('expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
+    Route::get('expenses/list', [ExpenseController::class, 'list'])->name('expenses.list');
+    Route::get('expenses/statistics', [ExpenseController::class, 'statistics'])->name('expenses.statistics');
+    Route::get('expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
 
-Route::resource('expenses', ExpenseController::class);
+    Route::resource('expenses', ExpenseController::class);
 });
 // Add this inside your routes file
 Route::get('/api/corporation/{id}/boundaries', function ($id) {

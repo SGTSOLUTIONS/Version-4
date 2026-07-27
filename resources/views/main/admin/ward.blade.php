@@ -608,6 +608,11 @@
                                                 <i class="bi bi-receipt me-2"></i> Missing Bill pdf
                                             </a>
                                         </li>
+                                        <li>
+                                            <a class="dropdown-item mis-bill-downlaod-btn" data-id="${ward.id}" href="#">
+                                                <i class="bi bi-receipt me-2"></i> Mis Download
+                                            </a>
+                                        </li>
                                         ${userRole === 'admin' ? `
                                                                 <li><hr class="dropdown-divider"></li>
                                                                 <li>
@@ -1064,6 +1069,17 @@
 
                 window.location.href = "/wards/" + id + "/missing-bill-excel?road_name=" +
                     encodeURIComponent(roadname);
+
+            });
+            $(document).on('click', '.mis-bill-downlaod-btn', function() {
+
+                let id = $(this).data('id');
+                let roadname = $("#ward-" + id).val();
+
+
+
+                window.location.href = "/wards/" + id + "/missing-bill-excel?road_name=" +
+                    encodeURIComponent(all);
 
             });
             $(document).on('click', '.missing-bill-pdf-btn', function() {

@@ -841,7 +841,7 @@ class WardController extends Controller
             $pointDataTable = 'point_data_' . $ward_id;
 
 
-  $query = DB::table($misTable)
+            $query = DB::table($misTable)
                 ->where('ward_no', $ward->ward_no);
 
             // Road filter
