@@ -690,88 +690,87 @@ class WardController extends Controller
             ], 500);
         }
     }
-   public function exportAllPolygons($ward_id)
-{
-    try {
-        $polygonTable = "polygons_" . $ward_id;
+    public function exportAllPolygons($ward_id)
+    {
+        try {
+            $polygonTable = "polygons_" . $ward_id;
 
-        // Check if table exists
-        if (!Schema::hasTable($polygonTable)) {
-            return response()->json([
-                "success" => false,
-                "message" => "Polygon table not found for ward #{$ward_id}"
-            ], 404);
-        }
-
-        $allBuildings = DB::table($polygonTable)->get();
-
-        if ($allBuildings->isEmpty()) {
-            return response()->json([
-                "success" => false,
-                "message" => "No polygons found for ward #{$ward_id}"
-            ], 404);
-        }
-
-        $features = [];
-
-        foreach ($allBuildings as $building) {
-            $coordinates = json_decode($building->coordinates, true);
-
-            if (!$coordinates) {
-                continue;
+            // Check if table exists
+            if (!Schema::hasTable($polygonTable)) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Polygon table not found for ward #{$ward_id}"
+                ], 404);
             }
 
-            // Convert to valid GeoJSON Polygon
-            if ($building->type == 'Polygon') {
-                // If coordinates are stored as [[x,y],[x,y],...]
-                if (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
-                    $coordinates = [$coordinates];
-                }
+            $allBuildings = DB::table($polygonTable)->get();
 
-                // Close polygon if not closed
-                $ring = &$coordinates[0];
-                if ($ring[0] != end($ring)) {
-                    $ring[] = $ring[0];
-                }
+            if ($allBuildings->isEmpty()) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "No polygons found for ward #{$ward_id}"
+                ], 404);
             }
 
-            $features[] = [
-                "type" => "Feature",
-                "properties" => [
-                    "gisid"  => $building->gisid,
-                    "sqfeet" => $building->sqfeet,
-                    "type"   => $building->type ?? 'Polygon',
-                ],
-                "geometry" => [
-                    "type" => $building->type ?? 'Polygon',
-                    "coordinates" => $coordinates
-                ]
+            $features = [];
+
+            foreach ($allBuildings as $building) {
+                $coordinates = json_decode($building->coordinates, true);
+
+                if (!$coordinates) {
+                    continue;
+                }
+
+                // Convert to valid GeoJSON Polygon
+                if ($building->type == 'Polygon') {
+                    // If coordinates are stored as [[x,y],[x,y],...]
+                    if (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
+                        $coordinates = [$coordinates];
+                    }
+
+                    // Close polygon if not closed
+                    $ring = &$coordinates[0];
+                    if ($ring[0] != end($ring)) {
+                        $ring[] = $ring[0];
+                    }
+                }
+
+                $features[] = [
+                    "type" => "Feature",
+                    "properties" => [
+                        "gisid"  => $building->gisid,
+                        "sqfeet" => $building->sqfeet,
+                        "type"   => $building->type ?? 'Polygon',
+                    ],
+                    "geometry" => [
+                        "type" => $building->type ?? 'Polygon',
+                        "coordinates" => $coordinates
+                    ]
+                ];
+            }
+
+            $geojson = [
+                "type" => "FeatureCollection",
+                "features" => $features
             ];
+
+            $fileName = "all_polygons_ward_{$ward_id}.geojson";
+
+            return response()->streamDownload(function () use ($geojson) {
+                echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            }, $fileName, [
+                'Content-Type' => 'application/geo+json',
+                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "line"    => $e->getLine(),
+                "file"    => $e->getFile(),
+            ], 500);
         }
-
-        $geojson = [
-            "type" => "FeatureCollection",
-            "features" => $features
-        ];
-
-        $fileName = "all_polygons_ward_{$ward_id}.geojson";
-
-        return response()->streamDownload(function () use ($geojson) {
-            echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        }, $fileName, [
-            'Content-Type' => 'application/geo+json',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-        ]);
-
-    } catch (\Throwable $e) {
-        return response()->json([
-            "success" => false,
-            "message" => $e->getMessage(),
-            "line"    => $e->getLine(),
-            "file"    => $e->getFile(),
-        ], 500);
     }
-}
     public function missingBuiildingExcel($ward_id)
     {
         try {
@@ -888,74 +887,70 @@ class WardController extends Controller
 
 
     public function missingBillPdf(Request $request, $ward_id)
-{
-    try {
+    {
+        try {
 
-        $roadName = $request->query('road_name');
-
-
-        $ward = Ward::findOrFail($ward_id);
-        $zone = Zone::findOrFail($ward->zone_id);
+            $roadName = $request->query('road_name');
 
 
-        $misTable = 'mis_' . $zone->corp_id;
-        $pointDataTable = 'point_data_' . $ward_id;
+            $ward = Ward::findOrFail($ward_id);
+            $zone = Zone::findOrFail($ward->zone_id);
 
 
-        $query = DB::table($misTable)
-            ->where('ward_no', $ward->ward_no);
+            $misTable = 'mis_' . $zone->corp_id;
+            $pointDataTable = 'point_data_' . $ward_id;
+
+return response()->json($ward);
+            $query = DB::table($misTable)
+                ->where('ward_no', $ward->ward_no);
 
 
-        // Road filter
-        if ($roadName && strtolower($roadName) != 'all') {
-            $query->where('road_name', $roadName);
-        }
+            // Road filter
+            if ($roadName && strtolower($roadName) != 'all') {
+                $query->where('road_name', $roadName);
+            }
 
 
-        $missingbill = $query
-            ->whereNotIn('assessment', function ($subQuery) use ($pointDataTable) {
+            $missingbill = $query
+                ->whereNotIn('assessment', function ($subQuery) use ($pointDataTable) {
 
-                $subQuery->select('assessment')
-                    ->from($pointDataTable);
+                    $subQuery->select('assessment')
+                        ->from($pointDataTable);
+                })
+                ->get();
 
-            })
-            ->get();
+
+            if ($missingbill->isEmpty()) {
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No missing records found.',
+                ], 404);
+            }
 
 
-        if ($missingbill->isEmpty()) {
+            $pdf = Pdf::loadView('exports.missing_bill_pdf', [
+                'missingbill' => $missingbill,
+                'ward'        => $ward,
+                'roadName'    => $roadName,
+            ])
+                ->setPaper('a4', 'landscape');
+
+
+            $fileName = "missing_bill_{$ward_id}_" .
+                str_replace(['.', ' '], '_', $roadName ?? 'all') .
+                ".pdf";
+
+
+            return $pdf->download($fileName);
+        } catch (\Throwable $e) {
 
             return response()->json([
                 'success' => false,
-                'message' => 'No missing records found.',
-            ], 404);
-
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+                'file'    => $e->getFile(),
+            ], 500);
         }
-
-
-        $pdf = Pdf::loadView('exports.missing_bill_pdf', [
-            'missingbill' => $missingbill,
-            'ward'        => $ward,
-            'roadName'    => $roadName,
-        ])
-        ->setPaper('a4', 'landscape');
-
-
-        $fileName = "missing_bill_{$ward_id}_" .
-            str_replace(['.', ' '], '_', $roadName ?? 'all') .
-            ".pdf";
-
-
-        return $pdf->download($fileName);
-
-
-    } catch (\Throwable $e) {
-
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-            'line'    => $e->getLine(),
-            'file'    => $e->getFile(),
-        ], 500);
     }
-}
 }
