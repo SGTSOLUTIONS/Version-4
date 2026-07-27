@@ -1,7 +1,7 @@
 <?php
 // app/Http/Controllers/Admin/ExpenseController.php
 
-namespace App\Http\Controllers\Admin; // FIX: was App\Http\Controllers — didn't match the folder/file path,
+namespace App\Http\Controllers; // FIX: was App\Http\Controllers — didn't match the folder/file path,
                                        // which throws "Class not found" if routes reference Admin\ExpenseController
 
 use App\Http\Controllers\Controller;
