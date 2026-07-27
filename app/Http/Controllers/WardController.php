@@ -106,7 +106,7 @@ class WardController extends Controller
             $corporationId = $ward->zone->corp_id;
             $misTableName = "mis_{$corporationId}";
             $wards = $query->latest()->paginate(12);
-
+            return response()->json($wards);
             $wards->getCollection()->transform(function ($ward) {
 
                 $misTableName = 'mis_' . $ward->zone->corp_id;
