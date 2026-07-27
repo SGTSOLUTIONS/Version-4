@@ -21,7 +21,7 @@ class Ward extends Model
         'extent_top',
         'extent_bottom',
         'boundary',
-        'zone',
+        'zone_name',
         'status',
         'contact_person',
         'designation',

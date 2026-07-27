@@ -109,16 +109,21 @@ class WardController extends Controller
             $wards = $query->latest()->paginate(12);
 
             $wards->getCollection()->transform(function ($ward) {
-
                 $ward->road_names = [];
 
-                // Check if zone exists
-                if (!$ward->zone) {
+                // IMPORTANT: Check the relationship, not the column
+                // Use relationLoaded to check if the relationship is loaded
+                // Use getRelation() to get the relationship object
+                $zoneRelation = $ward->getRelation('zone');
+
+                if (!$zoneRelation) {
                     $ward->table_error = 'Zone not found';
+                    $ward->zone_id_debug = $ward->zone_id;
+                    $ward->zone_name_debug = $ward->zone; // The string column
                     return $ward;
                 }
 
-                $misTableName = 'mis_' . $ward->zone->corp_id;
+                $misTableName = 'mis_' . $zoneRelation->corp_id;
                 $ward->mis_table = $misTableName;
 
                 if (Schema::hasTable($misTableName)) {

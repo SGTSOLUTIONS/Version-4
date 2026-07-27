@@ -36,7 +36,7 @@ return new class extends Migration
             $table->longText('boundary')->nullable();
 
             // Optional Zone Name
-            $table->string('zone')->nullable();
+            $table->string('zone_name')->nullable();
 
             // Contact Information
             $table->string('contact_person')->nullable();
