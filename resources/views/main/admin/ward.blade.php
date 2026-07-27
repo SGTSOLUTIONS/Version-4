@@ -411,6 +411,15 @@
     .btn-group-actions .dropdown-toggle {
         width: 100%;
     }
+
+    /* Fix for dropdown menu positioning */
+    .dropdown-menu {
+        min-width: 220px;
+    }
+
+    .dropdown-menu.show {
+        display: block;
+    }
 </style>
 @endpush
 
@@ -599,6 +608,9 @@
                         inactive: 'bg-secondary'
                     } [ward.status] || 'bg-secondary';
 
+                    // Create unique ID for this card's dropdown
+                    let dropdownId = 'dropdown-' + ward.id;
+
                     html += `
                         <div class="acard">
                             <div class="acard-body">
@@ -661,7 +673,7 @@
                                     </div>
                                 `}
 
-                                <!-- Action Buttons - Now all visible -->
+                                <!-- Action Buttons -->
                                 <div class="btn-group-actions">
                                     <button class="btn btn-sm btn-info view-btn" data-id="${ward.id}" title="View Ward Details">
                                         <i class="bi bi-eye"></i> View
@@ -670,10 +682,12 @@
                                         <i class="bi bi-pencil"></i> Edit
                                     </button>
                                     <div class="dropdown">
-                                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" title="More Actions">
+                                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button"
+                                                id="${dropdownId}" data-bs-toggle="dropdown"
+                                                aria-expanded="false" title="More Actions">
                                             <i class="bi bi-three-dots-vertical"></i> More
                                         </button>
-                                        <ul class="dropdown-menu">
+                                        <ul class="dropdown-menu" aria-labelledby="${dropdownId}">
                                             <li>
                                                 <a class="dropdown-item building-btn" data-id="${ward.id}" href="#">
                                                     <i class="bi bi-download me-2"></i> All Buildings (GeoJSON)
@@ -737,6 +751,14 @@
                     `;
                 });
                 $('#wardsGrid').html(html);
+
+                // Re-initialize dropdowns for the new content
+                // This is handled by Bootstrap's dropdown initialization
+                // But we need to make sure the dropdowns work
+                $('.dropdown-toggle').each(function() {
+                    // Remove any existing dropdown events to prevent duplicates
+                    $(this).off('click.bs.dropdown');
+                });
             }
 
             // Render pagination
@@ -874,8 +896,7 @@
                             }
                         });
                     }
-                @else
-                    $('#f_corp_id').prop('disabled', false);
+                @else                    $('#f_corp_id').prop('disabled', false);
                     $('#f_zone_id').html('<option value="">First select Corporation</option>').prop('disabled', true);
                 @endif
 
@@ -1138,6 +1159,7 @@
             // Download All Buildings (GeoJSON)
             $(document).on('click', '.building-btn', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 let id = $(this).data('id');
                 window.location.href = "/wards/" + id + "/export-all-polygons";
             });
@@ -1145,6 +1167,7 @@
             // Missing Building (GeoJSON)
             $(document).on('click', '.missing-building-btn', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 let id = $(this).data('id');
                 window.location.href = "/wards/" + id + "/missing-building-geojson";
             });
@@ -1152,6 +1175,7 @@
             // Missing Building (Excel)
             $(document).on('click', '.missing-building-excel-btn', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 let id = $(this).data('id');
                 window.location.href = "/wards/" + id + "/missing-building-excel";
             });
@@ -1159,6 +1183,7 @@
             // Missing Bill (Excel)
             $(document).on('click', '.missing-bill-btn', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 let id = $(this).data('id');
                 let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/missing-bill-excel?road_name=" +
@@ -1168,6 +1193,7 @@
             // Missing Bill (PDF)
             $(document).on('click', '.missing-bill-pdf-btn', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 let id = $(this).data('id');
                 let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/missing-bill-pdf?road_name=" +
@@ -1177,6 +1203,7 @@
             // MIS Download
             $(document).on('click', '.mis-bill-download-btn', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 let id = $(this).data('id');
                 let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/mis-bill-excel?road_name=" +
@@ -1186,6 +1213,7 @@
             // UGD Tax Download
             $(document).on('click', '.ugd-bill-download-btn', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 let id = $(this).data('id');
                 let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/ugd-tax-excel?road_name=" +
@@ -1195,6 +1223,7 @@
             // Water Tax Download
             $(document).on('click', '.water-bill-download-btn', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 let id = $(this).data('id');
                 let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/water-tax-excel?road_name=" +
@@ -1204,6 +1233,7 @@
             // Professional Tax Download
             $(document).on('click', '.professional-tax-download-btn', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 let id = $(this).data('id');
                 let roadname = $("#ward-" + id).val() || 'all';
                 window.location.href = "/wards/" + id + "/professional-tax-excel?road_name=" +
