@@ -167,6 +167,10 @@
                         <i class="bi bi-gear"></i>
                         <span class="ol-nav-label">Settings</span>
                     </a>
+                     <a href="{{ route('expenses.index')}}" class="ol-nav-item">
+                        <i class="bi bi-gear"></i>
+                        <span class="ol-nav-label">expenses</span>
+                    </a>
 
                     {{-- ================= TEAM LEADER ================= --}}
                 @elseif(Auth::user()->role == 'teamleader')
