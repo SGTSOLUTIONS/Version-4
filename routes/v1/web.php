@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommissionerController;
 use App\Http\Controllers\CorporationController;
-use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SurveyorController;
@@ -113,10 +112,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('teams/{id}', [TeamManagementController::class, 'destroy'])->name('teams.destroy');
 
 
-      Route::resource('expenses', ExpenseController::class);
-    Route::get('expenses/list', [ExpenseController::class, 'list'])->name('expenses.list');
-    Route::get('expenses/statistics', [ExpenseController::class, 'statistics'])->name('expenses.statistics');
-    Route::get('expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
+
 });
 // Add this inside your routes file
 Route::get('/api/corporation/{id}/boundaries', function ($id) {
