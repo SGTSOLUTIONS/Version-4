@@ -16,6 +16,7 @@ use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Schema;
 
 class WardController extends Controller
 {
@@ -106,26 +107,26 @@ class WardController extends Controller
             }
 
             $wards = $query->latest()->paginate(12);
-return response()->json($wards);
+
             $wards->getCollection()->transform(function ($ward) {
 
-                $ward->road_names = [];
+                $misTableName = 'mis_' . $ward->zone->corp_id;
 
-                if ($ward->zone) {
+                $ward->mis_table = $misTableName;
 
-                    $misTableName = 'mis_' . $ward->zone->corp_id;
+                if (Schema::hasTable($misTableName)) {
 
-                    if (Schema::hasTable($misTableName)) {
-
-                        $ward->road_names = DB::table($misTableName)
-                            ->where('ward_no', $ward->ward_no)
-                            ->whereNotNull('road_name')
-                            ->where('road_name', '!=', '')
-                            ->distinct()
-                            ->orderBy('road_name')
-                            ->pluck('road_name')
-                            ->toArray();
-                    }
+                    $ward->road_names = DB::table($misTableName)
+                        ->where('ward_no', $ward->ward_no)
+                        ->whereNotNull('road_name')
+                        ->where('road_name', '!=', '')
+                        ->distinct()
+                        ->orderBy('road_name')
+                        ->pluck('road_name')
+                        ->toArray();
+                } else {
+                    $ward->road_names = [];
+                    $ward->table_error = 'Table not found';
                 }
 
                 return $ward;
@@ -133,8 +134,7 @@ return response()->json($wards);
 
             return response()->json([
                 'status' => true,
-                'data' => $wards
-
+                'data' => $wards,
             ]);
         } catch (\Exception $e) {
             return response()->json([
