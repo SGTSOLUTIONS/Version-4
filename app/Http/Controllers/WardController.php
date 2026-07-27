@@ -840,7 +840,8 @@ class WardController extends Controller
             $misTable = 'mis_' . $zone->corp_id;
             $pointDataTable = 'point_data_' . $ward_id;
 
-
+            $query = DB::table($misTable)
+                ->where('ward_no', $ward->ward_no);
             $query = DB::table($misTable);
 
 
@@ -900,7 +901,6 @@ class WardController extends Controller
             $misTable = 'mis_' . $zone->corp_id;
             $pointDataTable = 'point_data_' . $ward_id;
 
-return response()->json($ward);
             $query = DB::table($misTable)
                 ->where('ward_no', $ward->ward_no);
 
