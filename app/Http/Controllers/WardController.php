@@ -69,6 +69,7 @@ class WardController extends Controller
     {
         try {
             $user = Auth::user();
+
             $query = Ward::with(['zone.corporation', 'zone']);
 
             if ($user->role == 'commissioner') {
@@ -82,10 +83,12 @@ class WardController extends Controller
             }
 
             if ($request->filled('zone')) {
-                $query->where('zone', 'like', '%' . $request->zone . '%')
-                    ->orWhereHas('zone', function ($q) use ($request) {
-                        $q->where('zone_name', 'like', '%' . $request->zone . '%');
-                    });
+                $query->where(function ($q) use ($request) {
+                    $q->where('zone', 'like', '%' . $request->zone . '%')
+                        ->orWhereHas('zone', function ($sub) use ($request) {
+                            $sub->where('zone_name', 'like', '%' . $request->zone . '%');
+                        });
+                });
             }
 
             if ($request->filled('status')) {
@@ -101,23 +104,29 @@ class WardController extends Controller
                     $q->where('corp_id', $request->corp_id);
                 });
             }
-            $ward = Ward::with('zone')->findOrFail($request->ward_id);
 
-            $corporationId = $ward->zone->corp_id;
-            $misTableName = "mis_{$corporationId}";
             $wards = $query->latest()->paginate(12);
-            return response()->json($wards);
+
             $wards->getCollection()->transform(function ($ward) {
 
-                $misTableName = 'mis_' . $ward->zone->corp_id;
+                $ward->road_names = [];
 
-                $ward->road_names = DB::table($misTableName)
-                    ->where('ward_no', $ward->ward_no)
-                    ->whereNotNull('road_name')
-                    ->where('road_name', '!=', '')
-                    ->distinct()
-                    ->orderBy('road_name')
-                    ->pluck('road_name');
+                if ($ward->zone) {
+
+                    $misTableName = 'mis_' . $ward->zone->corp_id;
+
+                    if (Schema::hasTable($misTableName)) {
+
+                        $ward->road_names = DB::table($misTableName)
+                            ->where('ward_no', $ward->ward_no)
+                            ->whereNotNull('road_name')
+                            ->where('road_name', '!=', '')
+                            ->distinct()
+                            ->orderBy('road_name')
+                            ->pluck('road_name')
+                            ->toArray();
+                    }
+                }
 
                 return $ward;
             });
