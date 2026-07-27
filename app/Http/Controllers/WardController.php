@@ -114,7 +114,7 @@ class WardController extends Controller
                 if ($ward->zone) {
 
                     $misTableName = 'mis_' . $ward->zone->corp_id;
-
+return response()->json($misTableName);
                     if (Schema::hasTable($misTableName)) {
 
                         $ward->road_names = DB::table($misTableName)
@@ -134,6 +134,7 @@ class WardController extends Controller
             return response()->json([
                 'status' => true,
                 'data' => $wards
+
             ]);
         } catch (\Exception $e) {
             return response()->json([
