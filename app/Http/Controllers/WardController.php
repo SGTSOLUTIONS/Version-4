@@ -16,6 +16,8 @@ use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\MissingBillExport;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class WardController extends Controller
 {
     protected $wardService;
@@ -802,44 +804,75 @@ class WardController extends Controller
     }
 
 
-    public function missingBillPdf($ward_id)
-    {
-        try {
-            $ward = Ward::find($ward_id);
-            $zone = Zone::find($ward->zone_id);
+    public function missingBillPdf(Request $request, $ward_id)
+{
+    try {
 
-            $misTable = 'mis_' . $zone->corp_id;
-            $pointDataTable = 'point_data_' . $ward_id;
+        $roadName = $request->query('road_name');
 
-            $missingbill = DB::table($misTable)->where('ward_no', $ward->ward_no)
-                ->whereNotIn('assessment', function ($query) use ($pointDataTable) {
-                    $query->select('assessment')->from($pointDataTable);
-                })
-                ->get();
 
-            if ($missingbill->isEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No missing records found.',
-                ], 404);
-            }
+        $ward = Ward::findOrFail($ward_id);
+        $zone = Zone::findOrFail($ward->zone_id);
 
-            $pdf = Pdf::loadView('exports.missing_bill_pdf', [
-                'missingbill' => $missingbill,
-                'ward'        => $ward,
-            ])
-                ->setPaper('a4', 'landscape');
 
-            $fileName = "missing_buildings_{$ward_id}.pdf";
+        $misTable = 'mis_' . $zone->corp_id;
+        $pointDataTable = 'point_data_' . $ward_id;
 
-            return $pdf->download($fileName);
-        } catch (\Throwable $e) {
+
+        $query = DB::table($misTable)
+            ->where('ward_no', $ward->ward_no);
+
+
+        // Road filter
+        if ($roadName && strtolower($roadName) != 'all') {
+            $query->where('road_name', $roadName);
+        }
+
+
+        $missingbill = $query
+            ->whereNotIn('assessment', function ($subQuery) use ($pointDataTable) {
+
+                $subQuery->select('assessment')
+                    ->from($pointDataTable);
+
+            })
+            ->get();
+
+
+        if ($missingbill->isEmpty()) {
+
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
-                'line'    => $e->getLine(),
-                'file'    => $e->getFile(),
-            ], 500);
+                'message' => 'No missing records found.',
+            ], 404);
+
         }
+
+
+        $pdf = Pdf::loadView('exports.missing_bill_pdf', [
+            'missingbill' => $missingbill,
+            'ward'        => $ward,
+            'roadName'    => $roadName,
+        ])
+        ->setPaper('a4', 'landscape');
+
+
+        $fileName = "missing_bill_{$ward_id}_" .
+            str_replace(['.', ' '], '_', $roadName ?? 'all') .
+            ".pdf";
+
+
+        return $pdf->download($fileName);
+
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'line'    => $e->getLine(),
+            'file'    => $e->getFile(),
+        ], 500);
     }
+}
 }

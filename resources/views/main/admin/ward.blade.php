@@ -525,21 +525,21 @@
                                     Ward ${escapeHtml(ward.ward_no)}
                                 </h3>
                                 ${ward.contact_person ? `
-                                                <p class="acard-desc small mb-1">
-                                                    <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
-                                                    ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
-                                                </p>
-                                            ` : ''}
+                                                    <p class="acard-desc small mb-1">
+                                                        <i class="bi bi-person"></i> ${escapeHtml(ward.contact_person)}
+                                                        ${ward.designation ? ` (${escapeHtml(ward.designation)})` : ''}
+                                                    </p>
+                                                ` : ''}
                                 ${ward.phone ? `
-                                                <p class="acard-desc small mb-1">
-                                                    <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
-                                                </p>
-                                            ` : ''}
+                                                    <p class="acard-desc small mb-1">
+                                                        <i class="bi bi-telephone"></i> ${escapeHtml(ward.phone)}
+                                                    </p>
+                                                ` : ''}
                                 ${ward.email ? `
-                                                <p class="acard-desc small mb-1">
-                                                    <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
-                                                </p>
-                                            ` : ''}
+                                                    <p class="acard-desc small mb-1">
+                                                        <i class="bi bi-envelope"></i> ${escapeHtml(ward.email)}
+                                                    </p>
+                                                ` : ''}
                                 <div class="acard-footer">
                                     <span class="acard-author">
                                         ${escapeHtml(ward.contact_person || 'No contact')}
@@ -549,26 +549,26 @@
                                     </span>
                                 </div>
                                 ${ward.road_names && ward.road_names.length ? `
-                                        <div class="mt-3">
-                                            <label class="form-label small fw-bold">Road Name</label>
-                                            <select class="form-select form-select-sm road-name-select" id="ward-${ward.id}"
-                                                    data-ward="${ward.id}">
-                                                <option value="all">Select Road</option>
-                                                ${ward.road_names.map(road => `
+                                            <div class="mt-3">
+                                                <label class="form-label small fw-bold">Road Name</label>
+                                                <select class="form-select form-select-sm road-name-select" id="ward-${ward.id}"
+                                                        data-ward="${ward.id}">
+                                                    <option value="all">Select Road</option>
+                                                    ${ward.road_names.map(road => `
                                                 <option value="${escapeHtml(road)}">
                                                     ${escapeHtml(road)}
                                                 </option>
                                             `).join('')}
-                                            </select>
-                                        </div>
-                                    ` : `
-                                        <div class="mt-3">
-                                            <label class="form-label small fw-bold">Road Name</label>
-                                            <select class="form-select form-select-sm" disabled>
-                                                <option>No Roads Found</option>
-                                            </select>
-                                        </div>
-                                    `}
+                                                </select>
+                                            </div>
+                                        ` : `
+                                            <div class="mt-3">
+                                                <label class="form-label small fw-bold">Road Name</label>
+                                                <select class="form-select form-select-sm" disabled>
+                                                    <option>No Roads Found</option>
+                                                </select>
+                                            </div>
+                                        `}
                                <div class="d-flex gap-2 mt-3">
                                 <button class="btn btn-sm btn-info flex-fill view-btn" data-id="${ward.id}">
                                     <i class="bi bi-eye"></i> View
@@ -604,13 +604,13 @@
                                             </a>
                                         </li>
                                         ${userRole === 'admin' ? `
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li>
-                                                        <a class="dropdown-item text-danger delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}" href="#">
-                                                            <i class="bi bi-trash me-2"></i> Delete
-                                                        </a>
-                                                    </li>
-                                                ` : ''}
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <a class="dropdown-item text-danger delete-btn" data-id="${ward.id}" data-name="${escapeHtml(ward.ward_no)}" href="#">
+                                                                <i class="bi bi-trash me-2"></i> Delete
+                                                            </a>
+                                                        </li>
+                                                    ` : ''}
                                     </ul>
                                 </div>
                             </div>
@@ -1006,8 +1006,8 @@
                                 <div class="col-12 text-center mb-3">
                                     ${imageUrl ? `<img src="${imageUrl}" alt="${escapeHtml(ward.ward_no)}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 10px;">` :
                                         `<div style="width: 150px; height: 150px; background: #e9ecef; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;">
-                                                        <i class="bi bi-building fs-1 text-muted"></i>
-                                                    </div>`}
+                                                            <i class="bi bi-building fs-1 text-muted"></i>
+                                                        </div>`}
                                 </div>
                                 <div class="col-md-6"><strong>Corporation:</strong><br><p>${escapeHtml(corporationName)}</p></div>
                                 <div class="col-md-6"><strong>Zone:</strong><br><p>${escapeHtml(zoneName)}</p></div>
@@ -1059,8 +1059,13 @@
             $(document).on('click', '.missing-bill-pdf-btn', function() {
 
                 let id = $(this).data('id');
+                let roadname = $("#ward-" + id).val();
 
-                window.location.href = "/wards/" + id + "/missing-bill-pdf";
+
+
+
+                window.location.href = "/wards/" + id + "/missing-bill-pdf?road_name="  +
+                    encodeURIComponent(roadname);
 
             });
 
