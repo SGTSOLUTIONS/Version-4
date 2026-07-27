@@ -421,10 +421,21 @@
         width: 100%;
     }
 
-    /* Fix for dropdown menu positioning */
+    /* Fix for dropdown menu positioning.
+       Menus are moved to <body> and positioned with JS (position: fixed),
+       so we give them a self-contained look here since they're no longer
+       inside Bootstrap's normal dropdown DOM structure. */
     .dropdown-menu {
+        display: none;
         min-width: 220px;
-        z-index: 3000; /* sit above cards, modals' backdrop, etc. */
+        z-index: 3000;
+        background: #fff;
+        border: 1px solid rgba(0,0,0,0.15);
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        padding: 6px 0;
+        margin: 0;
+        list-style: none;
     }
 
     .dropdown-menu.show {
@@ -699,8 +710,7 @@
                                     </button>
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-secondary dropdown-toggle" type="button"
-                                                id="${dropdownId}" data-bs-toggle="dropdown"
-                                                data-bs-display="static"
+                                                id="${dropdownId}"
                                                 aria-expanded="false" title="More Actions">
                                             <i class="bi bi-three-dots-vertical"></i> More
                                         </button>
@@ -768,31 +778,96 @@
                     `;
                 });
                 $('#wardsGrid').html(html);
+            }
 
-                // FIX: Explicitly (re)initialize every dropdown-toggle as a
-                // Bootstrap Dropdown instance using Popper's `fixed` strategy.
-                // This makes the menu render relative to the viewport instead
-                // of its offset parent, so it can never be clipped by a card,
-                // the grid, or any other ancestor — and it also guarantees
-                // dropdowns work correctly after the grid HTML is replaced
-                // on every AJAX reload (dynamically injected elements are
-                // not auto-initialized by Bootstrap's data-api after being
-                // added to the DOM).
-                document.querySelectorAll('#wardsGrid .dropdown-toggle').forEach(function(el) {
-                    // Dispose of any existing instance first to avoid duplicates
-                    let existing = bootstrap.Dropdown.getInstance(el);
-                    if (existing) {
-                        existing.dispose();
-                    }
-                    new bootstrap.Dropdown(el, {
-                        popperConfig: function(defaultConfig) {
-                            return Object.assign({}, defaultConfig, {
-                                strategy: 'fixed'
-                            });
-                        }
-                    });
+            // ------------------------------------------------------------------
+            // Manual dropdown handling (does NOT rely on the global `bootstrap`
+            // object or Bootstrap's Popper-based positioning). This guarantees
+            // the "More" menu opens correctly regardless of how Bootstrap JS is
+            // bundled/loaded in this project, and it can never be clipped by
+            // any ancestor because the menu is moved to <body> and positioned
+            // with `position: fixed` using real coordinates from the button.
+            // ------------------------------------------------------------------
+
+            // Open/close on toggle click
+            $(document).on('click', '.dropdown-toggle', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                let $btn = $(this);
+                let $menu = $btn.next('.dropdown-menu');
+
+                // If this menu is already open, close it
+                if ($menu.hasClass('show')) {
+                    closeAllDropdowns();
+                    return;
+                }
+
+                closeAllDropdowns();
+
+                // Move the menu to <body> so no ancestor (card, grid, etc.)
+                // can clip it, and remember where it came from so we can
+                // put it back later.
+                if (!$menu.data('original-parent')) {
+                    $menu.data('original-parent', $btn.parent());
+                }
+                $('body').append($menu);
+
+                positionDropdown($btn, $menu);
+                $menu.addClass('show').css('display', 'block');
+                $btn.attr('aria-expanded', 'true');
+            });
+
+            // Position the menu under its button using fixed coordinates
+            function positionDropdown($btn, $menu) {
+                let rect = $btn[0].getBoundingClientRect();
+                let menuWidth = $menu.outerWidth() || 220;
+                let spaceBelow = window.innerHeight - rect.bottom;
+                let menuHeight = $menu.outerHeight() || 300;
+
+                let top = rect.bottom + 4;
+                // Flip above the button if not enough room below
+                if (spaceBelow < menuHeight && rect.top > menuHeight) {
+                    top = rect.top - menuHeight - 4;
+                }
+
+                let left = rect.right - menuWidth;
+                if (left < 8) left = rect.left; // keep on-screen
+
+                $menu.css({
+                    position: 'fixed',
+                    top: top + 'px',
+                    left: left + 'px',
+                    zIndex: 3000
                 });
             }
+
+            function closeAllDropdowns() {
+                $('.dropdown-menu.show').each(function() {
+                    let $menu = $(this);
+                    $menu.removeClass('show').hide();
+                    let $origParent = $menu.data('original-parent');
+                    if ($origParent && $origParent.length) {
+                        $origParent.append($menu);
+                    }
+                });
+                $('.dropdown-toggle').attr('aria-expanded', 'false');
+            }
+
+            // Close when clicking anywhere outside an open menu/button
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.dropdown-menu, .dropdown-toggle').length) {
+                    closeAllDropdowns();
+                }
+            });
+
+            // Reposition on scroll/resize while a menu is open
+            $(window).on('scroll resize', function() {
+                let $openMenu = $('.dropdown-menu.show');
+                if ($openMenu.length) {
+                    closeAllDropdowns();
+                }
+            });
 
             // Render pagination
             function renderPagination(pagination) {
