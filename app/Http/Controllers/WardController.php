@@ -106,7 +106,7 @@ class WardController extends Controller
             }
 
             $wards = $query->latest()->paginate(12);
-
+return response()->json($wards);
             $wards->getCollection()->transform(function ($ward) {
 
                 $ward->road_names = [];
@@ -114,7 +114,7 @@ class WardController extends Controller
                 if ($ward->zone) {
 
                     $misTableName = 'mis_' . $ward->zone->corp_id;
-return response()->json($misTableName);
+
                     if (Schema::hasTable($misTableName)) {
 
                         $ward->road_names = DB::table($misTableName)
