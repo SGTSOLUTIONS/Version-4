@@ -829,18 +829,18 @@ class PointdataController extends Controller
             $ugdTaxTable           = "ugd_tax_{$corpId}";
             $professionalTaxTable  = "professional_tax_{$corpId}";
 
-            $pointData = DB::table($pointDataTable)->where('point_gisid', $id)->first();
+            $pointData = DB::table($pointDataTable)->where('id', $id)->first();
 
             if (!$pointData) {
                 return response()->json(['success' => false, 'message' => 'Point data not found'], 404);
             }
 
             $waterTax = DB::table($waterTaxTable)
-                ->where('watertax_no', $pointData->water_tax)
+                ->where('assessment', $pointData->assessment)
                 ->first();
 
             $ugdTax = DB::table($ugdTaxTable)
-                ->where('gisid', $pointData->point_gisid)
+                ->where('assessment', $pointData->assessment)
                 ->first();
 
             $professionalTax = DB::table($professionalTaxTable)
