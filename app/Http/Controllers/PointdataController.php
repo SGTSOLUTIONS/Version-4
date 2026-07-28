@@ -641,8 +641,6 @@ class PointdataController extends Controller
                 // ============================================================
                 $misData = [
                     'corporation_id' => $corpId,
-                    // 'zone_id' => $zoneId,  // REMOVED - Column doesn't exist
-                    'ward_id' => $wardId,
                     'ward_no' => $wardNo,
                     'assessment' => $request->assessment,
                     'old_assessment' => $request->old_assessment ?? null,
