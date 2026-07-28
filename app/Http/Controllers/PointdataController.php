@@ -784,13 +784,12 @@ class PointdataController extends Controller
     public function pointDataUpdate(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            // same rules as pointDataStore...
             'assessment_type' => 'required|in:OLD,NEW,VACANT,OTHER_WARD',
             'owner_name'       => 'required|string|max:255',
             'phone_number'     => 'required|digits:10',
             'new_door_no'      => 'required|string|max:100',
             'floor'            => 'required|integer|min:0',
-            'bill_usage'       => 'required|in:RESIDENTAL,COMMERCIAL',
+            'bill_usage'       => 'required|in:RESIDENTIAL,COMMERCIAL',
             'present_owner_name' => 'required|string|max:255',
             'old_door_no'      => 'required|string|max:100',
             'professional'     => 'nullable|array',
