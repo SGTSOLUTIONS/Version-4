@@ -243,515 +243,514 @@ class PointdataController extends Controller
         }
     }
     public function pointDataStore(Request $request)
-{
-    // Base validation rules
-    $validator = Validator::make($request->all(), [
-        'assessment_type'      => 'required|in:OLD,NEW,VACANT,OTHER_WARD',
-        'assessment'           => 'nullable|string|max:100',
-        'zone'                 => 'nullable|string|max:50',
-        'owner_name'           => 'required|string|max:255',
-        'phone_number'         => 'required|digits:10',
-        'new_door_no'          => 'required|string|max:100',
-        'floor'                => 'required|integer|min:0',
-        'bill_usage'           => 'required|in:RESIDENTIAL,COMMERCIAL',
-        'old_assessment'       => 'nullable|string|max:100',
-        'present_owner_name'   => 'required|string|max:255',
-        'old_door_no'          => 'required|string|max:100',
-        'aadhar_no'            => 'nullable|digits:12',
-        'ration_no'            => 'nullable|string|max:100',
-        'number_persons'       => 'nullable|integer|min:1',
-        'eb'                   => 'nullable|string|max:100',
-        'worker_name'          => 'nullable|string|max:255',
-        'remarks'              => 'nullable|string',
-        'watertax_no'          => 'nullable|string|max:100',
-        'old_watertax_no'      => 'nullable|string|max:100',
-        'water_usage'          => 'nullable|in:Domestic,Commercial,Industrial,Institutional',
-        'water_DBC_type'       => 'nullable|string|max:100',
-        'water_slab_description' => 'nullable|string',
-        'ugd_no'               => 'nullable|string|max:100',
-        'old_ugd_no'           => 'nullable|string|max:100',
-        'ugd_usage'            => 'nullable|string|max:100',
-        'ugd_DBC_type'         => 'nullable|string|max:100',
-        'ugd_slab_description' => 'nullable|string',
-        'point_gisid'          => 'required|string|max:100',
-        'professional'         => 'nullable|array',
-        'professional.*.pt_number' => 'nullable|string|max:100',
-        'professional.*.old_pt_number' => 'nullable|string|max:100',
-        'professional.*.establishment_name' => 'nullable|string|max:255',
-        'professional.*.profession_type' => 'nullable|string|max:100',
-        'professional.*.employee_count' => 'nullable|integer|min:0',
-        'professional.*.half_year_tax' => 'nullable|numeric|min:0',
-        'professional.*.pt_remarks' => 'nullable|string',
-    ]);
+    {
+        // Base validation rules
+        $validator = Validator::make($request->all(), [
+            'assessment_type'      => 'required|in:OLD,NEW,VACANT,OTHER_WARD',
+            'assessment'           => 'nullable|string|max:100',
+            'zone'                 => 'nullable|string|max:50',
+            'owner_name'           => 'required|string|max:255',
+            'phone_number'         => 'required|digits:10',
+            'new_door_no'          => 'required|string|max:100',
+            'floor'                => 'required|integer|min:0',
+            'bill_usage'           => 'required|in:RESIDENTIAL,COMMERCIAL',
+            'old_assessment'       => 'nullable|string|max:100',
+            'present_owner_name'   => 'required|string|max:255',
+            'old_door_no'          => 'required|string|max:100',
+            'aadhar_no'            => 'nullable|digits:12',
+            'ration_no'            => 'nullable|string|max:100',
+            'number_persons'       => 'nullable|integer|min:1',
+            'eb'                   => 'nullable|string|max:100',
+            'worker_name'          => 'nullable|string|max:255',
+            'remarks'              => 'nullable|string',
+            'watertax_no'          => 'nullable|string|max:100',
+            'old_watertax_no'      => 'nullable|string|max:100',
+            'water_usage'          => 'nullable|in:Domestic,Commercial,Industrial,Institutional',
+            'water_DBC_type'       => 'nullable|string|max:100',
+            'water_slab_description' => 'nullable|string',
+            'ugd_no'               => 'nullable|string|max:100',
+            'old_ugd_no'           => 'nullable|string|max:100',
+            'ugd_usage'            => 'nullable|string|max:100',
+            'ugd_DBC_type'         => 'nullable|string|max:100',
+            'ugd_slab_description' => 'nullable|string',
+            'point_gisid'          => 'required|string|max:100',
+            'professional'         => 'nullable|array',
+            'professional.*.pt_number' => 'nullable|string|max:100',
+            'professional.*.old_pt_number' => 'nullable|string|max:100',
+            'professional.*.establishment_name' => 'nullable|string|max:255',
+            'professional.*.profession_type' => 'nullable|string|max:100',
+            'professional.*.employee_count' => 'nullable|integer|min:0',
+            'professional.*.half_year_tax' => 'nullable|numeric|min:0',
+            'professional.*.pt_remarks' => 'nullable|string',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation errors',
-            'errors'  => $validator->errors()
-        ], 422);
-    }
-
-    try {
-        $user = User::find(Auth::id());
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found'
-            ], 404);
-        }
-
-        $ward = Ward::find($user->ward_id);
-        if (!$ward) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ward not found for the user'
-            ], 404);
-        }
-
-        $zone = Zone::find($ward->zone_id);
-        if (!$zone) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Zone not found for the ward'
-            ], 404);
-        }
-
-        $corporation = Corporation::find($zone->corp_id);
-        if (!$corporation) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Corporation not found for the zone'
-            ], 404);
-        }
-
-        $wardId = $ward->id;
-        $wardNo = $ward->ward_no;
-        $corpId = $corporation->id;
-
-        $polygonDataTableName = "polygon_data_{$wardId}";
-        $pointDataTableName = "point_data_{$wardId}";
-        $waterTaxTableName = "water_tax_{$corpId}";
-        $misTableName = "mis_{$corpId}";
-        $ugdTaxTableName = "ugd_tax_{$corpId}";
-        $professionalTaxTableName = "professional_tax_{$corpId}";
-
-        // Check if tables exist
-        if (!Schema::hasTable($misTableName)) {
-            return response()->json([
-                'success' => false,
-                'message' => "MIS table ({$misTableName}) not found"
-            ], 422);
-        }
-
-        // Check if point data already exists
-        $exist = DB::table($pointDataTableName)
-            ->where('assessment', $request->assessment)
-            ->exists();
-
-        if ($exist) {
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation errors',
-                'errors' => [
-                    'assessment_type' => ['Assessment Already entered.']
-                ]
+                'errors'  => $validator->errors()
             ], 422);
         }
-
-        // Validate assessment type
-        if ($request->assessment_type === 'OLD') {
-            $exists = DB::table($misTableName)
-                ->where('assessment', $request->assessment)
-                ->where('ward_no', $wardNo)
-                ->exists();
-
-            if (!$exists) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation errors',
-                    'errors' => [
-                        'assessment_type' => ['Assessment not found in MIS for this ward.']
-                    ]
-                ], 422);
-            }
-        } elseif ($request->assessment_type === 'NEW') {
-            $exists = DB::table($misTableName)
-                ->where('assessment', $request->assessment)
-                ->exists();
-
-            if ($exists) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation errors',
-                    'errors' => [
-                        'assessment_type' => ['Assessment already exists in MIS.']
-                    ]
-                ], 422);
-            }
-        } elseif ($request->assessment_type === 'OTHER_WARD') {
-            $exists = DB::table($misTableName)
-                ->where('assessment', $request->assessment)
-                ->where('ward_no', '!=', $wardNo)
-                ->exists();
-
-            if (!$exists) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation errors',
-                    'errors' => [
-                        'assessment_type' => ['Assessment not found in MIS for another ward.']
-                    ]
-                ], 422);
-            }
-        }
-
-        // Get building data
-        $buildingdata = DB::table($polygonDataTableName)
-            ->where('gisid', $request->point_gisid)
-            ->first();
-
-        if (!$buildingdata) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Building data not found for the given GIS ID'
-            ], 422);
-        }
-
-        // Validate floor
-        if ($request->floor >= $buildingdata->number_floor) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation errors',
-                'errors' => [
-                    'floor' => ['Entered floor exceeds the number of floors in the building.']
-                ]
-            ], 422);
-        }
-
-        // Validate building usage
-        $building_usage = strtoupper(trim($buildingdata->building_usage ?? ''));
-        $bill_usage = strtoupper(trim($request->bill_usage ?? ''));
-
-        $validUsageMap = [
-            'RESIDENTIAL' => ['RESIDENTIAL'],
-            'COMMERCIAL' => ['COMMERCIAL'],
-            'MIXED' => ['RESIDENTIAL', 'COMMERCIAL'],
-            'INDUSTRIAL' => ['INDUSTRIAL'],
-            'INSTITUTIONAL' => ['INSTITUTIONAL'],
-            'GOVERNMENT' => ['GOVERNMENT'],
-            'VACANT' => ['VACANT'],
-        ];
-
-        if (!isset($validUsageMap[$building_usage])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid building usage',
-                'errors' => [
-                    'bill_usage' => ["Invalid building usage '{$building_usage}'"]
-                ]
-            ], 422);
-        }
-
-        if (!in_array($bill_usage, $validUsageMap[$building_usage])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation errors',
-                'errors' => [
-                    'bill_usage' => ["For {$building_usage} buildings, bill usage must be " . implode(' or ', $validUsageMap[$building_usage])]
-                ]
-            ], 422);
-        }
-
-        // Check if tables exist before using them
-        if (!Schema::hasTable($waterTaxTableName)) {
-            return response()->json([
-                'success' => false,
-                'message' => "Water tax table ({$waterTaxTableName}) not found"
-            ], 422);
-        }
-
-        if (!Schema::hasTable($ugdTaxTableName)) {
-            return response()->json([
-                'success' => false,
-                'message' => "UGD tax table ({$ugdTaxTableName}) not found"
-            ], 422);
-        }
-
-        if (!Schema::hasTable($professionalTaxTableName)) {
-            return response()->json([
-                'success' => false,
-                'message' => "Professional tax table ({$professionalTaxTableName}) not found"
-            ], 422);
-        }
-
-        DB::beginTransaction();
 
         try {
-            $validationErrors = [];
+            $user = User::find(Auth::id());
 
-            // ============================================================
-            // 1. WATER TAX - INSERT IF NOT EXISTS
-            // ============================================================
-            if ($request->filled('watertax_no')) {
-                $watertax = DB::table($waterTaxTableName)
-                    ->where('watertax_no', $request->watertax_no)
-                    ->first();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found'
+                ], 404);
+            }
 
-                if (!$watertax) {
-                    // INSERT NEW WATER TAX RECORD
-                    DB::table($waterTaxTableName)->insert([
-                        'corporation_id' => $corpId,
-                        'ward_no' => $wardNo,
-                        'gisid' => $request->point_gisid,
-                        'assessment' => $request->assessment,
-                        'watertax_no' => $request->watertax_no,
-                        'old_watertax_no' => $request->old_watertax_no ?? null,
-                        'usage' => $request->water_usage ?? null,
-                        'DBC_type' => $request->water_DBC_type ?? null,
-                        'slab_description' => $request->water_slab_description ?? null,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                } else {
-                    // CHECK IF LINKED TO DIFFERENT GIS
-                    if (!empty($watertax->gisid) && $watertax->gisid !== $request->point_gisid) {
-                        $validationErrors['watertax_no'] = ['Water tax number is already linked to a different GIS ID.'];
-                    } else {
-                        // UPDATE EXISTING WATER TAX
-                        DB::table($waterTaxTableName)
-                            ->where('watertax_no', $request->watertax_no)
-                            ->update([
-                                'ward_no' => $wardNo,
-                                'gisid' => $request->point_gisid,
-                                'usage' => $request->water_usage ?? $watertax->usage,
-                                'DBC_type' => $request->water_DBC_type ?? $watertax->DBC_type,
-                                'slab_description' => $request->water_slab_description ?? $watertax->slab_description,
-                                'updated_at' => now(),
-                            ]);
-                    }
+            $ward = Ward::find($user->ward_id);
+            if (!$ward) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ward not found for the user'
+                ], 404);
+            }
+
+            $zone = Zone::find($ward->zone_id);
+            if (!$zone) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Zone not found for the ward'
+                ], 404);
+            }
+
+            $corporation = Corporation::find($zone->corp_id);
+            if (!$corporation) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Corporation not found for the zone'
+                ], 404);
+            }
+
+            $wardId = $ward->id;
+            $wardNo = $ward->ward_no;
+            $zoneId = $zone->id;
+            $corpId = $corporation->id;
+
+            $polygonDataTableName = "polygon_data_{$wardId}";
+            $pointDataTableName = "point_data_{$wardId}";
+            $waterTaxTableName = "water_tax_{$corpId}";
+            $misTableName = "mis_{$corpId}";
+            $ugdTaxTableName = "ugd_tax_{$corpId}";
+            $professionalTaxTableName = "professional_tax_{$corpId}";
+
+            // Check if tables exist
+            if (!Schema::hasTable($misTableName)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "MIS table ({$misTableName}) not found"
+                ], 422);
+            }
+
+            // Check if point data already exists
+            $exist = DB::table($pointDataTableName)
+                ->where('assessment', $request->assessment)
+                ->exists();
+
+            if ($exist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation errors',
+                    'errors' => [
+                        'assessment_type' => ['Assessment Already entered.']
+                    ]
+                ], 422);
+            }
+
+            // Validate assessment type
+            if ($request->assessment_type === 'OLD') {
+                $exists = DB::table($misTableName)
+                    ->where('assessment', $request->assessment)
+                    ->where('ward_no', $wardNo)
+                    ->exists();
+
+                if (!$exists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation errors',
+                        'errors' => [
+                            'assessment_type' => ['Assessment not found in MIS for this ward.']
+                        ]
+                    ], 422);
+                }
+            } elseif ($request->assessment_type === 'NEW') {
+                $exists = DB::table($misTableName)
+                    ->where('assessment', $request->assessment)
+                    ->exists();
+
+                if ($exists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation errors',
+                        'errors' => [
+                            'assessment_type' => ['Assessment already exists in MIS.']
+                        ]
+                    ], 422);
+                }
+            } elseif ($request->assessment_type === 'OTHER_WARD') {
+                $exists = DB::table($misTableName)
+                    ->where('assessment', $request->assessment)
+                    ->where('ward_no', '!=', $wardNo)
+                    ->exists();
+
+                if (!$exists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation errors',
+                        'errors' => [
+                            'assessment_type' => ['Assessment not found in MIS for another ward.']
+                        ]
+                    ], 422);
                 }
             }
 
-            // ============================================================
-            // 2. UGD TAX - INSERT IF NOT EXISTS
-            // ============================================================
-            if ($request->filled('ugd_no')) {
-                $ugd = DB::table($ugdTaxTableName)
-                    ->where('ugd_no', $request->ugd_no)
-                    ->first();
+            // Get building data
+            $buildingdata = DB::table($polygonDataTableName)
+                ->where('gisid', $request->point_gisid)
+                ->first();
 
-                if (!$ugd) {
-                    // INSERT NEW UGD RECORD
-                    DB::table($ugdTaxTableName)->insert([
-                        'corporation_id' => $corpId,
-                        'ward_no' => $wardNo,
-                        'gisid' => $request->point_gisid,
-                        'assessment' => $request->assessment,
-                        'ugd_no' => $request->ugd_no,
-                        'old_ugd_no' => $request->old_ugd_no ?? null,
-                        'usage' => $request->ugd_usage ?? null,
-                        'DBC_type' => $request->ugd_DBC_type ?? null,
-                        'slab_description' => $request->ugd_slab_description ?? null,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                } else {
-                    // CHECK IF LINKED TO DIFFERENT GIS
-                    if (!empty($ugd->gisid) && $ugd->gisid !== $request->point_gisid) {
-                        $validationErrors['ugd_no'] = ['UGD number is already linked to a different GIS ID.'];
-                    } else {
-                        // UPDATE EXISTING UGD
-                        DB::table($ugdTaxTableName)
-                            ->where('ugd_no', $request->ugd_no)
-                            ->update([
-                                'ward_no' => $wardNo,
-                                'gisid' => $request->point_gisid,
-                                'usage' => $request->ugd_usage ?? $ugd->usage,
-                                'DBC_type' => $request->ugd_DBC_type ?? $ugd->DBC_type,
-                                'slab_description' => $request->ugd_slab_description ?? $ugd->slab_description,
-                                'updated_at' => now(),
-                            ]);
-                    }
-                }
+            if (!$buildingdata) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Building data not found for the given GIS ID'
+                ], 422);
             }
 
-            // ============================================================
-            // 3. PROFESSIONAL TAX - INSERT IF NOT EXISTS
-            // ============================================================
-            if ($request->has('professional') && is_array($request->professional)) {
-                foreach ($request->professional as $index => $professional) {
-                    if (empty($professional['pt_number'])) {
-                        continue;
-                    }
+            // Validate floor
+            if ($request->floor >= $buildingdata->number_floor) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation errors',
+                    'errors' => [
+                        'floor' => ['Entered floor exceeds the number of floors in the building.']
+                    ]
+                ], 422);
+            }
 
-                    $existing = DB::table($professionalTaxTableName)
-                        ->where('pt_number', $professional['pt_number'])
+            // Validate building usage
+            $building_usage = strtoupper(trim($buildingdata->building_usage ?? ''));
+            $bill_usage = strtoupper(trim($request->bill_usage ?? ''));
+
+            $validUsageMap = [
+                'RESIDENTIAL' => ['RESIDENTIAL'],
+                'COMMERCIAL' => ['COMMERCIAL'],
+                'MIXED' => ['RESIDENTIAL', 'COMMERCIAL'],
+                'INDUSTRIAL' => ['INDUSTRIAL'],
+                'INSTITUTIONAL' => ['INSTITUTIONAL'],
+                'GOVERNMENT' => ['GOVERNMENT'],
+                'VACANT' => ['VACANT'],
+            ];
+
+            if (!isset($validUsageMap[$building_usage])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid building usage',
+                    'errors' => [
+                        'bill_usage' => ["Invalid building usage '{$building_usage}'"]
+                    ]
+                ], 422);
+            }
+
+            if (!in_array($bill_usage, $validUsageMap[$building_usage])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation errors',
+                    'errors' => [
+                        'bill_usage' => ["For {$building_usage} buildings, bill usage must be " . implode(' or ', $validUsageMap[$building_usage])]
+                    ]
+                ], 422);
+            }
+
+            // Check if tables exist before using them
+            if (!Schema::hasTable($waterTaxTableName)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Water tax table ({$waterTaxTableName}) not found"
+                ], 422);
+            }
+
+            if (!Schema::hasTable($ugdTaxTableName)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "UGD tax table ({$ugdTaxTableName}) not found"
+                ], 422);
+            }
+
+            if (!Schema::hasTable($professionalTaxTableName)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Professional tax table ({$professionalTaxTableName}) not found"
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            try {
+                $validationErrors = [];
+
+                // ============================================================
+                // 1. WATER TAX - INSERT IF NOT EXISTS
+                // ============================================================
+                if ($request->filled('watertax_no')) {
+                    $watertax = DB::table($waterTaxTableName)
+                        ->where('watertax_no', $request->watertax_no)
                         ->first();
 
-                    if ($existing) {
-                        // CHECK IF LINKED TO DIFFERENT GIS
-                        if (!empty($existing->gisid) && $existing->gisid != $request->point_gisid) {
-                            $validationErrors["professional.{$index}.pt_number"] = [
-                                "Professional Tax Number '{$professional['pt_number']}' is already linked with another GIS ID."
-                            ];
-                        } else {
-                            // UPDATE EXISTING PROFESSIONAL TAX
-                            DB::table($professionalTaxTableName)
-                                ->where('id', $existing->id)
-                                ->update([
-                                    'corporation_id' => $corpId,
-                                    'ward_no' => $wardNo,
-                                    'gisid' => $request->point_gisid,
-                                    'assessment' => $request->assessment,
-                                    'old_pt_number' => $professional['old_pt_number'] ?? $existing->old_pt_number,
-                                    'establishment_name' => $professional['establishment_name'] ?? $existing->establishment_name,
-                                    'profession_type' => $professional['profession_type'] ?? $existing->profession_type,
-                                    'employee_count' => $professional['employee_count'] ?? $existing->employee_count,
-                                    'half_year_tax' => $professional['half_year_tax'] ?? $existing->half_year_tax,
-                                    'remarks' => $professional['pt_remarks'] ?? $existing->remarks,
-                                    'updated_at' => now(),
-                                ]);
-                        }
-                    } else {
-                        // INSERT NEW PROFESSIONAL TAX
-                        DB::table($professionalTaxTableName)->insert([
+                    if (!$watertax) {
+                        // INSERT NEW WATER TAX RECORD
+                        DB::table($waterTaxTableName)->insert([
                             'corporation_id' => $corpId,
                             'ward_no' => $wardNo,
                             'gisid' => $request->point_gisid,
                             'assessment' => $request->assessment,
-                            'pt_number' => $professional['pt_number'],
-                            'old_pt_number' => $professional['old_pt_number'] ?? null,
-                            'establishment_name' => $professional['establishment_name'] ?? null,
-                            'profession_type' => $professional['profession_type'] ?? null,
-                            'employee_count' => $professional['employee_count'] ?? null,
-                            'half_year_tax' => $professional['half_year_tax'] ?? null,
-                            'remarks' => $professional['pt_remarks'] ?? null,
+                            'watertax_no' => $request->watertax_no,
+                            'old_watertax_no' => $request->old_watertax_no ?? null,
+                            'usage' => $request->water_usage ?? null,
+                            'DBC_type' => $request->water_DBC_type ?? null,
+                            'slab_description' => $request->water_slab_description ?? null,
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
+                    } else {
+                        // CHECK IF LINKED TO DIFFERENT GIS
+                        if (!empty($watertax->gisid) && $watertax->gisid !== $request->point_gisid) {
+                            $validationErrors['watertax_no'] = ['Water tax number is already linked to a different GIS ID.'];
+                        } else {
+                            // UPDATE EXISTING WATER TAX
+                            DB::table($waterTaxTableName)
+                                ->where('watertax_no', $request->watertax_no)
+                                ->update([
+                                    'ward_no' => $wardNo,
+                                    'gisid' => $request->point_gisid,
+                                    'usage' => $request->water_usage ?? $watertax->usage,
+                                    'DBC_type' => $request->water_DBC_type ?? $watertax->DBC_type,
+                                    'slab_description' => $request->water_slab_description ?? $watertax->slab_description,
+                                    'updated_at' => now(),
+                                ]);
+                        }
                     }
                 }
-            }
 
-            // ============================================================
-            // 4. MIS TABLE - INSERT/UPDATE
-            // ============================================================
-            $misData = [
-                'corporation_id' => $corpId,
-                'zone_id' => $zone->id,
-                'ward_id' => $wardId,
-                'ward_no' => $wardNo,
-                'assessment' => $request->assessment,
-                'old_assessment' => $request->old_assessment ?? null,
-                'owner_name' => $request->owner_name,
-                'present_owner_name' => $request->present_owner_name,
-                'phone_number' => $request->phone_number,
-                'door_no' => $request->new_door_no,
-                'old_door_no' => $request->old_door_no,
-                'floor' => $request->floor,
-                'usage' => $request->bill_usage,
-                'aadhar_no' => $request->aadhar_no,
-                'ration_no' => $request->ration_no,
-                'no_of_persons' => $request->number_persons,
-                'eb' => $request->eb,
-                'gisid' => $request->point_gisid,
-                'watertax_no' => $request->watertax_no ?? null,
-                'ugd_no' => $request->ugd_no ?? null,
-                'remarks' => $request->remarks,
-                'worker_name' => $user->id ?? null,
-                'updated_at' => now(),
-            ];
+                // ============================================================
+                // 2. UGD TAX - INSERT IF NOT EXISTS
+                // ============================================================
+                if ($request->filled('ugd_no')) {
+                    $ugd = DB::table($ugdTaxTableName)
+                        ->where('ugd_no', $request->ugd_no)
+                        ->first();
 
-            // Check if MIS record exists
-            $misExists = DB::table($misTableName)
-                ->where('assessment', $request->assessment)
-                ->exists();
+                    if (!$ugd) {
+                        // INSERT NEW UGD RECORD
+                        DB::table($ugdTaxTableName)->insert([
+                            'corporation_id' => $corpId,
+                            'ward_no' => $wardNo,
+                            'gisid' => $request->point_gisid,
+                            'assessment' => $request->assessment,
+                            'ugd_no' => $request->ugd_no,
+                            'old_ugd_no' => $request->old_ugd_no ?? null,
+                            'usage' => $request->ugd_usage ?? null,
+                            'DBC_type' => $request->ugd_DBC_type ?? null,
+                            'slab_description' => $request->ugd_slab_description ?? null,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    } else {
+                        // CHECK IF LINKED TO DIFFERENT GIS
+                        if (!empty($ugd->gisid) && $ugd->gisid !== $request->point_gisid) {
+                            $validationErrors['ugd_no'] = ['UGD number is already linked to a different GIS ID.'];
+                        } else {
+                            // UPDATE EXISTING UGD
+                            DB::table($ugdTaxTableName)
+                                ->where('ugd_no', $request->ugd_no)
+                                ->update([
+                                    'ward_no' => $wardNo,
+                                    'gisid' => $request->point_gisid,
+                                    'usage' => $request->ugd_usage ?? $ugd->usage,
+                                    'DBC_type' => $request->ugd_DBC_type ?? $ugd->DBC_type,
+                                    'slab_description' => $request->ugd_slab_description ?? $ugd->slab_description,
+                                    'updated_at' => now(),
+                                ]);
+                        }
+                    }
+                }
 
-            if ($misExists) {
-                // UPDATE MIS
-                DB::table($misTableName)
+                // ============================================================
+                // 3. PROFESSIONAL TAX - INSERT IF NOT EXISTS
+                // ============================================================
+                if ($request->has('professional') && is_array($request->professional)) {
+                    foreach ($request->professional as $index => $professional) {
+                        if (empty($professional['pt_number'])) {
+                            continue;
+                        }
+
+                        $existing = DB::table($professionalTaxTableName)
+                            ->where('pt_number', $professional['pt_number'])
+                            ->first();
+
+                        if ($existing) {
+                            // CHECK IF LINKED TO DIFFERENT GIS
+                            if (!empty($existing->gisid) && $existing->gisid != $request->point_gisid) {
+                                $validationErrors["professional.{$index}.pt_number"] = [
+                                    "Professional Tax Number '{$professional['pt_number']}' is already linked with another GIS ID."
+                                ];
+                            } else {
+                                // UPDATE EXISTING PROFESSIONAL TAX
+                                DB::table($professionalTaxTableName)
+                                    ->where('id', $existing->id)
+                                    ->update([
+                                        'corporation_id' => $corpId,
+                                        'ward_no' => $wardNo,
+                                        'gisid' => $request->point_gisid,
+                                        'assessment' => $request->assessment,
+                                        'old_pt_number' => $professional['old_pt_number'] ?? $existing->old_pt_number,
+                                        'establishment_name' => $professional['establishment_name'] ?? $existing->establishment_name,
+                                        'profession_type' => $professional['profession_type'] ?? $existing->profession_type,
+                                        'employee_count' => $professional['employee_count'] ?? $existing->employee_count,
+                                        'half_year_tax' => $professional['half_year_tax'] ?? $existing->half_year_tax,
+                                        'remarks' => $professional['pt_remarks'] ?? $existing->remarks,
+                                        'updated_at' => now(),
+                                    ]);
+                            }
+                        } else {
+                            // INSERT NEW PROFESSIONAL TAX
+                            DB::table($professionalTaxTableName)->insert([
+                                'corporation_id' => $corpId,
+                                'ward_no' => $wardNo,
+                                'gisid' => $request->point_gisid,
+                                'assessment' => $request->assessment,
+                                'pt_number' => $professional['pt_number'],
+                                'old_pt_number' => $professional['old_pt_number'] ?? null,
+                                'establishment_name' => $professional['establishment_name'] ?? null,
+                                'profession_type' => $professional['profession_type'] ?? null,
+                                'employee_count' => $professional['employee_count'] ?? null,
+                                'half_year_tax' => $professional['half_year_tax'] ?? null,
+                                'remarks' => $professional['pt_remarks'] ?? null,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        }
+                    }
+                }
+
+                // ============================================================
+                // 4. MIS TABLE - INSERT/UPDATE (REMOVED zone_id)
+                // ============================================================
+                $misData = [
+                    'corporation_id' => $corpId,
+                    // 'zone_id' => $zoneId,  // REMOVED - Column doesn't exist
+                    'ward_id' => $wardId,
+                    'ward_no' => $wardNo,
+                    'assessment' => $request->assessment,
+                    'old_assessment' => $request->old_assessment ?? null,
+                    'owner_name' => $request->owner_name,
+                    'present_owner_name' => $request->present_owner_name,
+                    'phone_number' => $request->phone_number,
+                    'door_no' => $request->new_door_no,
+                    'old_door_no' => $request->old_door_no,
+                    'floor' => $request->floor,
+                    'usage' => $request->bill_usage,
+                    'aadhar_no' => $request->aadhar_no ?? null,
+                    'ration_no' => $request->ration_no ?? null,
+                    'no_of_persons' => $request->number_persons ?? null,
+                    'eb' => $request->eb ?? null,
+                    'gisid' => $request->point_gisid,
+                    'watertax_no' => $request->watertax_no ?? null,
+                    'ugd_no' => $request->ugd_no ?? null,
+                    'remarks' => $request->remarks ?? null,
+                    'worker_name' => $user->id ?? null,
+                    'updated_at' => now(),
+                ];
+
+                // Check if MIS record exists
+                $misExists = DB::table($misTableName)
                     ->where('assessment', $request->assessment)
-                    ->update($misData);
-            } else {
-                // INSERT MIS
-                $misData['created_at'] = now();
-                DB::table($misTableName)->insert($misData);
-            }
+                    ->exists();
 
-            // ============================================================
-            // 5. If any validation errors exist, rollback
-            // ============================================================
-            if (!empty($validationErrors)) {
+                if ($misExists) {
+                    // UPDATE MIS
+                    DB::table($misTableName)
+                        ->where('assessment', $request->assessment)
+                        ->update($misData);
+                } else {
+                    // INSERT MIS
+                    $misData['created_at'] = now();
+                    DB::table($misTableName)->insert($misData);
+                }
+
+                // ============================================================
+                // 5. If any validation errors exist, rollback
+                // ============================================================
+                if (!empty($validationErrors)) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation errors',
+                        'errors' => $validationErrors
+                    ], 422);
+                }
+
+                // ============================================================
+                // 6. INSERT POINT DATA
+                // ============================================================
+                DB::table($pointDataTableName)->insert([
+                    'building_data_id' => $buildingdata->id,
+                    'assessment_type' => $request->assessment_type,
+                    'assessment' => $request->assessment,
+                    'owner_name' => $request->owner_name,
+                    'phone_number' => $request->phone_number,
+                    'new_door_no' => $request->new_door_no,
+                    'floor' => $request->floor,
+                    'bill_usage' => $request->bill_usage,
+                    'old_assessment' => $request->old_assessment,
+                    'present_owner_name' => $request->present_owner_name,
+                    'old_door_no' => $request->old_door_no,
+                    'aadhar_no' => $request->aadhar_no,
+                    'ration_no' => $request->ration_no,
+                    'no_of_persons' => $request->number_persons,
+                    'eb' => $request->eb,
+                    'worker_name' => $user->id ?? null,
+                    'remarks' => $request->remarks,
+                    'water_tax' => $request->watertax_no,
+                    'point_gisid' => $request->point_gisid,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Point data stored successfully.',
+                    'data' => [
+                        'assessment' => $request->assessment,
+                        'gisid' => $request->point_gisid,
+                        'ward_no' => $wardNo,
+                        'water_tax_processed' => $request->filled('watertax_no') ? true : false,
+                        'ugd_processed' => $request->filled('ugd_no') ? true : false,
+                        'professional_tax_processed' => $request->has('professional') ? count($request->professional) : 0,
+                        'mis_updated' => $misExists ? 'updated' : 'inserted',
+                    ]
+                ], 200);
+            } catch (\Exception $e) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation errors',
-                    'errors' => $validationErrors
-                ], 422);
+                    'message' => 'Database error: ' . $e->getMessage(),
+                    'error' => $e->getMessage()
+                ], 500);
             }
-
-            // ============================================================
-            // 6. INSERT POINT DATA
-            // ============================================================
-            DB::table($pointDataTableName)->insert([
-                'building_data_id' => $buildingdata->id,
-                'assessment_type' => $request->assessment_type,
-                'assessment' => $request->assessment,
-                'owner_name' => $request->owner_name,
-                'phone_number' => $request->phone_number,
-                'new_door_no' => $request->new_door_no,
-                'floor' => $request->floor,
-                'bill_usage' => $request->bill_usage,
-                'old_assessment' => $request->old_assessment,
-                'present_owner_name' => $request->present_owner_name,
-                'old_door_no' => $request->old_door_no,
-                'aadhar_no' => $request->aadhar_no,
-                'ration_no' => $request->ration_no,
-                'no_of_persons' => $request->number_persons,
-                'eb' => $request->eb,
-                'worker_name' => $user->id ?? null,
-                'remarks' => $request->remarks,
-                'water_tax' => $request->watertax_no,
-                'point_gisid' => $request->point_gisid,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Point data stored successfully.',
-                'data' => [
-                    'assessment' => $request->assessment,
-                    'gisid' => $request->point_gisid,
-                    'ward_no' => $wardNo,
-                    'water_tax_processed' => $request->filled('watertax_no') ? true : false,
-                    'ugd_processed' => $request->filled('ugd_no') ? true : false,
-                    'professional_tax_processed' => $request->has('professional') ? count($request->professional) : 0,
-                    'mis_updated' => $misExists ? 'updated' : 'inserted',
-                ]
-            ], 200);
-
         } catch (\Exception $e) {
-            DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Database error: ' . $e->getMessage(),
+                'message' => 'Something went wrong: ' . $e->getMessage(),
                 'error' => $e->getMessage()
             ], 500);
         }
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Something went wrong: ' . $e->getMessage(),
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
     public function lineDataStore(Request $request)
     {
         $validator = Validator::make($request->all(), [
