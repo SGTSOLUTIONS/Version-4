@@ -580,7 +580,7 @@ class PointdataController extends Controller
                         // ===== INSERT NEW PROFESSIONAL TAX =====
                         DB::table($professionalTaxTableName)->insert([
                             'corporation_id' => $corpId,
-                            'ward_id' => $wardId,
+                             'ward_no' => $ward->ward_no,
                             'gisid' => $request->point_gisid,
                             'assessment' => $request->assessment,
                             'pt_number' => $professional['pt_number'],
