@@ -67,6 +67,7 @@ class WaterTaxImport implements ToCollection, WithHeadingRow, WithValidation
                     'usage' => $this->validateUsage($row['usage'] ?? null),
                     'slab_description' => $row['slab_description'] ?? null,
                     'DBC_type' => $this->validateDbcType($row['dbc_type'] ?? $row['DBC_type'] ?? null),
+                    'remarks' => $row['remarks'] ?? null,
                 ];
 
                 if ($existingRecord) {

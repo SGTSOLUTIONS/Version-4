@@ -798,7 +798,7 @@ class PointdataController extends Controller
             'removed_professional_ids' => 'nullable|array',
             'removed_professional_ids.*' => 'integer',
         ]);
-//data
+        //data
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }

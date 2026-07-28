@@ -139,6 +139,7 @@ class CorporationService
                     'Government',
                     'Others'
                 ])->nullable();
+                $table->string('remarks')->nullable();
 
                 $table->timestamps();
                 $table->softDeletes();
