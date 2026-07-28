@@ -641,28 +641,23 @@ class PointdataController extends Controller
                 // ============================================================
                 $misData = [
                     'corporation_id' => $corpId,
-                    'ward_no' => $wardNo,
-                    'assessment' => $request->assessment,
-                    'old_assessment' => $request->old_assessment ?? null,
-                    'owner_name' => $request->owner_name,
-                    'present_owner_name' => $request->present_owner_name,
-                    'phone_number' => $request->phone_number,
-                    'door_no' => $request->new_door_no,
-                    'old_door_no' => $request->old_door_no,
-                    'floor' => $request->floor,
-                    'usage' => $request->bill_usage,
-                    'aadhar_no' => $request->aadhar_no ?? null,
-                    'ration_no' => $request->ration_no ?? null,
-                    'no_of_persons' => $request->number_persons ?? null,
-                    'eb' => $request->eb ?? null,
                     'gisid' => $request->point_gisid,
-                    'watertax_no' => $request->watertax_no ?? null,
-                    'ugd_no' => $request->ugd_no ?? null,
-                    'remarks' => $request->remarks ?? null,
-                    'worker_name' => $user->id ?? null,
-                    'updated_at' => now(),
-                ];
-
+                     'ward_no' => $wardNo,
+                      'assessment' => $request->assessment,
+                       'old_assessment' => $request->old_assessment ?? null,
+                        'road_name' => $request->road_name ?? null,
+                         'owner_name' => $request->owner_name,
+                         'old_door_no' => $request->old_door_no,
+                         'new_door_no' => $request->new_door_no,
+                         'phone_number' => $request->phone_number,
+                         'plot_area' => $request->plot_area ?? null,
+                         'half_year_tax' => $request->half_year_tax ?? null,
+                         'balance' => $request->balance ?? null,
+                         'usage' => $request->bill_usage ?? null,
+                         'type' => $request->type ?? null,
+                         'zone' => $request->zone ?? null,
+                         'updated_at' => now(),
+                         ];
                 // Check if MIS record exists
                 $misExists = DB::table($misTableName)
                     ->where('assessment', $request->assessment)
