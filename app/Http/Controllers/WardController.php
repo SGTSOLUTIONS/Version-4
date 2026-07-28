@@ -903,6 +903,7 @@ class WardController extends Controller
             if (!empty($roadName) && strtolower($roadName) !== 'all') {
                 $query->where('road_name', $roadName);
             }
+            $data = $query->get();
 
             // File name
             $fileName = (!empty($roadName) && strtolower($roadName) !== 'all')
@@ -910,7 +911,7 @@ class WardController extends Controller
                 : "mis_bill_{$ward_id}.xlsx";
 
             return Excel::download(
-                new MissingBillExport($query),
+                new MissingBillExport($data),
                 $fileName
             );
         } catch (\Throwable $e) {
@@ -970,7 +971,7 @@ class WardController extends Controller
             if (!empty($roadName) && strtolower($roadName) !== 'all') {
                 $query->where('road_name', $roadName);
             }
-$data = $query->get();
+            $data = $query->get();
             $fileName = (!empty($roadName) && strtolower($roadName) !== 'all')
                 ? "{$roadName}_{$ward_id}.xlsx"
                 : "professional_tax_{$ward_id}.xlsx";
@@ -1003,7 +1004,7 @@ $data = $query->get();
             if (!empty($roadName) && strtolower($roadName) !== 'all') {
                 $query->where('road_name', $roadName);
             }
-$data = $query->get();
+            $data = $query->get();
 
             $fileName = (!empty($roadName) && strtolower($roadName) !== 'all')
                 ? "{$roadName}_{$ward_id}.xlsx"

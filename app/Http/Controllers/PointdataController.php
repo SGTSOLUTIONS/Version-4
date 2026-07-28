@@ -253,7 +253,7 @@ class PointdataController extends Controller
             'phone_number'         => 'required|digits:10',
             'new_door_no'          => 'required|string|max:100',
             'floor'                => 'required|integer|min:0',
-            'bill_usage'           => 'required|in:Residential,Commercial',
+            'bill_usage'           => 'required|in:RESIDENTIAL,COMMERCIAL',
             'old_assessment'       => 'nullable|string|max:100',
             'present_owner_name'   => 'required|string|max:255',
             'old_door_no'          => 'required|string|max:100',
