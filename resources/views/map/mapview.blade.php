@@ -1753,11 +1753,6 @@
                                         </select>
                                         <div class="invalid-feedback">Please select water usage type.</div>
                                     </div>
-
-
-
-
-
                                     <div class="col-md-4">
                                         <label for="water_DBC_type" class="form-label">Water DBC Type</label>
                                         <input type="text" class="form-control" id="water_DBC_type"
@@ -2673,155 +2668,158 @@
                 $('#professionalContainer').empty();
                 ptIndex = 0;
             });
-            // Save Point Data
-            $('#savePointDetails').on('click', function() {
-                const $form = $('#pointDetailsForm');
-                const editId = $form.attr('data-edit-id');
-                const formData = new FormData(document.getElementById('pointDetailsForm'));
-                formData.append('_token', $('input[name="_token"]').val());
+           // Save Point Data
+                $('#savePointDetails').on('click', function() {
+                    const $form = $('#pointDetailsForm');
+                    const editId = $form.attr('data-edit-id');
+                    const formData = new FormData(document.getElementById('pointDetailsForm'));
+                    formData.append('_token', $('input[name="_token"]').val());
 
-                const $btn = $(this);
-                const originalHtml = $btn.html();
+                    const $btn = $(this);
+                    const originalHtml = $btn.html();
 
-                // Disable button and show loading state
-                $btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+                    // ✅ CLEAR PREVIOUS ERRORS BEFORE SUBMITTING
+                    $('.is-invalid').removeClass('is-invalid');
+                    $('.invalid-feedback').remove();
+                    $('.error-message').html('');
 
-                // Function to reset button
-                function resetButton() {
-                    $btn.html(originalHtml).prop('disabled', false);
-                }
+                    // Disable button and show loading state
+                    $btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
 
-                // Safety timeout
-                const timeoutId = setTimeout(function() {
-                    resetButton();
-                    showFlashMessage('Request timed out. Please try again.', 'warning');
-                }, 30000);
+                    // Function to reset button
+                    function resetButton() {
+                        $btn.html(originalHtml).prop('disabled', false);
+                    }
 
-                if (editId) {
-                    // ─── UPDATE MODE ───
-                    // Use POST with _method=PUT since your route is PUT
-                    formData.append('_method', 'PUT');
+                    // Safety timeout
+                    const timeoutId = setTimeout(function() {
+                        resetButton();
+                        showFlashMessage('Request timed out. Please try again.', 'warning');
+                    }, 30000);
 
-                    $.ajax({
-                        url: `/point-data/${editId}`,
-                        method: 'POST', // Laravel method spoofing
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            clearTimeout(timeoutId);
-                            console.log('Update response:', response);
+                    if (editId) {
+                        // ─── UPDATE MODE ───
+                        formData.append('_method', 'PUT');
 
-                            if (response.success) {
-                                showFlashMessage('Point data updated successfully!', 'success');
-                                $('#pointDetailsModal').modal('hide');
-                                $form.removeAttr('data-edit-id');
-                                // Reset button text
-                                $('#savePointDetails').html(originalHtml);
-                                reloadAllSources();
-                                resetButton();
-                            } else {
-                                showFlashMessage(response.message || 'Update failed', 'error');
-                                resetButton();
-                            }
-                        },
-                        error: function(xhr) {
-                            clearTimeout(timeoutId);
-                            console.error('Update error:', xhr);
+                        $.ajax({
+                            url: `/point-data/${editId}`,
+                            method: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(response) {
+                                clearTimeout(timeoutId);
+                                console.log('Update response:', response);
 
-                            let errorMessage = 'Update failed.';
-
-                            if (xhr.status === 422) {
-                                // Validation errors
-                                const errors = xhr.responseJSON?.errors;
-                                if (errors) {
-                                    $.each(errors, function(field, messages) {
-                                        const fieldElement = $(`#${field}`);
-                                        if (fieldElement.length) {
-                                            fieldElement.addClass('is-invalid');
-                                            const errorDiv = $(`#${field}_error`);
-                                            if (errorDiv.length) {
-                                                errorDiv.html(messages[0]);
-                                            } else {
-                                                fieldElement.after(
-                                                    `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
-                                                );
-                                            }
-                                        }
-                                    });
-                                    errorMessage = 'Please fix the validation errors.';
+                                if (response.success) {
+                                    showFlashMessage('Point data updated successfully!', 'success');
+                                    $('#pointDetailsModal').modal('hide');
+                                    $form.removeAttr('data-edit-id');
+                                    $('#savePointDetails').html(originalHtml);
+                                    reloadAllSources();
+                                    resetButton();
+                                } else {
+                                    showFlashMessage(response.message || 'Update failed', 'error');
+                                    resetButton();
                                 }
-                            } else if (xhr.responseJSON?.message) {
-                                errorMessage = xhr.responseJSON.message;
-                            } else if (xhr.status === 404) {
-                                errorMessage = 'Record not found. It may have been deleted.';
-                            } else if (xhr.status === 0) {
-                                errorMessage = 'Network error. Please check your connection.';
-                            } else if (xhr.status === 500) {
-                                errorMessage = 'Server error. Please try again later.';
-                            }
+                            },
+                            error: function(xhr) {
+                                clearTimeout(timeoutId);
+                                console.error('Update error:', xhr);
 
-                            showFlashMessage(errorMessage, 'error');
-                            resetButton();
-                        }
-                    });
-                } else {
-                    // ─── CREATE MODE ───
-                    $.ajax({
-                        url: '/point-data',
-                        method: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            clearTimeout(timeoutId);
-                            console.log('Create response:', response);
+                                let errorMessage = 'Update failed.';
 
-                            if (response.success) {
-                                showFlashMessage('Point data saved successfully!', 'success');
-                                $('#pointDetailsModal').modal('hide');
-                                reloadAllSources();
-                                resetButton();
-                            } else {
-                                showFlashMessage(response.message || 'Save failed', 'error');
-                                resetButton();
-                            }
-                        },
-                        error: function(xhr) {
-                            clearTimeout(timeoutId);
-                            console.error('Create error:', xhr);
-
-                            let errorMessage = 'Failed to save point data.';
-
-                            if (xhr.status === 422) {
-                                const errors = xhr.responseJSON?.errors;
-                                if (errors) {
-                                    $.each(errors, function(field, messages) {
-                                        const fieldElement = $(`#${field}`);
-                                        if (fieldElement.length) {
-                                            fieldElement.addClass('is-invalid');
-                                            const errorDiv = $(`#${field}_error`);
-                                            if (errorDiv.length) {
-                                                errorDiv.html(messages[0]);
-                                            } else {
-                                                fieldElement.after(
-                                                    `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
-                                                );
+                                if (xhr.status === 422) {
+                                    // Validation errors
+                                    const errors = xhr.responseJSON?.errors;
+                                    if (errors) {
+                                        $.each(errors, function(field, messages) {
+                                            const fieldElement = $(`#${field}`);
+                                            if (fieldElement.length) {
+                                                fieldElement.addClass('is-invalid');
+                                                const errorDiv = $(`#${field}_error`);
+                                                if (errorDiv.length) {
+                                                    errorDiv.html(messages[0]);
+                                                } else {
+                                                    fieldElement.after(
+                                                        `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
+                                                    );
+                                                }
                                             }
-                                        }
-                                    });
-                                    errorMessage = 'Please fix the validation errors.';
+                                        });
+                                        errorMessage = 'Please fix the validation errors.';
+                                    }
+                                } else if (xhr.responseJSON?.message) {
+                                    errorMessage = xhr.responseJSON.message;
+                                } else if (xhr.status === 404) {
+                                    errorMessage = 'Record not found. It may have been deleted.';
+                                } else if (xhr.status === 0) {
+                                    errorMessage = 'Network error. Please check your connection.';
+                                } else if (xhr.status === 500) {
+                                    errorMessage = 'Server error. Please try again later.';
                                 }
-                            } else if (xhr.responseJSON?.message) {
-                                errorMessage = xhr.responseJSON.message;
-                            }
 
-                            showFlashMessage(errorMessage, 'error');
-                            resetButton();
-                        }
-                    });
-                }
-            });
+                                showFlashMessage(errorMessage, 'error');
+                                resetButton();
+                            }
+                        });
+                    } else {
+                        // ─── CREATE MODE ───
+                        $.ajax({
+                            url: '/point-data',
+                            method: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(response) {
+                                clearTimeout(timeoutId);
+                                console.log('Create response:', response);
+
+                                if (response.success) {
+                                    showFlashMessage('Point data saved successfully!', 'success');
+                                    $('#pointDetailsModal').modal('hide');
+                                    reloadAllSources();
+                                    resetButton();
+                                } else {
+                                    showFlashMessage(response.message || 'Save failed', 'error');
+                                    resetButton();
+                                }
+                            },
+                            error: function(xhr) {
+                                clearTimeout(timeoutId);
+                                console.error('Create error:', xhr);
+
+                                let errorMessage = 'Failed to save point data.';
+
+                                if (xhr.status === 422) {
+                                    const errors = xhr.responseJSON?.errors;
+                                    if (errors) {
+                                        $.each(errors, function(field, messages) {
+                                            const fieldElement = $(`#${field}`);
+                                            if (fieldElement.length) {
+                                                fieldElement.addClass('is-invalid');
+                                                const errorDiv = $(`#${field}_error`);
+                                                if (errorDiv.length) {
+                                                    errorDiv.html(messages[0]);
+                                                } else {
+                                                    fieldElement.after(
+                                                        `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
+                                                    );
+                                                }
+                                            }
+                                        });
+                                        errorMessage = 'Please fix the validation errors.';
+                                    }
+                                } else if (xhr.responseJSON?.message) {
+                                    errorMessage = xhr.responseJSON.message;
+                                }
+
+                                showFlashMessage(errorMessage, 'error');
+                                resetButton();
+                            }
+                        });
+                    }
+                });
 
 
             // ─── Polygon Click ───

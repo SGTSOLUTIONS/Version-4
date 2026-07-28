@@ -512,6 +512,7 @@ class PointdataController extends Controller
                             'usage' => $request->water_usage ?? null,
                             'DBC_type' => $request->water_DBC_type ?? null,
                             'slab_description' => $request->water_slab_description ?? null,
+                            'remarks' => "NEW WATERTAX",
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
@@ -642,22 +643,22 @@ class PointdataController extends Controller
                 $misData = [
                     'corporation_id' => $corpId,
                     'gisid' => $request->point_gisid,
-                     'ward_no' => $wardNo,
-                      'assessment' => $request->assessment,
-                       'old_assessment' => $request->old_assessment ?? null,
-                        'road_name' => $request->road_name ?? null,
-                         'owner_name' => $request->owner_name,
-                         'old_door_no' => $request->old_door_no,
-                         'new_door_no' => $request->new_door_no,
-                         'phone_number' => $request->phone_number,
-                         'plot_area' => $request->plot_area ?? null,
-                         'half_year_tax' => $request->half_year_tax ?? null,
-                         'balance' => $request->balance ?? null,
-                         'usage' => $request->bill_usage ?? null,
-                         'type' => $request->type ?? null,
-                         'zone' => $request->zone ?? null,
-                         'updated_at' => now(),
-                         ];
+                    'ward_no' => $wardNo,
+                    'assessment' => $request->assessment,
+                    'old_assessment' => $request->old_assessment ?? null,
+                    'road_name' => $request->road_name ?? null,
+                    'owner_name' => $request->owner_name,
+                    'old_door_no' => $request->old_door_no,
+                    'new_door_no' => $request->new_door_no,
+                    'phone_number' => $request->phone_number,
+                    'plot_area' => $request->plot_area ?? null,
+                    'half_year_tax' => $request->half_year_tax ?? null,
+                    'balance' => $request->balance ?? null,
+                    'usage' => $request->bill_usage ?? null,
+                    'type' => $request->type ?? null,
+                    'zone' => $request->zone ?? null,
+                    'updated_at' => now(),
+                ];
                 // Check if MIS record exists
                 $misExists = DB::table($misTableName)
                     ->where('assessment', $request->assessment)
@@ -861,30 +862,80 @@ class PointdataController extends Controller
     public function pointDataUpdate(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'assessment_type' => 'required|in:OLD,NEW,VACANT,OTHER_WARD',
-            'owner_name'       => 'required|string|max:255',
-            'phone_number'     => 'required|digits:10',
-            'new_door_no'      => 'required|string|max:100',
-            'floor'            => 'required|integer|min:0',
-            'bill_usage'       => 'required|in:RESIDENTIAL,COMMERCIAL',
-            'present_owner_name' => 'required|string|max:255',
-            'old_door_no'      => 'required|string|max:100',
-            'professional'     => 'nullable|array',
-            'professional.*.id' => 'nullable|integer',
+            // Point Data fields
+            'point_gisid'          => 'required|string|max:100',
+            'assessment_type'      => 'required|in:OLD,NEW,VACANT,OTHER_WARD',
+            'assessment'           => 'required|string|max:100',
+            'old_assessment'       => 'nullable|string|max:100',
+            'zone'                 => 'required|string|max:50',
+            'owner_name'           => 'required|string|max:255',
+            'present_owner_name'   => 'nullable|string|max:255',
+            'phone_number'         => 'required|digits:10',
+            'old_door_no'          => 'nullable|string|max:100',
+            'new_door_no'          => 'required|string|max:100',
+            'aadhar_no'            => 'nullable|digits:12',
+            'ration_no'            => 'nullable|string|max:50',
+            'floor'                => 'required|integer|min:0',
+            'number_persons'       => 'nullable|integer|min:0',
+            'bill_usage'           => 'required|in:RESIDENTIAL,COMMERCIAL',
+            'eb'                   => 'nullable|string|max:50',
+            'worker_name'          => 'nullable|string|max:255',
+            'remarks'              => 'nullable|string',
+
+            // Water Tax fields
+            'watertax_no'          => 'nullable|string|max:100',
+            'old_watertax_no'      => 'nullable|string|max:100',
+            'water_usage'          => 'nullable|string|max:100',
+            'water_DBC_type'       => 'nullable|string|max:100',
+            'water_slab_description' => 'nullable|string',
+
+            // UGD Tax fields
+            'ugd_no'               => 'nullable|string|max:100',
+            'old_ugd_no'           => 'nullable|string|max:100',
+            'ugd_usage'            => 'nullable|string|max:100',
+            'ugd_DBC_type'         => 'nullable|string|max:100',
+            'ugd_slab_description' => 'nullable|string',
+
+            // Professional Tax fields
+            'professional'         => 'nullable|array',
+            'professional.*.id'    => 'nullable|integer',
             'professional.*.pt_number' => 'nullable|string|max:100',
+            'professional.*.old_pt_number' => 'nullable|string|max:100',
+            'professional.*.establishment_name' => 'nullable|string|max:255',
+            'professional.*.profession_type' => 'nullable|string|max:100',
+            'professional.*.employee_count' => 'nullable|integer|min:0',
+            'professional.*.half_year_tax' => 'nullable|numeric|min:0',
+            'professional.*.pt_remarks' => 'nullable|string',
+
             'removed_professional_ids' => 'nullable|array',
             'removed_professional_ids.*' => 'integer',
         ]);
-        //data
+
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
         try {
             $user = User::find(Auth::id());
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'User not found'], 404);
+            }
+
             $ward = Ward::find($user->ward_id);
+            if (!$ward) {
+                return response()->json(['success' => false, 'message' => 'Ward not found'], 404);
+            }
+
             $zone = Zone::find($ward->zone_id);
+            if (!$zone) {
+                return response()->json(['success' => false, 'message' => 'Zone not found'], 404);
+            }
+
             $corporation = Corporation::find($zone->corp_id);
+            if (!$corporation) {
+                return response()->json(['success' => false, 'message' => 'Corporation not found'], 404);
+            }
+
             $wardId = $ward->id;
             $corpId = $corporation->id;
 
@@ -893,6 +944,7 @@ class PointdataController extends Controller
             $ugdTaxTable          = "ugd_tax_{$corpId}";
             $professionalTaxTable = "professional_tax_{$corpId}";
 
+            // Check if point data exists
             $existing = DB::table($pointDataTable)->where('id', $id)->first();
             if (!$existing) {
                 return response()->json(['success' => false, 'message' => 'Point data not found'], 404);
@@ -900,68 +952,125 @@ class PointdataController extends Controller
 
             DB::beginTransaction();
             try {
-                // 1. Update point_data
+                // 1. Update point_data - Added missing fields
                 DB::table($pointDataTable)->where('id', $id)->update([
-                    'assessment_type'     => $request->assessment_type,
-                    'assessment'          => $request->assessment,
-                    'owner_name'          => $request->owner_name,
-                    'phone_number'        => $request->phone_number,
-                    'new_door_no'         => $request->new_door_no,
-                    'floor'               => $request->floor,
-                    'bill_usage'          => $request->bill_usage,
-                    'old_assessment'      => $request->old_assessment,
-                    'present_owner_name'  => $request->present_owner_name,
-                    'old_door_no'         => $request->old_door_no,
-                    'aadhar_no'           => $request->aadhar_no,
-                    'ration_no'           => $request->ration_no,
-                    'no_of_persons'       => $request->number_persons,
-                    'eb'                  => $request->eb,
-                    'remarks'             => $request->remarks,
-                    'water_tax'           => $request->watertax_no,
-                    'updated_at'          => now(),
+                    'point_gisid'          => $request->point_gisid,
+                    'assessment_type'      => $request->assessment_type,
+                    'assessment'           => $request->assessment,
+                    'old_assessment'       => $request->old_assessment,
+                    'zone'                 => $request->zone,
+                    'owner_name'           => $request->owner_name,
+                    'present_owner_name'   => $request->present_owner_name,
+                    'phone_number'         => $request->phone_number,
+                    'old_door_no'          => $request->old_door_no,
+                    'new_door_no'          => $request->new_door_no,
+                    'aadhar_no'            => $request->aadhar_no,
+                    'ration_no'            => $request->ration_no,
+                    'floor'                => $request->floor,
+                    'no_of_persons'        => $request->number_persons,
+                    'bill_usage'           => $request->bill_usage,
+                    'eb'                   => $request->eb,
+                    'worker_name'          => $request->worker_name,
+                    'remarks'              => $request->remarks,
+                    'updated_at'           => now(),
                 ]);
 
-                // 2. Water tax update
+                // 2. Water tax - Update or Insert
                 if ($request->filled('watertax_no')) {
-                    DB::table($waterTaxTable)->where('watertax_no', $request->watertax_no)->update([
-                        'gisid'             => $existing->point_gisid,
-                        'usage'             => $request->water_usage,
-                        'DBC_type'          => $request->water_DBC_type,
-                        'slab_description'  => $request->water_slab_description,
-                        'updated_at'        => now(),
-                    ]);
+                    $waterTaxExists = DB::table($waterTaxTable)
+                        ->where('watertax_no', $request->watertax_no)
+                        ->exists();
+
+                    if ($waterTaxExists) {
+                        // Update existing
+                        DB::table($waterTaxTable)
+                            ->where('watertax_no', $request->watertax_no)
+                            ->update([
+                                'gisid'              => $request->point_gisid,
+                                'old_watertax_no'    => $request->old_watertax_no,
+                                'usage'              => $request->water_usage,
+                                'DBC_type'           => $request->water_DBC_type,
+                                'slab_description'   => $request->water_slab_description,
+                                'updated_at'         => now(),
+                            ]);
+                    } else {
+                        // Insert new
+                        DB::table($waterTaxTable)->insert([
+                            'corporation_id'     => $corpId,
+                            'gisid'              => $request->point_gisid,
+                            'watertax_no'        => $request->watertax_no,
+                            'old_watertax_no'    => $request->old_watertax_no,
+                            'usage'              => $request->water_usage,
+                            'DBC_type'           => $request->water_DBC_type,
+                            'slab_description'   => $request->water_slab_description,
+                            'created_at'         => now(),
+                            'updated_at'         => now(),
+                        ]);
+                    }
                 }
 
-                // 3. UGD update
+                // 3. UGD tax - Update or Insert
                 if ($request->filled('ugd_no')) {
-                    DB::table($ugdTaxTable)->where('ugd_no', $request->ugd_no)->update([
-                        'gisid'             => $existing->point_gisid,
-                        'usage'             => $request->ugd_usage,
-                        'DBC_type'          => $request->ugd_DBC_type,
-                        'slab_description'  => $request->ugd_slab_description,
-                        'updated_at'        => now(),
-                    ]);
+                    $ugdExists = DB::table($ugdTaxTable)
+                        ->where('ugd_no', $request->ugd_no)
+                        ->exists();
+
+                    if ($ugdExists) {
+                        // Update existing
+                        DB::table($ugdTaxTable)
+                            ->where('ugd_no', $request->ugd_no)
+                            ->update([
+                                'gisid'              => $request->point_gisid,
+                                'old_ugd_no'         => $request->old_ugd_no,
+                                'usage'              => $request->ugd_usage,
+                                'DBC_type'           => $request->ugd_DBC_type,
+                                'slab_description'   => $request->ugd_slab_description,
+                                'updated_at'         => now(),
+                            ]);
+                    } else {
+                        // Insert new
+                        DB::table($ugdTaxTable)->insert([
+                            'corporation_id'     => $corpId,
+                            'gisid'              => $request->point_gisid,
+                            'ugd_no'             => $request->ugd_no,
+                            'old_ugd_no'         => $request->old_ugd_no,
+                            'usage'              => $request->ugd_usage,
+                            'DBC_type'           => $request->ugd_DBC_type,
+                            'slab_description'   => $request->ugd_slab_description,
+                            'created_at'         => now(),
+                            'updated_at'         => now(),
+                        ]);
+                    }
                 }
 
                 // 4. Professional tax: update existing / insert new
                 if ($request->has('professional') && is_array($request->professional)) {
                     foreach ($request->professional as $prof) {
-                        if (empty($prof['pt_number'])) continue;
+                        // Skip if pt_number is empty
+                        if (empty($prof['pt_number'])) {
+                            continue;
+                        }
 
                         if (!empty($prof['id'])) {
-                            DB::table($professionalTaxTable)->where('id', $prof['id'])->update([
-                                'old_pt_number'      => $prof['old_pt_number'] ?? null,
-                                'establishment_name' => $prof['establishment_name'] ?? null,
-                                'profession_type'    => $prof['profession_type'] ?? null,
-                                'employee_count'     => $prof['employee_count'] ?? null,
-                                'half_year_tax'      => $prof['half_year_tax'] ?? null,
-                                'remarks'            => $prof['pt_remarks'] ?? null,
-                                'updated_at'         => now(),
-                            ]);
+                            // Update existing
+                            DB::table($professionalTaxTable)
+                                ->where('id', $prof['id'])
+                                ->where('corporation_id', $corpId) // Security: ensure belongs to this corp
+                                ->update([
+                                    'pt_number'          => $prof['pt_number'],
+                                    'old_pt_number'      => $prof['old_pt_number'] ?? null,
+                                    'establishment_name' => $prof['establishment_name'] ?? null,
+                                    'profession_type'    => $prof['profession_type'] ?? null,
+                                    'employee_count'     => $prof['employee_count'] ?? null,
+                                    'half_year_tax'      => $prof['half_year_tax'] ?? null,
+                                    'remarks'            => $prof['pt_remarks'] ?? null,
+                                    'updated_at'         => now(),
+                                ]);
                         } else {
+                            // Insert new
                             DB::table($professionalTaxTable)->insert([
                                 'corporation_id'     => $corpId,
-                                'gisid'              => $existing->point_gisid,
+                                'gisid'              => $request->point_gisid,
                                 'assessment'         => $request->assessment,
                                 'pt_number'          => $prof['pt_number'],
                                 'old_pt_number'      => $prof['old_pt_number'] ?? null,
@@ -977,21 +1086,42 @@ class PointdataController extends Controller
                     }
                 }
 
-                // 5. Delete professional tax rows the user removed in the UI
+                // 5. Delete professional tax rows the user removed
                 if ($request->filled('removed_professional_ids')) {
                     DB::table($professionalTaxTable)
                         ->whereIn('id', $request->removed_professional_ids)
+                        ->where('corporation_id', $corpId) // Security: ensure belongs to this corp
                         ->delete();
                 }
 
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Point data updated successfully.']);
+
+                // Return updated data for frontend
+                $updatedData = DB::table($pointDataTable)->where('id', $id)->first();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Point data updated successfully.',
+                    'data' => $updatedData
+                ]);
             } catch (\Exception $e) {
                 DB::rollBack();
-                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+                \Log::error('Point data update error: ' . $e->getMessage(), [
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Database error: ' . $e->getMessage()
+                ], 500);
             }
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Log::error('Point data update error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ], 500);
         }
     }
     public function pointDataFilter(Request $request)
