@@ -502,7 +502,7 @@ class PointdataController extends Controller
                         // ===== INSERT NEW WATER TAX RECORD =====
                         DB::table($waterTaxTableName)->insert([
                             'corporation_id' => $corpId,
-                            'ward_id' => $wardId,
+                            'ward_no' => $$ward->no,
                             'gisid' => $request->point_gisid,
                             'assessment' => $request->assessment,
                             'watertax_no' => $request->watertax_no,
