@@ -1746,7 +1746,7 @@
                                                 class="text-danger">*</span></label>
                                         <select class="form-select" id="water_usage" name="water_usage" required>
                                             <option value="">Select</option>
-                                            <option value="Domestic">Domestic</option>
+                                            <option value="Resdentrial">Residential</option>
                                             <option value="Commercial">Commercial</option>
                                             <option value="Industrial">Industrial</option>
                                             <option value="Institutional">Institutional</option>
