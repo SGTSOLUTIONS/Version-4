@@ -1204,7 +1204,7 @@
             <p class="ol-page-sub">{{ now()->format('l, d F Y') }} — {{ auth()->user()->name ?? 'Executive Officer' }}</p>
         </div>
         <div class="d-flex gap-2 align-items-center">
-            <span class="ds-pill paid"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Live</span>
+            <span class="ds-pill paid"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Lisve</span>
             <!-- Usage Variation -->
             <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
                 <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
@@ -1216,7 +1216,20 @@
             </a>
         </div>
     </div>
+     <div class="ol-page-header">
 
+
+            <!-- Usage Variation -->
+            <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
+                <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
+            </a>
+
+            <!-- Area Variation -->
+            <a href="{{ url('area-variation/' . $ward->id) }}" class="btn btn-info btn-sm">
+                <i class="bi bi-bounding-box me-1"></i> Area Variation
+            </a>
+
+    </div>
     <div class="map-card" id="mapCard">
         <div class="map-header">
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
@@ -1224,20 +1237,7 @@
         </div>
         <div id="map"></div>
     </div>
-    <div class="ol-page-header">
 
-
-        <!-- Usage Variation -->
-        <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
-            <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
-        </a>
-
-        <!-- Area Variation -->
-        <a href="{{ url('area-variation/' . $ward->id) }}" class="btn btn-info btn-sm">
-            <i class="bi bi-bounding-box me-1"></i> Area Variation
-        </a>
-
-    </div>
     <!-- ─── BUILDING VIEW MODAL ─── -->
     <!-- ─── BUILDING VIEW MODAL ─── -->
     <div class="modal fade" id="buildingViewModal" tabindex="-1" aria-hidden="true">
@@ -2779,11 +2779,11 @@
                             </div>
 
                             ${ptList.length ? `
-                                                <div class="row mt-2 g-2">
-                                                    <div class="col-12">
-                                                        <div class="tax-card">
-                                                            <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                                            ${ptList.map(pt => `
+                                        <div class="row mt-2 g-2">
+                                            <div class="col-12">
+                                                <div class="tax-card">
+                                                    <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                                    ${ptList.map(pt => `
                                             <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
@@ -2798,10 +2798,10 @@
                                                 <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                             </div>
                                         `).join('')}
-                                                        </div>
-                                                    </div>
                                                 </div>
-                                                ` : ''}
+                                            </div>
+                                        </div>
+                                        ` : ''}
                         </div>`;
                 });
 
