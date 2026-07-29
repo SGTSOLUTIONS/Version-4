@@ -1224,7 +1224,7 @@
         </div>
         <div id="map"></div>
     </div>
-<div class="ol-page-header">
+    <div class="ol-page-header">
 
 
         <!-- Usage Variation -->
@@ -2779,11 +2779,11 @@
                             </div>
 
                             ${ptList.length ? `
-                                            <div class="row mt-2 g-2">
-                                                <div class="col-12">
-                                                    <div class="tax-card">
-                                                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                                        ${ptList.map(pt => `
+                                                <div class="row mt-2 g-2">
+                                                    <div class="col-12">
+                                                        <div class="tax-card">
+                                                            <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                                            ${ptList.map(pt => `
                                             <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
@@ -2798,10 +2798,10 @@
                                                 <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                             </div>
                                         `).join('')}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            ` : ''}
+                                                ` : ''}
                         </div>`;
                 });
 
