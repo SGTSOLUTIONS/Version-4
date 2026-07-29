@@ -4,7 +4,464 @@
 @section('page_title', 'Dashboard')
 
 @push('styles')
-<style></style>
+<style>
+/* ══════════════════════════════════════════════
+   COLORFUL BRIGHT THEME — Revenue Dashboard
+   ══════════════════════════════════════════════ */
+
+/* ── Root Variables ── */
+:root {
+    --gradient-primary: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    --gradient-success: linear-gradient(135deg, #00d2d3, #55efc4);
+    --gradient-warning: linear-gradient(135deg, #feca57, #fdcb6e);
+    --gradient-danger: linear-gradient(135deg, #ff6b6b, #ff7675);
+    --gradient-info: linear-gradient(135deg, #54a0ff, #74b9ff);
+    --gradient-rainbow: linear-gradient(135deg, #ff6b6b, #feca57, #54a0ff, #00d2d3, #a29bfe);
+    --shadow-colorful: 0 8px 32px rgba(108, 92, 231, 0.2);
+}
+
+/* ── Page Header ── */
+.ol-page-header {
+    background: linear-gradient(135deg, #faf0ff, #f0f7ff, #f0fff4);
+    padding: 1.5rem 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    border: 2px solid #f0e8ff;
+    box-shadow: 0 4px 20px rgba(157, 78, 221, 0.08);
+}
+
+.ol-page-title {
+    font-size: 1.65rem;
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(135deg, #2d1b69, #6c5ce7, #a29bfe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ol-page-sub {
+    color: #7c5cbf;
+    margin: 4px 0 0;
+    font-weight: 500;
+}
+
+.rv-submit {
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    border: none;
+    color: white !important;
+    padding: 0 1.5rem;
+    height: 38px;
+    border-radius: 10px !important;
+    font-weight: 700;
+    font-size: 0.8rem !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.rv-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(108, 92, 231, 0.35);
+    color: white !important;
+}
+
+/* ── Stat Cards ── */
+.ds-stat {
+    background: linear-gradient(145deg, #ffffff, #faf0ff);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 2px 12px rgba(157, 78, 221, 0.08);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 2px solid #f0e8ff;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+}
+
+.ds-stat::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-rainbow);
+    background-size: 300% 100%;
+    animation: shimmer 3s ease infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 300% 0%; }
+}
+
+.ds-stat:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 32px rgba(108, 92, 231, 0.15);
+    border-color: #c4b5fd;
+}
+
+.ds-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+}
+
+.ds-stat-icon.green {
+    background: rgba(0, 210, 211, 0.15);
+    color: #00d2d3;
+}
+
+.ds-stat-icon.gold {
+    background: rgba(254, 202, 87, 0.15);
+    color: #feca57;
+}
+
+.ds-stat-icon.blue {
+    background: rgba(84, 160, 255, 0.15);
+    color: #54a0ff;
+}
+
+.ds-stat-icon.red {
+    background: rgba(255, 107, 107, 0.15);
+    color: #ff6b6b;
+}
+
+.ds-stat-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #7c5cbf;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ds-stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #2d1b69;
+    margin: 4px 0 6px;
+}
+
+.ds-stat-change {
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+
+.ds-stat-change.up {
+    color: #00d2d3;
+    background: rgba(0, 210, 211, 0.1);
+}
+
+.ds-stat-change.down {
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+}
+
+/* ── Cards ── */
+.ds-card {
+    background: linear-gradient(145deg, #ffffff, #faf0ff);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 2px 12px rgba(157, 78, 221, 0.08);
+    border: 2px solid #f0e8ff;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ds-card:hover {
+    border-color: #c4b5fd;
+    box-shadow: 0 8px 32px rgba(108, 92, 231, 0.12);
+}
+
+.ds-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.ds-card-title {
+    font-weight: 700;
+    color: #2d1b69;
+    font-size: 1rem;
+}
+
+/* ── Pills ── */
+.ds-pill {
+    font-size: 0.65rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.ds-pill.paid,
+.ds-pill.on-track {
+    background: linear-gradient(135deg, #55efc4, #00b894);
+    color: white;
+}
+
+.ds-pill.pending {
+    background: linear-gradient(135deg, #fdcb6e, #f39c12);
+    color: white;
+}
+
+.ds-pill.overdue,
+.ds-pill.at-risk {
+    background: linear-gradient(135deg, #ff7675, #d63031);
+    color: white;
+}
+
+.ds-pill.behind {
+    background: linear-gradient(135deg, #fdcb6e, #f39c12);
+    color: white;
+}
+
+/* ── Bar Chart ── */
+.ds-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.ds-bar-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #7c5cbf;
+    width: 32px;
+    text-align: right;
+}
+
+.ds-bar-track {
+    flex: 1;
+    height: 8px;
+    background: #f0e8ff;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.ds-bar-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+}
+
+.ds-bar-fill.gold {
+    background: linear-gradient(90deg, #feca57, #fdcb6e);
+}
+
+.ds-bar-fill.blue {
+    background: linear-gradient(90deg, #54a0ff, #74b9ff);
+}
+
+.ds-bar-fill:not(.gold):not(.blue) {
+    background: linear-gradient(90deg, #00d2d3, #55efc4);
+}
+
+.ds-bar-val {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #5a4a7a;
+    font-family: monospace;
+    width: 48px;
+}
+
+/* ── Quick Actions ── */
+.ds-quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #faf0ff, #ffffff);
+    border: 2px solid #f0e8ff;
+    color: #2d1b69;
+    text-decoration: none;
+    font-size: 0.72rem;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    gap: 6px;
+    text-align: center;
+}
+
+.ds-quick-btn i {
+    font-size: 1.3rem;
+    background: var(--gradient-rainbow);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ds-quick-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    border-color: #6c5ce7;
+    box-shadow: 0 6px 24px rgba(108, 92, 231, 0.2);
+    background: linear-gradient(145deg, #ffffff, #f0f7ff);
+    color: #6c5ce7;
+}
+
+/* ── Progress Bars ── */
+.ds-progress-wrap {
+    margin-bottom: 12px;
+}
+
+.ds-progress-wrap:last-child {
+    margin-bottom: 0;
+}
+
+.ds-progress-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #2d1b69;
+    margin-bottom: 4px;
+}
+
+.ds-progress-bar {
+    height: 8px;
+    background: #f0e8ff;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.ds-progress-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Tables ── */
+.ds-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.ds-table th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    font-weight: 700;
+    color: #7c5cbf;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #f0e8ff;
+}
+
+.ds-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #f5f0ff;
+    color: #374151;
+}
+
+.ds-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.ds-table tbody tr:hover {
+    background: rgba(108, 92, 231, 0.04);
+}
+
+/* ── Activity Feed ── */
+.ds-activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f0ff;
+}
+
+.ds-activity-item:last-child {
+    border-bottom: none;
+}
+
+.ds-activity-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ds-activity-text {
+    font-size: 0.78rem;
+    color: #374151;
+    line-height: 1.4;
+}
+
+.ds-activity-text strong {
+    color: #2d1b69;
+}
+
+.ds-activity-time {
+    font-size: 0.65rem;
+    color: #9ca3af;
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .ol-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+    }
+
+    .ds-stat {
+        padding: 1rem;
+    }
+
+    .ds-stat-value {
+        font-size: 1.4rem;
+    }
+
+    .ds-card {
+        padding: 1rem;
+    }
+
+    .ds-quick-btn {
+        font-size: 0.65rem;
+        padding: 0.5rem;
+    }
+
+    .ds-quick-btn i {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .col-sm-2-custom {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+</style>
 @endpush
 
 @section('content')
@@ -216,14 +673,14 @@
                         @endphp
                         @foreach($transactions as $txn)
                         <tr>
-                            <td><span style="font-family:var(--font-mono); font-size:0.72rem; color:#0a2e1a;">{{ $txn[0] }}</span></td>
-                            <td><span style="font-weight:600; color:#111827;">{{ $txn[1] }}</span></td>
-                            <td><span style="color:#6b7280;">{{ $txn[2] }}</span></td>
-                            <td><span style="font-family:var(--font-mono); font-weight:500; color:#0a2e1a;">{{ $txn[3] }}</span></td>
+                            <td><span style="font-family:var(--font-mono); font-size:0.72rem; color:#6c5ce7;">{{ $txn[0] }}</span></td>
+                            <td><span style="font-weight:600; color:#2d1b69;">{{ $txn[1] }}</span></td>
+                            <td><span style="color:#7c5cbf;">{{ $txn[2] }}</span></td>
+                            <td><span style="font-family:var(--font-mono); font-weight:500; color:#00b894;">{{ $txn[3] }}</span></td>
                             <td><span style="color:#9ca3af; font-size:0.72rem;">{{ $txn[4] }}</span></td>
                             <td><span class="ds-pill {{ $txn[5] }}">{{ $txn[5] }}</span></td>
                             <td>
-                                <a href="#" style="color:#10b981; font-size:13px;" title="View">
+                                <a href="#" style="color:#6c5ce7; font-size:13px; transition:0.2s;" title="View">
                                     <i class="bi bi-eye"></i>
                                 </a>
                             </td>
@@ -245,7 +702,7 @@
             <div class="ds-card-body">
 
                 <div class="ds-activity-item">
-                    <div class="ds-activity-dot" style="background:rgba(16,185,129,0.1); color:#10b981;">
+                    <div class="ds-activity-dot" style="background:rgba(0,210,211,0.15); color:#00d2d3;">
                         <i class="bi bi-check2"></i>
                     </div>
                     <div>
@@ -255,7 +712,7 @@
                 </div>
 
                 <div class="ds-activity-item">
-                    <div class="ds-activity-dot" style="background:rgba(251,191,36,0.1); color:#d97706;">
+                    <div class="ds-activity-dot" style="background:rgba(254,202,87,0.15); color:#feca57;">
                         <i class="bi bi-file-text"></i>
                     </div>
                     <div>
@@ -265,7 +722,7 @@
                 </div>
 
                 <div class="ds-activity-item">
-                    <div class="ds-activity-dot" style="background:rgba(59,130,246,0.1); color:#3b82f6;">
+                    <div class="ds-activity-dot" style="background:rgba(84,160,255,0.15); color:#54a0ff;">
                         <i class="bi bi-person-plus"></i>
                     </div>
                     <div>
@@ -275,7 +732,7 @@
                 </div>
 
                 <div class="ds-activity-item">
-                    <div class="ds-activity-dot" style="background:rgba(239,68,68,0.1); color:#ef4444;">
+                    <div class="ds-activity-dot" style="background:rgba(255,107,107,0.15); color:#ff6b6b;">
                         <i class="bi bi-exclamation"></i>
                     </div>
                     <div>
@@ -285,7 +742,7 @@
                 </div>
 
                 <div class="ds-activity-item">
-                    <div class="ds-activity-dot" style="background:rgba(167,139,250,0.1); color:#7c3aed;">
+                    <div class="ds-activity-dot" style="background:rgba(167,139,250,0.15); color:#a78bfa;">
                         <i class="bi bi-patch-check"></i>
                     </div>
                     <div>
@@ -295,7 +752,7 @@
                 </div>
 
                 <div class="ds-activity-item">
-                    <div class="ds-activity-dot" style="background:rgba(16,185,129,0.1); color:#10b981;">
+                    <div class="ds-activity-dot" style="background:rgba(0,210,211,0.15); color:#00d2d3;">
                         <i class="bi bi-check2"></i>
                     </div>
                     <div>
@@ -310,7 +767,7 @@
 
 </div>
 
-{{-- ── Row 4: Zone performance (FIXED) ── --}}
+{{-- ── Row 4: Zone performance ── --}}
 <div class="row g-3">
     <div class="col-12">
         <div class="ds-card">
@@ -318,7 +775,7 @@
                 <div class="ds-card-title">Zone-wise Collection Performance — {{ now()->format('F Y') }}</div>
                 <div class="d-flex gap-2 align-items-center">
                     <span class="ds-pill paid">On Track</span>
-                    <a href="#" style="font-size:0.72rem; color:#10b981; text-decoration:none;">
+                    <a href="#" style="font-size:0.72rem; color:#6c5ce7; text-decoration:none; font-weight:600;">
                         Detailed View <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                 </div>
@@ -339,7 +796,6 @@
                     </thead>
                     <tbody>
                         @php
-                            // FIXED: Changed taxpayer counts from strings with commas to integers
                             $zones = [
                                 ['North Zone','K. Selvakumar','₹1.2Cr','₹1.08Cr','₹12.4L',3241,90,'paid'],
                                 ['South Zone','P. Ramachandran','₹0.9Cr','₹0.74Cr','₹16.1L',2876,82,'paid'],
@@ -350,22 +806,21 @@
                         @endphp
                         @foreach($zones as $z)
                         <tr>
-                            <td style="font-weight:600; color:#0a2e1a;">{{ $z[0] }}</td>
-                            <td style="color:#6b7280;">{{ $z[1] }}</td>
-                            <td style="font-family:var(--font-mono);">{{ $z[2] }}</td>
-                            <td style="font-family:var(--font-mono); font-weight:500; color:#059669;">{{ $z[3] }}</td>
-                            <td style="font-family:var(--font-mono); color:#dc2626;">{{ $z[4] }}</td>
-                            {{-- FIXED: Using number_format() on integer now instead of string with comma --}}
-                            <td style="font-family:var(--font-mono); color:#374151;">{{ number_format($z[5]) }}</td>
+                            <td style="font-weight:700; color:#2d1b69;">{{ $z[0] }}</td>
+                            <td style="color:#7c5cbf;">{{ $z[1] }}</td>
+                            <td style="font-family:var(--font-mono); color:#5a4a7a;">{{ $z[2] }}</td>
+                            <td style="font-family:var(--font-mono); font-weight:600; color:#00d2d3;">{{ $z[3] }}</td>
+                            <td style="font-family:var(--font-mono); color:#ff6b6b;">{{ $z[4] }}</td>
+                            <td style="font-family:var(--font-mono); color:#6c5ce7;">{{ number_format($z[5]) }}</td>
                             <td>
                                 <div style="display:flex; align-items:center; gap:8px;">
-                                    <div style="flex:1; height:6px; background:#f3f4f6; border-radius:20px; overflow:hidden; min-width:60px;">
-                                        <div style="height:100%; width:{{ $z[6] }}%; background:{{ $z[6] >= 80 ? '#10b981' : ($z[6] >= 60 ? '#fbbf24' : '#ef4444') }}; border-radius:20px;"></div>
+                                    <div style="flex:1; height:6px; background:#f0e8ff; border-radius:20px; overflow:hidden; min-width:60px;">
+                                        <div style="height:100%; width:{{ $z[6] }}%; background:{{ $z[6] >= 80 ? '#00d2d3' : ($z[6] >= 60 ? '#feca57' : '#ff6b6b') }}; border-radius:20px;"></div>
                                     </div>
-                                    <span style="font-family:var(--font-mono); font-size:0.72rem; color:#374151; width:32px;">{{ $z[6] }}%</span>
+                                    <span style="font-family:var(--font-mono); font-size:0.72rem; font-weight:600; color:#2d1b69; width:32px;">{{ $z[6] }}%</span>
                                 </div>
                             </td>
-                            <td><span class="ds-pill {{ $z[7] }}">{{ $z[6] >= 80 ? 'on track' : ($z[6] >= 60 ? 'behind' : 'at risk') }}</span></td>
+                            <td><span class="ds-pill {{ $z[6] >= 80 ? 'paid' : ($z[6] >= 60 ? 'pending' : 'overdue') }}">{{ $z[6] >= 80 ? 'on track' : ($z[6] >= 60 ? 'behind' : 'at risk') }}</span></td>
                         </tr>
                         @endforeach
                     </tbody>
