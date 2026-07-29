@@ -1216,6 +1216,20 @@
             </a>
         </div>
     </div>
+     <div class="ol-page-header">
+
+
+            <!-- Usage Variation -->
+            <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
+                <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
+            </a>
+
+            <!-- Area Variation -->
+            <a href="{{ url('area-variation/' . $ward->id) }}" class="btn btn-info btn-sm">
+                <i class="bi bi-bounding-box me-1"></i> Area Variation
+            </a>
+
+    </div>
     <div class="map-card" id="mapCard">
         <div class="map-header">
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
