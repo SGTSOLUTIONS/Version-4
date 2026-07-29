@@ -840,6 +840,7 @@
             .acard-title {
                 font-size: var(--text-md);
             }
+            /* //data */
 
             .pagination .page-link {
                 padding: var(--s1) var(--s3);
