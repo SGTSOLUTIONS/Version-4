@@ -617,12 +617,15 @@ class PointdataController extends Controller
                                     ]);
                             }
                         } else {
+
                             // INSERT NEW PROFESSIONAL TAX
                             DB::table($professionalTaxTableName)->insert([
                                 'corporation_id' => $corpId,
                                 'ward_no' => $wardNo,
                                 'gisid' => $request->point_gisid,
-                                'assessment' => $request->assessment,
+                                'assessment'         => $request->assessment,
+                                'owner_name'         => $request->owner_name,
+                                'phone_number'         => $request->phone_number ?? null,
                                 'pt_number' => $professional['pt_number'],
                                 'old_pt_number' => $professional['old_pt_number'] ?? null,
                                 'establishment_name' => $professional['establishment_name'] ?? null,
@@ -1071,7 +1074,10 @@ class PointdataController extends Controller
                             DB::table($professionalTaxTable)->insert([
                                 'corporation_id'     => $corpId,
                                 'gisid'              => $request->point_gisid,
+                                'ward_no'              => $ward->ward_no,
                                 'assessment'         => $request->assessment,
+                                'owner_name'         => $request->owner_name,
+                                'phone_number'         => $request->phone_number ?? null,
                                 'pt_number'          => $prof['pt_number'],
                                 'old_pt_number'      => $prof['old_pt_number'] ?? null,
                                 'establishment_name' => $prof['establishment_name'] ?? null,
