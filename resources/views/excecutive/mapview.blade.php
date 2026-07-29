@@ -1204,7 +1204,7 @@
             <p class="ol-page-sub">{{ now()->format('l, d F Y') }} — {{ auth()->user()->name ?? 'Executive Officer' }}</p>
         </div>
         <div class="d-flex gap-2 align-items-center">
-            <span class="ds-pill paid"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Lisve</span>
+            <span class="ds-pill paid"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Live</span>
             <!-- Usage Variation -->
             <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
                 <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
@@ -1216,20 +1216,7 @@
             </a>
         </div>
     </div>
-     <div class="ol-page-header">
 
-
-            <!-- Usage Variation -->
-            <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
-                <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
-            </a>
-
-            <!-- Area Variation -->
-            <a href="{{ url('area-variation/' . $ward->id) }}" class="btn btn-info btn-sm">
-                <i class="bi bi-bounding-box me-1"></i> Area Variation
-            </a>
-
-    </div>
     <div class="map-card" id="mapCard">
         <div class="map-header">
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
