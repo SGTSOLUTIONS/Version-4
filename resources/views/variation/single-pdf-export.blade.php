@@ -97,9 +97,9 @@
     <table>
         <tr>
             <td style="width:60%;">
-                <strong>1. Zone No.</strong> {{ $zone->zone_no ?? ($zone->id ?? '') }}
+                <strong>1. Zone No.</strong> {{ $zone->zone_name ?? ($zone->id ?? '') }}
                 &nbsp;&nbsp; <strong>Ward No.</strong> {{ $ward->ward_no ?? '' }}
-                &nbsp;&nbsp; <strong>Mobile Number</strong>
+                &nbsp;&nbsp; <strong>Mobile Number</strong>{{ $data['assessment']['details']['points'][0]['phone_number'] ?? '' }}
             </td>
             <td style="width:40%;">
                 <table class="mobile-boxes no-border">
@@ -117,11 +117,11 @@
         </tr>
         <tr>
             <td class="label">3. Name of the Owner (Mandatory)</td>
-            <td>&nbsp;</td>
+            <td>{{ $data['assessment']['details']['points'][0]['owner_name'] ?? '' }}</td>
         </tr>
         <tr>
             <td class="label">4. Name of the Occupier</td>
-            <td>&nbsp;</td>
+            <td>{{ $data['assessment']['details']['points'][0]['owner_name'] ?? '' }}</td>
         </tr>
         <tr>
             <td class="label">5. Address:</td>
@@ -186,7 +186,7 @@
             <td>&nbsp;</td>
         </tr>
         @php
-            $usage = strtoupper(trim($data['building']['usage'] ?? ($data['assessment']['usage'] ?? '')));
+            $usage = strtoupper(trim($data['building']['building_usage'] ?? ($data['assessment']['usage'] ?? '')));
             $mark = fn($cond) => $cond ? '[X]' : '[ ]';
         @endphp
         <tr>
