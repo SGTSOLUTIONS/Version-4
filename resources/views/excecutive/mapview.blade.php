@@ -132,6 +132,13 @@
             border-color: #0d6efd;
         }
 
+        /* ─── 3D Toggle Active State ─── */
+        .threed-toggle-btn.active-3d {
+            color: #fff;
+            background: #198754;
+            border-color: #198754;
+        }
+
         @keyframes pulse {
             0% {
                 opacity: 1;
@@ -1496,6 +1503,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Cesium.js"></script>
+    <!-- ═══ ADDED: ol-cesium library (below Cesium.js) ═══ -->
+    <script src="https://cdn.jsdelivr.net/npm/ol-cesium@2.16.0/dist/olcesium.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -1951,6 +1960,144 @@
                 })
             });
 
+            // ═══════════════════════════════════════════════════════════════
+            // ADDED: ol-cesium 2D/3D SWITCHABLE VIEWER
+            // (extends the SAME `map` instance created above — nothing removed)
+            // ═══════════════════════════════════════════════════════════════
+
+            // ─── CUSTOM FEATURE CONVERTER: extrudes building polygons by floors ───
+            class ExtrudedBuildingConverter extends olcs.FeatureConverter {
+                olPolygonGeometryToCesium(layer, feature, olGeometry, projection, opt_height) {
+                    const originalData = feature.get('originalData') || {};
+                    let floors = parseInt(
+                        originalData.number_floor ?? originalData.floors ?? feature.get('number_floor')
+                    );
+                    const FLOOR_HEIGHT = 3.2; // meters per floor
+                    const extrudedHeight = (!isNaN(floors) && floors > 0) ? floors * FLOOR_HEIGHT : FLOOR_HEIGHT;
+
+                    // Build a Cesium PolygonHierarchy directly from the OL polygon coordinates
+                    const rings = olGeometry.getLinearRings();
+                    const toCartesian = (coord) => {
+                        const lonLat = ol.proj.toLonLat(coord, projection);
+                        return Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], 0);
+                    };
+
+                    const outerRing = rings[0].getCoordinates().map(toCartesian);
+                    const holes = rings.slice(1).map(r =>
+                        new Cesium.PolygonHierarchy(r.getCoordinates().map(toCartesian))
+                    );
+
+                    return new Cesium.PolygonGeometry({
+                        polygonHierarchy: new Cesium.PolygonHierarchy(outerRing, holes),
+                        height: 0,
+                        extrudedHeight: extrudedHeight,
+                        vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+                    });
+                }
+            }
+
+            // ─── OLCesium INSTANCE (lazy-initialized on first 3D toggle) ───
+            let ol3d = null;
+            let is3DMode = false;
+
+            function initCesium3D() {
+                if (ol3d) return ol3d;
+
+                ol3d = new olcs.OLCesium({
+                    map: map,
+                    target: 'map',
+                    createSynchronizers: (olMap, scene) => {
+                        const converter = new ExtrudedBuildingConverter(scene);
+                        return [
+                            new olcs.RasterSynchronizer(olMap, scene), // keeps drone/OSM/satellite as ground imagery
+                            new olcs.VectorSynchronizer(olMap, scene, converter), // polygons/lines w/ extrusion
+                            new olcs.OverlaySynchronizer(olMap, scene)
+                        ];
+                    }
+                });
+
+                const scene = ol3d.getCesiumScene();
+                scene.globe.depthTestAgainstTerrain = true;
+
+                return ol3d;
+            }
+
+            // ─── CESIUM CLICK HANDLER: reuses EXISTING popup/modal logic ───
+            let cesiumClickHandlerAttached = false;
+
+            function setupCesiumClickHandler() {
+                if (cesiumClickHandlerAttached) return;
+                const scene = ol3d.getCesiumScene();
+                const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+
+                handler.setInputAction(function(movement) {
+                    const pickedFeature = scene.pick(movement.position);
+                    if (Cesium.defined(pickedFeature)) {
+                        // ol-cesium exposes the originating OL feature via .olFeature (or primitive.olFeature)
+                        const olFeature = pickedFeature.olFeature ||
+                            (pickedFeature.primitive && pickedFeature.primitive.olFeature) ||
+                            pickedFeature.id;
+
+                        if (olFeature && typeof olFeature.get === 'function') {
+                            showFeatureDetails(olFeature); // ← EXISTING function, untouched
+                        }
+                    }
+                }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+                cesiumClickHandlerAttached = true;
+            }
+
+            // ─── ENTER / EXIT 3D ───
+            function enter3DMode() {
+                const firstInit = !ol3d;
+                initCesium3D();
+                if (firstInit) setupCesiumClickHandler();
+
+                ol3d.setEnabled(true);
+                is3DMode = true;
+                $('#threedToggleBtn').addClass('active-3d');
+                showToast('🧊 3D view enabled', 2000);
+
+                const scene = ol3d.getCesiumScene();
+                const camera = scene.camera;
+
+                // Ward extent in lon/lat for Cesium
+                const extentLonLat = ol.proj.transformExtent(
+                    imageExtent, map.getView().getProjection(), 'EPSG:4326'
+                );
+                const [west, south, east, north] = extentLonLat;
+
+                // Let Cesium finish initializing before flying the camera
+                setTimeout(function() {
+                    camera.flyTo({
+                        destination: Cesium.Rectangle.fromDegrees(west, south, east, north),
+                        orientation: {
+                            heading: Cesium.Math.toRadians(0),
+                            pitch: Cesium.Math.toRadians(-60), // ~60° tilt
+                            roll: 0
+                        },
+                        duration: 1.5
+                    });
+                }, 150);
+            }
+
+            function exit3DMode() {
+                if (ol3d) {
+                    ol3d.setEnabled(false);
+                }
+                is3DMode = false;
+                $('#threedToggleBtn').removeClass('active-3d');
+                showToast('🗺️ 2D view enabled', 2000);
+
+                setTimeout(function() {
+                    map.updateSize();
+                }, 150);
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // END ADDED ol-cesium BLOCK
+            // ═══════════════════════════════════════════════════════════════
+
             // ─── GET MAP CONTAINER ───
             const $mapContainer = $('#map');
             $mapContainer.append(`<div class="map-controls-stack" id="mapControlsStack"></div>`);
@@ -2348,7 +2495,16 @@
                 </div>
             `);
 
-            // 7. FULLSCREEN BUTTON
+            // 7. ═══ ADDED: 3D TOGGLE BUTTON (inside map controls) ═══
+            $stack.append(`
+                <div class="custom-3d-toggle">
+                    <button class="threed-toggle-btn" id="threedToggleBtn" title="Toggle 3D View">
+                        <i class="bi bi-box"></i>
+                    </button>
+                </div>
+            `);
+
+            // 8. FULLSCREEN BUTTON
             $mapContainer.append(`
                 <button class="fullscreen-btn" id="fullscreenBtn">
                     <i class="bi bi-arrows-fullscreen"></i>
@@ -2965,6 +3121,16 @@
                 $('.search-dropdown').removeClass('active');
                 if ($('#filterDropdown').hasClass('active')) {
                     updateFilterStats();
+                }
+            });
+
+            // ═══ ADDED: 3D TOGGLE BUTTON HANDLER ═══
+            $(document).on('click', '#threedToggleBtn', function(e) {
+                e.stopPropagation();
+                if (!is3DMode) {
+                    enter3DMode();
+                } else {
+                    exit3DMode();
                 }
             });
 
@@ -4047,6 +4213,9 @@
 
                 setTimeout(function() {
                     map.updateSize();
+                    if (ol3d && ol3d.getEnabled()) {
+                        ol3d.getCesiumScene().requestRender();
+                    }
                 }, 150);
             });
 
