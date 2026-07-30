@@ -454,7 +454,7 @@ class WardController extends Controller
                 $ward->extent_right = $request->extent_right;
                 $ward->extent_top = $request->extent_top;
                 $ward->extent_bottom = $request->extent_bottom;
-                $ward->zone_name = $request->zone;
+                $ward->zone_name     = $request->zone;
                 $ward->status = $request->status;
                 $ward->contact_person = $request->contact_person;
                 $ward->designation = $request->designation;

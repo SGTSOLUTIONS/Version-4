@@ -1214,6 +1214,9 @@
             <a href="{{ url('area-variation/' . $ward->id) }}" class="btn btn-info btn-sm">
                 <i class="bi bi-bounding-box me-1"></i> Area Variation
             </a>
+            <a href="{{ url('data-controll/' . $ward->id) }}" class="btn btn-info btn-sm">
+                <i class="bi bi-bounding-box me-1"></i> Data Control
+            </a>
         </div>
     </div>
 

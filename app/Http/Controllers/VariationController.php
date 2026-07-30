@@ -104,7 +104,7 @@ class VariationController extends Controller
         foreach ($pointDatas as $pd) {
             $pointDataByGisid[$pd->point_gisid][] = $pd;
         }
-
+return $pointDataByGisid;
         $result = [];
 
         foreach ($polygons as $polygon) {
@@ -492,5 +492,36 @@ class VariationController extends Controller
 
         fclose($output);
         exit;
+    }
+
+
+
+    public function dataControlls($wardId)
+    {
+        $ward = Ward::findOrFail($wardId);
+        $zone = Zone::findOrFail($ward->zone_id);
+
+        $corp = $zone->corp_id;
+        $wardNo = $ward->ward_no;
+
+        $polygonsTableName = "polygons_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName = "point_data_{$wardId}";
+        $misTableName = "mis_{$corp}";
+         $polygons = DB::table($polygonsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas = DB::table($pointDataTableName)->get();
+
+        $misData = DB::table($misTableName)
+            ->where('ward_no', $wardNo)
+            ->get();
+
+        $buildingVariations = $this->buildBuildingVariations(
+            $polygons,
+            $polygonDatas,
+            $pointDatas,
+            $misData
+        );
+        return response()->json($buildingVariations);
     }
 }

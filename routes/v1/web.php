@@ -60,6 +60,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])
         ->name('usage.variation');
+        Route::get('/data-controll/{wardId}', [VariationController::class, 'dataControll'])
+        ->name('data.Controll');
+
+
+
+
+
     Route::post('/variation/filter', [VariationController::class, 'filterVariations'])->name('variation.filter');
     Route::post('/variation/export', [VariationController::class, 'exportVariations'])->name('variation.export');
     Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])->name('variation.usage');
