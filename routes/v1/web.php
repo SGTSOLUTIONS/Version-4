@@ -63,6 +63,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/data-controll/{wardId}', [VariationController::class, 'dataControll'])
         ->name('data.Controll');
         Route::get('/data-variation/export/{wardId}', [VariationController::class, 'exportVariation'])->name('data-variation.export');
+        Route::get('/variation/export/{wardId}', [VariationController::class, 'exportVariation'])->name('variation.export');
 
 
 

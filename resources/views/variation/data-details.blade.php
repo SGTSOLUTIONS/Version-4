@@ -225,12 +225,12 @@
             font-size: 0.8rem;
             padding: 8px 20px;
             transition: all 0.2s;
+            border: none;
         }
 
         .btn-export-excel {
             background: #217346;
             color: white;
-            border: none;
         }
 
         .btn-export-excel:hover {
@@ -243,7 +243,6 @@
         .btn-export-pdf {
             background: #dc3545;
             color: white;
-            border: none;
         }
 
         .btn-export-pdf:hover {
@@ -256,7 +255,6 @@
         .btn-export-csv {
             background: #0d6efd;
             color: white;
-            border: none;
         }
 
         .btn-export-csv:hover {
@@ -339,37 +337,6 @@
             font-size: 0.9rem;
         }
 
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.85);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            border-radius: 12px;
-        }
-
-        .loading-overlay.show {
-            display: flex;
-        }
-
-        .loading-overlay .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #e5e7eb;
-            border-top-color: #2563eb;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
         .detail-modal-content {
             max-height: 500px;
             overflow-y: auto;
@@ -434,6 +401,13 @@
             gap: 10px;
             align-items: center;
             flex-wrap: wrap;
+        }
+
+        .btn-filter {
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 6px 14px;
         }
 
         @media (max-width: 768px) {
@@ -599,56 +573,59 @@
                 <div class="col-xl-2 col-lg-3 col-md-4">
                     <label class="form-label"><i class="bi bi-tags me-1"></i>Usage Status</label>
                     <select name="usage_status" id="filterUsageStatus" class="form-select form-select-sm">
-                        <option value="all">All Status</option>
-                        <option value="MATCH">✅ Match</option>
-                        <option value="VARIATION">❌ Variation</option>
-                        <option value="PARTIAL_MATCH">⚠️ Partial Match</option>
-                        <option value="BUILDING_ONLY">🏢 Building Only</option>
-                        <option value="ASSESSMENT_ONLY">📄 Assessment Only</option>
-                        <option value="NO_DATA">⬜ No Data</option>
+                        <option value="all" {{ request('usage_status') == 'all' ? 'selected' : '' }}>All Status</option>
+                        <option value="MATCH" {{ request('usage_status') == 'MATCH' ? 'selected' : '' }}>✅ Match</option>
+                        <option value="VARIATION" {{ request('usage_status') == 'VARIATION' ? 'selected' : '' }}>❌ Variation</option>
+                        <option value="PARTIAL_MATCH" {{ request('usage_status') == 'PARTIAL_MATCH' ? 'selected' : '' }}>⚠️ Partial Match</option>
+                        <option value="BUILDING_ONLY" {{ request('usage_status') == 'BUILDING_ONLY' ? 'selected' : '' }}>🏢 Building Only</option>
+                        <option value="ASSESSMENT_ONLY" {{ request('usage_status') == 'ASSESSMENT_ONLY' ? 'selected' : '' }}>📄 Assessment Only</option>
+                        <option value="NO_DATA" {{ request('usage_status') == 'NO_DATA' ? 'selected' : '' }}>⬜ No Data</option>
                     </select>
                 </div>
 
                 <div class="col-xl-2 col-lg-3 col-md-4">
                     <label class="form-label"><i class="bi bi-rulers me-1"></i>Area Status</label>
                     <select name="area_status" id="filterAreaStatus" class="form-select form-select-sm">
-                        <option value="all">All Status</option>
-                        <option value="MATCH">Match</option>
-                        <option value="VARIATION">Variation</option>
+                        <option value="all" {{ request('area_status') == 'all' ? 'selected' : '' }}>All Status</option>
+                        <option value="MATCH" {{ request('area_status') == 'MATCH' ? 'selected' : '' }}>Match</option>
+                        <option value="VARIATION" {{ request('area_status') == 'VARIATION' ? 'selected' : '' }}>Variation</option>
                     </select>
                 </div>
 
                 <div class="col-xl-2 col-lg-3 col-md-4">
                     <label class="form-label"><i class="bi bi-hash me-1"></i>GIS ID</label>
-                    <input type="text" name="gisid" id="filterGisid" class="form-control form-control-sm" placeholder="Search GIS ID...">
+                    <input type="text" name="gisid" id="filterGisid" class="form-control form-control-sm"
+                           placeholder="Search GIS ID..." value="{{ request('gisid') }}">
                 </div>
 
                 <div class="col-xl-2 col-lg-3 col-md-4">
                     <label class="form-label"><i class="bi bi-file-earmark-text me-1"></i>Assessment Count</label>
                     <select name="assessment_count" id="filterAssessmentCount" class="form-select form-select-sm">
-                        <option value="all">All Counts</option>
-                        <option value="0">No Assessments</option>
-                        <option value="1">1 Assessment</option>
-                        <option value="2">2 Assessments</option>
-                        <option value="3">3+ Assessments</option>
+                        <option value="all" {{ request('assessment_count') == 'all' ? 'selected' : '' }}>All Counts</option>
+                        <option value="0" {{ request('assessment_count') == '0' ? 'selected' : '' }}>No Assessments</option>
+                        <option value="1" {{ request('assessment_count') == '1' ? 'selected' : '' }}>1 Assessment</option>
+                        <option value="2" {{ request('assessment_count') == '2' ? 'selected' : '' }}>2 Assessments</option>
+                        <option value="3" {{ request('assessment_count') == '3' ? 'selected' : '' }}>3+ Assessments</option>
                     </select>
                 </div>
 
                 <div class="col-xl-2 col-lg-3 col-md-4">
                     <label class="form-label"><i class="bi bi-sliders me-1"></i>Area Variation %</label>
                     <div class="d-flex gap-2">
-                        <input type="number" name="var_min" id="filterVarMin" class="form-control form-control-sm" placeholder="Min %" min="0" max="100">
-                        <input type="number" name="var_max" id="filterVarMax" class="form-control form-control-sm" placeholder="Max %" min="0" max="100">
+                        <input type="number" name="var_min" id="filterVarMin" class="form-control form-control-sm"
+                               placeholder="Min %" min="0" max="100" value="{{ request('var_min') }}">
+                        <input type="number" name="var_max" id="filterVarMax" class="form-control form-control-sm"
+                               placeholder="Max %" min="0" max="100" value="{{ request('var_max') }}">
                     </div>
                 </div>
 
                 <div class="col-xl-2 col-lg-3 col-md-4">
                     <label class="form-label">&nbsp;</label>
                     <div class="d-flex gap-2 flex-wrap">
-                        <button type="submit" class="btn btn-primary btn-sm">
+                        <button type="submit" class="btn btn-primary btn-filter">
                             <i class="bi bi-funnel me-1"></i> Apply
                         </button>
-                        <a href="{{ route('variation.show', $ward->id) }}" class="btn btn-outline-secondary btn-sm">
+                        <a href="{{ route('variation.show', $ward->id) }}" class="btn btn-outline-secondary btn-filter">
                             <i class="bi bi-arrow-counterclockwise"></i> Reset
                         </a>
                     </div>
@@ -663,12 +640,10 @@
                             <i class="bi bi-info-circle me-1"></i>
                             Showing <span id="visibleCount">{{ $total }}</span> of <span id="totalCount">{{ $total }}</span> buildings
                         </span>
-                        <!-- Filtered Export Buttons -->
-                        <div class="export-buttons-group">
-                            <button type="button" class="btn btn-export btn-export-excel btn-sm" id="exportFilteredExcel">
-                                <i class="bi bi-file-earmark-excel me-1"></i> Export Filtered
-                            </button>
-                        </div>
+                        <!-- Filtered Export Button -->
+                        <button type="button" class="btn btn-export btn-export-excel btn-sm" id="exportFilteredExcel">
+                            <i class="bi bi-file-earmark-excel me-1"></i> Export Filtered
+                        </button>
                     </div>
                 </div>
             </div>
@@ -685,7 +660,7 @@
             <table class="table table-hover" id="variationTable">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th style="width:50px;">#</th>
                         <th>GIS ID</th>
                         <th>Building Usage</th>
                         <th>Assessment Usage</th>
@@ -695,7 +670,7 @@
                         <th>Area Variation</th>
                         <th>Area Status</th>
                         <th>Assessments</th>
-                        <th>Actions</th>
+                        <th style="width:100px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1065,10 +1040,10 @@
                 }, 2000);
             });
 
-            // ─── EXPORT ALL ───
+            // ─── EXPORT ALL BUTTONS ───
             $('.btn-export-excel, .btn-export-pdf, .btn-export-csv').on('click', function(e) {
                 // Show loading for export all
-                if (!$(this).hasClass('btn-sm')) {
+                if (!$(this).hasClass('btn-sm') || $(this).attr('id') !== 'exportFilteredExcel') {
                     Swal.fire({
                         title: 'Exporting...',
                         text: 'Please wait while we generate your file',

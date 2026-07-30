@@ -513,7 +513,7 @@ class VariationController extends Controller
 
 
 
-    public function dataControll($wardId)
+   public function dataControll($wardId)
     {
         $ward = Ward::findOrFail($wardId);
         $zone = Zone::findOrFail($ward->zone_id);
@@ -525,6 +525,7 @@ class VariationController extends Controller
         $polygonDataTableName = "polygon_data_{$wardId}";
         $pointDataTableName = "point_data_{$wardId}";
         $misTableName = "mis_{$corp}";
+
         $polygons = DB::table($polygonsTableName)->get();
         $polygonDatas = DB::table($polygonDataTableName)->get();
         $pointDatas = DB::table($pointDataTableName)->get();
@@ -539,12 +540,14 @@ class VariationController extends Controller
             $pointDatas,
             $misData
         );
+
         return view('variation.data-details', [
             'buildingVariations' => $buildingVariations,
             'ward' => $ward,
             'zone' => $zone
         ]);
     }
+
     private function buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData)
     {
         $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
@@ -645,7 +648,6 @@ class VariationController extends Controller
                             'plot_area' => $mis->plot_area ?? null,
                             'assessment' => $mis->assessment ?? null,
                             'usage' => $mis->usage ?? null,
-                            // Add other MIS fields as needed
                         ] : null
                     ];
 
@@ -728,25 +730,18 @@ class VariationController extends Controller
 
             // ─── COMPLETE RESULT WITH ALL DETAILS ───
             $result[$gisid] = [
-                // Basic GIS ID
                 'gisid' => $gisid,
-
-                // Polygon/Building Details
                 'polygon' => [
                     'sqfeet' => $polygonSqfeet,
                     'coordinates' => $polygon->coordinates ?? null,
                     'geometry' => $polygon->geometry ?? null,
                 ],
-
-                // Building Details
                 'building' => [
                     'area' => round($buildingArea, 2),
                     'usage' => $buildingUsage,
                     'details' => $buildingDetails,
                     'raw_data' => $polyData ? (array) $polyData : null
                 ],
-
-                // Assessment Details
                 'assessment' => [
                     'area' => round($assessmentArea, 2),
                     'usage' => $assessmentUsage,
@@ -756,8 +751,6 @@ class VariationController extends Controller
                     'details' => $assessmentDetails,
                     'raw_data' => $allAssessmentData ? (array) $allAssessmentData : null
                 ],
-
-                // Area Comparison
                 'area_comparison' => [
                     'building_area' => round($buildingArea, 2),
                     'assessment_area' => round($assessmentArea, 2),
@@ -767,8 +760,6 @@ class VariationController extends Controller
                     'status_label' => abs($areaVariation) > 1 ? 'Area Variation' : 'Area Match',
                     'status_badge' => abs($areaVariation) > 1 ? 'badge-warning' : 'badge-success'
                 ],
-
-                // Usage Comparison
                 'usage_comparison' => [
                     'building_usage' => $buildingUsage,
                     'assessment_usage' => $assessmentUsage,
@@ -780,8 +771,6 @@ class VariationController extends Controller
                     'has_mismatch' => $hasUsageMismatch,
                     'has_partial_match' => $hasPartialMatch
                 ],
-
-                // All raw data for reference
                 'raw_data' => [
                     'polygon_data' => $polyData ? (array) $polyData : null,
                     'point_data' => isset($pointDataByGisid[$gisid]) ?
@@ -799,35 +788,85 @@ class VariationController extends Controller
 
         return $result;
     }
-    public function exportVariation($wardId)
+
+    public function exportVariation($wardId, Request $request)
     {
-        $data = $this->dataControll($wardId);
-        $buildingVariations = $data->getData()['buildingVariations'] ?? [];
+        $ward = Ward::findOrFail($wardId);
+        $zone = Zone::findOrFail($ward->zone_id);
+
+        $corp = $zone->corp_id;
+        $wardNo = $ward->ward_no;
+
+        $polygonsTableName = "polygons_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName = "point_data_{$wardId}";
+        $misTableName = "mis_{$corp}";
+
+        $polygons = DB::table($polygonsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas = DB::table($pointDataTableName)->get();
+
+        $misData = DB::table($misTableName)
+            ->where('ward_no', $wardNo)
+            ->get();
+
+        $buildingVariations = $this->buildBuildingData(
+            $polygons,
+            $polygonDatas,
+            $pointDatas,
+            $misData
+        );
+
+        // Apply filters if any
+        if ($request->has('gisid') && $request->gisid) {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return $item['gisid'] == $request->gisid;
+            });
+        }
+
+        if ($request->has('usage_status') && $request->usage_status != 'all') {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return ($item['usage_comparison']['usage_status'] ?? '') == $request->usage_status;
+            });
+        }
+
+        if ($request->has('area_status') && $request->area_status != 'all') {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return strtolower($item['area_comparison']['area_status'] ?? '') == $request->area_status;
+            });
+        }
+
+        if ($request->has('var_min') && $request->var_min != '') {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return ($item['area_comparison']['variation_percentage'] ?? 0) >= floatval($request->var_min);
+            });
+        }
+
+        if ($request->has('var_max') && $request->var_max != '') {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return ($item['area_comparison']['variation_percentage'] ?? 0) <= floatval($request->var_max);
+            });
+        }
 
         // Create Excel file
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Headers
+        // Set headers
         $headers = [
-            'GIS ID',
-            'Building Usage',
-            'Building Area',
-            'Assessment Usage',
-            'Assessment Area',
-            'Area Variation',
-            'Variation %',
-            'Area Status',
-            'Usage Status',
-            'Floor Count',
-            'Basement'
+            'GIS ID', 'Building Usage', 'Building Area (sqft)',
+            'Assessment Usage', 'Assessment Area (sqft)',
+            'Area Variation (sqft)', 'Variation %',
+            'Area Status', 'Usage Status',
+            'Floor Count', 'Basement', 'Percentage',
+            'Assessment Count', 'Assessment Type'
         ];
 
         foreach ($headers as $index => $header) {
             $sheet->setCellValueByColumnAndRow($index + 1, 1, $header);
         }
 
-        // Data
+        // Fill data
         $row = 2;
         foreach ($buildingVariations as $gisid => $item) {
             $sheet->setCellValueByColumnAndRow(1, $row, $gisid);
@@ -841,25 +880,30 @@ class VariationController extends Controller
             $sheet->setCellValueByColumnAndRow(9, $row, $item['usage_comparison']['usage_status_label'] ?? 'N/A');
             $sheet->setCellValueByColumnAndRow(10, $row, $item['building']['details']['number_floor'] ?? 0);
             $sheet->setCellValueByColumnAndRow(11, $row, $item['building']['details']['basement'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(12, $row, $item['building']['details']['percentage'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(13, $row, $item['assessment']['count'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(14, $row, $item['assessment']['details']['assessment_type_status'] ?? 'N/A');
             $row++;
         }
 
         // Auto-size columns
-        foreach (range('A', 'K') as $col) {
+        foreach (range('A', 'N') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        // Create response
+        $writer = new Xlsx($spreadsheet);
         $filename = "data_variation_ward_{$wardId}_" . date('Y-m-d_H-i-s') . ".xlsx";
 
         return response()->stream(
-            function () use ($writer) {
+            function() use ($writer) {
                 $writer->save('php://output');
             },
             200,
             [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'max-age=0',
             ]
         );
     }
