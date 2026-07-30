@@ -511,9 +511,7 @@ class VariationController extends Controller
         exit;
     }
 
-
-
-   public function dataControll($wardId)
+public function dataControll($wardId, Request $request)
     {
         $ward = Ward::findOrFail($wardId);
         $zone = Zone::findOrFail($ward->zone_id);
@@ -541,13 +539,65 @@ class VariationController extends Controller
             $misData
         );
 
+        // Apply filters if any
+        if ($request->has('usage_status') && $request->usage_status != 'all') {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return ($item['usage_comparison']['usage_status'] ?? '') == $request->usage_status;
+            });
+        }
+
+        if ($request->has('area_status') && $request->area_status != 'all') {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return strtolower($item['area_comparison']['area_status'] ?? '') == $request->area_status;
+            });
+        }
+
+        if ($request->has('gisid') && $request->gisid) {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return stripos($item['gisid'], $request->gisid) !== false;
+            });
+        }
+
+        if ($request->has('var_min') && $request->var_min != '') {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return ($item['area_comparison']['variation_percentage'] ?? 0) >= floatval($request->var_min);
+            });
+        }
+
+        if ($request->has('var_max') && $request->var_max != '') {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return ($item['area_comparison']['variation_percentage'] ?? 0) <= floatval($request->var_max);
+            });
+        }
+
+        // Pagination
+        $perPage = $request->get('per_page', 20);
+        $page = $request->get('page', 1);
+        $total = count($buildingVariations);
+        $paginatedData = array_slice($buildingVariations, ($page - 1) * $perPage, $perPage);
+
+        $pagination = [
+            'current_page' => (int)$page,
+            'per_page' => (int)$perPage,
+            'total' => $total,
+            'last_page' => ceil($total / $perPage),
+            'from' => (($page - 1) * $perPage) + 1,
+            'to' => min(($page * $perPage), $total)
+        ];
+
         return view('variation.data-details', [
-            'buildingVariations' => $buildingVariations,
+            'buildingVariations' => $paginatedData,
+            'allData' => $buildingVariations,
             'ward' => $ward,
-            'zone' => $zone
+            'zone' => $zone,
+            'pagination' => $pagination,
+            'filters' => $request->all()
         ]);
     }
 
+    /**
+     * Build building data from polygons, polygon data, point data and MIS data
+     */
     private function buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData)
     {
         $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
@@ -588,7 +638,6 @@ class VariationController extends Controller
 
                 $buildingUsage = $polyData->building_usage ?? null;
 
-                // Store all building details
                 $buildingDetails = [
                     'number_floor' => $numberFloor,
                     'basement' => $basement,
@@ -625,7 +674,6 @@ class VariationController extends Controller
 
                     $assessmentArea += $pointArea;
 
-                    // Get assessment usage
                     $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
                     if ($pointUsage) {
                         $allAssessmentUsages[] = $pointUsage;
@@ -635,7 +683,6 @@ class VariationController extends Controller
                         $assessmentUsage = $pointUsage;
                     }
 
-                    // Store individual point details
                     $assessmentDetails['points'][] = [
                         'assessment' => $pd->assessment,
                         'point_gisid' => $pd->point_gisid,
@@ -651,10 +698,8 @@ class VariationController extends Controller
                         ] : null
                     ];
 
-                    // Store all assessment data
                     $allAssessmentData = $pd;
 
-                    // Usage comparison logic
                     if ($buildingUsage && $pointUsage) {
                         $buildingUsageUpper = strtoupper(trim($buildingUsage));
                         $pointUsageUpper = strtoupper(trim($pointUsage));
@@ -677,7 +722,6 @@ class VariationController extends Controller
                     }
                 }
 
-                // Assessment type status
                 $assessmentType = strtoupper(trim($pd->assessment_type ?? ''));
                 if ($assessmentType === 'OLD') {
                     $assessmentTypeStatus = 'OLD ASSESSMENT';
@@ -728,7 +772,7 @@ class VariationController extends Controller
                 ? round((abs($areaVariation) / $buildingArea) * 100, 1)
                 : 0;
 
-            // ─── COMPLETE RESULT WITH ALL DETAILS ───
+            // ─── COMPLETE RESULT ───
             $result[$gisid] = [
                 'gisid' => $gisid,
                 'polygon' => [
@@ -789,6 +833,63 @@ class VariationController extends Controller
         return $result;
     }
 
+    /**
+     * Get building details via AJAX for lazy loading
+     */
+    public function getBuildingDetails($wardId, $gisid)
+    {
+        try {
+            $ward = Ward::findOrFail($wardId);
+            $zone = Zone::findOrFail($ward->zone_id);
+
+            $corp = $zone->corp_id;
+            $wardNo = $ward->ward_no;
+
+            $polygonsTableName = "polygons_{$wardId}";
+            $polygonDataTableName = "polygon_data_{$wardId}";
+            $pointDataTableName = "point_data_{$wardId}";
+            $misTableName = "mis_{$corp}";
+
+            $polygons = DB::table($polygonsTableName)->where('gisid', $gisid)->get();
+            $polygonDatas = DB::table($polygonDataTableName)->where('gisid', $gisid)->get();
+            $pointDatas = DB::table($pointDataTableName)->where('point_gisid', $gisid)->get();
+
+            $misData = DB::table($misTableName)
+                ->where('ward_no', $wardNo)
+                ->get();
+
+            $buildingVariations = $this->buildBuildingData(
+                $polygons,
+                $polygonDatas,
+                $pointDatas,
+                $misData
+            );
+
+            $data = $buildingVariations[$gisid] ?? null;
+
+            if (!$data) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data not found for GIS ID: ' . $gisid
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Export to Excel with filters
+     */
     public function exportVariation($wardId, Request $request)
     {
         $ward = Ward::findOrFail($wardId);
@@ -817,10 +918,10 @@ class VariationController extends Controller
             $misData
         );
 
-        // Apply filters if any
+        // Apply filters
         if ($request->has('gisid') && $request->gisid) {
             $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
-                return $item['gisid'] == $request->gisid;
+                return stripos($item['gisid'], $request->gisid) !== false;
             });
         }
 
@@ -852,9 +953,9 @@ class VariationController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Set headers
+        // Set headers with styling
         $headers = [
-            'GIS ID', 'Building Usage', 'Building Area (sqft)',
+            'S.No', 'GIS ID', 'Building Usage', 'Building Area (sqft)',
             'Assessment Usage', 'Assessment Area (sqft)',
             'Area Variation (sqft)', 'Variation %',
             'Area Status', 'Usage Status',
@@ -862,36 +963,41 @@ class VariationController extends Controller
             'Assessment Count', 'Assessment Type'
         ];
 
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '1A3C6E']],
+            'alignment' => ['horizontal' => 'center']
+        ];
+
         foreach ($headers as $index => $header) {
-            $sheet->setCellValueByColumnAndRow($index + 1, 1, $header);
+            $col = $index + 1;
+            $sheet->setCellValueByColumnAndRow($col, 1, $header);
+            $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
+            $sheet->getStyleByColumnAndRow($col, 1)->applyFromArray($headerStyle);
         }
 
         // Fill data
         $row = 2;
+        $sno = 1;
         foreach ($buildingVariations as $gisid => $item) {
-            $sheet->setCellValueByColumnAndRow(1, $row, $gisid);
-            $sheet->setCellValueByColumnAndRow(2, $row, $item['building']['usage'] ?? 'N/A');
-            $sheet->setCellValueByColumnAndRow(3, $row, $item['building']['area'] ?? 0);
-            $sheet->setCellValueByColumnAndRow(4, $row, $item['assessment']['usage'] ?? 'N/A');
-            $sheet->setCellValueByColumnAndRow(5, $row, $item['assessment']['area'] ?? 0);
-            $sheet->setCellValueByColumnAndRow(6, $row, $item['area_comparison']['area_variation'] ?? 0);
-            $sheet->setCellValueByColumnAndRow(7, $row, $item['area_comparison']['variation_percentage'] ?? 0);
-            $sheet->setCellValueByColumnAndRow(8, $row, $item['area_comparison']['area_status'] ?? 'N/A');
-            $sheet->setCellValueByColumnAndRow(9, $row, $item['usage_comparison']['usage_status_label'] ?? 'N/A');
-            $sheet->setCellValueByColumnAndRow(10, $row, $item['building']['details']['number_floor'] ?? 0);
-            $sheet->setCellValueByColumnAndRow(11, $row, $item['building']['details']['basement'] ?? 0);
-            $sheet->setCellValueByColumnAndRow(12, $row, $item['building']['details']['percentage'] ?? 0);
-            $sheet->setCellValueByColumnAndRow(13, $row, $item['assessment']['count'] ?? 0);
-            $sheet->setCellValueByColumnAndRow(14, $row, $item['assessment']['details']['assessment_type_status'] ?? 'N/A');
+            $sheet->setCellValueByColumnAndRow(1, $row, $sno++);
+            $sheet->setCellValueByColumnAndRow(2, $row, $gisid);
+            $sheet->setCellValueByColumnAndRow(3, $row, $item['building']['usage'] ?? 'N/A');
+            $sheet->setCellValueByColumnAndRow(4, $row, $item['building']['area'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(5, $row, $item['assessment']['usage'] ?? 'N/A');
+            $sheet->setCellValueByColumnAndRow(6, $row, $item['assessment']['area'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(7, $row, $item['area_comparison']['area_variation'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(8, $row, $item['area_comparison']['variation_percentage'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(9, $row, $item['area_comparison']['area_status'] ?? 'N/A');
+            $sheet->setCellValueByColumnAndRow(10, $row, $item['usage_comparison']['usage_status_label'] ?? 'N/A');
+            $sheet->setCellValueByColumnAndRow(11, $row, $item['building']['details']['number_floor'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(12, $row, $item['building']['details']['basement'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(13, $row, $item['building']['details']['percentage'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(14, $row, $item['assessment']['count'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(15, $row, $item['assessment']['details']['assessment_type_status'] ?? 'N/A');
             $row++;
         }
 
-        // Auto-size columns
-        foreach (range('A', 'N') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        // Create response
         $writer = new Xlsx($spreadsheet);
         $filename = "data_variation_ward_{$wardId}_" . date('Y-m-d_H-i-s') . ".xlsx";
 
@@ -906,5 +1012,172 @@ class VariationController extends Controller
                 'Cache-Control' => 'max-age=0',
             ]
         );
+    }
+
+    /**
+     * Export to PDF
+     */
+    public function exportPdf($wardId, Request $request)
+    {
+        $ward = Ward::findOrFail($wardId);
+        $zone = Zone::findOrFail($ward->zone_id);
+
+        $corp = $zone->corp_id;
+        $wardNo = $ward->ward_no;
+
+        $polygonsTableName = "polygons_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName = "point_data_{$wardId}";
+        $misTableName = "mis_{$corp}";
+
+        $polygons = DB::table($polygonsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas = DB::table($pointDataTableName)->get();
+
+        $misData = DB::table($misTableName)
+            ->where('ward_no', $wardNo)
+            ->get();
+
+        $buildingVariations = $this->buildBuildingData(
+            $polygons,
+            $polygonDatas,
+            $pointDatas,
+            $misData
+        );
+
+        // Apply filters
+        if ($request->has('gisid') && $request->gisid) {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return stripos($item['gisid'], $request->gisid) !== false;
+            });
+        }
+
+        $pdf = PDF::loadView('variation.pdf-export', [
+            'buildingVariations' => $buildingVariations,
+            'ward' => $ward,
+            'zone' => $zone,
+            'date' => now()->format('d-m-Y H:i:s')
+        ]);
+
+        $filename = "data_variation_ward_{$wardId}_" . date('Y-m-d_H-i-s') . ".pdf";
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export single building PDF (FORM 2 style)
+     */
+    public function exportSinglePdf($wardId, $gisid)
+    {
+        $ward = Ward::findOrFail($wardId);
+        $zone = Zone::findOrFail($ward->zone_id);
+
+        $corp = $zone->corp_id;
+        $wardNo = $ward->ward_no;
+
+        $polygonsTableName = "polygons_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName = "point_data_{$wardId}";
+        $misTableName = "mis_{$corp}";
+
+        $polygons = DB::table($polygonsTableName)->where('gisid', $gisid)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->where('gisid', $gisid)->get();
+        $pointDatas = DB::table($pointDataTableName)->where('point_gisid', $gisid)->get();
+
+        $misData = DB::table($misTableName)
+            ->where('ward_no', $wardNo)
+            ->get();
+
+        $buildingVariations = $this->buildBuildingData(
+            $polygons,
+            $polygonDatas,
+            $pointDatas,
+            $misData
+        );
+
+        $data = $buildingVariations[$gisid] ?? null;
+
+        if (!$data) {
+            return response()->json(['error' => 'Data not found'], 404);
+        }
+
+        $pdf = PDF::loadView('variation.single-pdf-export', [
+            'data' => $data,
+            'ward' => $ward,
+            'zone' => $zone,
+            'gisid' => $gisid,
+            'date' => now()->format('d-m-Y H:i:s')
+        ]);
+
+        $filename = "building_{$gisid}_details_" . date('Y-m-d_H-i-s') . ".pdf";
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Get paginated data via AJAX
+     */
+    public function getPaginatedData($wardId, Request $request)
+    {
+        $ward = Ward::findOrFail($wardId);
+        $zone = Zone::findOrFail($ward->zone_id);
+
+        $corp = $zone->corp_id;
+        $wardNo = $ward->ward_no;
+
+        $polygonsTableName = "polygons_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName = "point_data_{$wardId}";
+        $misTableName = "mis_{$corp}";
+
+        $polygons = DB::table($polygonsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas = DB::table($pointDataTableName)->get();
+
+        $misData = DB::table($misTableName)
+            ->where('ward_no', $wardNo)
+            ->get();
+
+        $buildingVariations = $this->buildBuildingData(
+            $polygons,
+            $polygonDatas,
+            $pointDatas,
+            $misData
+        );
+
+        // Apply filters
+        if ($request->has('usage_status') && $request->usage_status != 'all') {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return ($item['usage_comparison']['usage_status'] ?? '') == $request->usage_status;
+            });
+        }
+
+        if ($request->has('area_status') && $request->area_status != 'all') {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return strtolower($item['area_comparison']['area_status'] ?? '') == $request->area_status;
+            });
+        }
+
+        if ($request->has('gisid') && $request->gisid) {
+            $buildingVariations = array_filter($buildingVariations, function($item) use ($request) {
+                return stripos($item['gisid'], $request->gisid) !== false;
+            });
+        }
+
+        $perPage = $request->get('per_page', 20);
+        $page = $request->get('page', 1);
+        $total = count($buildingVariations);
+        $paginatedData = array_slice($buildingVariations, ($page - 1) * $perPage, $perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $paginatedData,
+            'pagination' => [
+                'current_page' => (int)$page,
+                'per_page' => (int)$perPage,
+                'total' => $total,
+                'last_page' => ceil($total / $perPage),
+                'from' => (($page - 1) * $perPage) + 1,
+                'to' => min(($page * $perPage), $total)
+            ]
+        ]);
     }
 }
