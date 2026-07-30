@@ -62,7 +62,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('usage.variation');
       Route::get('/data-controll/{wardId}', [VariationController::class, 'dataControll'])->name('variation.show');
 Route::get('/data-variation/export/{wardId}', [VariationController::class, 'exportVariation'])->name('data-variation.export');
-Route::get('/data-variation/pdf/{wardId}', [VariationController::class, 'exportPdf'])->name('data-variation.pdf');
+Route::get('/data-variation/pdf/{wardId}', [VariationController::class, 'exportPdffile'])->name('data-variation.pdf');
 Route::get('/data-variation/single-pdf/{wardId}/{gisid}', [VariationController::class, 'exportSinglePdf'])->name('data-variation.single-pdf');
 Route::get('/data-variation/details/{wardId}/{gisid}', [VariationController::class, 'getBuildingDetails'])->name('data-variation.details');
 Route::get('/data-variation/paginated/{wardId}', [VariationController::class, 'getPaginatedData'])->name('data-variation.paginated');

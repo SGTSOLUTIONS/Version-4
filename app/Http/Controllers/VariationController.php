@@ -1017,7 +1017,7 @@ public function dataControll($wardId, Request $request)
     /**
      * Export to PDF
      */
-    public function exportPdf($wardId, Request $request)
+    public function exportPdffile($wardId, Request $request)
     {
         $ward = Ward::findOrFail($wardId);
         $zone = Zone::findOrFail($ward->zone_id);
