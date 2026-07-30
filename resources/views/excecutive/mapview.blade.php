@@ -1220,12 +1220,9 @@
         </div>
         <div class="d-flex gap-2 align-items-center">
             <span class="ds-pill paid"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Live</span>
-            <!-- Usage Variation -->
             <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
                 <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
             </a>
-
-            <!-- Area Variation -->
             <a href="{{ url('area-variation/' . $ward->id) }}" class="btn btn-info btn-sm">
                 <i class="bi bi-bounding-box me-1"></i> Area Variation
             </a>
@@ -1243,8 +1240,7 @@
         <div id="map"></div>
     </div>
 
-    <!-- ─── BUILDING VIEW MODAL ─── -->
-    <!-- ─── BUILDING VIEW MODAL ─── -->
+    <!-- Modals remain the same as original -->
     <div class="modal fade" id="buildingViewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1258,61 +1254,46 @@
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-
-                <!-- ─── IMAGE STRIP ─── -->
                 <div class="bld-image-strip">
                     <div class="bld-img-wrap" id="bv_img1_wrap">
                         <img id="bv_img1" src="" style="display:none;"
                             onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
-                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i
-                                class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i
-                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
                     <div class="bld-img-wrap" id="bv_img2_wrap">
                         <img id="bv_img2" src="" style="display:none;"
                             onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
-                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i
-                                class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i
-                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
-
-                <!-- ─── SCROLLABLE BODY ─── -->
                 <div class="modal-body" style="max-height: 65vh; overflow-y: auto; padding: 20px 24px;">
-
-                    <!-- Quick Summary -->
-                    <div class="bld-summary-strip"
-                        style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px; margin-bottom: 20px;">
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                    <div class="bld-summary-strip" style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px; margin-bottom: 20px;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
                             <div class="bld-summary-icon">🧾</div>
                             <div>
                                 <div class="bld-summary-label">Assessments</div>
                                 <div class="bld-summary-val" id="bv_bills">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
                             <div class="bld-summary-icon">🏬</div>
                             <div>
                                 <div class="bld-summary-label">Shops</div>
                                 <div class="bld-summary-val" id="bv_shops">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
                             <div class="bld-summary-icon">🏢</div>
                             <div>
                                 <div class="bld-summary-label">Floors</div>
                                 <div class="bld-summary-val" id="bv_floors">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
                             <div class="bld-summary-icon">✅</div>
                             <div>
                                 <div class="bld-summary-label">Mapped</div>
@@ -1320,11 +1301,7 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Variation Section -->
                     <div id="bv_variation_wrap" style="margin-bottom: 20px;"></div>
-
-                    <!-- Basic Information -->
                     <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
@@ -1392,12 +1369,8 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Amenities -->
                     <div class="bld-section-divider mb-3"><i class="bi bi-check2-square me-2"></i>Amenities</div>
                     <div class="mb-4" id="bv_amenities" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
-
-                    <!-- Remarks -->
                     <div class="bld-section-divider mb-3"><i class="bi bi-chat-text me-2"></i>Remarks</div>
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -1418,8 +1391,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- ─── FOOTER ─── -->
                 <div class="modal-footer bld-modal-footer">
                     <span class="bld-footer-status">Read-only view</span>
                     <div>
@@ -1435,7 +1406,6 @@
         </div>
     </div>
 
-    <!-- ─── POINT DETAILS MODAL ─── -->
     <div class="modal fade" id="pointDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1443,24 +1413,20 @@
                     <div class="bld-header-inner">
                         <div class="bld-header-icon"><i class="bi bi-people"></i></div>
                         <div>
-                            <h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span
-                                    id="pdGisid"></span></span>
+                            <h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span id="pdGisid"></span></span>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small"
-                            id="pdBillSummary"></span></div>
-                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch"
-                        placeholder="Search by assessment, owner name, or phone number...">
+                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small" id="pdBillSummary"></span></div>
+                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch" placeholder="Search by assessment, owner name, or phone number...">
                     <div id="pointDetailsContainer"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ─── QC MODAL ─── -->
     <div class="modal fade" id="qcModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1473,9 +1439,7 @@
                 </div>
                 <div class="modal-body p-4">
                     <input type="hidden" id="qc_point_data_id">
-                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment
-                        <span id="qc_assessment_display" class="fw-semibold"></span>
-                    </p>
+                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment <span id="qc_assessment_display" class="fw-semibold"></span></p>
                     <div class="mb-3">
                         <label class="bld-form-label">QC Usage</label>
                         <select class="form-select bld-input" id="qcusage">
@@ -1497,8 +1461,7 @@
                 </div>
                 <div class="modal-footer bld-modal-footer">
                     <button type="button" class="btn bld-btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save
-                        QC</button>
+                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save QC</button>
                 </div>
             </div>
         </div>
@@ -1511,8 +1474,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Cesium.js"></script>
-    <!-- Add below Cesium.js -->
-    <script src="https://cdn.jsdelivr.net/npm/ol-cesium@2.15.0/dist/ol-cesium.min.js"></script>
+    <!-- Add below Cesium.js - using specific version that works -->
+    <script src="https://cdn.jsdelivr.net/npm/ol-cesium@2.14.0/dist/ol-cesium.min.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -1563,12 +1526,13 @@
                 source: new ol.source.ImageStatic({
                     url: droneImageURL,
                     imageExtent: imageExtent,
-                    imageSmoothing: false
+                    imageSmoothing: false,
+                    // Add crossOrigin for better loading
+                    crossOrigin: 'anonymous'
                 }),
                 opacity: 0.90,
                 visible: true,
-                title: 'Drone View',
-                renderMode: 'image'
+                title: 'Drone View'
             });
 
             const osmLayer = new ol.layer.Tile({
@@ -1625,6 +1589,7 @@
             let ol3d = null;
             let is3DMode = false;
             let cesiumViewer = null;
+            let cesiumInitialized = false;
 
             // ─── STYLES ───
             function createPolygonStyle(feature) {
@@ -1655,7 +1620,6 @@
                             fill: new ol.style.Fill({
                                 color: fillColor
                             }),
-                            // Add height for 3D extrusion
                             height: height
                         })
                     ];
@@ -1992,7 +1956,7 @@
             const $stack = $('#mapControlsStack');
 
             // ─── CONTROLS INJECTION ───
-            // 1. FILTER TOGGLE WITH FULL SCROLLABLE CONTAINER
+            // 1. FILTER TOGGLE
             $stack.append(`
                 <div class="custom-filter-toggle">
                     <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
@@ -2001,7 +1965,6 @@
                     <div class="filter-dropdown" id="filterDropdown">
                         <div class="dropdown-header">🔍 Filter Features</div>
                         <div class="filter-scroll-container">
-                            <!-- Building Usage Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Building Usage</div>
                                 <select class="form-select form-select-sm" id="usageFilter">
@@ -2016,10 +1979,7 @@
                                     <option value="OTHER">Other</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Usage Variation Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Usage Variation</div>
                                 <select class="form-select form-select-sm" id="usageVariationFilter">
@@ -2030,10 +1990,7 @@
                                 </select>
                                 <small class="text-muted">Compare building usage with assessment records</small>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Area Variation Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Area Variation</div>
                                 <select class="form-select form-select-sm" id="areaVariationFilter">
@@ -2045,10 +2002,7 @@
                                 </select>
                                 <small class="text-muted">Compare building area with assessment area</small>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Area Range Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Area Range (sqft)</div>
                                 <div class="filter-range">
@@ -2057,12 +2011,9 @@
                                         <span class="range-separator">to</span>
                                         <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="0">
                                     </div>
-                                   </div>
+                                </div>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Zonation Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Zonation</div>
                                 <select class="form-select form-select-sm" id="zoneFilter">
@@ -2076,10 +2027,7 @@
                                     <option value="ZONE-G">Zone G</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Construction Type Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Construction Type</div>
                                 <select class="form-select form-select-sm" id="constructionFilter">
@@ -2093,10 +2041,7 @@
                                     <option value="UNDER_CONSTRUCTION">Under Construction</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Building Type Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Building Type</div>
                                 <select class="form-select form-select-sm" id="buildingTypeFilter">
@@ -2124,10 +2069,7 @@
                                     <option value="Others">Others</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Amenities Filters -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Amenities</div>
                                 <select class="form-select form-select-sm" id="amenitiesFilter" multiple size="4">
@@ -2145,10 +2087,7 @@
                                 </select>
                                 <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- UGD Status Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">UGD Status</div>
                                 <select class="form-select form-select-sm" id="ugdFilter">
@@ -2164,10 +2103,7 @@
                                     <option value="2_UGD_Connection_-_3_Stage_Completed">2 UGD - 3 Stage</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Survey Status Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Survey Status</div>
                                 <select class="form-select form-select-sm" id="surveyStatusFilter">
@@ -2177,10 +2113,7 @@
                                     <option value="partially_surveyed">Partially Surveyed</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Assessment Count Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Assessment Count</div>
                                 <select class="form-select form-select-sm" id="assessmentCountFilter">
@@ -2191,10 +2124,7 @@
                                     <option value="three_plus">3+ Assessments</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Floor Count Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Number of Floors</div>
                                 <select class="form-select form-select-sm" id="floorFilter">
@@ -2206,10 +2136,7 @@
                                     <option value="4">4+ Floors</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Shop Count Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Number of Shops</div>
                                 <select class="form-select form-select-sm" id="shopFilter">
@@ -2220,10 +2147,7 @@
                                     <option value="3">3+ Shops</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Quick Stats -->
                             <div class="quick-stats" id="quickStats">
                                 <div class="stat-item"><strong>Total:</strong> <span class="stat-value" id="statTotal">0</span></div>
                                 <div class="stat-item"><strong>Surveyed:</strong> <span class="stat-value" id="statSurveyed">0</span></div>
@@ -2231,10 +2155,7 @@
                                 <div class="stat-item"><strong>With Variation:</strong> <span class="stat-value" id="statVariation">0</span></div>
                             </div>
                         </div>
-
                         <div class="dropdown-divider"></div>
-
-                        <!-- Filter Actions -->
                         <div class="filter-actions">
                             <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn">
                                 <i class="bi bi-check-circle"></i> Apply Filters
@@ -2383,7 +2304,6 @@
                 </div>
             `);
 
-            // Add inside map controls stack
             // 7. 3D TOGGLE BUTTON
             $stack.append(`
                 <div class="custom-threed-toggle">
@@ -2554,6 +2474,13 @@
             function initOLCesium() {
                 if (ol3d) return ol3d;
 
+                // Check if olcs is available
+                if (typeof olcs === 'undefined') {
+                    console.error('❌ ol-cesium library not loaded');
+                    showToast('⚠️ 3D library not loaded. Please refresh and try again.', 4000);
+                    return null;
+                }
+
                 try {
                     // Set Cesium Ion access token
                     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1ZDQ3MmI5MC04ZjY4LTQyMjMtODA4Ni1jZmVjZTI1NDI1ODAiLCJpZCI6MjU5MDQ1LCJpYXQiOjE3Mzc2MjE5Nzd9.FqIhYpDCCR-sxsN_Cu5qXrVvKqG8OxOYzuDdxMUVh2Y';
@@ -2579,9 +2506,10 @@
                         requestVertexNormals: true
                     });
 
-                    // Set initial mode to 2D (Columbus View)
+                    // Set initial mode to 2D
                     ol3d.setEnabled(false);
 
+                    cesiumInitialized = true;
                     console.log('✅ OLCesium initialized successfully');
                     return ol3d;
                 } catch (error) {
@@ -2593,6 +2521,12 @@
 
             // ─── TOGGLE 3D MODE ───
             function toggle3DMode() {
+                // Check if olcs is available
+                if (typeof olcs === 'undefined') {
+                    showToast('⚠️ 3D library is loading. Please try again in a moment.', 3000);
+                    return;
+                }
+
                 if (!ol3d) {
                     // Try to initialize if not already done
                     ol3d = initOLCesium();
@@ -2704,26 +2638,26 @@
                     const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
                     const usageBadgeClass = variation.usage_status === 'MATCH' ? 'complete' : 'empty';
                     $('#bv_variation_wrap').html(`
-            <div class="bv-variation-strip" style="display: flex; flex-wrap: wrap; gap: 12px; background: #f8fafc; border-radius: 10px; padding: 12px 16px; border: 1px solid #e5e7eb;">
-                <div class="bv-variation-card" style="flex: 1; min-width: 120px;">
-                    <div class="stat-label" style="font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;">Building Area</div>
-                    <div class="stat-value" style="font-size: .9rem; font-weight: 700; color: #1e293b; margin-top: 2px;">${variation.building_area} <span class="stat-sub" style="font-size: .7rem; font-weight: 600; color: #94a3b8;">sqft</span></div>
-                </div>
-                <div class="bv-variation-card" style="flex: 1; min-width: 120px;">
-                    <div class="stat-label" style="font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;">Assessment Area</div>
-                    <div class="stat-value" style="font-size: .9rem; font-weight: 700; color: #1e293b; margin-top: 2px;">${variation.assessment_area} <span class="stat-sub" style="font-size: .7rem; font-weight: 600; color: #94a3b8;">sqft</span></div>
-                </div>
-                <div class="bv-variation-card" style="flex: 1; min-width: 120px;">
-                    <div class="stat-label" style="font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;">Area Variation</div>
-                    <div class="stat-value" style="font-size: .9rem; font-weight: 700; color: #1e293b; margin-top: 2px;">${variation.area_variation} <span class="stat-sub" style="font-size: .7rem; font-weight: 600; color: #94a3b8;">(${variation.variation_percentage}%)</span></div>
-                    <span class="bld-status-tag ${areaBadgeClass}" style="display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; letter-spacing: .3px; ${areaBadgeClass === 'complete' ? 'background: #dcfce7; color: #15803d;' : 'background: #fee2e2; color: #b91c1c;'}">${variation.area_status}</span>
-                </div>
-                <div class="bv-variation-card" style="flex: 1; min-width: 120px;">
-                    <div class="stat-label" style="font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;">Usage Check</div>
-                    <span class="bld-status-tag ${usageBadgeClass}" style="display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; letter-spacing: .3px; margin-top: 4px; ${usageBadgeClass === 'complete' ? 'background: #dcfce7; color: #15803d;' : 'background: #fee2e2; color: #b91c1c;'}">${variation.usage_status}</span>
-                </div>
-            </div>
-        `);
+                        <div class="bv-variation-strip">
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Building Area</div>
+                                <div class="stat-value">${variation.building_area} <span class="stat-sub">sqft</span></div>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Assessment Area</div>
+                                <div class="stat-value">${variation.assessment_area} <span class="stat-sub">sqft</span></div>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Area Variation</div>
+                                <div class="stat-value">${variation.area_variation} <span class="stat-sub">(${variation.variation_percentage}%)</span></div>
+                                <span class="bld-status-tag ${areaBadgeClass}">${variation.area_status}</span>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Usage Check</div>
+                                <span class="bld-status-tag ${usageBadgeClass}">${variation.usage_status}</span>
+                            </div>
+                        </div>
+                    `);
                 } else {
                     $('#bv_variation_wrap').html('');
                 }
@@ -2748,7 +2682,7 @@
                     if (val === 'Yes' || val === true || val === 1) {
                         hasAmenities = true;
                         amenHtml +=
-                            `<span class="bld-status-tag complete" style="display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: #dcfce7; color: #15803d; letter-spacing: .3px;"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                            `<span class="bld-status-tag complete"><i class="bi bi-check-circle"></i> ${label}</span>`;
                     }
                 });
                 $('#bv_amenities').html(hasAmenities ? amenHtml :
@@ -3711,7 +3645,6 @@
                             .map(v => v.gisid)
                         );
                     } else if (usageVariation === 'unmapped') {
-                        // Get all polygon gisids that are NOT in buildingVariations
                         const variationGisids = new Set(Object.keys(buildingVariations));
                         usageVariationGisids = new Set(
                             polygons
@@ -3920,15 +3853,12 @@
                     areaGisids
                 ].filter(set => set !== null);
 
-                // Start with all polygon gisids
                 let finalGisids = new Set(polygons.map(p => p.gisid));
 
-                // Intersect with each filter set
                 allFilterSets.forEach(filterSet => {
                     if (filterSet.size > 0) {
                         finalGisids = new Set([...finalGisids].filter(gisid => filterSet.has(gisid)));
                     } else {
-                        // If any filter set is empty, no results
                         finalGisids = new Set();
                     }
                 });
@@ -3983,7 +3913,6 @@
                 );
                 $('#featureCountBadge').text(`Buildings: ${visibleCount}`);
 
-                // Update quick stats
                 $('#statTotal').text(total);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(total - polygonDatas.length);
@@ -4004,19 +3933,14 @@
             }
 
             function resetAllFilters(silent = false) {
-                // Reset all dropdowns
                 $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter')
                     .val('all');
                 $('#usageVariationFilter, #areaVariationFilter, #assessmentCountFilter, #floorFilter, #shopFilter')
                     .val('all');
                 $('#amenitiesFilter').val([]);
-
-                // Reset area range
                 $('#minArea').val(0);
                 $('#maxArea').val(0);
-                $('#areaRange').val(0);
 
-                // ─── CLEAR SOURCE AND ADD ALL POLYGONS ───
                 polygonSource.clear();
                 polygons.forEach(poly => {
                     try {
@@ -4042,7 +3966,6 @@
                     }
                 });
 
-                // ─── UPDATE UI ───
                 const allFeatures = polygonSource.getFeatures();
                 $('#visibleCount').text(allFeatures.length);
                 $('#totalCount').text(allFeatures.length);
@@ -4051,7 +3974,6 @@
                 );
                 $('#featureCountBadge').text(`Buildings: ${allFeatures.length}`);
 
-                // Update quick stats
                 $('#statTotal').text(polygons.length);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(polygons.length - polygonDatas.length);
@@ -4074,7 +3996,6 @@
                 resetAllFilters(false);
             });
 
-
             $('#minArea').on('change', function() {
                 let val = parseInt($(this).val()) || 0;
                 const maxVal = parseInt($('#maxArea').val()) || 0;
@@ -4082,7 +4003,6 @@
                     val = maxVal;
                     $(this).val(val);
                 }
-
             });
 
             $('#maxArea').on('change', function() {
@@ -4092,7 +4012,6 @@
                     val = minVal;
                     $(this).val(val);
                 }
-
             });
 
             // ─── FILTER SEARCH ───
@@ -4279,6 +4198,15 @@
             console.log('📊 Lines:', lines.length);
             console.log('📊 Point Data:', pointDatas.length);
             console.log('🌍 3D mode ready - Click the cube button to activate');
+
+            // Check if olcs is loaded
+            setTimeout(function() {
+                if (typeof olcs !== 'undefined') {
+                    console.log('✅ ol-cesium library loaded successfully');
+                } else {
+                    console.warn('⚠️ ol-cesium library not loaded - 3D mode will not work');
+                }
+            }, 1000);
 
             setTimeout(() => {
                 showToast('👆 Click on any building to view details', 4000);
