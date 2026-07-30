@@ -539,7 +539,11 @@ class VariationController extends Controller
             $pointDatas,
             $misData
         );
-        return response()->json($buildingVariations);
+        return view('variation.data-details', [
+            'buildingVariations' => $buildingVariations,
+            'ward' => $ward,
+            'zone' => $zone
+        ]);
     }
     private function buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData)
     {
@@ -794,5 +798,69 @@ class VariationController extends Controller
         }
 
         return $result;
+    }
+    public function exportVariation($wardId)
+    {
+        $data = $this->dataControll($wardId);
+        $buildingVariations = $data->getData()['buildingVariations'] ?? [];
+
+        // Create Excel file
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Headers
+        $headers = [
+            'GIS ID',
+            'Building Usage',
+            'Building Area',
+            'Assessment Usage',
+            'Assessment Area',
+            'Area Variation',
+            'Variation %',
+            'Area Status',
+            'Usage Status',
+            'Floor Count',
+            'Basement'
+        ];
+
+        foreach ($headers as $index => $header) {
+            $sheet->setCellValueByColumnAndRow($index + 1, 1, $header);
+        }
+
+        // Data
+        $row = 2;
+        foreach ($buildingVariations as $gisid => $item) {
+            $sheet->setCellValueByColumnAndRow(1, $row, $gisid);
+            $sheet->setCellValueByColumnAndRow(2, $row, $item['building']['usage'] ?? 'N/A');
+            $sheet->setCellValueByColumnAndRow(3, $row, $item['building']['area'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(4, $row, $item['assessment']['usage'] ?? 'N/A');
+            $sheet->setCellValueByColumnAndRow(5, $row, $item['assessment']['area'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(6, $row, $item['area_comparison']['area_variation'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(7, $row, $item['area_comparison']['variation_percentage'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(8, $row, $item['area_comparison']['area_status'] ?? 'N/A');
+            $sheet->setCellValueByColumnAndRow(9, $row, $item['usage_comparison']['usage_status_label'] ?? 'N/A');
+            $sheet->setCellValueByColumnAndRow(10, $row, $item['building']['details']['number_floor'] ?? 0);
+            $sheet->setCellValueByColumnAndRow(11, $row, $item['building']['details']['basement'] ?? 0);
+            $row++;
+        }
+
+        // Auto-size columns
+        foreach (range('A', 'K') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = "data_variation_ward_{$wardId}_" . date('Y-m-d_H-i-s') . ".xlsx";
+
+        return response()->stream(
+            function () use ($writer) {
+                $writer->save('php://output');
+            },
+            200,
+            [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]
+        );
     }
 }
