@@ -1765,13 +1765,13 @@
             window.showDetails = function(gisid) {
                 $('#modalGisid').text(gisid);
                 $('#modalBody').html(`
-        <div class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2 text-muted">Loading building details...</p>
-        </div>
-    `);
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading building details...</p>
+                    </div>
+                `);
                 detailModal.show();
 
                 // FIXED: Use direct URL construction instead of route helper
@@ -1807,8 +1807,10 @@
             // ─── RENDER DETAILS ───
             function renderDetails(data, gisid) {
                 // Update PDF button
-                $('#exportSinglePdfBtn').attr('href',
-                    "{{ route('data-variation.single-pdf', [$ward->id, '']) }}/" + gisid);
+              $('#exportSinglePdfBtn').attr(
+    'href',
+    "/data-variation/single-pdf/{{ $ward->id }}/" + gisid
+);
 
                 let html = `
                     <div class="detail-modal-content">
