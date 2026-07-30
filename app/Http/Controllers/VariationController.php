@@ -586,6 +586,7 @@ class VariationController extends Controller
             $assessmentCount = 0;
             $assessmentUsage = null;
             $allAssessmentUsages = [];
+            $allAssessmentData = [];
             $hasUsageMismatch = false;
             $hasPartialMatch = false;
 
@@ -594,7 +595,7 @@ class VariationController extends Controller
                 foreach ($pointDataByGisid[$gisid] as $pd) {
 
                     $assessmentCount++;
-
+                    $allAssessmentData = $pd;
                     $mis = $misByAssessment->get($pd->assessment);
 
                     $pointArea = 0;
@@ -640,7 +641,6 @@ class VariationController extends Controller
                     };
 
                     if ($buildingUsage && $pointUsage) {
-
                         if (in_array($pointUsage, $allowedAssessmentUsage)) {
                             $hasPartialMatch = true;
                         } else {
@@ -718,6 +718,7 @@ class VariationController extends Controller
                 'usage_badge_class' => $usageBadgeClass,
 
                 'assessment_count' => $assessmentCount,
+                'allAssessmentData' => $allAssessmentData,
             ];
         }
 
