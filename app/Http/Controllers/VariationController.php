@@ -104,7 +104,6 @@ class VariationController extends Controller
         foreach ($pointDatas as $pd) {
             $pointDataByGisid[$pd->point_gisid][] = $pd;
         }
-return $pointDataByGisid;
         $result = [];
 
         foreach ($polygons as $polygon) {
@@ -119,12 +118,14 @@ return $pointDataByGisid;
             $buildingArea = $polygonSqfeet;
             $numberFloor = 1;
             $basement = 0;
+            $percentage = 0;
 
             if ($polyData) {
                 $numberFloor = floatval($polyData->number_floor ?? 0);
                 $basement = floatval($polyData->basement ?? 0);
+                $percentage = floatval(($polyData->percentage/100) ?? 0);
 
-                $buildingArea = ($numberFloor > 0 ? $numberFloor : 1) * $polygonSqfeet;
+                $buildingArea = ($numberFloor > 0 ? $numberFloor+$percentage : 1) * $polygonSqfeet;
 
                 if ($basement > 0) {
                     $buildingArea += ($polygonSqfeet * $basement);
