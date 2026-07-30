@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-     <style>
+    <style>
         /* ─── ROOT VARIABLES ─── */
         :root {
             --primary-color: #2563eb;
@@ -266,13 +266,40 @@
             flex-shrink: 0;
         }
 
-        .stat-card .stat-icon.blue { background: var(--primary-light); color: var(--primary-color); }
-        .stat-card .stat-icon.green { background: var(--success-light); color: var(--success-color); }
-        .stat-card .stat-icon.red { background: var(--danger-light); color: var(--danger-color); }
-        .stat-card .stat-icon.amber { background: var(--warning-light); color: var(--warning-color); }
-        .stat-card .stat-icon.cyan { background: var(--info-light); color: var(--info-color); }
-        .stat-card .stat-icon.purple { background: var(--purple-light); color: var(--purple-color); }
-        .stat-card .stat-icon.pink { background: var(--pink-light); color: var(--pink-color); }
+        .stat-card .stat-icon.blue {
+            background: var(--primary-light);
+            color: var(--primary-color);
+        }
+
+        .stat-card .stat-icon.green {
+            background: var(--success-light);
+            color: var(--success-color);
+        }
+
+        .stat-card .stat-icon.red {
+            background: var(--danger-light);
+            color: var(--danger-color);
+        }
+
+        .stat-card .stat-icon.amber {
+            background: var(--warning-light);
+            color: var(--warning-color);
+        }
+
+        .stat-card .stat-icon.cyan {
+            background: var(--info-light);
+            color: var(--info-color);
+        }
+
+        .stat-card .stat-icon.purple {
+            background: var(--purple-light);
+            color: var(--purple-color);
+        }
+
+        .stat-card .stat-icon.pink {
+            background: var(--pink-light);
+            color: var(--pink-color);
+        }
 
         .stat-card .stat-content {
             flex: 1;
@@ -302,8 +329,13 @@
             margin-left: 6px;
         }
 
-        .stat-card .stat-content .stat-value .trend.up { color: var(--success-color); }
-        .stat-card .stat-content .stat-value .trend.down { color: var(--danger-color); }
+        .stat-card .stat-content .stat-value .trend.up {
+            color: var(--success-color);
+        }
+
+        .stat-card .stat-content .stat-value .trend.down {
+            color: var(--danger-color);
+        }
 
         /* ─── FILTER CARD ─── */
         .filter-card {
@@ -645,9 +677,17 @@
             transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .variation-progress .bar-success { background: var(--success-color); }
-        .variation-progress .bar-danger { background: var(--danger-color); }
-        .variation-progress .bar-warning { background: var(--warning-color); }
+        .variation-progress .bar-success {
+            background: var(--success-color);
+        }
+
+        .variation-progress .bar-danger {
+            background: var(--danger-color);
+        }
+
+        .variation-progress .bar-warning {
+            background: var(--warning-color);
+        }
 
         /* ─── ACTION BUTTONS ─── */
         .btn-action {
@@ -797,7 +837,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* ─── DETAIL MODAL ─── */
@@ -1037,11 +1079,11 @@
                 gap: 4px;
             }
 
-            .filter-card .row > div {
+            .filter-card .row>div {
                 margin-bottom: 12px;
             }
 
-            .filter-card .row > div:last-child {
+            .filter-card .row>div:last-child {
                 margin-bottom: 0;
             }
 
@@ -1093,21 +1135,53 @@
             overflow: hidden;
         }
 
-        .gap-1 { gap: 4px; }
-        .gap-2 { gap: 8px; }
-        .gap-3 { gap: 12px; }
+        .gap-1 {
+            gap: 4px;
+        }
 
-        .fw-600 { font-weight: 600; }
-        .fw-700 { font-weight: 700; }
-        .fw-800 { font-weight: 800; }
+        .gap-2 {
+            gap: 8px;
+        }
 
-        .text-gray-400 { color: var(--gray-400); }
-        .text-gray-500 { color: var(--gray-500); }
-        .text-gray-600 { color: var(--gray-600); }
-        .text-gray-700 { color: var(--gray-700); }
-        .text-gray-800 { color: var(--gray-800); }
+        .gap-3 {
+            gap: 12px;
+        }
 
-        .bg-gray-50 { background: var(--gray-50); }
+        .fw-600 {
+            font-weight: 600;
+        }
+
+        .fw-700 {
+            font-weight: 700;
+        }
+
+        .fw-800 {
+            font-weight: 800;
+        }
+
+        .text-gray-400 {
+            color: var(--gray-400);
+        }
+
+        .text-gray-500 {
+            color: var(--gray-500);
+        }
+
+        .text-gray-600 {
+            color: var(--gray-600);
+        }
+
+        .text-gray-700 {
+            color: var(--gray-700);
+        }
+
+        .text-gray-800 {
+            color: var(--gray-800);
+        }
+
+        .bg-gray-50 {
+            background: var(--gray-50);
+        }
 
         .clickable-row {
             cursor: pointer;
@@ -1128,471 +1202,547 @@
 @endpush
 
 @section('content')
-<div class="container-fluid mt-4">
+    <div class="container-fluid mt-4">
 
-    <!-- PAGE HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <h4 class="mb-1 fw-bold">
-                <i class="bi bi-tags text-primary me-2"></i>
-                Data Variation Report - Ward {{ $ward->ward_no ?? 'N/A' }}
-            </h4>
-            <p class="text-muted small mb-0">
-                Zone: {{ $zone->zone_name ?? 'N/A' }} | {{ now()->format('l, d F Y') }}
-            </p>
-        </div>
-        <div class="header-actions">
-            <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Back
-            </a>
-            <div class="export-buttons-group">
-                <a href="{{ route('data-variation.export', $ward->id) }}" class="btn btn-export btn-export-excel btn-sm">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Excel
+        <!-- PAGE HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h4 class="mb-1 fw-bold">
+                    <i class="bi bi-tags text-primary me-2"></i>
+                    Data Variation Report - Ward {{ $ward->ward_no ?? 'N/A' }}
+                </h4>
+                <p class="text-muted small mb-0">
+                    Zone: {{ $zone->zone_name ?? 'N/A' }} | {{ now()->format('l, d F Y') }}
+                </p>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back
                 </a>
-                <a href="{{ route('data-variation.pdf', $ward->id) }}" class="btn btn-export btn-export-pdf btn-sm">
-                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
-                </a>
-                <button type="button" class="btn btn-export btn-export-csv btn-sm" id="exportFilteredBtn">
-                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Filtered
-                </button>
+                <div class="export-buttons-group">
+                    <a href="{{ route('data-variation.export', $ward->id) }}"
+                        class="btn btn-export btn-export-excel btn-sm">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </a>
+                    <a href="{{ route('data-variation.pdf', $ward->id) }}" class="btn btn-export btn-export-pdf btn-sm">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                    <button type="button" class="btn btn-export btn-export-csv btn-sm" id="exportFilteredBtn">
+                        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Filtered
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- STATISTICS CARDS -->
-    @php
-        $total = count($allData ?? $buildingVariations);
-        $matches = 0;
-        $variations = 0;
-        $partialMatches = 0;
-        $buildingOnly = 0;
-        $assessmentOnly = 0;
-        $noData = 0;
-        $areaVariations = 0;
+        <!-- STATISTICS CARDS -->
+        @php
+            $total = count($allData ?? $buildingVariations);
+            $matches = 0;
+            $variations = 0;
+            $partialMatches = 0;
+            $buildingOnly = 0;
+            $assessmentOnly = 0;
+            $noData = 0;
+            $areaVariations = 0;
 
-        foreach(($allData ?? $buildingVariations) as $item) {
-            $status = $item['usage_comparison']['usage_status'] ?? 'NO_DATA';
-            switch($status) {
-                case 'MATCH': $matches++; break;
-                case 'VARIATION': $variations++; break;
-                case 'PARTIAL_MATCH': $partialMatches++; break;
-                case 'BUILDING_ONLY': $buildingOnly++; break;
-                case 'ASSESSMENT_ONLY': $assessmentOnly++; break;
-                default: $noData++; break;
+            foreach ($allData ?? $buildingVariations as $item) {
+                $status = $item['usage_comparison']['usage_status'] ?? 'NO_DATA';
+                switch ($status) {
+                    case 'MATCH':
+                        $matches++;
+                        break;
+                    case 'VARIATION':
+                        $variations++;
+                        break;
+                    case 'PARTIAL_MATCH':
+                        $partialMatches++;
+                        break;
+                    case 'BUILDING_ONLY':
+                        $buildingOnly++;
+                        break;
+                    case 'ASSESSMENT_ONLY':
+                        $assessmentOnly++;
+                        break;
+                    default:
+                        $noData++;
+                        break;
+                }
+                if (($item['area_comparison']['area_status'] ?? '') === 'VARIATION') {
+                    $areaVariations++;
+                }
             }
-            if (($item['area_comparison']['area_status'] ?? '') === 'VARIATION') {
-                $areaVariations++;
-            }
-        }
-    @endphp
+        @endphp
 
-    <div class="row g-3 mb-4">
-        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-blue"><i class="bi bi-building"></i></div>
-                <div>
-                    <div class="stat-label">Total Buildings</div>
-                    <div class="stat-value">{{ $total }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-green"><i class="bi bi-check2-circle"></i></div>
-                <div>
-                    <div class="stat-label">Usage Match</div>
-                    <div class="stat-value">{{ $matches }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-red"><i class="bi bi-x-circle"></i></div>
-                <div>
-                    <div class="stat-label">Usage Variation</div>
-                    <div class="stat-value">{{ $variations }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-amber"><i class="bi bi-exclamation-triangle"></i></div>
-                <div>
-                    <div class="stat-label">Partial Match</div>
-                    <div class="stat-value">{{ $partialMatches }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-cyan"><i class="bi bi-building"></i></div>
-                <div>
-                    <div class="stat-label">Building Only</div>
-                    <div class="stat-value">{{ $buildingOnly }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-purple"><i class="bi bi-file-earmark-text"></i></div>
-                <div>
-                    <div class="stat-label">Assessment Only</div>
-                    <div class="stat-value">{{ $assessmentOnly }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-pink"><i class="bi bi-dash-circle"></i></div>
-                <div>
-                    <div class="stat-label">No Data</div>
-                    <div class="stat-value">{{ $noData }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-2 col-lg-3 col-md-4 col-6">
-            <div class="stat-card">
-                <div class="stat-icon stat-icon-cyan"><i class="bi bi-arrows-expand"></i></div>
-                <div>
-                    <div class="stat-label">Area Variation</div>
-                    <div class="stat-value">{{ $areaVariations }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FILTER SECTION -->
-    <div class="filter-card">
-        <form id="filterForm" method="GET" action="{{ route('variation.show', $ward->id) }}">
-            <div class="row g-3 align-items-end">
-                <div class="col-xl-2 col-lg-3 col-md-4">
-                    <label class="form-label"><i class="bi bi-tags me-1"></i>Usage Status</label>
-                    <select name="usage_status" id="filterUsageStatus" class="form-select form-select-sm">
-                        <option value="all" {{ request('usage_status') == 'all' ? 'selected' : '' }}>All Status</option>
-                        <option value="MATCH" {{ request('usage_status') == 'MATCH' ? 'selected' : '' }}>✅ Match</option>
-                        <option value="VARIATION" {{ request('usage_status') == 'VARIATION' ? 'selected' : '' }}>❌ Variation</option>
-                        <option value="PARTIAL_MATCH" {{ request('usage_status') == 'PARTIAL_MATCH' ? 'selected' : '' }}>⚠️ Partial Match</option>
-                        <option value="BUILDING_ONLY" {{ request('usage_status') == 'BUILDING_ONLY' ? 'selected' : '' }}>🏢 Building Only</option>
-                        <option value="ASSESSMENT_ONLY" {{ request('usage_status') == 'ASSESSMENT_ONLY' ? 'selected' : '' }}>📄 Assessment Only</option>
-                        <option value="NO_DATA" {{ request('usage_status') == 'NO_DATA' ? 'selected' : '' }}>⬜ No Data</option>
-                    </select>
-                </div>
-                <div class="col-xl-2 col-lg-3 col-md-4">
-                    <label class="form-label"><i class="bi bi-rulers me-1"></i>Area Status</label>
-                    <select name="area_status" id="filterAreaStatus" class="form-select form-select-sm">
-                        <option value="all" {{ request('area_status') == 'all' ? 'selected' : '' }}>All Status</option>
-                        <option value="MATCH" {{ request('area_status') == 'MATCH' ? 'selected' : '' }}>Match</option>
-                        <option value="VARIATION" {{ request('area_status') == 'VARIATION' ? 'selected' : '' }}>Variation</option>
-                    </select>
-                </div>
-                <div class="col-xl-2 col-lg-3 col-md-4">
-                    <label class="form-label"><i class="bi bi-hash me-1"></i>GIS ID</label>
-                    <input type="text" name="gisid" id="filterGisid" class="form-control form-control-sm"
-                           placeholder="Search GIS ID..." value="{{ request('gisid') }}">
-                </div>
-                <div class="col-xl-2 col-lg-3 col-md-4">
-                    <label class="form-label"><i class="bi bi-sliders me-1"></i>Area Variation %</label>
-                    <div class="d-flex gap-2">
-                        <input type="number" name="var_min" id="filterVarMin" class="form-control form-control-sm"
-                               placeholder="Min %" min="0" max="100" value="{{ request('var_min') }}">
-                        <input type="number" name="var_max" id="filterVarMax" class="form-control form-control-sm"
-                               placeholder="Max %" min="0" max="100" value="{{ request('var_max') }}">
+        <div class="row g-3 mb-4">
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-blue"><i class="bi bi-building"></i></div>
+                    <div>
+                        <div class="stat-label">Total Buildings</div>
+                        <div class="stat-value">{{ $total }}</div>
                     </div>
                 </div>
-                <div class="col-xl-2 col-lg-3 col-md-4">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <button type="submit" class="btn btn-primary btn-filter">
-                            <i class="bi bi-funnel me-1"></i> Apply
-                        </button>
-                        <a href="{{ route('variation.show', $ward->id) }}" class="btn btn-outline-secondary btn-filter">
-                            <i class="bi bi-arrow-counterclockwise"></i> Reset
-                        </a>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-green"><i class="bi bi-check2-circle"></i></div>
+                    <div>
+                        <div class="stat-label">Usage Match</div>
+                        <div class="stat-value">{{ $matches }}</div>
                     </div>
                 </div>
-                <div class="col-xl-2 col-lg-3 col-md-4">
-                    <label class="form-label"><i class="bi bi-eye me-1"></i>Per Page</label>
-                    <select name="per_page" id="perPageSelect" class="form-select form-select-sm">
-                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-                        <option value="20" {{ request('per_page') == 20 ? 'selected' : '' }}>20</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-                        <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
-                    </select>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-red"><i class="bi bi-x-circle"></i></div>
+                    <div>
+                        <div class="stat-label">Usage Variation</div>
+                        <div class="stat-value">{{ $variations }}</div>
+                    </div>
                 </div>
             </div>
-        </form>
-    </div>
-
-    <!-- TABLE -->
-    <div class="table-container" id="tableContainer">
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="spinner"></div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-amber"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div>
+                        <div class="stat-label">Partial Match</div>
+                        <div class="stat-value">{{ $partialMatches }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-cyan"><i class="bi bi-building"></i></div>
+                    <div>
+                        <div class="stat-label">Building Only</div>
+                        <div class="stat-value">{{ $buildingOnly }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-purple"><i class="bi bi-file-earmark-text"></i></div>
+                    <div>
+                        <div class="stat-label">Assessment Only</div>
+                        <div class="stat-value">{{ $assessmentOnly }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-pink"><i class="bi bi-dash-circle"></i></div>
+                    <div>
+                        <div class="stat-label">No Data</div>
+                        <div class="stat-value">{{ $noData }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-cyan"><i class="bi bi-arrows-expand"></i></div>
+                    <div>
+                        <div class="stat-label">Area Variation</div>
+                        <div class="stat-value">{{ $areaVariations }}</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="table-header">
-            <h5><i class="bi bi-table me-2"></i>Data Variation Details</h5>
-            <span class="text-muted small">
-                Showing {{ $pagination['from'] ?? 0 }} to {{ $pagination['to'] ?? 0 }} of {{ $pagination['total'] ?? 0 }} records
-            </span>
+
+        <!-- FILTER SECTION -->
+        <div class="filter-card">
+            <form id="filterForm" method="GET" action="{{ route('variation.show', $ward->id) }}">
+                <div class="row g-3 align-items-end">
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="form-label"><i class="bi bi-tags me-1"></i>Usage Status</label>
+                        <select name="usage_status" id="filterUsageStatus" class="form-select form-select-sm">
+                            <option value="all" {{ request('usage_status') == 'all' ? 'selected' : '' }}>All Status
+                            </option>
+                            <option value="MATCH" {{ request('usage_status') == 'MATCH' ? 'selected' : '' }}>✅ Match
+                            </option>
+                            <option value="VARIATION" {{ request('usage_status') == 'VARIATION' ? 'selected' : '' }}>❌
+                                Variation</option>
+                            <option value="PARTIAL_MATCH"
+                                {{ request('usage_status') == 'PARTIAL_MATCH' ? 'selected' : '' }}>⚠️ Partial Match
+                            </option>
+                            <option value="BUILDING_ONLY"
+                                {{ request('usage_status') == 'BUILDING_ONLY' ? 'selected' : '' }}>🏢 Building Only
+                            </option>
+                            <option value="ASSESSMENT_ONLY"
+                                {{ request('usage_status') == 'ASSESSMENT_ONLY' ? 'selected' : '' }}>📄 Assessment Only
+                            </option>
+                            <option value="NO_DATA" {{ request('usage_status') == 'NO_DATA' ? 'selected' : '' }}>⬜ No Data
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="form-label"><i class="bi bi-rulers me-1"></i>Area Status</label>
+                        <select name="area_status" id="filterAreaStatus" class="form-select form-select-sm">
+                            <option value="all" {{ request('area_status') == 'all' ? 'selected' : '' }}>All Status
+                            </option>
+                            <option value="MATCH" {{ request('area_status') == 'MATCH' ? 'selected' : '' }}>Match
+                            </option>
+                            <option value="VARIATION" {{ request('area_status') == 'VARIATION' ? 'selected' : '' }}>
+                                Variation</option>
+                        </select>
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="form-label"><i class="bi bi-hash me-1"></i>GIS ID</label>
+                        <input type="text" name="gisid" id="filterGisid" class="form-control form-control-sm"
+                            placeholder="Search GIS ID..." value="{{ request('gisid') }}">
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="form-label"><i class="bi bi-sliders me-1"></i>Area Variation %</label>
+                        <div class="d-flex gap-2">
+                            <input type="number" name="var_min" id="filterVarMin" class="form-control form-control-sm"
+                                placeholder="Min %" min="0" max="100" value="{{ request('var_min') }}">
+                            <input type="number" name="var_max" id="filterVarMax" class="form-control form-control-sm"
+                                placeholder="Max %" min="0" max="100" value="{{ request('var_max') }}">
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="submit" class="btn btn-primary btn-filter">
+                                <i class="bi bi-funnel me-1"></i> Apply
+                            </button>
+                            <a href="{{ route('variation.show', $ward->id) }}"
+                                class="btn btn-outline-secondary btn-filter">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="form-label"><i class="bi bi-eye me-1"></i>Per Page</label>
+                        <select name="per_page" id="perPageSelect" class="form-select form-select-sm">
+                            <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+                            <option value="20" {{ request('per_page') == 20 ? 'selected' : '' }}>20</option>
+                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
         </div>
-        <div class="table-responsive">
-            <table class="table table-hover" id="variationTable">
-                <thead>
-                    <tr>
-                        <th style="width:50px;">#</th>
-                        <th>GIS ID</th>
-                        <th>Building Usage</th>
-                        <th>Assessment Usage</th>
-                        <th>Usage Status</th>
-                        <th>Building Area</th>
-                        <th>Assessment Area</th>
-                        <th>Area Variation</th>
-                        <th>Area Status</th>
-                        <th>Assessments</th>
-                        <th style="width:120px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    @forelse($buildingVariations as $gisid => $variation)
-                        @php
-                            $buildingArea = $variation['building']['area'] ?? 0;
-                            $buildingUsage = $variation['building']['usage'] ?? null;
-                            $assessmentArea = $variation['assessment']['area'] ?? 0;
-                            $assessmentUsage = $variation['assessment']['usage'] ?? null;
-                            $assessmentCount = $variation['assessment']['count'] ?? 0;
-                            $usageStatus = $variation['usage_comparison']['usage_status'] ?? 'NO_DATA';
-                            $usageStatusLabel = $variation['usage_comparison']['usage_status_label'] ?? 'No Data';
-                            $areaVariation = $variation['area_comparison']['area_variation'] ?? 0;
-                            $areaStatus = $variation['area_comparison']['area_status'] ?? 'MATCH';
-                            $variationPercentage = $variation['area_comparison']['variation_percentage'] ?? 0;
-                            $allAssessmentUsages = $variation['assessment']['all_usages'] ?? [];
-                            $hasMultiple = $variation['assessment']['has_multiple'] ?? false;
-                            $floorCount = $variation['building']['details']['number_floor'] ?? 'N/A';
-                            $basementCount = $variation['building']['details']['basement'] ?? 'N/A';
-                            $assessmentTypeStatus = $variation['assessment']['details']['assessment_type_status'] ?? 'N/A';
 
-                            $badgeClass = '';
-                            $icon = '';
-                            switch($usageStatus) {
-                                case 'MATCH': $badgeClass = 'badge-match'; $icon = 'bi-check-circle'; break;
-                                case 'VARIATION': $badgeClass = 'badge-variation'; $icon = 'bi-x-circle'; break;
-                                case 'PARTIAL_MATCH': $badgeClass = 'badge-partial'; $icon = 'bi-exclamation-triangle'; break;
-                                case 'BUILDING_ONLY': $badgeClass = 'badge-building-only'; $icon = 'bi-building'; break;
-                                case 'ASSESSMENT_ONLY': $badgeClass = 'badge-assessment-only'; $icon = 'bi-file-earmark-text'; break;
-                                default: $badgeClass = 'badge-no-data'; $icon = 'bi-dash-circle'; break;
-                            }
-
-                            $isUsageVariation = $usageStatus === 'VARIATION';
-                            $isPartialMatch = $usageStatus === 'PARTIAL_MATCH';
-                            $isBuildingOnly = $usageStatus === 'BUILDING_ONLY';
-                            $isAssessmentOnly = $usageStatus === 'ASSESSMENT_ONLY';
-                            $isNoData = $usageStatus === 'NO_DATA';
-
-                            $usageValueClass = $isUsageVariation ? 'mismatch' : ($isBuildingOnly || $isAssessmentOnly || $isNoData ? 'null-value' : 'match');
-
-                            $assessmentDisplay = $assessmentUsage ?? 'N/A';
-                            if ($isBuildingOnly) $assessmentDisplay = '— (Not Assessed)';
-                            if ($isNoData) $assessmentDisplay = '— (No Data)';
-
-                            $buildingDisplay = $buildingUsage ?? 'N/A';
-                            if ($isAssessmentOnly) $buildingDisplay = '— (Not Mapped)';
-                            if ($isNoData) $buildingDisplay = '— (No Data)';
-
-                            $usageTooltip = !empty($allAssessmentUsages) ? implode(', ', $allAssessmentUsages) : 'No usages';
-                        @endphp
-                        <tr class="clickable-row" data-gisid="{{ $gisid }}" data-ward="{{ $ward->id }}">
-                            <td>{{ $loop->iteration + (($pagination['current_page'] - 1) * $pagination['per_page']) }}</td>
-                            <td>
-                                <code>{{ $gisid }}</code>
-                                @if($hasMultiple)
-                                    <span class="badge bg-info ms-1" title="Multiple assessments">M</span>
-                                @endif
-                            </td>
-                            <td>
-                                <span class="usage-detail-box" title="Building Usage">
-                                    <span class="label">Usage:</span>
-                                    <span class="value {{ $usageValueClass }}">{{ $buildingDisplay }}</span>
-                                </span>
-                                <div class="small text-muted mt-1">
-                                    <span class="badge bg-light text-dark">F: {{ $floorCount }}</span>
-                                    <span class="badge bg-light text-dark">B: {{ $basementCount }}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="usage-detail-box" title="Assessment Usage">
-                                    <span class="label">Usage:</span>
-                                    <span class="value {{ $usageValueClass }}">{{ $assessmentDisplay }}</span>
-                                </span>
-                                @if($isUsageVariation)
-                                    <span class="badge badge-variation ms-1" title="Usage mismatch">Mismatch</span>
-                                @endif
-                                @if($isPartialMatch)
-                                    <span class="badge badge-partial ms-1" title="Partial match">Partial</span>
-                                @endif
-                                @if(!empty($allAssessmentUsages) && count($allAssessmentUsages) > 1)
-                                    <div class="small text-muted mt-1">
-                                        <i class="bi bi-list-ul"></i>
-                                        <span title="All usages: {{ $usageTooltip }}">{{ count($allAssessmentUsages) }} usages</span>
-                                    </div>
-                                @endif
-                                @if($assessmentTypeStatus != 'N/A' && $assessmentTypeStatus != 'OTHER')
-                                    <span class="badge badge-assessment-type {{ strtolower(str_replace(' ', '', $assessmentTypeStatus)) }}">
-                                        {{ $assessmentTypeStatus }}
-                                    </span>
-                                @endif
-                            </td>
-                            <td>
-                                <span class="{{ $badgeClass }}" title="{{ $usageStatusLabel }}">
-                                    <i class="{{ $icon }} me-1"></i>
-                                    {{ $usageStatusLabel }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="fw-bold">{{ number_format($buildingArea, 2) }}</span>
-                                <span class="text-muted small">sqft</span>
-                            </td>
-                            <td>
-                                <span class="fw-bold">{{ number_format($assessmentArea, 2) }}</span>
-                                <span class="text-muted small">sqft</span>
-                            </td>
-                            <td class="{{ $areaVariation > 0 ? 'text-danger' : ($areaVariation < 0 ? 'text-success' : 'text-muted') }}">
-                                {{ $areaVariation > 0 ? '+' : '' }}{{ number_format($areaVariation, 2) }}
-                                <br>
-                                <small class="text-muted">{{ number_format($variationPercentage, 1) }}%</small>
-                            </td>
-                            <td>
-                                <span class="{{ $areaStatus == 'VARIATION' ? 'badge-variation' : 'badge-match' }}">
-                                    {{ $areaStatus }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge {{ $assessmentCount == 0 ? 'bg-secondary' : 'bg-primary' }}">
-                                    {{ $assessmentCount }}
-                                </span>
-                                @if($assessmentCount > 0)
-                                    <br>
-                                    <small class="text-muted">assessments</small>
-                                @endif
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-1">
-                                    <button type="button" class="btn btn-sm btn-outline-info"
-                                            onclick="showDetails('{{ $gisid }}')"
-                                            title="View Details">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <a href="{{ route('data-variation.single-pdf', [$ward->id, $gisid]) }}"
-                                       class="btn btn-sm btn-outline-danger"
-                                       title="Download PDF (FORM 2)">
-                                        <i class="bi bi-file-earmark-pdf"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
+        <!-- TABLE -->
+        <div class="table-container" id="tableContainer">
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>
+            </div>
+            <div class="table-header">
+                <h5><i class="bi bi-table me-2"></i>Data Variation Details</h5>
+                <span class="text-muted small">
+                    Showing {{ $pagination['from'] ?? 0 }} to {{ $pagination['to'] ?? 0 }} of
+                    {{ $pagination['total'] ?? 0 }} records
+                </span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover" id="variationTable">
+                    <thead>
                         <tr>
-                            <td colspan="11">
-                                <div class="empty-state">
-                                    <i class="bi bi-inbox"></i>
-                                    <h5>No Records Found</h5>
-                                    <p>No variation data available for this ward with the applied filters.</p>
-                                </div>
-                            </td>
+                            <th style="width:50px;">#</th>
+                            <th>GIS ID</th>
+                            <th>Building Usage</th>
+                            <th>Assessment Usage</th>
+                            <th>Usage Status</th>
+                            <th>Building Area</th>
+                            <th>Assessment Area</th>
+                            <th>Area Variation</th>
+                            <th>Area Status</th>
+                            <th>Assessments</th>
+                            <th style="width:120px;">Actions</th>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody id="tableBody">
+                        @forelse($buildingVariations as $gisid => $variation)
+                            @php
+                                $buildingArea = $variation['building']['area'] ?? 0;
+                                $buildingUsage = $variation['building']['usage'] ?? null;
+                                $assessmentArea = $variation['assessment']['area'] ?? 0;
+                                $assessmentUsage = $variation['assessment']['usage'] ?? null;
+                                $assessmentCount = $variation['assessment']['count'] ?? 0;
+                                $usageStatus = $variation['usage_comparison']['usage_status'] ?? 'NO_DATA';
+                                $usageStatusLabel = $variation['usage_comparison']['usage_status_label'] ?? 'No Data';
+                                $areaVariation = $variation['area_comparison']['area_variation'] ?? 0;
+                                $areaStatus = $variation['area_comparison']['area_status'] ?? 'MATCH';
+                                $variationPercentage = $variation['area_comparison']['variation_percentage'] ?? 0;
+                                $allAssessmentUsages = $variation['assessment']['all_usages'] ?? [];
+                                $hasMultiple = $variation['assessment']['has_multiple'] ?? false;
+                                $floorCount = $variation['building']['details']['number_floor'] ?? 'N/A';
+                                $basementCount = $variation['building']['details']['basement'] ?? 'N/A';
+                                $assessmentTypeStatus =
+                                    $variation['assessment']['details']['assessment_type_status'] ?? 'N/A';
 
-        <!-- PAGINATION -->
-        @if(($pagination['total'] ?? 0) > 0)
-        <div class="pagination-container">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div class="text-muted small">
-                    Showing {{ $pagination['from'] ?? 0 }} to {{ $pagination['to'] ?? 0 }} of {{ $pagination['total'] ?? 0 }} entries
-                </div>
-                <nav aria-label="Page navigation">
-                    <ul class="pagination pagination-sm">
-                        <li class="page-item {{ ($pagination['current_page'] ?? 1) <= 1 ? 'disabled' : '' }}">
-                            <a class="page-link" href="?page={{ ($pagination['current_page'] ?? 1) - 1 }}&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">
-                                <i class="bi bi-chevron-left"></i>
-                            </a>
-                        </li>
-                        @php
-                            $currentPage = $pagination['current_page'] ?? 1;
-                            $lastPage = $pagination['last_page'] ?? 1;
-                            $start = max(1, $currentPage - 2);
-                            $end = min($lastPage, $currentPage + 2);
-                            if ($end - $start < 4) {
-                                if ($start == 1) $end = min(5, $lastPage);
-                                else $start = max(1, $lastPage - 4);
-                            }
-                        @endphp
-                        @if($start > 1)
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">1</a>
-                            </li>
-                            @if($start > 2)
-                                <li class="page-item disabled"><span class="page-link">...</span></li>
-                            @endif
-                        @endif
-                        @for($i = $start; $i <= $end; $i++)
-                            <li class="page-item {{ $i == $currentPage ? 'active' : '' }}">
-                                <a class="page-link" href="?page={{ $i }}&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">
-                                    {{ $i }}
-                                </a>
-                            </li>
-                        @endfor
-                        @if($end < $lastPage)
-                            @if($end < $lastPage - 1)
-                                <li class="page-item disabled"><span class="page-link">...</span></li>
-                            @endif
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ $lastPage }}&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">
-                                    {{ $lastPage }}
-                                </a>
-                            </li>
-                        @endif
-                        <li class="page-item {{ ($pagination['current_page'] ?? 1) >= ($pagination['last_page'] ?? 1) ? 'disabled' : '' }}">
-                            <a class="page-link" href="?page={{ ($pagination['current_page'] ?? 1) + 1 }}&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-        @endif
-    </div>
-</div>
+                                $badgeClass = '';
+                                $icon = '';
+                                switch ($usageStatus) {
+                                    case 'MATCH':
+                                        $badgeClass = 'badge-match';
+                                        $icon = 'bi-check-circle';
+                                        break;
+                                    case 'VARIATION':
+                                        $badgeClass = 'badge-variation';
+                                        $icon = 'bi-x-circle';
+                                        break;
+                                    case 'PARTIAL_MATCH':
+                                        $badgeClass = 'badge-partial';
+                                        $icon = 'bi-exclamation-triangle';
+                                        break;
+                                    case 'BUILDING_ONLY':
+                                        $badgeClass = 'badge-building-only';
+                                        $icon = 'bi-building';
+                                        break;
+                                    case 'ASSESSMENT_ONLY':
+                                        $badgeClass = 'badge-assessment-only';
+                                        $icon = 'bi-file-earmark-text';
+                                        break;
+                                    default:
+                                        $badgeClass = 'badge-no-data';
+                                        $icon = 'bi-dash-circle';
+                                        break;
+                                }
 
-<!-- DETAIL MODAL -->
-<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="detailModalLabel">
-                    <i class="bi bi-info-circle text-primary me-2"></i>
-                    Building Details - <span id="modalGisid"></span>
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                $isUsageVariation = $usageStatus === 'VARIATION';
+                                $isPartialMatch = $usageStatus === 'PARTIAL_MATCH';
+                                $isBuildingOnly = $usageStatus === 'BUILDING_ONLY';
+                                $isAssessmentOnly = $usageStatus === 'ASSESSMENT_ONLY';
+                                $isNoData = $usageStatus === 'NO_DATA';
+
+                                $usageValueClass = $isUsageVariation
+                                    ? 'mismatch'
+                                    : ($isBuildingOnly || $isAssessmentOnly || $isNoData
+                                        ? 'null-value'
+                                        : 'match');
+
+                                $assessmentDisplay = $assessmentUsage ?? 'N/A';
+                                if ($isBuildingOnly) {
+                                    $assessmentDisplay = '— (Not Assessed)';
+                                }
+                                if ($isNoData) {
+                                    $assessmentDisplay = '— (No Data)';
+                                }
+
+                                $buildingDisplay = $buildingUsage ?? 'N/A';
+                                if ($isAssessmentOnly) {
+                                    $buildingDisplay = '— (Not Mapped)';
+                                }
+                                if ($isNoData) {
+                                    $buildingDisplay = '— (No Data)';
+                                }
+
+                                $usageTooltip = !empty($allAssessmentUsages)
+                                    ? implode(', ', $allAssessmentUsages)
+                                    : 'No usages';
+                            @endphp
+                            <tr class="clickable-row" data-gisid="{{ $gisid }}" data-ward="{{ $ward->id }}">
+                                <td>{{ $loop->iteration + ($pagination['current_page'] - 1) * $pagination['per_page'] }}
+                                </td>
+                                <td>
+                                    <code>{{ $gisid }}</code>
+                                    @if ($hasMultiple)
+                                        <span class="badge bg-info ms-1" title="Multiple assessments">M</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="usage-detail-box" title="Building Usage">
+                                        <span class="label">Usage:</span>
+                                        <span class="value {{ $usageValueClass }}">{{ $buildingDisplay }}</span>
+                                    </span>
+                                    <div class="small text-muted mt-1">
+                                        <span class="badge bg-light text-dark">F: {{ $floorCount }}</span>
+                                        <span class="badge bg-light text-dark">B: {{ $basementCount }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="usage-detail-box" title="Assessment Usage">
+                                        <span class="label">Usage:</span>
+                                        <span class="value {{ $usageValueClass }}">{{ $assessmentDisplay }}</span>
+                                    </span>
+                                    @if ($isUsageVariation)
+                                        <span class="badge badge-variation ms-1" title="Usage mismatch">Mismatch</span>
+                                    @endif
+                                    @if ($isPartialMatch)
+                                        <span class="badge badge-partial ms-1" title="Partial match">Partial</span>
+                                    @endif
+                                    @if (!empty($allAssessmentUsages) && count($allAssessmentUsages) > 1)
+                                        <div class="small text-muted mt-1">
+                                            <i class="bi bi-list-ul"></i>
+                                            <span
+                                                title="All usages: {{ $usageTooltip }}">{{ count($allAssessmentUsages) }}
+                                                usages</span>
+                                        </div>
+                                    @endif
+                                    @if ($assessmentTypeStatus != 'N/A' && $assessmentTypeStatus != 'OTHER')
+                                        <span
+                                            class="badge badge-assessment-type {{ strtolower(str_replace(' ', '', $assessmentTypeStatus)) }}">
+                                            {{ $assessmentTypeStatus }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="{{ $badgeClass }}" title="{{ $usageStatusLabel }}">
+                                        <i class="{{ $icon }} me-1"></i>
+                                        {{ $usageStatusLabel }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ number_format($buildingArea, 2) }}</span>
+                                    <span class="text-muted small">sqft</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ number_format($assessmentArea, 2) }}</span>
+                                    <span class="text-muted small">sqft</span>
+                                </td>
+                                <td
+                                    class="{{ $areaVariation > 0 ? 'text-danger' : ($areaVariation < 0 ? 'text-success' : 'text-muted') }}">
+                                    {{ $areaVariation > 0 ? '+' : '' }}{{ number_format($areaVariation, 2) }}
+                                    <br>
+                                    <small class="text-muted">{{ number_format($variationPercentage, 1) }}%</small>
+                                </td>
+                                <td>
+                                    <span class="{{ $areaStatus == 'VARIATION' ? 'badge-variation' : 'badge-match' }}">
+                                        {{ $areaStatus }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {{ $assessmentCount == 0 ? 'bg-secondary' : 'bg-primary' }}">
+                                        {{ $assessmentCount }}
+                                    </span>
+                                    @if ($assessmentCount > 0)
+                                        <br>
+                                        <small class="text-muted">assessments</small>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                            onclick="showDetails('{{ $gisid }}')" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <a href="/data-variation/single-pdf/{{ $ward->id }}/{{ $gisid }}"
+   class="btn btn-sm btn-outline-danger"
+   title="Download PDF (FORM 2)"
+   target="_blank">
+    <i class="bi bi-file-earmark-pdf"></i>
+</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="11">
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox"></i>
+                                        <h5>No Records Found</h5>
+                                        <p>No variation data available for this ward with the applied filters.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-            <div class="modal-body" id="modalBody">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+
+            <!-- PAGINATION -->
+            @if (($pagination['total'] ?? 0) > 0)
+                <div class="pagination-container">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div class="text-muted small">
+                            Showing {{ $pagination['from'] ?? 0 }} to {{ $pagination['to'] ?? 0 }} of
+                            {{ $pagination['total'] ?? 0 }} entries
+                        </div>
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm">
+                                <li class="page-item {{ ($pagination['current_page'] ?? 1) <= 1 ? 'disabled' : '' }}">
+                                    <a class="page-link"
+                                        href="?page={{ ($pagination['current_page'] ?? 1) - 1 }}&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                                @php
+                                    $currentPage = $pagination['current_page'] ?? 1;
+                                    $lastPage = $pagination['last_page'] ?? 1;
+                                    $start = max(1, $currentPage - 2);
+                                    $end = min($lastPage, $currentPage + 2);
+                                    if ($end - $start < 4) {
+                                        if ($start == 1) {
+                                            $end = min(5, $lastPage);
+                                        } else {
+                                            $start = max(1, $lastPage - 4);
+                                        }
+                                    }
+                                @endphp
+                                @if ($start > 1)
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                            href="?page=1&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">1</a>
+                                    </li>
+                                    @if ($start > 2)
+                                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                                    @endif
+                                @endif
+                                @for ($i = $start; $i <= $end; $i++)
+                                    <li class="page-item {{ $i == $currentPage ? 'active' : '' }}">
+                                        <a class="page-link"
+                                            href="?page={{ $i }}&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">
+                                            {{ $i }}
+                                        </a>
+                                    </li>
+                                @endfor
+                                @if ($end < $lastPage)
+                                    @if ($end < $lastPage - 1)
+                                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                                    @endif
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                            href="?page={{ $lastPage }}&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">
+                                            {{ $lastPage }}
+                                        </a>
+                                    </li>
+                                @endif
+                                <li
+                                    class="page-item {{ ($pagination['current_page'] ?? 1) >= ($pagination['last_page'] ?? 1) ? 'disabled' : '' }}">
+                                    <a class="page-link"
+                                        href="?page={{ ($pagination['current_page'] ?? 1) + 1 }}&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <a href="#" class="btn btn-export btn-export-pdf" id="exportSinglePdfBtn">
-                    <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
-                </a>
+            @endif
+        </div>
+    </div>
+
+    <!-- DETAIL MODAL -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailModalLabel">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        Building Details - <span id="modalGisid"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="#" class="btn btn-export btn-export-pdf" id="exportSinglePdfBtn">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-</div>
 @endsection
 
 @push('scripts')
@@ -1611,41 +1761,45 @@
             });
 
             // ─── SHOW DETAILS WITH LAZY LOADING ───
+            // ─── SHOW DETAILS WITH LAZY LOADING ───
             window.showDetails = function(gisid) {
                 $('#modalGisid').text(gisid);
                 $('#modalBody').html(`
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2 text-muted">Loading building details...</p>
-                    </div>
-                `);
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading building details...</p>
+        </div>
+    `);
                 detailModal.show();
 
-                // Fetch details via AJAX
+                // FIXED: Use direct URL construction instead of route helper
+                const url = `/data-variation/details/${wardId}/${gisid}`;
+
                 $.ajax({
-                    url: "{{ route('data-variation.details', ['wardId' => $ward->id, 'gisid' => '']) }}/" + gisid,
+                    url: url,
                     method: 'GET',
                     success: function(response) {
                         if (response.success && response.data) {
                             renderDetails(response.data, gisid);
                         } else {
                             $('#modalBody').html(`
-                                <div class="alert alert-danger">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                    Failed to load building details. Please try again.
-                                </div>
-                            `);
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Failed to load building details. Please try again.
+                    </div>
+                `);
                         }
                     },
-                    error: function() {
+                    error: function(xhr) {
+                        console.error('AJAX Error:', xhr);
                         $('#modalBody').html(`
-                            <div class="alert alert-danger">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                Error loading building details.
-                            </div>
-                        `);
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Error loading building details. Status: ${xhr.status}
+                </div>
+            `);
                     }
                 });
             };
@@ -1653,7 +1807,8 @@
             // ─── RENDER DETAILS ───
             function renderDetails(data, gisid) {
                 // Update PDF button
-                $('#exportSinglePdfBtn').attr('href', "{{ route('data-variation.single-pdf', [$ward->id, '']) }}/" + gisid);
+                $('#exportSinglePdfBtn').attr('href',
+                    "{{ route('data-variation.single-pdf', [$ward->id, '']) }}/" + gisid);
 
                 let html = `
                     <div class="detail-modal-content">
@@ -1794,8 +1949,8 @@
                                 <div class="detail-section">
                                     <h6><i class="bi bi-list-ul me-2"></i>Assessment Points</h6>
                                     ${data.assessment.details?.points && data.assessment.details.points.length > 0 ? `
-                                        <div class="assessment-points-list">
-                                            ${data.assessment.details.points.map(p => `
+                                            <div class="assessment-points-list">
+                                                ${data.assessment.details.points.map(p => `
                                                 <div class="point-item">
                                                     <span class="fw-bold">${p.assessment}</span>
                                                     <span class="text-muted">|</span>
@@ -1807,10 +1962,10 @@
                                                     ${p.mis_data ? `<span class="badge bg-info ms-1">MIS: ${p.mis_data.plot_area || 'N/A'}</span>` : ''}
                                                 </div>
                                             `).join('')}
-                                        </div>
-                                    ` : `
-                                        <div class="text-muted">No assessment points available</div>
-                                    `}
+                                            </div>
+                                        ` : `
+                                            <div class="text-muted">No assessment points available</div>
+                                        `}
                                 </div>
                             </div>
                         </div>
@@ -1839,10 +1994,13 @@
                     title: 'Exporting...',
                     text: 'Please wait while we generate your file',
                     allowOutsideClick: false,
-                    didOpen: () => { Swal.showLoading(); }
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
                 });
 
-                window.location.href = "{{ route('data-variation.export', $ward->id) }}?" + params.toString();
+                window.location.href = "{{ route('data-variation.export', $ward->id) }}?" + params
+                    .toString();
 
                 setTimeout(() => {
                     Swal.close();
