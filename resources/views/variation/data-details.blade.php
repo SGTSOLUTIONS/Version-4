@@ -1808,9 +1808,9 @@
             function renderDetails(data, gisid) {
                 // Update PDF button
               $('#exportSinglePdfBtn').attr(
-    'href',
-    "/data-variation/single-pdf/{{ $ward->id }}/" + gisid
-);
+                    'href',
+                    "/data-variation/single-pdf/{{ $ward->id }}/" + gisid
+                );
 
                 let html = `
                     <div class="detail-modal-content">
