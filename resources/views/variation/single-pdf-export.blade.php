@@ -78,6 +78,143 @@
             margin: 6px 0 2px 0;
             font-size: 10px;
         }
+
+        /* ─── SIGNATURE STYLES ─── */
+        .signature-block {
+            margin-top: 20px;
+            border-top: 1px solid #000;
+            padding-top: 15px;
+        }
+
+        .signature-grid {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .signature-grid .sig-item {
+            display: table-cell;
+            text-align: center;
+            vertical-align: top;
+            padding: 5px 10px;
+            width: 25%;
+        }
+
+        .signature-grid .sig-item .sig-title {
+            font-weight: bold;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .signature-grid .sig-item .sig-line {
+            border-bottom: 1px solid #000;
+            height: 30px;
+            margin: 5px 0;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .signature-grid .sig-item .sig-label {
+            font-size: 8px;
+            color: #666;
+        }
+
+        .signature-grid .sig-item .sig-date {
+            font-size: 8px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        /* ─── OFFICIAL SEAL PLACEHOLDER ─── */
+        .seal-placeholder {
+            display: inline-block;
+            border: 1px dashed #999;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            font-size: 6px;
+            color: #999;
+            margin: 5px auto;
+        }
+
+        /* ─── FOOTER SIGNATURE AREA ─── */
+        .footer-signatures {
+            margin-top: 25px;
+            border-top: 2px solid #333;
+            padding-top: 15px;
+        }
+
+        .footer-signatures .sig-row {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .footer-signatures .sig-row .sig-col {
+            display: table-cell;
+            text-align: center;
+            padding: 0 10px;
+            vertical-align: top;
+        }
+
+        .footer-signatures .sig-row .sig-col .sig-box {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 8px 12px;
+            min-height: 80px;
+            background: #f9f9f9;
+        }
+
+        .footer-signatures .sig-row .sig-col .sig-box .sig-name {
+            font-weight: bold;
+            font-size: 9px;
+            margin-top: 5px;
+        }
+
+        .footer-signatures .sig-row .sig-col .sig-box .sig-designation {
+            font-size: 8px;
+            color: #555;
+        }
+
+        .footer-signatures .sig-row .sig-col .sig-box .sig-stamp {
+            font-size: 7px;
+            color: #999;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .footer-signatures .sig-row .sig-col .sig-box .sig-placeholder {
+            height: 35px;
+            border-bottom: 1px dashed #aaa;
+            margin: 8px 0;
+        }
+
+        @media print {
+            .footer-signatures .sig-row .sig-col .sig-box {
+                border: 1px solid #aaa;
+                background: #fff;
+            }
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 600px) {
+            .signature-grid .sig-item {
+                display: block;
+                width: 100%;
+                margin-bottom: 15px;
+            }
+
+            .footer-signatures .sig-row .sig-col {
+                display: block;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
     </style>
 </head>
 
@@ -349,8 +486,17 @@
         </p>
         <table class="no-border" style="margin-top:20px;">
             <tr class="no-border">
-                <td class="no-border" style="width:50%;">Place: ______________________</td>
-                <td class="no-border" style="text-align:right;">Signature of the Applicant</td>
+                <td class="no-border" style="width:50%;">
+                    Place: ______________________
+                    <br><br>
+                    <span style="font-size:8px; color:#666;">(Location where signed)</span>
+                </td>
+                <td class="no-border" style="text-align:right;">
+                    <div style="border-bottom:1px solid #000; width:180px; margin-left:auto; height:25px;"></div>
+                    Signature of the Applicant
+                    <br>
+                    <span style="font-size:8px; color:#666;">(Applicant's signature)</span>
+                </td>
             </tr>
             <tr class="no-border">
                 <td class="no-border">Date: {{ $date }}</td>
@@ -409,16 +555,130 @@
             Metropolitan Water Supply and Sewerage Act, 1978 applies.<br>
             This property may be modified with effect from .............………………….
         </p>
-        <table class="no-border" style="margin-top:30px;">
-            <tr class="no-border">
-                <td class="no-border center" style="width:25%;">Assessor</td>
-                <td class="no-border center" style="width:25%;">Assistant Revenue Officer</td>
-                <td class="no-border center" style="width:25%;">Zonal Officer</td>
-                <td class="no-border center" style="width:25%;">City Revenue Officer</td>
-            </tr>
-        </table>
+
+        <!-- ============================================================ -->
+        <!--          OFFICIAL SIGNATURE BLOCK - UPDATED WITH SPACE        -->
+        <!-- ============================================================ -->
+        <div class="signature-block">
+            <div style="text-align:center; font-weight:bold; font-size:10px; margin-bottom:12px;">
+                OFFICIAL SIGNATURES
+            </div>
+
+            <div class="signature-grid">
+                <!-- 1. ASSESSOR -->
+                <div class="sig-item">
+                    <div class="sig-title">Assessor</div>
+                    <div class="sig-placeholder" style="height:35px; border-bottom:1px solid #000; margin:5px 0;"></div>
+                    <div class="sig-label">(Signature with Date)</div>
+                    <div style="font-size:7px; color:#999; margin-top:2px;">
+                        <span class="seal-placeholder" style="display:inline-block; border:1px dashed #999; border-radius:50%; width:35px; height:35px; line-height:35px; text-align:center; font-size:6px; color:#999;">SEAL</span>
+                    </div>
+                    <div style="font-size:7px; color:#999; margin-top:3px;">Name: _________________</div>
+                    <div style="font-size:7px; color:#999;">Designation: _____________</div>
+                    <div style="font-size:7px; color:#999;">Date: _________________</div>
+                </div>
+
+                <!-- 2. ASSISTANT REVENUE OFFICER -->
+                <div class="sig-item">
+                    <div class="sig-title">Assistant Revenue Officer</div>
+                    <div class="sig-placeholder" style="height:35px; border-bottom:1px solid #000; margin:5px 0;"></div>
+                    <div class="sig-label">(Signature with Date)</div>
+                    <div style="font-size:7px; color:#999; margin-top:2px;">
+                        <span class="seal-placeholder" style="display:inline-block; border:1px dashed #999; border-radius:50%; width:35px; height:35px; line-height:35px; text-align:center; font-size:6px; color:#999;">SEAL</span>
+                    </div>
+                    <div style="font-size:7px; color:#999; margin-top:3px;">Name: _________________</div>
+                    <div style="font-size:7px; color:#999;">Designation: _____________</div>
+                    <div style="font-size:7px; color:#999;">Date: _________________</div>
+                </div>
+
+                <!-- 3. ZONAL OFFICER -->
+                <div class="sig-item">
+                    <div class="sig-title">Zonal Officer</div>
+                    <div class="sig-placeholder" style="height:35px; border-bottom:1px solid #000; margin:5px 0;"></div>
+                    <div class="sig-label">(Signature with Date)</div>
+                    <div style="font-size:7px; color:#999; margin-top:2px;">
+                        <span class="seal-placeholder" style="display:inline-block; border:1px dashed #999; border-radius:50%; width:35px; height:35px; line-height:35px; text-align:center; font-size:6px; color:#999;">SEAL</span>
+                    </div>
+                    <div style="font-size:7px; color:#999; margin-top:3px;">Name: _________________</div>
+                    <div style="font-size:7px; color:#999;">Designation: _____________</div>
+                    <div style="font-size:7px; color:#999;">Date: _________________</div>
+                </div>
+
+                <!-- 4. CITY REVENUE OFFICER -->
+                <div class="sig-item">
+                    <div class="sig-title">City Revenue Officer</div>
+                    <div class="sig-placeholder" style="height:35px; border-bottom:1px solid #000; margin:5px 0;"></div>
+                    <div class="sig-label">(Signature with Date)</div>
+                    <div style="font-size:7px; color:#999; margin-top:2px;">
+                        <span class="seal-placeholder" style="display:inline-block; border:1px dashed #999; border-radius:50%; width:35px; height:35px; line-height:35px; text-align:center; font-size:6px; color:#999;">SEAL</span>
+                    </div>
+                    <div style="font-size:7px; color:#999; margin-top:3px;">Name: _________________</div>
+                    <div style="font-size:7px; color:#999;">Designation: _____________</div>
+                    <div style="font-size:7px; color:#999;">Date: _________________</div>
+                </div>
+            </div>
+
+            <!-- Office Stamp / Verification -->
+            <div style="text-align:center; margin-top:12px; padding-top:8px; border-top:1px solid #ddd;">
+                <span style="font-size:7px; color:#888;">
+                    <strong>Office Stamp:</strong>
+                    <span style="border:1px solid #999; padding:2px 15px; display:inline-block; min-width:120px; height:20px;">&nbsp;</span>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <strong>Verification Date:</strong>
+                    <span style="border-bottom:1px solid #999; padding:0 10px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                </span>
+            </div>
+        </div>
+        <!-- ============================================================ -->
+        <!--              END OFFICIAL SIGNATURE BLOCK                      -->
+        <!-- ============================================================ -->
     </div>
 
+    <!-- ============================================================ -->
+    <!--              BOTTOM SIGNATURE AREA (Alternative)               -->
+    <!-- ============================================================ -->
+    <div class="footer-signatures">
+        <div style="text-align:center; font-size:8px; color:#666; margin-bottom:8px;">
+            <strong>FOR OFFICIAL USE ONLY</strong>
+        </div>
+        <div class="sig-row">
+            <div class="sig-col">
+                <div class="sig-box">
+                    <div class="sig-placeholder" style="height:30px; border-bottom:1px dashed #aaa;"></div>
+                    <div class="sig-name">Assessor</div>
+                    <div class="sig-designation">Assessment Department</div>
+                    <div class="sig-stamp">Signature &amp; Date</div>
+                </div>
+            </div>
+            <div class="sig-col">
+                <div class="sig-box">
+                    <div class="sig-placeholder" style="height:30px; border-bottom:1px dashed #aaa;"></div>
+                    <div class="sig-name">Assistant Revenue Officer</div>
+                    <div class="sig-designation">Revenue Department</div>
+                    <div class="sig-stamp">Signature &amp; Date</div>
+                </div>
+            </div>
+            <div class="sig-col">
+                <div class="sig-box">
+                    <div class="sig-placeholder" style="height:30px; border-bottom:1px dashed #aaa;"></div>
+                    <div class="sig-name">Zonal Officer</div>
+                    <div class="sig-designation">Zonal Office</div>
+                    <div class="sig-stamp">Signature &amp; Date</div>
+                </div>
+            </div>
+            <div class="sig-col">
+                <div class="sig-box">
+                    <div class="sig-placeholder" style="height:30px; border-bottom:1px dashed #aaa;"></div>
+                    <div class="sig-name">City Revenue Officer</div>
+                    <div class="sig-designation">Revenue Department</div>
+                    <div class="sig-stamp">Signature &amp; Date</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ============================================================ -->
+
+    <!-- System Reference Section -->
     <div style="margin-top:16px; border-top:1px dashed #999; padding-top:6px;" class="small">
         <strong>System Reference (GIS Comparison — for internal verification, not part of official FORM 2):</strong><br>
         GIS ID: {{ $gisid }} &nbsp;|&nbsp;
