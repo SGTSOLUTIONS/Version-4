@@ -496,7 +496,7 @@ return $pointDataByGisid;
 
 
 
-    public function dataControlls($wardId)
+    public function dataControll($wardId)
     {
         $ward = Ward::findOrFail($wardId);
         $zone = Zone::findOrFail($ward->zone_id);
