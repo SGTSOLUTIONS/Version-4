@@ -1,3 +1,5 @@
+<!-- resources/views/variation/data-details.blade.php -->
+
 @extends('layouts.office')
 
 @section('title', 'Data Variation Report')
@@ -323,20 +325,6 @@
             margin: 2px 0 0 0;
         }
 
-        .stat-card .stat-content .stat-value .trend {
-            font-size: 0.7rem;
-            font-weight: 600;
-            margin-left: 6px;
-        }
-
-        .stat-card .stat-content .stat-value .trend.up {
-            color: var(--success-color);
-        }
-
-        .stat-card .stat-content .stat-value .trend.down {
-            color: var(--danger-color);
-        }
-
         /* ─── FILTER CARD ─── */
         .filter-card {
             background: #fff;
@@ -625,6 +613,11 @@
             color: var(--primary-color);
         }
 
+        .badge-assessment-type.other {
+            background: var(--gray-200);
+            color: var(--gray-600);
+        }
+
         /* ─── USAGE DETAIL BOX ─── */
         .usage-detail-box {
             background: var(--gray-50);
@@ -658,35 +651,6 @@
         .usage-detail-box .value.null-value {
             color: var(--gray-400);
             font-style: italic;
-        }
-
-        /* ─── PROGRESS BAR ─── */
-        .variation-progress {
-            width: 50px;
-            height: 5px;
-            background: var(--gray-200);
-            border-radius: 4px;
-            overflow: hidden;
-            display: inline-block;
-            vertical-align: middle;
-        }
-
-        .variation-progress .bar {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .variation-progress .bar-success {
-            background: var(--success-color);
-        }
-
-        .variation-progress .bar-danger {
-            background: var(--danger-color);
-        }
-
-        .variation-progress .bar-warning {
-            background: var(--warning-color);
         }
 
         /* ─── ACTION BUTTONS ─── */
@@ -1127,76 +1091,12 @@
             background: var(--gray-400);
         }
 
-        /* ─── UTILITY ─── */
-        .text-truncate-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .gap-1 {
-            gap: 4px;
-        }
-
-        .gap-2 {
-            gap: 8px;
-        }
-
-        .gap-3 {
-            gap: 12px;
-        }
-
-        .fw-600 {
-            font-weight: 600;
-        }
-
-        .fw-700 {
-            font-weight: 700;
-        }
-
-        .fw-800 {
-            font-weight: 800;
-        }
-
-        .text-gray-400 {
-            color: var(--gray-400);
-        }
-
-        .text-gray-500 {
-            color: var(--gray-500);
-        }
-
-        .text-gray-600 {
-            color: var(--gray-600);
-        }
-
-        .text-gray-700 {
-            color: var(--gray-700);
-        }
-
-        .text-gray-800 {
-            color: var(--gray-800);
-        }
-
-        .bg-gray-50 {
-            background: var(--gray-50);
-        }
-
         .clickable-row {
             cursor: pointer;
         }
 
         .clickable-row:hover {
             background: var(--primary-light) !important;
-        }
-
-        .transition-all {
-            transition: var(--transition);
-        }
-
-        .shadow-hover:hover {
-            box-shadow: var(--shadow-md);
         }
     </style>
 @endpush
@@ -1220,11 +1120,12 @@
                     <i class="bi bi-arrow-left me-1"></i> Back
                 </a>
                 <div class="export-buttons-group">
-                    <a href="{{ route('data-variation.export', $ward->id) }}"
+                    <a href="{{ route('data-variation.export', $ward->id) }}?{{ http_build_query(request()->except(['page', 'per_page'])) }}"
                         class="btn btn-export btn-export-excel btn-sm">
                         <i class="bi bi-file-earmark-excel me-1"></i> Excel
                     </a>
-                    <a href="{{ route('data-variation.pdf', $ward->id) }}" class="btn btn-export btn-export-pdf btn-sm">
+                    <a href="{{ route('data-variation.pdf', $ward->id) }}?{{ http_build_query(request()->except(['page', 'per_page'])) }}"
+                        class="btn btn-export btn-export-pdf btn-sm">
                         <i class="bi bi-file-earmark-pdf me-1"></i> PDF
                     </a>
                     <button type="button" class="btn btn-export btn-export-csv btn-sm" id="exportFilteredBtn">
@@ -1244,6 +1145,9 @@
             $assessmentOnly = 0;
             $noData = 0;
             $areaVariations = 0;
+            $oldAssessment = 0;
+            $newAssessment = 0;
+            $otherAssessment = 0;
 
             foreach ($allData ?? $buildingVariations as $item) {
                 $status = $item['usage_comparison']['usage_status'] ?? 'NO_DATA';
@@ -1270,13 +1174,22 @@
                 if (($item['area_comparison']['area_status'] ?? '') === 'VARIATION') {
                     $areaVariations++;
                 }
+
+                $assessmentType = $item['assessment']['details']['assessment_type_status'] ?? 'N/A';
+                if (strpos($assessmentType, 'OLD') !== false) {
+                    $oldAssessment++;
+                } elseif (strpos($assessmentType, 'NEW') !== false) {
+                    $newAssessment++;
+                } elseif ($assessmentType !== 'N/A') {
+                    $otherAssessment++;
+                }
             }
         @endphp
 
         <div class="row g-3 mb-4">
             <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-blue"><i class="bi bi-building"></i></div>
+                    <div class="stat-icon blue"><i class="bi bi-building"></i></div>
                     <div>
                         <div class="stat-label">Total Buildings</div>
                         <div class="stat-value">{{ $total }}</div>
@@ -1285,7 +1198,7 @@
             </div>
             <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-green"><i class="bi bi-check2-circle"></i></div>
+                    <div class="stat-icon green"><i class="bi bi-check2-circle"></i></div>
                     <div>
                         <div class="stat-label">Usage Match</div>
                         <div class="stat-value">{{ $matches }}</div>
@@ -1294,7 +1207,7 @@
             </div>
             <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-red"><i class="bi bi-x-circle"></i></div>
+                    <div class="stat-icon red"><i class="bi bi-x-circle"></i></div>
                     <div>
                         <div class="stat-label">Usage Variation</div>
                         <div class="stat-value">{{ $variations }}</div>
@@ -1303,7 +1216,7 @@
             </div>
             <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-amber"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div class="stat-icon amber"><i class="bi bi-exclamation-triangle"></i></div>
                     <div>
                         <div class="stat-label">Partial Match</div>
                         <div class="stat-value">{{ $partialMatches }}</div>
@@ -1312,7 +1225,7 @@
             </div>
             <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-cyan"><i class="bi bi-building"></i></div>
+                    <div class="stat-icon cyan"><i class="bi bi-building"></i></div>
                     <div>
                         <div class="stat-label">Building Only</div>
                         <div class="stat-value">{{ $buildingOnly }}</div>
@@ -1321,7 +1234,7 @@
             </div>
             <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-purple"><i class="bi bi-file-earmark-text"></i></div>
+                    <div class="stat-icon purple"><i class="bi bi-file-earmark-text"></i></div>
                     <div>
                         <div class="stat-label">Assessment Only</div>
                         <div class="stat-value">{{ $assessmentOnly }}</div>
@@ -1330,7 +1243,7 @@
             </div>
             <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-pink"><i class="bi bi-dash-circle"></i></div>
+                    <div class="stat-icon pink"><i class="bi bi-dash-circle"></i></div>
                     <div>
                         <div class="stat-label">No Data</div>
                         <div class="stat-value">{{ $noData }}</div>
@@ -1339,10 +1252,28 @@
             </div>
             <div class="col-xl-2 col-lg-3 col-md-4 col-6">
                 <div class="stat-card">
-                    <div class="stat-icon stat-icon-cyan"><i class="bi bi-arrows-expand"></i></div>
+                    <div class="stat-icon cyan"><i class="bi bi-arrows-expand"></i></div>
                     <div>
                         <div class="stat-label">Area Variation</div>
                         <div class="stat-value">{{ $areaVariations }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon amber"><i class="bi bi-clock-history"></i></div>
+                    <div>
+                        <div class="stat-label">OLD Assessment</div>
+                        <div class="stat-value">{{ $oldAssessment }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-6">
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="bi bi-plus-circle"></i></div>
+                    <div>
+                        <div class="stat-label">NEW Assessment</div>
+                        <div class="stat-value">{{ $newAssessment }}</div>
                     </div>
                 </div>
             </div>
@@ -1355,36 +1286,56 @@
                     <div class="col-xl-2 col-lg-3 col-md-4">
                         <label class="form-label"><i class="bi bi-tags me-1"></i>Usage Status</label>
                         <select name="usage_status" id="filterUsageStatus" class="form-select form-select-sm">
-                            <option value="all" {{ request('usage_status') == 'all' ? 'selected' : '' }}>All Status
-                            </option>
-                            <option value="MATCH" {{ request('usage_status') == 'MATCH' ? 'selected' : '' }}>✅ Match
-                            </option>
-                            <option value="VARIATION" {{ request('usage_status') == 'VARIATION' ? 'selected' : '' }}>❌
-                                Variation</option>
-                            <option value="PARTIAL_MATCH"
-                                {{ request('usage_status') == 'PARTIAL_MATCH' ? 'selected' : '' }}>⚠️ Partial Match
-                            </option>
-                            <option value="BUILDING_ONLY"
-                                {{ request('usage_status') == 'BUILDING_ONLY' ? 'selected' : '' }}>🏢 Building Only
-                            </option>
-                            <option value="ASSESSMENT_ONLY"
-                                {{ request('usage_status') == 'ASSESSMENT_ONLY' ? 'selected' : '' }}>📄 Assessment Only
-                            </option>
-                            <option value="NO_DATA" {{ request('usage_status') == 'NO_DATA' ? 'selected' : '' }}>⬜ No Data
-                            </option>
+                            <option value="all" {{ request('usage_status') == 'all' ? 'selected' : '' }}>All Status</option>
+                            <option value="MATCH" {{ request('usage_status') == 'MATCH' ? 'selected' : '' }}>✅ Match</option>
+                            <option value="VARIATION" {{ request('usage_status') == 'VARIATION' ? 'selected' : '' }}>❌ Variation</option>
+                            <option value="PARTIAL_MATCH" {{ request('usage_status') == 'PARTIAL_MATCH' ? 'selected' : '' }}>⚠️ Partial Match</option>
+                            <option value="BUILDING_ONLY" {{ request('usage_status') == 'BUILDING_ONLY' ? 'selected' : '' }}>🏢 Building Only</option>
+                            <option value="ASSESSMENT_ONLY" {{ request('usage_status') == 'ASSESSMENT_ONLY' ? 'selected' : '' }}>📄 Assessment Only</option>
+                            <option value="NO_DATA" {{ request('usage_status') == 'NO_DATA' ? 'selected' : '' }}>⬜ No Data</option>
                         </select>
                     </div>
                     <div class="col-xl-2 col-lg-3 col-md-4">
                         <label class="form-label"><i class="bi bi-rulers me-1"></i>Area Status</label>
                         <select name="area_status" id="filterAreaStatus" class="form-select form-select-sm">
-                            <option value="all" {{ request('area_status') == 'all' ? 'selected' : '' }}>All Status
-                            </option>
-                            <option value="MATCH" {{ request('area_status') == 'MATCH' ? 'selected' : '' }}>Match
-                            </option>
-                            <option value="VARIATION" {{ request('area_status') == 'VARIATION' ? 'selected' : '' }}>
-                                Variation</option>
+                            <option value="all" {{ request('area_status') == 'all' ? 'selected' : '' }}>All Status</option>
+                            <option value="MATCH" {{ request('area_status') == 'MATCH' ? 'selected' : '' }}>Match</option>
+                            <option value="VARIATION" {{ request('area_status') == 'VARIATION' ? 'selected' : '' }}>Variation</option>
                         </select>
                     </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="form-label"><i class="bi bi-tag me-1"></i>Assessment Type</label>
+                        <select name="assessment_type" id="filterAssessmentType" class="form-select form-select-sm">
+                            <option value="all" {{ request('assessment_type') == 'all' ? 'selected' : '' }}>All Types</option>
+                            <option value="OLD ASSESSMENT" {{ request('assessment_type') == 'OLD ASSESSMENT' ? 'selected' : '' }}>🕐 OLD Assessment</option>
+                            <option value="NEW ASSESSMENT" {{ request('assessment_type') == 'NEW ASSESSMENT' ? 'selected' : '' }}>🆕 NEW Assessment</option>
+                            <option value="OTHER" {{ request('assessment_type') == 'OTHER' ? 'selected' : '' }}>📋 OTHER</option>
+                        </select>
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="form-label"><i class="bi bi-building me-1"></i>Building Usage</label>
+                        <select name="building_usage" id="filterBuildingUsage" class="form-select form-select-sm">
+                            <option value="all" {{ request('building_usage') == 'all' ? 'selected' : '' }}>All Usages</option>
+                            @foreach($filterOptions['building_usage'] ?? [] as $usage)
+                                <option value="{{ $usage }}" {{ request('building_usage') == $usage ? 'selected' : '' }}>
+                                    {{ $usage }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="form-label"><i class="bi bi-file-text me-1"></i>Assessment Usage</label>
+                        <select name="assessment_usage" id="filterAssessmentUsage" class="form-select form-select-sm">
+                            <option value="all" {{ request('assessment_usage') == 'all' ? 'selected' : '' }}>All Usages</option>
+                            @foreach($filterOptions['assessment_usage'] ?? [] as $usage)
+                                <option value="{{ $usage }}" {{ request('assessment_usage') == $usage ? 'selected' : '' }}>
+                                    {{ $usage }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="row g-3 align-items-end mt-2">
                     <div class="col-xl-2 col-lg-3 col-md-4">
                         <label class="form-label"><i class="bi bi-hash me-1"></i>GIS ID</label>
                         <input type="text" name="gisid" id="filterGisid" class="form-control form-control-sm"
@@ -1400,16 +1351,11 @@
                         </div>
                     </div>
                     <div class="col-xl-2 col-lg-3 col-md-4">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <button type="submit" class="btn btn-primary btn-filter">
-                                <i class="bi bi-funnel me-1"></i> Apply
-                            </button>
-                            <a href="{{ route('variation.show', $ward->id) }}"
-                                class="btn btn-outline-secondary btn-filter">
-                                <i class="bi bi-arrow-counterclockwise"></i> Reset
-                            </a>
-                        </div>
+                        <label class="form-label"><i class="bi bi-list-ul me-1"></i>Has Multiple</label>
+                        <select name="has_multiple" id="filterHasMultiple" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            <option value="1" {{ request('has_multiple') == '1' ? 'selected' : '' }}>Yes</option>
+                        </select>
                     </div>
                     <div class="col-xl-2 col-lg-3 col-md-4">
                         <label class="form-label"><i class="bi bi-eye me-1"></i>Per Page</label>
@@ -1420,6 +1366,18 @@
                             <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
                             <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
                         </select>
+                    </div>
+                    <div class="col-xl-2 col-lg-3 col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="submit" class="btn btn-primary btn-filter">
+                                <i class="bi bi-funnel me-1"></i> Apply
+                            </button>
+                            <a href="{{ route('variation.show', $ward->id) }}"
+                                class="btn btn-outline-secondary btn-filter">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset
+                            </a>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -1471,34 +1429,33 @@
                                 $hasMultiple = $variation['assessment']['has_multiple'] ?? false;
                                 $floorCount = $variation['building']['details']['number_floor'] ?? 'N/A';
                                 $basementCount = $variation['building']['details']['basement'] ?? 'N/A';
-                                $assessmentTypeStatus =
-                                    $variation['assessment']['details']['assessment_type_status'] ?? 'N/A';
+                                $assessmentTypeStatus = $variation['assessment']['details']['assessment_type_status'] ?? 'N/A';
 
                                 $badgeClass = '';
                                 $icon = '';
                                 switch ($usageStatus) {
                                     case 'MATCH':
-                                        $badgeClass = 'badge-match';
+                                        $badgeClass = 'match';
                                         $icon = 'bi-check-circle';
                                         break;
                                     case 'VARIATION':
-                                        $badgeClass = 'badge-variation';
+                                        $badgeClass = 'variation';
                                         $icon = 'bi-x-circle';
                                         break;
                                     case 'PARTIAL_MATCH':
-                                        $badgeClass = 'badge-partial';
+                                        $badgeClass = 'partial';
                                         $icon = 'bi-exclamation-triangle';
                                         break;
                                     case 'BUILDING_ONLY':
-                                        $badgeClass = 'badge-building-only';
+                                        $badgeClass = 'building-only';
                                         $icon = 'bi-building';
                                         break;
                                     case 'ASSESSMENT_ONLY':
-                                        $badgeClass = 'badge-assessment-only';
+                                        $badgeClass = 'assessment-only';
                                         $icon = 'bi-file-earmark-text';
                                         break;
                                     default:
-                                        $badgeClass = 'badge-no-data';
+                                        $badgeClass = 'no-data';
                                         $icon = 'bi-dash-circle';
                                         break;
                                 }
@@ -1534,10 +1491,11 @@
                                 $usageTooltip = !empty($allAssessmentUsages)
                                     ? implode(', ', $allAssessmentUsages)
                                     : 'No usages';
+
+                                $assessmentTypeBadgeClass = strtolower(str_replace(' ', '', $assessmentTypeStatus));
                             @endphp
                             <tr class="clickable-row" data-gisid="{{ $gisid }}" data-ward="{{ $ward->id }}">
-                                <td>{{ $loop->iteration + ($pagination['current_page'] - 1) * $pagination['per_page'] }}
-                                </td>
+                                <td>{{ $loop->iteration + ($pagination['current_page'] - 1) * $pagination['per_page'] }}</td>
                                 <td>
                                     <code>{{ $gisid }}</code>
                                     @if ($hasMultiple)
@@ -1560,29 +1518,26 @@
                                         <span class="value {{ $usageValueClass }}">{{ $assessmentDisplay }}</span>
                                     </span>
                                     @if ($isUsageVariation)
-                                        <span class="badge badge-variation ms-1" title="Usage mismatch">Mismatch</span>
+                                        <span class="badge bg-danger ms-1" title="Usage mismatch">Mismatch</span>
                                     @endif
                                     @if ($isPartialMatch)
-                                        <span class="badge badge-partial ms-1" title="Partial match">Partial</span>
+                                        <span class="badge bg-warning ms-1" title="Partial match">Partial</span>
                                     @endif
                                     @if (!empty($allAssessmentUsages) && count($allAssessmentUsages) > 1)
                                         <div class="small text-muted mt-1">
                                             <i class="bi bi-list-ul"></i>
-                                            <span
-                                                title="All usages: {{ $usageTooltip }}">{{ count($allAssessmentUsages) }}
-                                                usages</span>
+                                            <span title="All usages: {{ $usageTooltip }}">{{ count($allAssessmentUsages) }} usages</span>
                                         </div>
                                     @endif
                                     @if ($assessmentTypeStatus != 'N/A' && $assessmentTypeStatus != 'OTHER')
-                                        <span
-                                            class="badge badge-assessment-type {{ strtolower(str_replace(' ', '', $assessmentTypeStatus)) }}">
+                                        <span class="badge badge-assessment-type {{ $assessmentTypeBadgeClass }}">
                                             {{ $assessmentTypeStatus }}
                                         </span>
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="{{ $badgeClass }}" title="{{ $usageStatusLabel }}">
-                                        <i class="{{ $icon }} me-1"></i>
+                                    <span class="badge badge-status {{ $badgeClass }}">
+                                        <i class="bi {{ $icon }} me-1"></i>
                                         {{ $usageStatusLabel }}
                                     </span>
                                 </td>
@@ -1594,14 +1549,13 @@
                                     <span class="fw-bold">{{ number_format($assessmentArea, 2) }}</span>
                                     <span class="text-muted small">sqft</span>
                                 </td>
-                                <td
-                                    class="{{ $areaVariation > 0 ? 'text-danger' : ($areaVariation < 0 ? 'text-success' : 'text-muted') }}">
+                                <td class="{{ $areaVariation > 0 ? 'text-danger' : ($areaVariation < 0 ? 'text-success' : 'text-muted') }}">
                                     {{ $areaVariation > 0 ? '+' : '' }}{{ number_format($areaVariation, 2) }}
                                     <br>
                                     <small class="text-muted">{{ number_format($variationPercentage, 1) }}%</small>
                                 </td>
                                 <td>
-                                    <span class="{{ $areaStatus == 'VARIATION' ? 'badge-variation' : 'badge-match' }}">
+                                    <span class="badge badge-area {{ $areaStatus == 'VARIATION' ? 'variation' : 'match' }}">
                                         {{ $areaStatus }}
                                     </span>
                                 </td>
@@ -1621,11 +1575,9 @@
                                             <i class="bi bi-eye"></i>
                                         </button>
                                         <a href="/data-variation/single-pdf/{{ $ward->id }}/{{ $gisid }}"
-   class="btn btn-sm btn-outline-danger"
-   title="Download PDF (FORM 2)"
-   target="_blank">
-    <i class="bi bi-file-earmark-pdf"></i>
-</a>
+                                            class="btn btn-sm btn-outline-danger" title="Download PDF (FORM 2)" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -1701,8 +1653,7 @@
                                         </a>
                                     </li>
                                 @endif
-                                <li
-                                    class="page-item {{ ($pagination['current_page'] ?? 1) >= ($pagination['last_page'] ?? 1) ? 'disabled' : '' }}">
+                                <li class="page-item {{ ($pagination['current_page'] ?? 1) >= ($pagination['last_page'] ?? 1) ? 'disabled' : '' }}">
                                     <a class="page-link"
                                         href="?page={{ ($pagination['current_page'] ?? 1) + 1 }}&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">
                                         <i class="bi bi-chevron-right"></i>
@@ -1748,7 +1699,6 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Store data
         const wardId = {{ $ward->id }};
         let detailModal = null;
 
@@ -1760,8 +1710,7 @@
                 $('#filterForm').submit();
             });
 
-            // ─── SHOW DETAILS WITH LAZY LOADING ───
-            // ─── SHOW DETAILS WITH LAZY LOADING ───
+            // ─── SHOW DETAILS ───
             window.showDetails = function(gisid) {
                 $('#modalGisid').text(gisid);
                 $('#modalBody').html(`
@@ -1774,7 +1723,6 @@
                 `);
                 detailModal.show();
 
-                // FIXED: Use direct URL construction instead of route helper
                 const url = `/data-variation/details/${wardId}/${gisid}`;
 
                 $.ajax({
@@ -1785,29 +1733,28 @@
                             renderDetails(response.data, gisid);
                         } else {
                             $('#modalBody').html(`
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        Failed to load building details. Please try again.
-                    </div>
-                `);
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    Failed to load building details. Please try again.
+                                </div>
+                            `);
                         }
                     },
                     error: function(xhr) {
                         console.error('AJAX Error:', xhr);
                         $('#modalBody').html(`
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    Error loading building details. Status: ${xhr.status}
-                </div>
-            `);
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Error loading building details. Status: ${xhr.status}
+                            </div>
+                        `);
                     }
                 });
             };
 
             // ─── RENDER DETAILS ───
             function renderDetails(data, gisid) {
-                // Update PDF button
-              $('#exportSinglePdfBtn').attr(
+                $('#exportSinglePdfBtn').attr(
                     'href',
                     "/data-variation/single-pdf/{{ $ward->id }}/" + gisid
                 );
@@ -1873,7 +1820,11 @@
                                     </div>
                                     <div class="detail-item">
                                         <span class="label">Assessment Type</span>
-                                        <span class="value">${data.assessment.details?.assessment_type_status || 'N/A'}</span>
+                                        <span class="value">
+                                            <span class="badge badge-assessment-type ${(data.assessment.details?.assessment_type_status || 'N/A').toLowerCase().replace(/\s/g, '')}">
+                                                ${data.assessment.details?.assessment_type_status || 'N/A'}
+                                            </span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -1886,7 +1837,7 @@
                                     <div class="detail-item">
                                         <span class="label">Status</span>
                                         <span class="value">
-                                            <span class="${data.area_comparison.area_status === 'VARIATION' ? 'badge-variation' : 'badge-match'}">
+                                            <span class="badge badge-area ${data.area_comparison.area_status === 'VARIATION' ? 'variation' : 'match'}">
                                                 ${data.area_comparison.area_status}
                                             </span>
                                         </span>
@@ -1917,7 +1868,7 @@
                                     <div class="detail-item">
                                         <span class="label">Status</span>
                                         <span class="value">
-                                            <span class="${data.usage_comparison.usage_badge_class}">
+                                            <span class="badge badge-status ${data.usage_comparison.usage_badge_class}">
                                                 ${data.usage_comparison.usage_status_label}
                                             </span>
                                         </span>
@@ -1951,8 +1902,8 @@
                                 <div class="detail-section">
                                     <h6><i class="bi bi-list-ul me-2"></i>Assessment Points</h6>
                                     ${data.assessment.details?.points && data.assessment.details.points.length > 0 ? `
-                                            <div class="assessment-points-list">
-                                                ${data.assessment.details.points.map(p => `
+                                        <div class="assessment-points-list">
+                                            ${data.assessment.details.points.map(p => `
                                                 <div class="point-item">
                                                     <span class="fw-bold">${p.assessment}</span>
                                                     <span class="text-muted">|</span>
@@ -1964,10 +1915,10 @@
                                                     ${p.mis_data ? `<span class="badge bg-info ms-1">MIS: ${p.mis_data.plot_area || 'N/A'}</span>` : ''}
                                                 </div>
                                             `).join('')}
-                                            </div>
-                                        ` : `
-                                            <div class="text-muted">No assessment points available</div>
-                                        `}
+                                        </div>
+                                    ` : `
+                                        <div class="text-muted">No assessment points available</div>
+                                    `}
                                 </div>
                             </div>
                         </div>

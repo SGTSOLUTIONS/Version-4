@@ -514,115 +514,198 @@ class VariationController extends Controller
 
 
 
-   public function dataControll($wardId, Request $request)
-    {
-        $ward = Ward::findOrFail($wardId);
-        $zone = Zone::findOrFail($ward->zone_id);
+   // In VariationController.php
 
-        $corp = $zone->corp_id;
-        $wardNo = $ward->ward_no;
-
-        $polygonsTableName = "polygons_{$wardId}";
-        $polygonDataTableName = "polygon_data_{$wardId}";
-        $pointDataTableName = "point_data_{$wardId}";
-        $misTableName = "mis_{$corp}";
-
-        $polygons = DB::table($polygonsTableName)->get();
-        $polygonDatas = DB::table($polygonDataTableName)->get();
-        $pointDatas = DB::table($pointDataTableName)->get();
-
-        $misData = DB::table($misTableName)
-            ->where('ward_no', $wardNo)
-            ->get();
-
-        $buildingVariations = $this->buildBuildingData(
-            $polygons,
-            $polygonDatas,
-            $pointDatas,
-            $misData
-        );
-
-        $buildingVariations = $this->applyFilters($buildingVariations, $request);
-
-        // Pagination
-        $perPage = $request->get('per_page', 20);
-        $page = $request->get('page', 1);
-
-        if ($perPage === 'all') {
-            $perPage = max(count($buildingVariations), 1);
-        }
-
-        $total = count($buildingVariations);
-        $paginatedData = array_slice($buildingVariations, ($page - 1) * $perPage, $perPage, true);
-
-        $pagination = [
-            'current_page' => (int) $page,
-            'per_page' => (int) $perPage,
-            'total' => $total,
-            'last_page' => max((int) ceil($total / $perPage), 1),
-            'from' => $total > 0 ? (($page - 1) * $perPage) + 1 : 0,
-            'to' => min(($page * $perPage), $total),
-        ];
-
-        return view('variation.data-details', [
-            'buildingVariations' => $paginatedData,
-            'allData' => $buildingVariations,
-            'ward' => $ward,
-            'zone' => $zone,
-            'pagination' => $pagination,
-            'filters' => $request->all(),
-        ]);
+/**
+ * Central filter logic — reused across page load, AJAX pagination, and export
+ */
+private function applyFilters($buildingVariations, Request $request)
+{
+    // ─── USAGE STATUS FILTER ───
+    if ($request->filled('usage_status') && $request->usage_status != 'all') {
+        $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
+            return ($item['usage_comparison']['usage_status'] ?? '') == $request->usage_status;
+        });
     }
 
+    // ─── AREA STATUS FILTER ───
+    if ($request->filled('area_status') && $request->area_status != 'all') {
+        $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
+            return strtoupper($item['area_comparison']['area_status'] ?? '') == strtoupper($request->area_status);
+        });
+    }
+
+    // ─── ASSESSMENT TYPE FILTER (NEW) ───
+    if ($request->filled('assessment_type') && $request->assessment_type != 'all') {
+        $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
+            $assessmentType = $item['assessment']['details']['assessment_type_status'] ?? 'N/A';
+            return strtoupper($assessmentType) == strtoupper($request->assessment_type);
+        });
+    }
+
+    // ─── BUILDING USAGE FILTER (NEW) ───
+    if ($request->filled('building_usage') && $request->building_usage != 'all') {
+        $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
+            $buildingUsage = $item['building']['usage'] ?? '';
+            return strtoupper($buildingUsage) == strtoupper($request->building_usage);
+        });
+    }
+
+    // ─── ASSESSMENT USAGE FILTER (NEW) ───
+    if ($request->filled('assessment_usage') && $request->assessment_usage != 'all') {
+        $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
+            $assessmentUsages = $item['assessment']['all_usages'] ?? [];
+            return in_array($request->assessment_usage, $assessmentUsages);
+        });
+    }
+
+    // ─── GIS ID SEARCH ───
+    if ($request->filled('gisid')) {
+        $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
+            return stripos($item['gisid'], $request->gisid) !== false;
+        });
+    }
+
+    // ─── VARIATION PERCENTAGE RANGE ───
+    if ($request->filled('var_min')) {
+        $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
+            return ($item['area_comparison']['variation_percentage'] ?? 0) >= floatval($request->var_min);
+        });
+    }
+
+    if ($request->filled('var_max')) {
+        $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
+            return ($item['area_comparison']['variation_percentage'] ?? 0) <= floatval($request->var_max);
+        });
+    }
+
+    // ─── MULTIPLE ASSESSMENTS FILTER ───
+    if ($request->filled('has_multiple') && $request->has_multiple == '1') {
+        $buildingVariations = array_filter($buildingVariations, function ($item) {
+            return ($item['assessment']['has_multiple'] ?? false) === true;
+        });
+    }
+
+    return $buildingVariations;
+}
+
+/**
+ * Get filter options for dropdowns
+ */
+private function getFilterOptions($buildingVariations)
+{
+    $options = [
+        'usage_status' => [],
+        'area_status' => ['MATCH', 'VARIATION'],
+        'assessment_type' => [],
+        'building_usage' => [],
+        'assessment_usage' => [],
+    ];
+
+    foreach ($buildingVariations as $item) {
+        // Usage status
+        $status = $item['usage_comparison']['usage_status'] ?? 'NO_DATA';
+        if (!in_array($status, $options['usage_status'])) {
+            $options['usage_status'][] = $status;
+        }
+
+        // Assessment type
+        $assessmentType = $item['assessment']['details']['assessment_type_status'] ?? 'N/A';
+        if ($assessmentType !== 'N/A' && !in_array($assessmentType, $options['assessment_type'])) {
+            $options['assessment_type'][] = $assessmentType;
+        }
+
+        // Building usage
+        $buildingUsage = $item['building']['usage'] ?? null;
+        if ($buildingUsage && !in_array($buildingUsage, $options['building_usage'])) {
+            $options['building_usage'][] = $buildingUsage;
+        }
+
+        // Assessment usage
+        $assessmentUsages = $item['assessment']['all_usages'] ?? [];
+        foreach ($assessmentUsages as $usage) {
+            if ($usage && !in_array($usage, $options['assessment_usage'])) {
+                $options['assessment_usage'][] = $usage;
+            }
+        }
+    }
+
+    // Sort all options
+    foreach ($options as $key => $value) {
+        sort($options[$key]);
+    }
+
+    return $options;
+}
+
+public function dataControll($wardId, Request $request)
+{
+    $ward = Ward::findOrFail($wardId);
+    $zone = Zone::findOrFail($ward->zone_id);
+
+    $corp = $zone->corp_id;
+    $wardNo = $ward->ward_no;
+
+    $polygonsTableName = "polygons_{$wardId}";
+    $polygonDataTableName = "polygon_data_{$wardId}";
+    $pointDataTableName = "point_data_{$wardId}";
+    $misTableName = "mis_{$corp}";
+
+    $polygons = DB::table($polygonsTableName)->get();
+    $polygonDatas = DB::table($polygonDataTableName)->get();
+    $pointDatas = DB::table($pointDataTableName)->get();
+
+    $misData = DB::table($misTableName)
+        ->where('ward_no', $wardNo)
+        ->get();
+
+    $buildingVariations = $this->buildBuildingData(
+        $polygons,
+        $polygonDatas,
+        $pointDatas,
+        $misData
+    );
+
+    // Get filter options before applying filters (for dropdowns)
+    $filterOptions = $this->getFilterOptions($buildingVariations);
+
+    // Apply filters
+    $buildingVariations = $this->applyFilters($buildingVariations, $request);
+
+    // Pagination
+    $perPage = $request->get('per_page', 20);
+    $page = $request->get('page', 1);
+
+    if ($perPage === 'all') {
+        $perPage = max(count($buildingVariations), 1);
+    }
+
+    $total = count($buildingVariations);
+    $paginatedData = array_slice($buildingVariations, ($page - 1) * $perPage, $perPage, true);
+
+    $pagination = [
+        'current_page' => (int) $page,
+        'per_page' => (int) $perPage,
+        'total' => $total,
+        'last_page' => max((int) ceil($total / $perPage), 1),
+        'from' => $total > 0 ? (($page - 1) * $perPage) + 1 : 0,
+        'to' => min(($page * $perPage), $total),
+    ];
+
+    return view('variation.data-details', [
+        'buildingVariations' => $paginatedData,
+        'allData' => $buildingVariations,
+        'ward' => $ward,
+        'zone' => $zone,
+        'pagination' => $pagination,
+        'filters' => $request->all(),
+        'filterOptions' => $filterOptions,
+    ]);
+}
     /**
      * Central filter logic — reused across page load, AJAX pagination, and export
      */
-    private function applyFilters($buildingVariations, Request $request)
-    {
-        if ($request->filled('usage_status') && $request->usage_status != 'all') {
-            $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
-                return ($item['usage_comparison']['usage_status'] ?? '') == $request->usage_status;
-            });
-        }
 
-        if ($request->filled('area_status') && $request->area_status != 'all') {
-            $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
-                return strtoupper($item['area_comparison']['area_status'] ?? '') == strtoupper($request->area_status);
-            });
-        }
-
-        if ($request->filled('assessment_type') && $request->assessment_type != 'all') {
-            $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
-                return strtoupper($item['assessment']['details']['assessment_type_status'] ?? '') == strtoupper($request->assessment_type);
-            });
-        }
-
-        if ($request->filled('gisid')) {
-            $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
-                return stripos($item['gisid'], $request->gisid) !== false;
-            });
-        }
-
-        if ($request->filled('var_min')) {
-            $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
-                return ($item['area_comparison']['variation_percentage'] ?? 0) >= floatval($request->var_min);
-            });
-        }
-
-        if ($request->filled('var_max')) {
-            $buildingVariations = array_filter($buildingVariations, function ($item) use ($request) {
-                return ($item['area_comparison']['variation_percentage'] ?? 0) <= floatval($request->var_max);
-            });
-        }
-
-        if ($request->filled('has_multiple') && $request->has_multiple == '1') {
-            $buildingVariations = array_filter($buildingVariations, function ($item) {
-                return ($item['assessment']['has_multiple'] ?? false) === true;
-            });
-        }
-
-        return $buildingVariations;
-    }
 
     /**
      * Build building data from polygons, polygon data, point data and MIS data
