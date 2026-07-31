@@ -1277,6 +1277,11 @@
                                         </select>
                                         <div id="percentage_error" class="error-message text-danger small"></div>
                                     </div>
+                                      <div class="col-md-3 mb-3"><label class="form-label">Basement</label><input
+                                            type="number" class="form-control" name="basement" id="basement"
+                                            min="0" placeholder="Number of basements">
+                                        <div id="basement_error" class="error-message text-danger small"></div>
+                                    </div>
                                     <div class="col-md-6 mb-3"><label class="form-label">Building Name</label><input
                                             type="text" class="form-control" name="building_name" id="building_name"
                                             placeholder="Enter building name">
@@ -1470,11 +1475,7 @@
                                         </select>
                                         <div id="solar_panel_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3"><label class="form-label">Basement</label><input
-                                            type="number" class="form-control" name="basement" id="basement"
-                                            min="0" placeholder="Number of basements">
-                                        <div id="basement_error" class="error-message text-danger small"></div>
-                                    </div>
+
                                     <div class="col-md-3 mb-3"><label class="form-label">Water
                                             Connection</label><select class="form-select" name="water_connection"
                                             id="water_connection">

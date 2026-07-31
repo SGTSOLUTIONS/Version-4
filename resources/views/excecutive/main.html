@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cesium Satellite Demo</title>
+<link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css">
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Cesium.js"></script>
+<style>
+  html, body, #cesiumContainer {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+</style>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+
+<script>
+  // ── Cesium Ion access token ──
+  // Get your own free token at https://ion.cesium.com/tokens (this demo uses
+  // Cesium's default public token which is rate-limited).
+  Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
+
+  const viewer = new Cesium.Viewer('cesiumContainer', {
+      baseLayerPicker: false,
+      geocoder: false,
+      homeButton: false,
+      sceneModePicker: false,
+      navigationHelpButton: false,
+      animation: false,
+      timeline: false,
+      fullscreenButton: true,
+      infoBox: false,
+      selectionIndicator: false,
+
+      // ── Satellite imagery (Esri World Imagery) as the base layer ──
+      baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+          Cesium.ArcGisMapServerImageryProvider.fromUrl(
+              'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+          )
+      )
+  });
+
+  viewer.scene.globe.depthTestAgainstTerrain = true;
+
+  // ── Fly to a starting location (Chennai) ──
+  viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(80.2707, 13.0827, 15000),
+      orientation: {
+          heading: Cesium.Math.toRadians(0),
+          pitch: Cesium.Math.toRadians(-45),
+          roll: 0
+      },
+      duration: 2
+  });
+
+  // ── Example: add a simple marker ──
+  viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(80.2707, 13.0827),
+      point: {
+          pixelSize: 14,
+          color: Cesium.Color.RED,
+          outlineColor: Cesium.Color.WHITE,
+          outlineWidth: 3,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+      },
+      label: {
+          text: 'Chennai',
+          font: 'bold 14px Arial',
+          fillColor: Cesium.Color.WHITE,
+          showBackground: true,
+          backgroundColor: Cesium.Color.BLACK.withAlpha(0.6),
+          verticalOrigin: Cesium.VerticalOrigin.TOP,
+          pixelOffset: new Cesium.Cartesian2(0, 10)
+      }
+  });
+</script>
+</body>
+</html>

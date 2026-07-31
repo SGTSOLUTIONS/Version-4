@@ -4,7 +4,7 @@
 @section('page_title', 'Executive GIS Dashboard')
 
 @push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
@@ -55,12 +55,28 @@
             position: relative;
         }
 
-        /* ─── Cesium 3D container (replaces the broken ol-cesium sync) ─── */
+        /* ─── Cesium Container ─── */
         #cesiumContainer {
             width: 100%;
             height: 800px;
             position: relative;
             display: none;
+            background: #1a1a2e;
+            z-index: 1;
+        }
+
+        #cesiumContainer .cesium-viewer {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        #cesiumContainer .cesium-widget-credits {
+            display: none !important;
+        }
+
+        #cesiumContainer .cesium-viewer-toolbar {
+            right: 20px;
+            top: 20px;
         }
 
         /* ─── Map Controls Stack ─── */
@@ -140,33 +156,16 @@
             border-color: #0d6efd;
         }
 
-        /* 3D Button Styles */
         .threed-toggle-btn.active-3d {
             color: #0d6efd;
             background: #e3f0ff;
             border-color: #0d6efd;
-            animation: pulse 1.5s infinite;
-        }
-
-        .custom-threed-toggle {
-            position: relative;
-            z-index: 1001;
-        }
-
-        .threed-toggle-btn .bi-box-fill {
-            color: #0d6efd;
         }
 
         @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-            100% {
-                opacity: 1;
-            }
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         /* ─── Dropdowns ─── */
@@ -196,23 +195,10 @@
             display: block;
         }
 
-        .layer-dropdown {
-            min-width: 220px;
-        }
-
-        .location-dropdown {
-            min-width: 200px;
-        }
-
-        .search-dropdown {
-            min-width: 320px;
-        }
-
-        .filter-dropdown {
-            min-width: 350px;
-            max-height: 80vh;
-            overflow: hidden;
-        }
+        .layer-dropdown { min-width: 220px; }
+        .location-dropdown { min-width: 200px; }
+        .search-dropdown { min-width: 320px; }
+        .filter-dropdown { min-width: 350px; max-height: 80vh; overflow: hidden; }
 
         /* ─── Filter Scroll Container ─── */
         .filter-scroll-container {
@@ -224,17 +210,14 @@
         .filter-scroll-container::-webkit-scrollbar {
             width: 6px;
         }
-
         .filter-scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 3px;
         }
-
         .filter-scroll-container::-webkit-scrollbar-thumb {
             background: #ccc;
             border-radius: 3px;
         }
-
         .filter-scroll-container::-webkit-scrollbar-thumb:hover {
             background: #999;
         }
@@ -419,25 +402,10 @@
             font-weight: 600;
         }
 
-        .type-badge.road {
-            background: #0dcaf0;
-            color: #000;
-        }
-
-        .type-badge.parcel {
-            background: #198754;
-            color: #fff;
-        }
-
-        .type-badge.point {
-            background: #ffc107;
-            color: #000;
-        }
-
-        .type-badge.assessment {
-            background: #0d6efd;
-            color: #fff;
-        }
+        .type-badge.road { background: #0dcaf0; color: #000; }
+        .type-badge.parcel { background: #198754; color: #fff; }
+        .type-badge.point { background: #ffc107; color: #000; }
+        .type-badge.assessment { background: #0d6efd; color: #fff; }
 
         .filter-field-group {
             margin-bottom: 10px;
@@ -528,6 +496,16 @@
             height: 100vh;
             z-index: 9999;
             border-radius: 0;
+        }
+
+        #cesiumContainer.fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            border-radius: 0 !important;
         }
 
         .map-card.fullscreen-mode {
@@ -625,7 +603,7 @@
         }
 
         .bld-img-wrap img {
-
+            width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform .4s ease;
@@ -1000,7 +978,6 @@
             color: #94a3b8;
         }
 
-        /* ─── Quick Stats ─── */
         .quick-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1029,195 +1006,55 @@
 
         /* ─── Responsive ─── */
         @media (max-width: 768px) {
-            #map,
-            #cesiumContainer {
-                height: 500px;
-            }
-
-            .map-controls-stack {
-                right: 12px;
-                top: 12px;
-                gap: 6px;
-            }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
+            #map, #cesiumContainer { height: 500px; }
+            .map-controls-stack { right: 12px; top: 12px; gap: 6px; }
+            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn,
+            .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn,
             .filter-toggle-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 15px;
-                padding: 8px;
-                border-radius: 8px;
+                width: 38px; height: 38px; font-size: 15px; padding: 8px; border-radius: 8px;
             }
-
-            .fullscreen-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 15px;
-                padding: 8px;
-                right: 12px;
-                bottom: 12px;
-            }
-
-            .layer-dropdown,
-            .location-dropdown {
-                min-width: 180px;
-            }
-
-            .search-dropdown {
-                min-width: 280px;
-                right: -10px;
-            }
-
-            .filter-dropdown {
-                min-width: 300px;
-                right: -10px;
-            }
-
-            .bld-image-strip {
-                height: 150px;
-            }
-
-            .bld-summary-card {
-                flex: 1 1 45%;
-            }
-
-            .point-data-card-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .quick-stats {
-                grid-template-columns: 1fr 1fr;
-            }
+            .fullscreen-btn { width: 38px; height: 38px; font-size: 15px; padding: 8px; right: 12px; bottom: 12px; }
+            .layer-dropdown, .location-dropdown { min-width: 180px; }
+            .search-dropdown { min-width: 280px; right: -10px; }
+            .filter-dropdown { min-width: 300px; right: -10px; }
+            .bld-image-strip { height: 150px; }
+            .bld-summary-card { flex: 1 1 45%; }
+            .point-data-card-grid { grid-template-columns: 1fr 1fr; }
+            .quick-stats { grid-template-columns: 1fr 1fr; }
         }
 
         @media (max-width: 480px) {
-            #map,
-            #cesiumContainer {
-                height: 400px;
-            }
-
-            .map-controls-stack {
-                right: 8px;
-                top: 8px;
-                gap: 5px;
-            }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
+            #map, #cesiumContainer { height: 400px; }
+            .map-controls-stack { right: 8px; top: 8px; gap: 5px; }
+            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn,
+            .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn,
             .filter-toggle-btn {
-                width: 34px;
-                height: 34px;
-                font-size: 13px;
-                padding: 6px;
-                border-radius: 6px;
+                width: 34px; height: 34px; font-size: 13px; padding: 6px; border-radius: 6px;
             }
-
-            .fullscreen-btn {
-                width: 34px;
-                height: 34px;
-                font-size: 13px;
-                padding: 6px;
-                right: 8px;
-                bottom: 8px;
-            }
-
-            .layer-dropdown,
-            .location-dropdown {
-                min-width: 160px;
-                right: -5px;
-            }
-
-            .search-dropdown {
-                min-width: 240px;
-                right: -15px;
-            }
-
-            .filter-dropdown {
-                min-width: 260px;
-                right: -15px;
-                max-height: 70vh;
-            }
-
-            .bld-summary-card {
-                flex: 1 1 100%;
-                border-right: none;
-                border-bottom: 1px solid #e5e7eb;
-            }
-
-            .bld-summary-strip {
-                flex-direction: column;
-            }
-
-            .bld-image-strip {
-                height: 120px;
-                flex-direction: column;
-            }
-
-            .bld-img-wrap+.bld-img-wrap {
-                border-left: none;
-                border-top: 3px solid #fff;
-            }
-
-            .point-data-card-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .point-data-card-header {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .point-data-card-actions {
-                justify-content: flex-start;
-            }
-
-            .search-result-actions {
-                flex-direction: column;
-                gap: 4px;
-            }
-
-            .search-result-actions .btn-sm {
-                width: 100%;
-            }
-
-            .quick-stats {
-                grid-template-columns: 1fr 1fr;
-                font-size: 10px;
-            }
+            .fullscreen-btn { width: 34px; height: 34px; font-size: 13px; padding: 6px; right: 8px; bottom: 8px; }
+            .layer-dropdown, .location-dropdown { min-width: 160px; right: -5px; }
+            .search-dropdown { min-width: 240px; right: -15px; }
+            .filter-dropdown { min-width: 260px; right: -15px; max-height: 70vh; }
+            .bld-summary-card { flex: 1 1 100%; border-right: none; border-bottom: 1px solid #e5e7eb; }
+            .bld-summary-strip { flex-direction: column; }
+            .bld-image-strip { height: 120px; flex-direction: column; }
+            .bld-img-wrap+.bld-img-wrap { border-left: none; border-top: 3px solid #fff; }
+            .point-data-card-grid { grid-template-columns: 1fr; }
+            .point-data-card-header { flex-direction: column; gap: 8px; }
+            .point-data-card-actions { justify-content: flex-start; }
+            .search-result-actions { flex-direction: column; gap: 4px; }
+            .search-result-actions .btn-sm { width: 100%; }
+            .quick-stats { grid-template-columns: 1fr 1fr; font-size: 10px; }
         }
 
-        /* Touch-friendly */
         @media (hover: none) and (pointer: coarse) {
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                min-height: 44px;
-                min-width: 44px;
+            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn,
+            .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn,
+            .filter-toggle-btn, .fullscreen-btn {
+                min-height: 44px; min-width: 44px;
             }
-
-            .fullscreen-btn {
-                min-height: 44px;
-                min-width: 44px;
-            }
-
             .search-result-actions .btn-sm {
-                min-height: 34px;
-                font-size: 12px;
-                padding: 4px 12px;
+                min-height: 34px; font-size: 12px; padding: 4px 12px;
             }
         }
     </style>
@@ -1252,7 +1089,7 @@
         <div id="cesiumContainer"></div>
     </div>
 
-    <!-- Modals remain the same as original -->
+    <!-- Modals -->
     <div class="modal fade" id="buildingViewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1482,7 +1319,8 @@
 
 @push('scripts')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ol@v7.3.0/dist/ol.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ol-cesium@v2.11.0/dist/ol-cesium.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Cesium.js"></script>
@@ -1537,7 +1375,6 @@
                     url: droneImageURL,
                     imageExtent: imageExtent,
                     imageSmoothing: false,
-                    // Add crossOrigin for better loading
                     crossOrigin: 'anonymous'
                 }),
                 opacity: 0.90,
@@ -1595,11 +1432,11 @@
             let trackInterval = null;
             let isGettingLocation = false;
 
-            // ─── 3D MODE VARIABLES (standalone Cesium viewer — see toggle3DMode) ───
+            // ─── CESIUM / 3D MODE ───
+            let ol3d = null;
             let is3DMode = false;
-            let cesiumViewer = null;
-            let cesiumBuildingEntities = [];
-            let cesiumClickHandler = null;
+            let cesiumInitialized = false;
+            const CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
 
             // ─── STYLES ───
             function createPolygonStyle(feature) {
@@ -1951,12 +1788,183 @@
                 })
             });
 
+            // ─── CESIUM 3D INTEGRATION ───
+
+            /**
+             * Initialize Cesium with ol-cesium for 2D/3D integration
+             */
+            function initCesium() {
+                if (cesiumInitialized) return true;
+
+                try {
+                    // Set Cesium Ion token
+                    Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
+
+                    // Get the Cesium container
+                    const cesiumContainer = document.getElementById('cesiumContainer');
+                    cesiumContainer.style.display = 'none';
+                    cesiumContainer.style.width = '100%';
+                    cesiumContainer.style.height = '800px';
+
+                    // Create the ol-cesium instance
+                    ol3d = new olcs.OLCesium({
+                        map: map,
+                        target: cesiumContainer,
+                        resolutionScale: 1.0,
+                        sceneOptions: {
+                            terrainProvider: Cesium.createWorldTerrain(),
+                            shadows: true,
+                            skyAtmosphere: true,
+                            lighting: true
+                        }
+                    });
+
+                    // Set terrain provider
+                    ol3d.getCesiumScene().terrainProvider = Cesium.createWorldTerrain({
+                        requestWaterMask: true,
+                        requestVertexNormals: true
+                    });
+
+                    // Enable the 3D view
+                    ol3d.setEnabled(true);
+                    ol3d.getCesiumScene().globe.depthTestAgainstTerrain = true;
+
+                    // Sync the view
+                    ol3d.getData().viewportToOlMap();
+
+                    cesiumInitialized = true;
+                    console.log('✅ Cesium initialized successfully with ol-cesium');
+                    return true;
+                } catch (error) {
+                    console.error('❌ Failed to initialize Cesium:', error);
+                    showToast('⚠️ Failed to initialize 3D mode: ' + error.message, 4000);
+                    return false;
+                }
+            }
+
+            /**
+             * Toggle between 2D and 3D modes
+             */
+            function toggle3DMode() {
+                const $threedBtn = $('#threedToggleBtn');
+                const $map = $('#map');
+                const $cesiumContainer = $('#cesiumContainer');
+
+                if (!is3DMode) {
+                    // ─── SWITCH TO 3D MODE ───
+
+                    // Initialize Cesium if not already done
+                    if (!cesiumInitialized) {
+                        const success = initCesium();
+                        if (!success) {
+                            showToast('⚠️ Could not initialize 3D view', 3000);
+                            return;
+                        }
+                    }
+
+                    if (!ol3d) {
+                        showToast('⚠️ 3D view not available', 3000);
+                        return;
+                    }
+
+                    // Show Cesium container, hide OpenLayers map
+                    $map.hide();
+                    $cesiumContainer.show();
+                    $cesiumContainer.css('height', '800px');
+
+                    // Enable the 3D view
+                    ol3d.setEnabled(true);
+
+                    // Sync the view
+                    setTimeout(() => {
+                        try {
+                            ol3d.getData().viewportToOlMap();
+                            ol3d.getCesiumScene().requestRender();
+                            // Fly to current view
+                            const view = ol3d.getOlMap().getView();
+                            const center = view.getCenter();
+                            const zoom = view.getZoom();
+                            if (center) {
+                                const lonLat = ol.proj.toLonLat(center);
+                                ol3d.getCesiumScene().camera.flyTo({
+                                    destination: new Cesium.Cartesian3.fromDegrees(
+                                        lonLat[0],
+                                        lonLat[1],
+                                        300 + (18 - zoom) * 50
+                                    ),
+                                    duration: 2.0
+                                });
+                            }
+                        } catch (e) {
+                            console.warn('Error during 3D transition:', e);
+                        }
+                    }, 100);
+
+                    // Update button state
+                    is3DMode = true;
+                    $threedBtn.addClass('active-3d').html('<i class="bi bi-box-fill"></i>');
+                    showToast('🌍 3D mode activated', 3000);
+
+                } else {
+                    // ─── SWITCH TO 2D MODE ───
+
+                    // Disable 3D view
+                    if (ol3d) {
+                        ol3d.setEnabled(false);
+                    }
+
+                    // Show OpenLayers map, hide Cesium
+                    $cesiumContainer.hide();
+                    $map.show();
+                    map.updateSize();
+
+                    // Update button state
+                    is3DMode = false;
+                    $threedBtn.removeClass('active-3d').html('<i class="bi bi-box"></i>');
+                    showToast('🗺️ 2D mode restored', 2000);
+                }
+            }
+
+            /**
+             * Synchronize 3D view when map changes
+             */
+            function sync3DView() {
+                if (is3DMode && ol3d && ol3d.getEnabled()) {
+                    try {
+                        ol3d.getData().viewportToOlMap();
+                        ol3d.getCesiumScene().requestRender();
+                    } catch (e) {
+                        // Ignore sync errors
+                    }
+                }
+            }
+
+            // ─── 3D TOGGLE EVENT HANDLER ───
+            $(document).on('click', '#threedToggleBtn', function(e) {
+                e.stopPropagation();
+                toggle3DMode();
+            });
+
+            // ─── SYNC 3D VIEW ON MAP MOVEMENT ───
+            map.getView().on('change:center', sync3DView);
+            map.getView().on('change:resolution', sync3DView);
+
+            // ─── HANDLE MAP SIZE CHANGES ───
+            $(window).on('resize', function() {
+                if (is3DMode && ol3d && ol3d.getEnabled()) {
+                    try {
+                        ol3d.getCesiumScene().requestRender();
+                    } catch (e) {}
+                }
+            });
+
             // ─── GET MAP CONTAINER ───
             const $mapContainer = $('#map');
             $mapContainer.append(`<div class="map-controls-stack" id="mapControlsStack"></div>`);
             const $stack = $('#mapControlsStack');
 
             // ─── CONTROLS INJECTION ───
+
             // 1. FILTER TOGGLE
             $stack.append(`
                 <div class="custom-filter-toggle">
@@ -2361,11 +2369,13 @@
                 $('#activeLayerBadge').text(layerName);
                 $('.layer-dropdown-item[data-layer-type="base"]').removeClass('active');
                 $('.layer-dropdown-item[data-layer="' + layerName + '"]').addClass('active');
+                sync3DView();
             }
 
             function toggleDroneLayer() {
                 const visible = !droneLayer.getVisible();
                 droneLayer.setVisible(visible);
+                sync3DView();
                 return visible;
             }
 
@@ -2435,7 +2445,7 @@
                     center: coords,
                     zoom: 20,
                     duration: 1000
-                });
+                }, sync3DView);
             }
 
             function zoomToExtent() {
@@ -2443,7 +2453,7 @@
                     padding: [50, 50, 50, 50],
                     duration: 1000,
                     maxZoom: 20
-                });
+                }, sync3DView);
                 showToast('📍 Zoomed to ward extent', 2000);
             }
 
@@ -2471,182 +2481,9 @@
                 });
             }
 
-            // ══════════════════════════════════════════════════════════════
-            // ─── STANDALONE CESIUM 3D VIEW ───
-            // ol-cesium is intentionally NOT used here: the npm package's
-            // browser bundle (dist/olcesium.umd.js) targets the modular
-            // `ol/*.js` package via a bundler and needs `ol` 6.x/7.x — it
-            // is not compatible with the monolithic ol@latest CDN build
-            // loaded on this page. Instead we spin up a plain Cesium.Viewer
-            // and draw the buildings as extruded polygon entities, reusing
-            // the same polygons/polygonDatas/buildingVariations data.
-            // ══════════════════════════════════════════════════════════════
-
-            const CESIUM_ION_TOKEN =
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1ZDQ3MmI5MC04ZjY4LTQyMjMtODA4Ni1jZmVjZTI1NDI1ODAiLCJpZCI6MjU5MDQ1LCJpYXQiOjE3Mzc2MjE5Nzd9.FqIhYpDCCR-sxsN_Cu5qXrVvKqG8OxOYzuDdxMUVh2Y';
-
-            function initCesiumViewer() {
-                if (cesiumViewer) return cesiumViewer;
-
-                if (typeof Cesium === 'undefined') {
-                    showToast('⚠️ Cesium library failed to load. Check your connection and refresh.', 4000);
-                    return null;
-                }
-
-                try {
-                    Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
-
-                    cesiumViewer = new Cesium.Viewer('cesiumContainer', {
-                        baseLayerPicker: false,
-                        geocoder: false,
-                        homeButton: false,
-                        sceneModePicker: false,
-                        navigationHelpButton: false,
-                        animation: false,
-                        timeline: false,
-                        fullscreenButton: false,
-                        infoBox: false,
-                        selectionIndicator: false
-                    });
-
-                    cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
-
-                    // Click-to-inspect a building, mirroring the 2D map behaviour
-                    cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(cesiumViewer.scene.canvas);
-                    cesiumClickHandler.setInputAction(function(movement) {
-                        const picked = cesiumViewer.scene.pick(movement.position);
-                        if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
-                            showFeatureDetails({
-                                get: function(key) {
-                                    return key === 'gisid' ? picked.id.gisid : undefined;
-                                }
-                            });
-                        }
-                    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-                    buildCesiumBuildings();
-
-                    console.log('✅ Cesium 3D viewer initialized');
-                    return cesiumViewer;
-                } catch (error) {
-                    console.error('❌ Cesium init failed:', error);
-                    showToast('⚠️ 3D mode not available: ' + error.message, 4000);
-                    cesiumViewer = null;
-                    return null;
-                }
-            }
-
-            function buildCesiumBuildings() {
-                if (!cesiumViewer) return;
-
-                cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
-                cesiumBuildingEntities = [];
-
-                polygons.forEach(poly => {
-                    try {
-                        const ring = JSON.parse(poly.coordinates);
-                        if (!Array.isArray(ring) || ring.length < 3) return;
-
-                        // Polygon coordinates on this page are stored in the map's
-                        // view projection (EPSG:3857); Cesium wants WGS84 degrees.
-                        const lonLatFlat = [];
-                        ring.forEach(pt => {
-                            const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
-                            lonLatFlat.push(lonLat[0], lonLat[1]);
-                        });
-
-                        const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
-                        const usage = polygonData?.building_usage || 'OTHER';
-                        const colorHex = usageColors[usage] || '#0d6efd';
-                        const floors = parseInt(polygonData?.number_floor) || 0;
-                        const height = Math.max((floors + 1) * 3.2, 3.2);
-
-                        const entity = cesiumViewer.entities.add({
-                            gisid: poly.gisid,
-                            polygon: {
-                                hierarchy: Cesium.Cartesian3.fromDegreesArray(lonLatFlat),
-                                extrudedHeight: height,
-                                height: 0,
-                                material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.75),
-                                outline: true,
-                                outlineColor: Cesium.Color.WHITE,
-                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-                                extrudedHeightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
-                            }
-                        });
-                        cesiumBuildingEntities.push(entity);
-                    } catch (e) {
-                        console.error('Cesium polygon build error:', e);
-                    }
-                });
-
-                console.log('🏢 Cesium buildings drawn:', cesiumBuildingEntities.length);
-            }
-
-            function flyCesiumToWardExtent() {
-                if (!cesiumViewer) return;
-                const center = ol.extent.getCenter(imageExtent);
-                const lonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
-
-                cesiumViewer.camera.flyTo({
-                    destination: Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], 350),
-                    orientation: {
-                        heading: Cesium.Math.toRadians(0),
-                        pitch: Cesium.Math.toRadians(-55),
-                        roll: 0
-                    },
-                    duration: 2.0
-                });
-            }
-
-            // ─── TOGGLE 3D MODE ───
-            function toggle3DMode() {
-                const $threedBtn = $('#threedToggleBtn');
-
-                if (!is3DMode) {
-                    // ─── ENTER 3D MODE ───
-                    const viewer = initCesiumViewer();
-                    if (!viewer) return;
-
-                    buildCesiumBuildings();
-
-                    $('#map').hide();
-                    $('#cesiumContainer').show();
-                    setTimeout(() => viewer.resize(), 50);
-
-                    flyCesiumToWardExtent();
-
-                    is3DMode = true;
-                    $threedBtn.addClass('active-3d').html('<i class="bi bi-box-fill"></i>');
-                    showToast('🌍 3D mode activated - Buildings extruded', 3000);
-                } else {
-                    // ─── EXIT 3D MODE ───
-                    $('#cesiumContainer').hide();
-                    $('#map').show();
-                    map.updateSize();
-
-                    is3DMode = false;
-                    $threedBtn.removeClass('active-3d').html('<i class="bi bi-box"></i>');
-                    showToast('🗺️ 2D mode restored', 2000);
-                }
-            }
-
-            // ─── 3D TOGGLE EVENT HANDLER ───
-            $(document).on('click', '#threedToggleBtn', function(e) {
-                e.stopPropagation();
-                toggle3DMode();
-            });
-
-            // ─── HANDLE MAP SIZE CHANGES ───
-            $(window).on('resize', function() {
-                if (cesiumViewer && is3DMode) {
-                    cesiumViewer.resize();
-                }
-            });
-
             // ─── FUNCTION TO SHOW BUILDING VIEW ───
             function showBuildingView(item) {
-                // ─── SET BASIC FIELDS ───
+                // Set basic fields
                 $('#bv_gisid').text(item.gisid || '-');
                 $('#bv_zone').text(item.zone || item.building_zone || '-');
                 $('#bv_building_name').text(item.building_name || '-');
@@ -2664,7 +2501,7 @@
                 const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
                 $('#bv_mapped').text(mappedCount);
 
-                // ─── VARIATION ───
+                // Variation
                 const variation = buildingVariations[item.gisid];
                 if (variation) {
                     const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
@@ -2694,7 +2531,7 @@
                     $('#bv_variation_wrap').html('');
                 }
 
-                // ─── AMENITIES ───
+                // Amenities
                 const amenities = [
                     ['Lift Room', item.liftroom],
                     ['Head Room', item.headroom],
@@ -2720,11 +2557,11 @@
                 $('#bv_amenities').html(hasAmenities ? amenHtml :
                     '<span class="text-muted small">No amenities recorded</span>');
 
-                // ─── REMARKS ───
+                // Remarks
                 $('#bv_remarks').text(item.remarks || '—');
                 $('#bv_corp_remarks').text(item.corporationremarks || '—');
 
-                // ─── IMAGES ───
+                // Images
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
 
                 function loadImage(imgId, emptyId, errorId, imagePath) {
@@ -2760,7 +2597,7 @@
                 loadImage('bv_img1', 'bv_img1_empty', 'bv_img1_error', item.image);
                 loadImage('bv_img2', 'bv_img2_empty', 'bv_img2_error', item.image2);
 
-                // ─── BUTTON HANDLERS ───
+                // Button handlers
                 $('#buildingViewPointsBtn').off('click').on('click', function() {
                     bootstrap.Modal.getInstance(document.getElementById('buildingViewModal')).hide();
                     openPointDetails(item.gisid);
@@ -3152,6 +2989,7 @@
                         const visible = !layer.getVisible();
                         layer.setVisible(visible);
                         $(this).toggleClass('active', visible);
+                        sync3DView();
                     }
                 }
             });
@@ -3161,6 +2999,7 @@
                 $(this).toggleClass('active-label');
                 polygonLayer.setStyle(createPolygonStyle);
                 polygonLayer.changed();
+                sync3DView();
             });
 
             // Legend Toggle
@@ -3244,6 +3083,7 @@
                             }
 
                             showToast('📍 Live location activated', 2000);
+                            sync3DView();
 
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
@@ -3260,6 +3100,7 @@
                                             positionFeature.getGeometry()
                                                 .setCoordinates(p);
                                         }
+                                        sync3DView();
                                     },
                                     function(error) {
                                         console.error('Watch error:', error);
@@ -3293,6 +3134,7 @@
                         positionLayer.getSource().removeFeature(positionFeature);
                         positionFeature = null;
                     }
+                    sync3DView();
                 }
                 $('.location-dropdown').removeClass('active');
             });
@@ -3337,7 +3179,7 @@
                                 center: projected,
                                 zoom: 19,
                                 duration: 500
-                            });
+                            }, sync3DView);
 
                             showToast('📍 Tracking started - auto-centering', 3000);
 
@@ -3366,7 +3208,7 @@
                                             center: p,
                                             zoom: 19,
                                             duration: 500
-                                        });
+                                        }, sync3DView);
                                     },
                                     function(error) {
                                         console.error('Track error:', error);
@@ -3384,7 +3226,7 @@
                                         center: currentPosition,
                                         zoom: 19,
                                         duration: 500
-                                    });
+                                    }, sync3DView);
                                 }
                             }, 2000);
 
@@ -3418,6 +3260,7 @@
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
                     }
+                    sync3DView();
                 }
                 $('.location-dropdown').removeClass('active');
             });
@@ -3447,6 +3290,7 @@
                 $('#trackMeBadge').text('OFF').removeClass('tracking');
                 $('#locationToggleBtn').removeClass('active-location tracking');
                 showToast('🧹 Cleared all location data', 2000);
+                sync3DView();
                 $('.location-dropdown').removeClass('active');
             });
 
@@ -3605,7 +3449,7 @@
             }
 
             function applyFilters() {
-                // ─── GET FILTER VALUES ───
+                // Get filter values
                 const selectedUsage = $('#usageFilter').val();
                 const usageVariation = $('#usageVariationFilter').val();
                 const areaVariation = $('#areaVariationFilter').val();
@@ -3621,7 +3465,7 @@
                 const minArea = parseInt($('#minArea').val()) || 0;
                 const maxArea = parseInt($('#maxArea').val()) || 0;
 
-                // ─── CHECK IF ANY FILTER ACTIVE ───
+                // Check if any filter active
                 const allUsageSelected = selectedUsage === 'all';
                 const allZonesSelected = selectedZone === 'all';
                 const allConstructionSelected = selectedConstruction === 'all';
@@ -3648,10 +3492,10 @@
                     return;
                 }
 
-                // ─── STEP 1: COLLECT GIS IDs FROM EACH FILTER ───
+                // Step 1: Collect GIS IDs from each filter
                 let filteredGisids = new Set();
 
-                // ─── 1A: USAGE FILTER ───
+                // 1A: USAGE FILTER
                 let usageGisids = null;
                 if (!allUsageSelected) {
                     usageGisids = new Set(
@@ -3661,7 +3505,7 @@
                     );
                 }
 
-                // ─── 1B: USAGE VARIATION FILTER ───
+                // 1B: USAGE VARIATION FILTER
                 let usageVariationGisids = null;
                 if (!allUsageVariationSelected) {
                     if (usageVariation === 'match') {
@@ -3686,7 +3530,7 @@
                     }
                 }
 
-                // ─── 1C: AREA VARIATION FILTER ───
+                // 1C: AREA VARIATION FILTER
                 let areaVariationGisids = null;
                 if (!allAreaVariationSelected) {
                     if (areaVariation === 'match') {
@@ -3717,7 +3561,7 @@
                     }
                 }
 
-                // ─── 1D: ZONE FILTER ───
+                // 1D: ZONE FILTER
                 let zoneGisids = null;
                 if (!allZonesSelected) {
                     zoneGisids = new Set(
@@ -3727,7 +3571,7 @@
                     );
                 }
 
-                // ─── 1E: CONSTRUCTION FILTER ───
+                // 1E: CONSTRUCTION FILTER
                 let constructionGisids = null;
                 if (!allConstructionSelected) {
                     constructionGisids = new Set(
@@ -3737,7 +3581,7 @@
                     );
                 }
 
-                // ─── 1F: BUILDING TYPE FILTER ───
+                // 1F: BUILDING TYPE FILTER
                 let buildingTypeGisids = null;
                 if (!allBuildingTypesSelected) {
                     buildingTypeGisids = new Set(
@@ -3747,7 +3591,7 @@
                     );
                 }
 
-                // ─── 1G: AMENITIES FILTER ───
+                // 1G: AMENITIES FILTER
                 let amenitiesGisids = null;
                 if (!noAmenitiesSelected) {
                     amenitiesGisids = new Set(
@@ -3763,7 +3607,7 @@
                     );
                 }
 
-                // ─── 1H: UGD FILTER ───
+                // 1H: UGD FILTER
                 let ugdGisids = null;
                 if (!allUgdSelected) {
                     ugdGisids = new Set(
@@ -3773,7 +3617,7 @@
                     );
                 }
 
-                // ─── 1I: SURVEY STATUS FILTER ───
+                // 1I: SURVEY STATUS FILTER
                 let surveyStatusGisids = null;
                 if (!allSurveyStatusSelected) {
                     if (selectedSurveyStatus === 'surveyed') {
@@ -3798,7 +3642,7 @@
                     }
                 }
 
-                // ─── 1J: ASSESSMENT COUNT FILTER ───
+                // 1J: ASSESSMENT COUNT FILTER
                 let assessmentCountGisids = null;
                 if (!allAssessmentCountSelected) {
                     const gisidPointCount = {};
@@ -3820,7 +3664,7 @@
                     );
                 }
 
-                // ─── 1K: FLOOR FILTER ───
+                // 1K: FLOOR FILTER
                 let floorGisids = null;
                 if (!allFloorSelected) {
                     floorGisids = new Set(
@@ -3838,7 +3682,7 @@
                     );
                 }
 
-                // ─── 1L: SHOP FILTER ───
+                // 1L: SHOP FILTER
                 let shopGisids = null;
                 if (!allShopSelected) {
                     shopGisids = new Set(
@@ -3855,7 +3699,7 @@
                     );
                 }
 
-                // ─── 1M: AREA RANGE FILTER ───
+                // 1M: AREA RANGE FILTER
                 let areaGisids = null;
                 if (!areaDefault) {
                     areaGisids = new Set(
@@ -3868,7 +3712,7 @@
                     );
                 }
 
-                // ─── STEP 2: INTERSECT ALL FILTER SETS ───
+                // Step 2: Intersect all filter sets
                 const allFilterSets = [
                     usageGisids,
                     usageVariationGisids,
@@ -3895,7 +3739,7 @@
                     }
                 });
 
-                // ─── STEP 3: CLEAR SOURCE AND ADD FILTERED POLYGONS ───
+                // Step 3: Clear source and add filtered polygons
                 polygonSource.clear();
 
                 let totalBuildings = 0;
@@ -3934,7 +3778,7 @@
                     }
                 });
 
-                // ─── STEP 4: UPDATE UI ───
+                // Step 4: Update UI
                 const visibleCount = polygonSource.getFeatures().length;
                 const total = polygons.length;
 
@@ -3963,7 +3807,8 @@
                     showToast(`✅ ${visibleCount} features match the selected filters`, 2000);
                 }
 
-                if (is3DMode) buildCesiumBuildings();
+                // Sync 3D view
+                setTimeout(sync3DView, 300);
             }
 
             function resetAllFilters(silent = false) {
@@ -4021,7 +3866,8 @@
                     showToast('🔄 All filters reset - all features visible', 2000);
                 }
 
-                if (is3DMode) buildCesiumBuildings();
+                // Sync 3D view
+                setTimeout(sync3DView, 300);
             }
 
             $('#applyFiltersBtn').on('click', function() {
@@ -4167,18 +4013,24 @@
                 if (!isFullscreen) {
                     $card.addClass('fullscreen-mode');
                     $('#map').addClass('fullscreen');
+                    $('#cesiumContainer').addClass('fullscreen');
                     $btn.html('<i class="bi bi-fullscreen-exit"></i>');
                     isFullscreen = true;
                 } else {
                     $card.removeClass('fullscreen-mode');
                     $('#map').removeClass('fullscreen');
+                    $('#cesiumContainer').removeClass('fullscreen');
                     $btn.html('<i class="bi bi-arrows-fullscreen"></i>');
                     isFullscreen = false;
                 }
 
                 setTimeout(function() {
                     map.updateSize();
-                    if (cesiumViewer) cesiumViewer.resize();
+                    if (is3DMode && ol3d && ol3d.getEnabled()) {
+                        try {
+                            ol3d.getCesiumScene().requestRender();
+                        } catch (e) {}
+                    }
                 }, 150);
             });
 
@@ -4207,6 +4059,7 @@
                 } else {
                     routeLine.getGeometry().setCoordinates(routePoints);
                 }
+                sync3DView();
             }
 
             // ─── SEARCH GIS ───
@@ -4233,7 +4086,7 @@
             console.log('📊 Polygons:', polygons.length);
             console.log('📊 Lines:', lines.length);
             console.log('📊 Point Data:', pointDatas.length);
-            console.log('🌍 3D mode ready (standalone Cesium viewer) - Click the cube button to activate');
+            console.log('🌍 3D mode ready (ol-cesium) - Click the cube button to activate');
 
             setTimeout(() => {
                 showToast('👆 Click on any building to view details', 4000);
