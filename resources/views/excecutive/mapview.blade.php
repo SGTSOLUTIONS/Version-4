@@ -161,11 +161,9 @@
             0% {
                 opacity: 1;
             }
-
             50% {
                 opacity: 0.5;
             }
-
             100% {
                 opacity: 1;
             }
@@ -550,6 +548,19 @@
         .map-card.fullscreen-mode #map,
         .map-card.fullscreen-mode #cesiumContainer {
             height: calc(100vh - 5px);
+        }
+
+        /* Bootstrap's modal/backdrop default to z-index ~1050-1056, which is
+           BELOW the fullscreen map's z-index (9998-9999). That's why clicking
+           a building while in fullscreen looked like "nothing happens" — the
+           modal was opening, just rendering underneath the map. Push modals
+           above the fullscreen map/Cesium view so they're actually visible. */
+        .modal-backdrop {
+            z-index: 10050 !important;
+        }
+
+        .modal {
+            z-index: 10060 !important;
         }
 
         /* ─── Modal Styles ─── */
@@ -1031,7 +1042,6 @@
 
         /* ─── Responsive ─── */
         @media (max-width: 768px) {
-
             #map,
             #cesiumContainer {
                 height: 500px;
@@ -1099,7 +1109,6 @@
         }
 
         @media (max-width: 480px) {
-
             #map,
             #cesiumContainer {
                 height: 400px;
@@ -1274,51 +1283,42 @@
                     <div class="bld-img-wrap" id="bv_img1_wrap">
                         <img id="bv_img1" src="" style="display:none;"
                             onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
-                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i
-                                class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i
-                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
                     <div class="bld-img-wrap" id="bv_img2_wrap">
                         <img id="bv_img2" src="" style="display:none;"
                             onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
-                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i
-                                class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i
-                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
                 <div class="modal-body" style="max-height: 65vh; overflow-y: auto; padding: 20px 24px;">
-                    <div class="bld-summary-strip"
-                        style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px; margin-bottom: 20px;">
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                    <div class="bld-summary-strip" style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px; margin-bottom: 20px;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
                             <div class="bld-summary-icon">🧾</div>
                             <div>
                                 <div class="bld-summary-label">Assessments</div>
                                 <div class="bld-summary-val" id="bv_bills">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
                             <div class="bld-summary-icon">🏬</div>
                             <div>
                                 <div class="bld-summary-label">Shops</div>
                                 <div class="bld-summary-val" id="bv_shops">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
                             <div class="bld-summary-icon">🏢</div>
                             <div>
                                 <div class="bld-summary-label">Floors</div>
                                 <div class="bld-summary-val" id="bv_floors">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
                             <div class="bld-summary-icon">✅</div>
                             <div>
                                 <div class="bld-summary-label">Mapped</div>
@@ -1438,17 +1438,14 @@
                     <div class="bld-header-inner">
                         <div class="bld-header-icon"><i class="bi bi-people"></i></div>
                         <div>
-                            <h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span
-                                    id="pdGisid"></span></span>
+                            <h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span id="pdGisid"></span></span>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small"
-                            id="pdBillSummary"></span></div>
-                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch"
-                        placeholder="Search by assessment, owner name, or phone number...">
+                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small" id="pdBillSummary"></span></div>
+                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch" placeholder="Search by assessment, owner name, or phone number...">
                     <div id="pointDetailsContainer"></div>
                 </div>
             </div>
@@ -1467,8 +1464,7 @@
                 </div>
                 <div class="modal-body p-4">
                     <input type="hidden" id="qc_point_data_id">
-                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment
-                        <span id="qc_assessment_display" class="fw-semibold"></span></p>
+                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment <span id="qc_assessment_display" class="fw-semibold"></span></p>
                     <div class="mb-3">
                         <label class="bld-form-label">QC Usage</label>
                         <select class="form-select bld-input" id="qcusage">
@@ -1490,8 +1486,7 @@
                 </div>
                 <div class="modal-footer bld-modal-footer">
                     <button type="button" class="btn bld-btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save
-                        QC</button>
+                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save QC</button>
                 </div>
             </div>
         </div>
@@ -2501,108 +2496,58 @@
             // ══════════════════════════════════════════════════════════════
 
             const CESIUM_ION_TOKEN =
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1ZDQ3MmI5MC04ZjY4LTQyMjMtODA4Ni1jZmVjZTI1NDI1ODAiLCJpZCI6MjU5MDQ1LCJpYXQiOjE3Mzc2MjE5Nzd9.FqIhYpDCCR-sxsN_Cu5qXrVvKqG8OxOYzuDdxMUVh2Y';
 
-           async function initCesiumViewer() {
-    if (cesiumViewer) return cesiumViewer;
+            function initCesiumViewer() {
+                if (cesiumViewer) return cesiumViewer;
 
-    if (typeof Cesium === 'undefined') {
-        showToast('⚠️ Cesium library failed to load.', 4000);
-        return null;
-    }
+                if (typeof Cesium === 'undefined') {
+                    showToast('⚠️ Cesium library failed to load. Check your connection and refresh.', 4000);
+                    return null;
+                }
 
-    try {
-        Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
+                try {
+                    Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
 
-        cesiumViewer = new Cesium.Viewer("cesiumContainer", {
-            baseLayer: Cesium.ImageryLayer.fromProviderAsync(
-                Cesium.IonImageryProvider.fromAssetId(2)
-            ),
-            terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(1),
-            baseLayerPicker: false,
-            geocoder: false,
-            homeButton: false,
-            sceneModePicker: false,
-            navigationHelpButton: false,
-            animation: false,
-            timeline: false,
-            fullscreenButton: false,
-            infoBox: false,
-            selectionIndicator: false,
-            shadows: true,
-            shouldAnimate: true
-        });
+                    cesiumViewer = new Cesium.Viewer('cesiumContainer', {
+                        baseLayerPicker: false,
+                        geocoder: false,
+                        homeButton: false,
+                        sceneModePicker: false,
+                        navigationHelpButton: false,
+                        animation: false,
+                        timeline: false,
+                        fullscreenButton: false,
+                        infoBox: false,
+                        selectionIndicator: false
+                    });
 
-        // ─── ADD DRONE IMAGE AS CUSTOM IMAGERY LAYER ───
-        if (droneImageURL && droneImageURL !== '') {
-            try {
-                // Convert extent from EPSG:3857 to WGS84 (degrees)
-                const extent4326 = [
-                    ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857', 'EPSG:4326'),
-                    ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857', 'EPSG:4326')
-                ];
+                    cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
 
-                // Create a custom imagery provider for the drone image
-                const droneImageryProvider = new Cesium.SingleTileImageryProvider({
-                    url: droneImageURL,
-                    rectangle: Cesium.Rectangle.fromDegrees(
-                        extent4326[0][0], // west
-                        extent4326[0][1], // south
-                        extent4326[1][0], // east
-                        extent4326[1][1]  // north
-                    ),
-                    credit: 'Drone Image'
-                });
+                    // Click-to-inspect a building, mirroring the 2D map behaviour
+                    cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(cesiumViewer.scene.canvas);
+                    cesiumClickHandler.setInputAction(function(movement) {
+                        const picked = cesiumViewer.scene.pick(movement.position);
+                        if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
+                            showFeatureDetails({
+                                get: function(key) {
+                                    return key === 'gisid' ? picked.id.gisid : undefined;
+                                }
+                            });
+                        }
+                    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-                // Add as a layer on top of the base map
-                const droneLayer = new Cesium.ImageryLayer(droneImageryProvider, {
-                    show: true,
-                    alpha: 0.85, // 85% opacity
-                    brightness: 1.0,
-                    contrast: 1.0
-                });
+                    buildCesiumBuildings();
 
-                cesiumViewer.imageryLayers.add(droneLayer);
-                console.log('✅ Drone image added to Cesium 3D view');
-
-            } catch (e) {
-                console.error('Failed to add drone image to Cesium:', e);
+                    console.log('✅ Cesium 3D viewer initialized');
+                    return cesiumViewer;
+                } catch (error) {
+                    console.error('❌ Cesium init failed:', error);
+                    showToast('⚠️ 3D mode not available: ' + error.message, 4000);
+                    cesiumViewer = null;
+                    return null;
+                }
             }
-        }
-
-        // ─── BUILD BUILDINGS ───
-        buildCesiumBuildings();
-
-        cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
-        cesiumViewer.scene.globe.enableLighting = true;
-        cesiumViewer.scene.skyAtmosphere.show = true;
-        cesiumViewer.scene.fog.enabled = true;
-
-        // Click event
-        cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(
-            cesiumViewer.scene.canvas
-        );
-
-        cesiumClickHandler.setInputAction(function (movement) {
-            const picked = cesiumViewer.scene.pick(movement.position);
-            if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
-                showFeatureDetails({
-                    get: function (key) {
-                        return key === "gisid" ? picked.id.gisid : undefined;
-                    }
-                });
-            }
-        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-        return cesiumViewer;
-
-    } catch (e) {
-        console.error(e);
-        showToast("3D initialization failed", 4000);
-        cesiumViewer = null;
-        return null;
-    }
-}
 
             function buildCesiumBuildings() {
                 if (!cesiumViewer) return;
@@ -2977,11 +2922,11 @@
                             </div>
 
                             ${ptList.length ? `
-                                            <div class="row mt-2 g-2">
-                                                <div class="col-12">
-                                                    <div class="tax-card">
-                                                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                                        ${ptList.map(pt => `
+                                        <div class="row mt-2 g-2">
+                                            <div class="col-12">
+                                                <div class="tax-card">
+                                                    <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                                    ${ptList.map(pt => `
                                             <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
@@ -2996,10 +2941,10 @@
                                                 <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                             </div>
                                         `).join('')}
-                                                    </div>
                                                 </div>
                                             </div>
-                                            ` : ''}
+                                        </div>
+                                        ` : ''}
                         </div>`;
                 });
 
