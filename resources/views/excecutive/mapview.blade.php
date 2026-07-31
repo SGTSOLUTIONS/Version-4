@@ -2483,59 +2483,91 @@
             // ══════════════════════════════════════════════════════════════
 
             const CESIUM_ION_TOKEN =
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1ZDQ3MmI5MC04ZjY4LTQyMjMtODA4Ni1jZmVjZTI1NDI1ODAiLCJpZCI6MjU5MDQ1LCJpYXQiOjE3Mzc2MjE5Nzd9.FqIhYpDCCR-sxsN_Cu5qXrVvKqG8OxOYzuDdxMUVh2Y';
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
 
-            function initCesiumViewer() {
-                if (cesiumViewer) return cesiumViewer;
+           async function initCesiumViewer() {
+    if (cesiumViewer) return cesiumViewer;
 
-                if (typeof Cesium === 'undefined') {
-                    showToast('⚠️ Cesium library failed to load. Check your connection and refresh.', 4000);
-                    return null;
-                }
+    if (typeof Cesium === 'undefined') {
+        showToast('⚠️ Cesium library failed to load.', 4000);
+        return null;
+    }
 
-                try {
-                    Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
+    try {
 
-                    cesiumViewer = new Cesium.Viewer('cesiumContainer', {
-                        baseLayerPicker: false,
-                        geocoder: false,
-                        homeButton: false,
-                        sceneModePicker: false,
-                        navigationHelpButton: false,
-                        animation: false,
-                        timeline: false,
-                        fullscreenButton: false,
-                        infoBox: false,
-                        selectionIndicator: false
-                    });
+        Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
 
-                    cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
+        cesiumViewer = new Cesium.Viewer("cesiumContainer", {
 
-                    // Click-to-inspect a building, mirroring the 2D map behaviour
-                    cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(cesiumViewer.scene.canvas);
-                    cesiumClickHandler.setInputAction(function(movement) {
-                        const picked = cesiumViewer.scene.pick(movement.position);
-                        if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
-                            showFeatureDetails({
-                                get: function(key) {
-                                    return key === 'gisid' ? picked.id.gisid : undefined;
-                                }
-                            });
-                        }
-                    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+            // World Imagery
+            baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+                Cesium.IonImageryProvider.fromAssetId(2)
+            ),
 
-                    buildCesiumBuildings();
+            // World Terrain
+            terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(1),
 
-                    console.log('✅ Cesium 3D viewer initialized');
-                    return cesiumViewer;
-                } catch (error) {
-                    console.error('❌ Cesium init failed:', error);
-                    showToast('⚠️ 3D mode not available: ' + error.message, 4000);
-                    cesiumViewer = null;
-                    return null;
-                }
+            baseLayerPicker: false,
+            geocoder: false,
+            homeButton: false,
+            sceneModePicker: false,
+            navigationHelpButton: false,
+            animation: false,
+            timeline: false,
+            fullscreenButton: false,
+            infoBox: false,
+            selectionIndicator: false,
+            shadows: true,
+            shouldAnimate: true
+        });
+
+        cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
+        cesiumViewer.scene.globe.enableLighting = true;
+
+        // Optional
+        cesiumViewer.scene.skyAtmosphere.show = true;
+        cesiumViewer.scene.fog.enabled = true;
+
+        // Click event
+        cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(
+            cesiumViewer.scene.canvas
+        );
+
+        cesiumClickHandler.setInputAction(function (movement) {
+
+            const picked = cesiumViewer.scene.pick(movement.position);
+
+            if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
+
+                showFeatureDetails({
+                    get: function (key) {
+                        return key === "gisid"
+                            ? picked.id.gisid
+                            : undefined;
+                    }
+                });
+
             }
 
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        buildCesiumBuildings();
+
+        console.log("✅ Cesium Viewer Initialized");
+
+        return cesiumViewer;
+
+    } catch (e) {
+
+        console.error(e);
+
+        showToast("3D initialization failed", 4000);
+
+        cesiumViewer = null;
+
+        return null;
+    }
+}
             function buildCesiumBuildings() {
                 if (!cesiumViewer) return;
 
