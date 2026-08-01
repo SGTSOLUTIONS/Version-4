@@ -168,9 +168,11 @@
             0% {
                 opacity: 1;
             }
+
             50% {
                 opacity: 0.5;
             }
+
             100% {
                 opacity: 1;
             }
@@ -1246,7 +1248,7 @@
             display: inline-block;
             width: 40px;
             height: 40px;
-            border: 4px solid rgba(255,255,255,0.2);
+            border: 4px solid rgba(255, 255, 255, 0.2);
             border-top-color: #0d6efd;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -1254,7 +1256,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .three-hud {
@@ -1262,10 +1266,10 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            color: rgba(255,255,255,0.5);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 12px;
             font-family: monospace;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             padding: 6px 16px;
             border-radius: 20px;
             pointer-events: none;
@@ -1522,7 +1526,8 @@
                 <div class="modal-body p-4">
                     <input type="hidden" id="qc_point_data_id">
                     <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment
-                        <span id="qc_assessment_display" class="fw-semibold"></span></p>
+                        <span id="qc_assessment_display" class="fw-semibold"></span>
+                    </p>
                     <div class="mb-3">
                         <label class="bld-form-label">QC Usage</label>
                         <select class="form-select bld-input" id="qcusage">
@@ -3194,11 +3199,11 @@
                             </div>
 
                             ${ptList.length ? `
-                                            <div class="row mt-2 g-2">
-                                                <div class="col-12">
-                                                    <div class="tax-card">
-                                                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                                        ${ptList.map(pt => `
+                                                <div class="row mt-2 g-2">
+                                                    <div class="col-12">
+                                                        <div class="tax-card">
+                                                            <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                                            ${ptList.map(pt => `
                                             <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
@@ -3213,10 +3218,10 @@
                                                 <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                             </div>
                                         `).join('')}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            ` : ''}
+                                                ` : ''}
                         </div>`;
                 });
 
