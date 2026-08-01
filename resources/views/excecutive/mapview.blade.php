@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
     <style>
         /* ─── Base Styles ─── */
         .dropdown-header {
@@ -54,20 +55,12 @@
             position: relative;
         }
 
-        /* ─── Three.js container ─── */
-        #threeContainer {
+        /* ─── Cesium 3D container (replaces the broken ol-cesium sync) ─── */
+        #cesiumContainer {
             width: 100%;
             height: 800px;
             position: relative;
             display: none;
-            background: #1a1a2e;
-            overflow: hidden;
-        }
-
-        #threeContainer canvas {
-            display: block;
-            width: 100% !important;
-            height: 100% !important;
         }
 
         /* ─── Map Controls Stack ─── */
@@ -555,7 +548,7 @@
         }
 
         .map-card.fullscreen-mode #map,
-        .map-card.fullscreen-mode #threeContainer {
+        .map-card.fullscreen-mode #cesiumContainer {
             height: calc(100vh - 5px);
         }
 
@@ -634,6 +627,7 @@
         }
 
         .bld-img-wrap img {
+
             height: 100%;
             object-fit: cover;
             transition: transform .4s ease;
@@ -1039,7 +1033,7 @@
         @media (max-width: 768px) {
 
             #map,
-            #threeContainer {
+            #cesiumContainer {
                 height: 500px;
             }
 
@@ -1107,7 +1101,7 @@
         @media (max-width: 480px) {
 
             #map,
-            #threeContainer {
+            #cesiumContainer {
                 height: 400px;
             }
 
@@ -1230,52 +1224,6 @@
                 padding: 4px 12px;
             }
         }
-
-        /* Three.js Loading indicator */
-        #threeLoading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 16px;
-            z-index: 10;
-            text-align: center;
-            pointer-events: none;
-        }
-
-        #threeLoading .spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            border-top-color: #0d6efd;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 10px;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .three-hud {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 12px;
-            font-family: monospace;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 6px 16px;
-            border-radius: 20px;
-            pointer-events: none;
-            z-index: 5;
-            white-space: nowrap;
-        }
     </style>
 @endpush
 
@@ -1305,13 +1253,7 @@
             <span class="text-muted small" id="featureCountBadge">Buildings: 0</span>
         </div>
         <div id="map"></div>
-        <div id="threeContainer">
-            <div id="threeLoading">
-                <div class="spinner"></div>
-                <div>Loading 3D Scene...</div>
-            </div>
-            <div class="three-hud">🖱️ Drag to orbit · Scroll to zoom</div>
-        </div>
+        <div id="cesiumContainer"></div>
     </div>
 
     <!-- Modals remain the same as original -->
@@ -1526,8 +1468,7 @@
                 <div class="modal-body p-4">
                     <input type="hidden" id="qc_point_data_id">
                     <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment
-                        <span id="qc_assessment_display" class="fw-semibold"></span>
-                    </p>
+                        <span id="qc_assessment_display" class="fw-semibold"></span></p>
                     <div class="mb-3">
                         <label class="bld-form-label">QC Usage</label>
                         <select class="form-select bld-input" id="qcusage">
@@ -1562,10 +1503,7 @@
     <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-
-    <!-- Three.js and OrbitControls -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Cesium.js"></script>
 
     <script>
         $(document).ready(function() {
@@ -1617,6 +1555,7 @@
                     url: droneImageURL,
                     imageExtent: imageExtent,
                     imageSmoothing: false,
+                    // Add crossOrigin for better loading
                     crossOrigin: 'anonymous'
                 }),
                 opacity: 0.90,
@@ -1646,7 +1585,7 @@
                 type: 'base',
                 visible: false,
                 source: new ol.source.XYZ({
-                    url: 'https://tile.openstreetmap.org/{z}/{y}/{x}.png',
+                    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     attributions: '&copy; OpenStreetMap'
                 })
             });
@@ -1674,18 +1613,11 @@
             let trackInterval = null;
             let isGettingLocation = false;
 
-            // ─── 3D MODE VARIABLES (Three.js) ───
+            // ─── 3D MODE VARIABLES (standalone Cesium viewer — see toggle3DMode) ───
             let is3DMode = false;
-            let threeScene = null;
-            let threeCamera = null;
-            let threeRenderer = null;
-            let threeControls = null;
-            let threeBuildings = [];
-            let threeAnimationId = null;
-            let threeInitialized = false;
-            let threeRaycaster = null;
-            let threeMouse = null;
-            let threeContainer = null;
+            let cesiumViewer = null;
+            let cesiumBuildingEntities = [];
+            let cesiumClickHandler = null;
 
             // ─── STYLES ───
             function createPolygonStyle(feature) {
@@ -2039,7 +1971,7 @@
 
             // ─── GET MAP CONTAINER ───
             const $mapContainer = $('#map');
-            const $threeContainer = $('#threeContainer');
+            const $mapContainer = $('#cesiumContainer');
             $mapContainer.append(`<div class="map-controls-stack" id="mapControlsStack"></div>`);
             const $stack = $('#mapControlsStack');
 
@@ -2559,319 +2491,181 @@
             }
 
             // ══════════════════════════════════════════════════════════════
-            // ─── THREE.JS 3D VIEW ───
+            // ─── STANDALONE CESIUM 3D VIEW ───
+            // ol-cesium is intentionally NOT used here: the npm package's
+            // browser bundle (dist/olcesium.umd.js) targets the modular
+            // `ol/*.js` package via a bundler and needs `ol` 6.x/7.x — it
+            // is not compatible with the monolithic ol@latest CDN build
+            // loaded on this page. Instead we spin up a plain Cesium.Viewer
+            // and draw the buildings as extruded polygon entities, reusing
+            // the same polygons/polygonDatas/buildingVariations data.
             // ══════════════════════════════════════════════════════════════
 
-            function initThreeScene() {
-                if (threeInitialized) return;
+            const CESIUM_ION_TOKEN =
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
 
-                threeContainer = document.getElementById('threeContainer');
+           async function initCesiumViewer() {
+    if (cesiumViewer) return cesiumViewer;
 
-                // ─── SCENE ───
-                threeScene = new THREE.Scene();
-                threeScene.background = new THREE.Color(0x1a1a2e);
-                threeScene.fog = new THREE.Fog(0x1a1a2e, 500, 1500);
+    if (typeof Cesium === 'undefined') {
+        showToast('⚠️ Cesium library failed to load.', 4000);
+        return null;
+    }
 
-                // ─── CAMERA ───
-                const aspect = threeContainer.clientWidth / threeContainer.clientHeight;
-                threeCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 5000);
+    try {
+        Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
 
-                // Get center of extent
-                const center = ol.extent.getCenter(imageExtent);
-                const centerLonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
+        cesiumViewer = new Cesium.Viewer("cesiumContainer", {
+            baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+                Cesium.IonImageryProvider.fromAssetId(2)
+            ),
+            terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(1),
+            baseLayerPicker: false,
+            geocoder: false,
+            homeButton: false,
+            sceneModePicker: false,
+            navigationHelpButton: false,
+            animation: false,
+            timeline: false,
+            fullscreenButton: false,
+            infoBox: false,
+            selectionIndicator: false,
+            shadows: true,
+            shouldAnimate: true
+        });
 
-                // Position camera above the center
-                const distance = 300;
-                threeCamera.position.set(
-                    centerLonLat[0] * 111000,
-                    centerLonLat[1] * 111000,
-                    distance
-                );
-                threeCamera.lookAt(centerLonLat[0] * 111000, centerLonLat[1] * 111000, 0);
+        // ─── ADD DRONE IMAGE AS CUSTOM IMAGERY LAYER ───
+        if (droneImageURL && droneImageURL !== '') {
+            try {
+                // Convert extent from EPSG:3857 to WGS84 (degrees)
+                const extent4326 = [
+                    ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857', 'EPSG:4326'),
+                    ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857', 'EPSG:4326')
+                ];
 
-                // ─── RENDERER ───
-                threeRenderer = new THREE.WebGLRenderer({
-                    antialias: true,
-                    alpha: false
-                });
-                threeRenderer.setSize(threeContainer.clientWidth, threeContainer.clientHeight);
-                threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                threeRenderer.shadowMap.enabled = true;
-                threeRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-                threeRenderer.toneMappingExposure = 1.2;
-                threeContainer.appendChild(threeRenderer.domElement);
-
-                // ─── CONTROLS ───
-                threeControls = new THREE.OrbitControls(threeCamera, threeRenderer.domElement);
-                threeControls.enableDamping = true;
-                threeControls.dampingFactor = 0.08;
-                threeControls.minDistance = 10;
-                threeControls.maxDistance = 2000;
-                threeControls.maxPolarAngle = Math.PI / 2.05;
-                threeControls.target.set(centerLonLat[0] * 111000, centerLonLat[1] * 111000, 0);
-                threeControls.update();
-
-                // ─── LIGHTS ───
-                const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
-                threeScene.add(ambientLight);
-
-                const hemisphereLight = new THREE.HemisphereLight(0x87ceeb, 0x3a3a5a, 0.8);
-                threeScene.add(hemisphereLight);
-
-                const sunLight = new THREE.DirectionalLight(0xffeedd, 1.5);
-                sunLight.position.set(100, 300, 200);
-                sunLight.castShadow = true;
-                sunLight.shadow.mapSize.width = 2048;
-                sunLight.shadow.mapSize.height = 2048;
-                sunLight.shadow.camera.near = 0.5;
-                sunLight.shadow.camera.far = 800;
-                sunLight.shadow.camera.left = -400;
-                sunLight.shadow.camera.right = 400;
-                sunLight.shadow.camera.top = 400;
-                sunLight.shadow.camera.bottom = -400;
-                threeScene.add(sunLight);
-
-                const fillLight = new THREE.DirectionalLight(0x8888ff, 0.3);
-                fillLight.position.set(-100, 100, -150);
-                threeScene.add(fillLight);
-
-                // ─── GROUND ───
-                const groundGeo = new THREE.PlaneGeometry(2000, 2000);
-                const groundMat = new THREE.MeshStandardMaterial({
-                    color: 0x2a2a4a,
-                    roughness: 0.9,
-                    metalness: 0.0,
-                    transparent: true,
-                    opacity: 0.8
-                });
-                const ground = new THREE.Mesh(groundGeo, groundMat);
-                ground.rotation.x = -Math.PI / 2;
-                ground.position.set(centerLonLat[0] * 111000, centerLonLat[1] * 111000, -1);
-                ground.receiveShadow = true;
-                threeScene.add(ground);
-
-                // ─── GRID HELPER ───
-                const gridHelper = new THREE.GridHelper(1000, 50, 0x444466, 0x333355);
-                gridHelper.position.set(centerLonLat[0] * 111000, centerLonLat[1] * 111000, -0.5);
-                threeScene.add(gridHelper);
-
-                // ─── RAYCASTER FOR CLICK ───
-                threeRaycaster = new THREE.Raycaster();
-                threeMouse = new THREE.Vector2();
-
-                // ─── CLICK HANDLER ───
-                threeRenderer.domElement.addEventListener('click', function(event) {
-                    const rect = threeRenderer.domElement.getBoundingClientRect();
-                    threeMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-                    threeMouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-                    threeRaycaster.setFromCamera(threeMouse, threeCamera);
-                    const intersects = threeRaycaster.intersectObjects(threeBuildings, false);
-
-                    if (intersects.length > 0) {
-                        const hit = intersects[0].object;
-                        const gisid = hit.userData.gisid;
-                        if (gisid) {
-                            const polygonData = polygonDatas.find(d => d.gisid == gisid);
-                            if (polygonData) {
-                                showBuildingView(polygonData);
-                            } else {
-                                showToast(`Building GIS ID: ${gisid}`, 2000);
-                            }
-                        }
-                    }
+                // Create a custom imagery provider for the drone image
+                const droneImageryProvider = new Cesium.SingleTileImageryProvider({
+                    url: droneImageURL,
+                    rectangle: Cesium.Rectangle.fromDegrees(
+                        extent4326[0][0], // west
+                        extent4326[0][1], // south
+                        extent4326[1][0], // east
+                        extent4326[1][1]  // north
+                    ),
+                    credit: 'Drone Image'
                 });
 
-                // ─── HOVER EFFECT ───
-                let hoveredObject = null;
-                threeRenderer.domElement.addEventListener('mousemove', function(event) {
-                    const rect = threeRenderer.domElement.getBoundingClientRect();
-                    threeMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-                    threeMouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-                    threeRaycaster.setFromCamera(threeMouse, threeCamera);
-                    const intersects = threeRaycaster.intersectObjects(threeBuildings, false);
-
-                    // Reset previous hover
-                    if (hoveredObject) {
-                        const origColor = hoveredObject.userData.origColor;
-                        if (origColor) {
-                            hoveredObject.material.color.setHex(origColor);
-                        }
-                        hoveredObject = null;
-                        threeRenderer.domElement.style.cursor = 'default';
-                    }
-
-                    if (intersects.length > 0) {
-                        const obj = intersects[0].object;
-                        if (obj.userData.gisid) {
-                            hoveredObject = obj;
-                            obj.userData.origColor = obj.material.color.getHex();
-                            obj.material.color.setHex(0xffff00);
-                            threeRenderer.domElement.style.cursor = 'pointer';
-                        }
-                    }
+                // Add as a layer on top of the base map
+                const droneLayer = new Cesium.ImageryLayer(droneImageryProvider, {
+                    show: true,
+                    alpha: 0.85, // 85% opacity
+                    brightness: 1.0,
+                    contrast: 1.0
                 });
 
-                // ─── BUILDINGS ───
-                buildThreeBuildings();
+                cesiumViewer.imageryLayers.add(droneLayer);
+                console.log('✅ Drone image added to Cesium 3D view');
 
-                // ─── HIDE LOADING ───
-                $('#threeLoading').hide();
-
-                threeInitialized = true;
-
-                // ─── START ANIMATION ───
-                animateThree();
-
-                // ─── HANDLE RESIZE ───
-                window.addEventListener('resize', function() {
-                    if (is3DMode && threeRenderer) {
-                        const width = threeContainer.clientWidth;
-                        const height = threeContainer.clientHeight;
-                        threeRenderer.setSize(width, height);
-                        threeCamera.aspect = width / height;
-                        threeCamera.updateProjectionMatrix();
-                    }
-                });
-
-                console.log('✅ Three.js scene initialized');
+            } catch (e) {
+                console.error('Failed to add drone image to Cesium:', e);
             }
+        }
 
-            function buildThreeBuildings() {
-                // Remove old buildings
-                threeBuildings.forEach(b => {
-                    threeScene.remove(b);
-                    b.geometry.dispose();
-                    b.material.dispose();
+        // ─── BUILD BUILDINGS ───
+        buildCesiumBuildings();
+
+        cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
+        cesiumViewer.scene.globe.enableLighting = true;
+        cesiumViewer.scene.skyAtmosphere.show = true;
+        cesiumViewer.scene.fog.enabled = true;
+
+        // Click event
+        cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(
+            cesiumViewer.scene.canvas
+        );
+
+        cesiumClickHandler.setInputAction(function (movement) {
+            const picked = cesiumViewer.scene.pick(movement.position);
+            if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
+                showFeatureDetails({
+                    get: function (key) {
+                        return key === "gisid" ? picked.id.gisid : undefined;
+                    }
                 });
-                threeBuildings = [];
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-                const center = ol.extent.getCenter(imageExtent);
-                const centerLonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
-                const cx = centerLonLat[0] * 111000;
-                const cy = centerLonLat[1] * 111000;
+        return cesiumViewer;
+
+    } catch (e) {
+        console.error(e);
+        showToast("3D initialization failed", 4000);
+        cesiumViewer = null;
+        return null;
+    }
+}
+
+            function buildCesiumBuildings() {
+                if (!cesiumViewer) return;
+
+                cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
+                cesiumBuildingEntities = [];
 
                 polygons.forEach(poly => {
                     try {
                         const ring = JSON.parse(poly.coordinates);
                         if (!Array.isArray(ring) || ring.length < 3) return;
 
-                        // Convert coordinates from EPSG:3857 to approximate meter-based local coordinates
-                        const points = ring.map(pt => {
+                        // Polygon coordinates on this page are stored in the map's
+                        // view projection (EPSG:3857); Cesium wants WGS84 degrees.
+                        const lonLatFlat = [];
+                        ring.forEach(pt => {
                             const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
-                            return new THREE.Vector2(
-                                (lonLat[0] * 111000) - cx,
-                                (lonLat[1] * 111000) - cy
-                            );
+                            lonLatFlat.push(lonLat[0], lonLat[1]);
                         });
 
                         const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const usage = polygonData?.building_usage || 'OTHER';
                         const colorHex = usageColors[usage] || '#0d6efd';
-                        const color = new THREE.Color(colorHex);
-
                         const floors = parseInt(polygonData?.number_floor) || 0;
                         const height = Math.max((floors + 1) * 3.2, 3.2);
 
-                        // Create shape
-                        const shape = new THREE.Shape(points);
-
-                        // Extrude settings
-                        const extrudeSettings = {
-                            depth: height,
-                            bevelEnabled: true,
-                            bevelThickness: 0.3,
-                            bevelSize: 0.2,
-                            bevelSegments: 4
-                        };
-
-                        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-                        geometry.computeVertexNormals();
-
-                        // Center the geometry
-                        geometry.translate(0, 0, -height / 2);
-
-                        const material = new THREE.MeshStandardMaterial({
-                            color: color,
-                            roughness: 0.6,
-                            metalness: 0.2,
-                            transparent: true,
-                            opacity: 0.85,
-                            emissive: new THREE.Color(color).multiplyScalar(0.05)
+                        const entity = cesiumViewer.entities.add({
+                            gisid: poly.gisid,
+                            polygon: {
+                                hierarchy: Cesium.Cartesian3.fromDegreesArray(lonLatFlat),
+                                extrudedHeight: height,
+                                height: 0,
+                                material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.75),
+                                outline: true,
+                                outlineColor: Cesium.Color.WHITE,
+                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                                extrudedHeightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
+                            }
                         });
-
-                        const mesh = new THREE.Mesh(geometry, material);
-                        mesh.position.set(cx, cy, 0);
-                        mesh.castShadow = true;
-                        mesh.receiveShadow = true;
-                        mesh.userData.gisid = poly.gisid;
-
-                        // Add outline
-                        const edges = new THREE.EdgesGeometry(geometry);
-                        const lineMat = new THREE.LineBasicMaterial({
-                            color: 0xffffff,
-                            transparent: true,
-                            opacity: 0.15
-                        });
-                        const wireframe = new THREE.LineSegments(edges, lineMat);
-                        mesh.add(wireframe);
-
-                        threeScene.add(mesh);
-                        threeBuildings.push(mesh);
-
+                        cesiumBuildingEntities.push(entity);
                     } catch (e) {
-                        console.error('Three.js building error:', e);
+                        console.error('Cesium polygon build error:', e);
                     }
                 });
 
-                console.log('🏢 Three.js buildings built:', threeBuildings.length);
+                console.log('🏢 Cesium buildings drawn:', cesiumBuildingEntities.length);
             }
 
-            function animateThree() {
-                threeAnimationId = requestAnimationFrame(animateThree);
-
-                if (threeControls) {
-                    threeControls.update();
-                }
-
-                if (threeRenderer && threeScene && threeCamera) {
-                    threeRenderer.render(threeScene, threeCamera);
-                }
-            }
-
-            function flyThreeToExtent() {
-                if (!threeCamera || !threeControls) return;
-
+            function flyCesiumToWardExtent() {
+                if (!cesiumViewer) return;
                 const center = ol.extent.getCenter(imageExtent);
-                const centerLonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
-                const cx = centerLonLat[0] * 111000;
-                const cy = centerLonLat[1] * 111000;
+                const lonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
 
-                // Smooth fly to overview
-                const target = new THREE.Vector3(cx, cy, 0);
-                const startPos = threeCamera.position.clone();
-                const endPos = new THREE.Vector3(cx, cy + 50, 250);
-                const duration = 1500;
-                const startTime = Date.now();
-
-                function flyStep() {
-                    const elapsed = Date.now() - startTime;
-                    const t = Math.min(elapsed / duration, 1);
-                    // Ease in-out
-                    const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-
-                    threeCamera.position.lerpVectors(startPos, endPos, ease);
-                    threeControls.target.lerp(target, ease);
-                    threeControls.update();
-
-                    if (t < 1) {
-                        requestAnimationFrame(flyStep);
-                    }
-                }
-
-                flyStep();
+                cesiumViewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], 350),
+                    orientation: {
+                        heading: Cesium.Math.toRadians(0),
+                        pitch: Cesium.Math.toRadians(-55),
+                        roll: 0
+                    },
+                    duration: 2.0
+                });
             }
 
             // ─── TOGGLE 3D MODE ───
@@ -2880,34 +2674,23 @@
 
                 if (!is3DMode) {
                     // ─── ENTER 3D MODE ───
-                    // Initialize Three.js if needed
-                    if (!threeInitialized) {
-                        initThreeScene();
-                    } else {
-                        // Rebuild buildings in case data changed
-                        buildThreeBuildings();
-                        // Show container
-                        $('#threeContainer').show();
-                        // Resize renderer
-                        if (threeRenderer) {
-                            const width = $('#threeContainer').width();
-                            const height = $('#threeContainer').height();
-                            threeRenderer.setSize(width, height);
-                            threeCamera.aspect = width / height;
-                            threeCamera.updateProjectionMatrix();
-                        }
-                    }
+                    const viewer = initCesiumViewer();
+                    if (!viewer) return;
+
+                    buildCesiumBuildings();
 
                     $('#map').hide();
-                    $('#threeContainer').show();
-                    flyThreeToExtent();
+                    $('#cesiumContainer').show();
+                    setTimeout(() => viewer.resize(), 50);
+
+                    flyCesiumToWardExtent();
 
                     is3DMode = true;
                     $threedBtn.addClass('active-3d').html('<i class="bi bi-box-fill"></i>');
                     showToast('🌍 3D mode activated - Buildings extruded', 3000);
                 } else {
                     // ─── EXIT 3D MODE ───
-                    $('#threeContainer').hide();
+                    $('#cesiumContainer').hide();
                     $('#map').show();
                     map.updateSize();
 
@@ -2925,12 +2708,8 @@
 
             // ─── HANDLE MAP SIZE CHANGES ───
             $(window).on('resize', function() {
-                if (threeRenderer && is3DMode) {
-                    const width = $('#threeContainer').width();
-                    const height = $('#threeContainer').height();
-                    threeRenderer.setSize(width, height);
-                    threeCamera.aspect = width / height;
-                    threeCamera.updateProjectionMatrix();
+                if (cesiumViewer && is3DMode) {
+                    cesiumViewer.resize();
                 }
             });
 
@@ -3199,11 +2978,11 @@
                             </div>
 
                             ${ptList.length ? `
-                                                <div class="row mt-2 g-2">
-                                                    <div class="col-12">
-                                                        <div class="tax-card">
-                                                            <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                                            ${ptList.map(pt => `
+                                            <div class="row mt-2 g-2">
+                                                <div class="col-12">
+                                                    <div class="tax-card">
+                                                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                                        ${ptList.map(pt => `
                                             <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
@@ -3218,10 +2997,10 @@
                                                 <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                             </div>
                                         `).join('')}
-                                                        </div>
                                                     </div>
                                                 </div>
-                                                ` : ''}
+                                            </div>
+                                            ` : ''}
                         </div>`;
                 });
 
@@ -4253,10 +4032,7 @@
                     showToast(`✅ ${visibleCount} features match the selected filters`, 2000);
                 }
 
-                // Rebuild Three.js buildings if in 3D mode
-                if (is3DMode && threeInitialized) {
-                    buildThreeBuildings();
-                }
+                if (is3DMode) buildCesiumBuildings();
             }
 
             function resetAllFilters(silent = false) {
@@ -4314,10 +4090,7 @@
                     showToast('🔄 All filters reset - all features visible', 2000);
                 }
 
-                // Rebuild Three.js buildings if in 3D mode
-                if (is3DMode && threeInitialized) {
-                    buildThreeBuildings();
-                }
+                if (is3DMode) buildCesiumBuildings();
             }
 
             $('#applyFiltersBtn').on('click', function() {
@@ -4474,13 +4247,7 @@
 
                 setTimeout(function() {
                     map.updateSize();
-                    if (threeRenderer && is3DMode) {
-                        const width = $('#threeContainer').width();
-                        const height = $('#threeContainer').height();
-                        threeRenderer.setSize(width, height);
-                        threeCamera.aspect = width / height;
-                        threeCamera.updateProjectionMatrix();
-                    }
+                    if (cesiumViewer) cesiumViewer.resize();
                 }, 150);
             });
 
@@ -4535,7 +4302,7 @@
             console.log('📊 Polygons:', polygons.length);
             console.log('📊 Lines:', lines.length);
             console.log('📊 Point Data:', pointDatas.length);
-            console.log('🌍 3D mode ready (Three.js) - Click the cube button to activate');
+            console.log('🌍 3D mode ready (standalone Cesium viewer) - Click the cube button to activate');
 
             setTimeout(() => {
                 showToast('👆 Click on any building to view details', 4000);
