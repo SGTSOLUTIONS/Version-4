@@ -4305,7 +4305,7 @@
             console.log('🌍 3D mode ready (standalone Cesium viewer) - Click the cube button to activate');
 
             setTimeout(() => {
-                showToast('👆 Click on any building to view details', 4000);
+                showToast('👆 Click on any building tdo view details', 4000);
             }, 1000);
         });
     </script>
