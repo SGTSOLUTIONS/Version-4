@@ -55,6 +55,14 @@
             position: relative;
         }
 
+        /* ─── Cesium 3D container (replaces the broken ol-cesium sync) ─── */
+        #cesiumContainer {
+            width: 100%;
+            height: 800px;
+            position: relative;
+            display: none;
+        }
+
         /* ─── Map Controls Stack ─── */
         .map-controls-stack {
             position: absolute;
@@ -130,6 +138,23 @@
             color: #0d6efd;
             background: #e3f0ff;
             border-color: #0d6efd;
+        }
+
+        /* 3D Button Styles */
+        .threed-toggle-btn.active-3d {
+            color: #0d6efd;
+            background: #e3f0ff;
+            border-color: #0d6efd;
+            animation: pulse 1.5s infinite;
+        }
+
+        .custom-threed-toggle {
+            position: relative;
+            z-index: 1001;
+        }
+
+        .threed-toggle-btn .bi-box-fill {
+            color: #0d6efd;
         }
 
         @keyframes pulse {
@@ -522,7 +547,8 @@
             display: none;
         }
 
-        .map-card.fullscreen-mode #map {
+        .map-card.fullscreen-mode #map,
+        .map-card.fullscreen-mode #cesiumContainer {
             height: calc(100vh - 5px);
         }
 
@@ -1005,7 +1031,9 @@
 
         /* ─── Responsive ─── */
         @media (max-width: 768px) {
-            #map {
+
+            #map,
+            #cesiumContainer {
                 height: 500px;
             }
 
@@ -1071,7 +1099,9 @@
         }
 
         @media (max-width: 480px) {
-            #map {
+
+            #map,
+            #cesiumContainer {
                 height: 400px;
             }
 
@@ -1205,12 +1235,9 @@
         </div>
         <div class="d-flex gap-2 align-items-center">
             <span class="ds-pill paid"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Live</span>
-            <!-- Usage Variation -->
             <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
                 <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
             </a>
-
-            <!-- Area Variation -->
             <a href="{{ url('area-variation/' . $ward->id) }}" class="btn btn-info btn-sm">
                 <i class="bi bi-bounding-box me-1"></i> Area Variation
             </a>
@@ -1226,10 +1253,10 @@
             <span class="text-muted small" id="featureCountBadge">Buildings: 0</span>
         </div>
         <div id="map"></div>
+        <div id="cesiumContainer"></div>
     </div>
 
-    <!-- ─── BUILDING VIEW MODAL ─── -->
-    <!-- ─── BUILDING VIEW MODAL ─── -->
+    <!-- Modals remain the same as original -->
     <div class="modal fade" id="buildingViewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1243,8 +1270,6 @@
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-
-                <!-- ─── IMAGE STRIP ─── -->
                 <div class="bld-image-strip">
                     <div class="bld-img-wrap" id="bv_img1_wrap">
                         <img id="bv_img1" src="" style="display:none;"
@@ -1265,11 +1290,7 @@
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
-
-                <!-- ─── SCROLLABLE BODY ─── -->
                 <div class="modal-body" style="max-height: 65vh; overflow-y: auto; padding: 20px 24px;">
-
-                    <!-- Quick Summary -->
                     <div class="bld-summary-strip"
                         style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px; margin-bottom: 20px;">
                         <div class="bld-summary-card"
@@ -1305,11 +1326,7 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Variation Section -->
                     <div id="bv_variation_wrap" style="margin-bottom: 20px;"></div>
-
-                    <!-- Basic Information -->
                     <div class="bld-section-divider mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
@@ -1377,12 +1394,8 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Amenities -->
                     <div class="bld-section-divider mb-3"><i class="bi bi-check2-square me-2"></i>Amenities</div>
                     <div class="mb-4" id="bv_amenities" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
-
-                    <!-- Remarks -->
                     <div class="bld-section-divider mb-3"><i class="bi bi-chat-text me-2"></i>Remarks</div>
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -1403,8 +1416,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- ─── FOOTER ─── -->
                 <div class="modal-footer bld-modal-footer">
                     <span class="bld-footer-status">Read-only view</span>
                     <div>
@@ -1420,7 +1431,6 @@
         </div>
     </div>
 
-    <!-- ─── POINT DETAILS MODAL ─── -->
     <div class="modal fade" id="pointDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1445,7 +1455,6 @@
         </div>
     </div>
 
-    <!-- ─── QC MODAL ─── -->
     <div class="modal fade" id="qcModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1546,7 +1555,9 @@
                 source: new ol.source.ImageStatic({
                     url: droneImageURL,
                     imageExtent: imageExtent,
-                    imageSmoothing: false
+                    imageSmoothing: false,
+                    // Add crossOrigin for better loading
+                    crossOrigin: 'anonymous'
                 }),
                 opacity: 0.90,
                 visible: true,
@@ -1602,6 +1613,12 @@
             let destinationLayer = null;
             let trackInterval = null;
             let isGettingLocation = false;
+
+            // ─── 3D MODE VARIABLES (standalone Cesium viewer — see toggle3DMode) ───
+            let is3DMode = false;
+            let cesiumViewer = null;
+            let cesiumBuildingEntities = [];
+            let cesiumClickHandler = null;
 
             // ─── STYLES ───
             function createPolygonStyle(feature) {
@@ -1831,6 +1848,7 @@
                 polygons.forEach(poly => {
                     try {
                         let coords = JSON.parse(poly.coordinates);
+                        const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const feature = new ol.Feature({
                             geometry: new ol.geom.Polygon([coords]),
                             gisid: poly.gisid,
@@ -1840,6 +1858,7 @@
                             old_assessment: poly.old_assessment || '',
                             owner_name: poly.owner_name || '',
                             phone_number: poly.phone_number || '',
+                            floors: polygonData?.number_floor || 0,
                             originalData: poly
                         });
                         feature.setId(poly.gisid);
@@ -1957,7 +1976,7 @@
             const $stack = $('#mapControlsStack');
 
             // ─── CONTROLS INJECTION ───
-            // 1. FILTER TOGGLE WITH FULL SCROLLABLE CONTAINER
+            // 1. FILTER TOGGLE
             $stack.append(`
                 <div class="custom-filter-toggle">
                     <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
@@ -1966,7 +1985,6 @@
                     <div class="filter-dropdown" id="filterDropdown">
                         <div class="dropdown-header">🔍 Filter Features</div>
                         <div class="filter-scroll-container">
-                            <!-- Building Usage Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Building Usage</div>
                                 <select class="form-select form-select-sm" id="usageFilter">
@@ -1981,10 +1999,7 @@
                                     <option value="OTHER">Other</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Usage Variation Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Usage Variation</div>
                                 <select class="form-select form-select-sm" id="usageVariationFilter">
@@ -1995,10 +2010,7 @@
                                 </select>
                                 <small class="text-muted">Compare building usage with assessment records</small>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Area Variation Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Area Variation</div>
                                 <select class="form-select form-select-sm" id="areaVariationFilter">
@@ -2010,10 +2022,7 @@
                                 </select>
                                 <small class="text-muted">Compare building area with assessment area</small>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Area Range Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Area Range (sqft)</div>
                                 <div class="filter-range">
@@ -2022,12 +2031,9 @@
                                         <span class="range-separator">to</span>
                                         <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="0">
                                     </div>
-                                   </div>
+                                </div>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Zonation Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Zonation</div>
                                 <select class="form-select form-select-sm" id="zoneFilter">
@@ -2041,10 +2047,7 @@
                                     <option value="ZONE-G">Zone G</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Construction Type Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Construction Type</div>
                                 <select class="form-select form-select-sm" id="constructionFilter">
@@ -2058,10 +2061,7 @@
                                     <option value="UNDER_CONSTRUCTION">Under Construction</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Building Type Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Building Type</div>
                                 <select class="form-select form-select-sm" id="buildingTypeFilter">
@@ -2089,10 +2089,7 @@
                                     <option value="Others">Others</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Amenities Filters -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Amenities</div>
                                 <select class="form-select form-select-sm" id="amenitiesFilter" multiple size="4">
@@ -2110,10 +2107,7 @@
                                 </select>
                                 <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- UGD Status Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">UGD Status</div>
                                 <select class="form-select form-select-sm" id="ugdFilter">
@@ -2129,10 +2123,7 @@
                                     <option value="2_UGD_Connection_-_3_Stage_Completed">2 UGD - 3 Stage</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Survey Status Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Survey Status</div>
                                 <select class="form-select form-select-sm" id="surveyStatusFilter">
@@ -2142,10 +2133,7 @@
                                     <option value="partially_surveyed">Partially Surveyed</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Assessment Count Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Assessment Count</div>
                                 <select class="form-select form-select-sm" id="assessmentCountFilter">
@@ -2156,10 +2144,7 @@
                                     <option value="three_plus">3+ Assessments</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Floor Count Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Number of Floors</div>
                                 <select class="form-select form-select-sm" id="floorFilter">
@@ -2171,10 +2156,7 @@
                                     <option value="4">4+ Floors</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Shop Count Filter -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Number of Shops</div>
                                 <select class="form-select form-select-sm" id="shopFilter">
@@ -2185,10 +2167,7 @@
                                     <option value="3">3+ Shops</option>
                                 </select>
                             </div>
-
                             <div class="dropdown-divider"></div>
-
-                            <!-- Quick Stats -->
                             <div class="quick-stats" id="quickStats">
                                 <div class="stat-item"><strong>Total:</strong> <span class="stat-value" id="statTotal">0</span></div>
                                 <div class="stat-item"><strong>Surveyed:</strong> <span class="stat-value" id="statSurveyed">0</span></div>
@@ -2196,10 +2175,7 @@
                                 <div class="stat-item"><strong>With Variation:</strong> <span class="stat-value" id="statVariation">0</span></div>
                             </div>
                         </div>
-
                         <div class="dropdown-divider"></div>
-
-                        <!-- Filter Actions -->
                         <div class="filter-actions">
                             <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn">
                                 <i class="bi bi-check-circle"></i> Apply Filters
@@ -2348,7 +2324,16 @@
                 </div>
             `);
 
-            // 7. FULLSCREEN BUTTON
+            // 7. 3D TOGGLE BUTTON
+            $stack.append(`
+                <div class="custom-threed-toggle">
+                    <button class="threed-toggle-btn" id="threedToggleBtn" title="Toggle 3D View">
+                        <i class="bi bi-box"></i>
+                    </button>
+                </div>
+            `);
+
+            // 8. FULLSCREEN BUTTON
             $mapContainer.append(`
                 <button class="fullscreen-btn" id="fullscreenBtn">
                     <i class="bi bi-arrows-fullscreen"></i>
@@ -2505,6 +2490,248 @@
                 });
             }
 
+            // ══════════════════════════════════════════════════════════════
+            // ─── STANDALONE CESIUM 3D VIEW ───
+            // ol-cesium is intentionally NOT used here: the npm package's
+            // browser bundle (dist/olcesium.umd.js) targets the modular
+            // `ol/*.js` package via a bundler and needs `ol` 6.x/7.x — it
+            // is not compatible with the monolithic ol@latest CDN build
+            // loaded on this page. Instead we spin up a plain Cesium.Viewer
+            // and draw the buildings as extruded polygon entities, reusing
+            // the same polygons/polygonDatas/buildingVariations data.
+            // ══════════════════════════════════════════════════════════════
+
+            const CESIUM_ION_TOKEN =
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
+
+            async function initCesiumViewer() {
+                if (cesiumViewer) return cesiumViewer;
+
+                if (typeof Cesium === 'undefined') {
+                    showToast('⚠️ Cesium library failed to load.', 4000);
+                    return null;
+                }
+
+                try {
+                    Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
+
+                    cesiumViewer = new Cesium.Viewer("cesiumContainer", {
+                        baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+                            Cesium.IonImageryProvider.fromAssetId(2)
+                        ),
+                        terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(1),
+                        baseLayerPicker: false,
+                        geocoder: false,
+                        homeButton: false,
+                        sceneModePicker: false,
+                        navigationHelpButton: false,
+                        animation: false,
+                        timeline: false,
+                        fullscreenButton: false,
+                        infoBox: false,
+                        selectionIndicator: false,
+                        shadows: true,
+                        shouldAnimate: true
+                    });
+
+                    // ─── ADD DRONE IMAGE ───
+                    await addDroneImageToCesium();
+
+                    // ─── BUILD BUILDINGS ───
+                    buildCesiumBuildings();
+
+                    cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
+                    cesiumViewer.scene.globe.enableLighting = true;
+                    cesiumViewer.scene.skyAtmosphere.show = true;
+                    cesiumViewer.scene.fog.enabled = true;
+
+                    // Click handler
+                    cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(
+                        cesiumViewer.scene.canvas
+                    );
+
+                    cesiumClickHandler.setInputAction(function(movement) {
+                        const picked = cesiumViewer.scene.pick(movement.position);
+                        if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
+                            showFeatureDetails({
+                                get: function(key) {
+                                    return key === "gisid" ? picked.id.gisid : undefined;
+                                }
+                            });
+                        }
+                    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+                    return cesiumViewer;
+
+                } catch (e) {
+                    console.error('Cesium init error:', e);
+                    showToast("3D initialization failed", 4000);
+                    cesiumViewer = null;
+                    return null;
+                }
+            }
+
+            // ─── NEW: Function to add drone image to Cesium ───
+            async function addDroneImageToCesium() {
+                if (!cesiumViewer) return;
+                if (!droneImageURL || droneImageURL === '') {
+                    console.log('No drone image available');
+                    return;
+                }
+
+                try {
+                    // Convert extent from EPSG:3857 to WGS84 degrees
+                    const westSouth = ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857',
+                        'EPSG:4326');
+                    const eastNorth = ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857',
+                        'EPSG:4326');
+
+                    // Create single tile provider
+                    const provider = new Cesium.SingleTileImageryProvider({
+                        url: droneImageURL,
+                        rectangle: Cesium.Rectangle.fromDegrees(
+                            westSouth[0], // west
+                            westSouth[1], // south
+                            eastNorth[0], // east
+                            eastNorth[1] // north
+                        )
+                    });
+
+                    // Add to viewer with transparency
+                    const droneLayer = new Cesium.ImageryLayer(provider, {
+                        alpha: 0.80,
+                        brightness: 1.0,
+                        contrast: 1.0,
+                        show: true
+                    });
+
+                    cesiumViewer.imageryLayers.add(droneLayer);
+                    console.log('✅ Drone image added to Cesium 3D view');
+
+                    // Store reference for toggling
+                    window.droneCesiumLayer = droneLayer;
+
+                } catch (e) {
+                    console.error('Error adding drone image to Cesium:', e);
+                }
+            }
+
+            // ─── Toggle drone image in 3D ───
+            function toggleDroneIn3D(show) {
+                if (window.droneCesiumLayer) {
+                    window.droneCesiumLayer.show = show;
+                }
+            }
+
+            function buildCesiumBuildings() {
+                if (!cesiumViewer) return;
+
+                cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
+                cesiumBuildingEntities = [];
+
+                polygons.forEach(poly => {
+                    try {
+                        const ring = JSON.parse(poly.coordinates);
+                        if (!Array.isArray(ring) || ring.length < 3) return;
+
+                        // Polygon coordinates on this page are stored in the map's
+                        // view projection (EPSG:3857); Cesium wants WGS84 degrees.
+                        const lonLatFlat = [];
+                        ring.forEach(pt => {
+                            const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
+                            lonLatFlat.push(lonLat[0], lonLat[1]);
+                        });
+
+                        const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
+                        const usage = polygonData?.building_usage || 'OTHER';
+                        const colorHex = usageColors[usage] || '#0d6efd';
+                        const floors = parseInt(polygonData?.number_floor) || 0;
+                        const height = Math.max((floors + 1) * 3.2, 3.2);
+
+                        const entity = cesiumViewer.entities.add({
+                            gisid: poly.gisid,
+                            polygon: {
+                                hierarchy: Cesium.Cartesian3.fromDegreesArray(lonLatFlat),
+                                extrudedHeight: height,
+                                height: 0,
+                                material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.75),
+                                outline: true,
+                                outlineColor: Cesium.Color.WHITE,
+                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                                extrudedHeightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
+                            }
+                        });
+                        cesiumBuildingEntities.push(entity);
+                    } catch (e) {
+                        console.error('Cesium polygon build error:', e);
+                    }
+                });
+
+                console.log('🏢 Cesium buildings drawn:', cesiumBuildingEntities.length);
+            }
+
+            function flyCesiumToWardExtent() {
+                if (!cesiumViewer) return;
+                const center = ol.extent.getCenter(imageExtent);
+                const lonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
+
+                cesiumViewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], 350),
+                    orientation: {
+                        heading: Cesium.Math.toRadians(0),
+                        pitch: Cesium.Math.toRadians(-55),
+                        roll: 0
+                    },
+                    duration: 2.0
+                });
+            }
+
+            // ─── TOGGLE 3D MODE ───
+            function toggle3DMode() {
+                const $threedBtn = $('#threedToggleBtn');
+
+                if (!is3DMode) {
+                    // ─── ENTER 3D MODE ───
+                    const viewer = initCesiumViewer();
+                    if (!viewer) return;
+
+                    buildCesiumBuildings();
+
+                    $('#map').hide();
+                    $('#cesiumContainer').show();
+                    setTimeout(() => viewer.resize(), 50);
+
+                    flyCesiumToWardExtent();
+
+                    is3DMode = true;
+                    $threedBtn.addClass('active-3d').html('<i class="bi bi-box-fill"></i>');
+                    showToast('🌍 3D mode activated - Buildings extruded', 3000);
+                } else {
+                    // ─── EXIT 3D MODE ───
+                    $('#cesiumContainer').hide();
+                    $('#map').show();
+                    map.updateSize();
+
+                    is3DMode = false;
+                    $threedBtn.removeClass('active-3d').html('<i class="bi bi-box"></i>');
+                    showToast('🗺️ 2D mode restored', 2000);
+                }
+            }
+
+            // ─── 3D TOGGLE EVENT HANDLER ───
+            $(document).on('click', '#threedToggleBtn', function(e) {
+                e.stopPropagation();
+                toggle3DMode();
+            });
+
+            // ─── HANDLE MAP SIZE CHANGES ───
+            $(window).on('resize', function() {
+                if (cesiumViewer && is3DMode) {
+                    cesiumViewer.resize();
+                }
+            });
+
+            // ─── FUNCTION TO SHOW BUILDING VIEW ───
             function showBuildingView(item) {
                 // ─── SET BASIC FIELDS ───
                 $('#bv_gisid').text(item.gisid || '-');
@@ -2530,26 +2757,26 @@
                     const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
                     const usageBadgeClass = variation.usage_status === 'MATCH' ? 'complete' : 'empty';
                     $('#bv_variation_wrap').html(`
-            <div class="bv-variation-strip" style="display: flex; flex-wrap: wrap; gap: 12px; background: #f8fafc; border-radius: 10px; padding: 12px 16px; border: 1px solid #e5e7eb;">
-                <div class="bv-variation-card" style="flex: 1; min-width: 120px;">
-                    <div class="stat-label" style="font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;">Building Area</div>
-                    <div class="stat-value" style="font-size: .9rem; font-weight: 700; color: #1e293b; margin-top: 2px;">${variation.building_area} <span class="stat-sub" style="font-size: .7rem; font-weight: 600; color: #94a3b8;">sqft</span></div>
-                </div>
-                <div class="bv-variation-card" style="flex: 1; min-width: 120px;">
-                    <div class="stat-label" style="font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;">Assessment Area</div>
-                    <div class="stat-value" style="font-size: .9rem; font-weight: 700; color: #1e293b; margin-top: 2px;">${variation.assessment_area} <span class="stat-sub" style="font-size: .7rem; font-weight: 600; color: #94a3b8;">sqft</span></div>
-                </div>
-                <div class="bv-variation-card" style="flex: 1; min-width: 120px;">
-                    <div class="stat-label" style="font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;">Area Variation</div>
-                    <div class="stat-value" style="font-size: .9rem; font-weight: 700; color: #1e293b; margin-top: 2px;">${variation.area_variation} <span class="stat-sub" style="font-size: .7rem; font-weight: 600; color: #94a3b8;">(${variation.variation_percentage}%)</span></div>
-                    <span class="bld-status-tag ${areaBadgeClass}" style="display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; letter-spacing: .3px; ${areaBadgeClass === 'complete' ? 'background: #dcfce7; color: #15803d;' : 'background: #fee2e2; color: #b91c1c;'}">${variation.area_status}</span>
-                </div>
-                <div class="bv-variation-card" style="flex: 1; min-width: 120px;">
-                    <div class="stat-label" style="font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;">Usage Check</div>
-                    <span class="bld-status-tag ${usageBadgeClass}" style="display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; letter-spacing: .3px; margin-top: 4px; ${usageBadgeClass === 'complete' ? 'background: #dcfce7; color: #15803d;' : 'background: #fee2e2; color: #b91c1c;'}">${variation.usage_status}</span>
-                </div>
-            </div>
-        `);
+                        <div class="bv-variation-strip">
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Building Area</div>
+                                <div class="stat-value">${variation.building_area} <span class="stat-sub">sqft</span></div>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Assessment Area</div>
+                                <div class="stat-value">${variation.assessment_area} <span class="stat-sub">sqft</span></div>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Area Variation</div>
+                                <div class="stat-value">${variation.area_variation} <span class="stat-sub">(${variation.variation_percentage}%)</span></div>
+                                <span class="bld-status-tag ${areaBadgeClass}">${variation.area_status}</span>
+                            </div>
+                            <div class="bv-variation-card">
+                                <div class="stat-label">Usage Check</div>
+                                <span class="bld-status-tag ${usageBadgeClass}">${variation.usage_status}</span>
+                            </div>
+                        </div>
+                    `);
                 } else {
                     $('#bv_variation_wrap').html('');
                 }
@@ -2574,7 +2801,7 @@
                     if (val === 'Yes' || val === true || val === 1) {
                         hasAmenities = true;
                         amenHtml +=
-                            `<span class="bld-status-tag complete" style="display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: #dcfce7; color: #15803d; letter-spacing: .3px;"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                            `<span class="bld-status-tag complete"><i class="bi bi-check-circle"></i> ${label}</span>`;
                     }
                 });
                 $('#bv_amenities').html(hasAmenities ? amenHtml :
@@ -2769,11 +2996,11 @@
                             </div>
 
                             ${ptList.length ? `
-                                        <div class="row mt-2 g-2">
-                                            <div class="col-12">
-                                                <div class="tax-card">
-                                                    <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                                    ${ptList.map(pt => `
+                                                <div class="row mt-2 g-2">
+                                                    <div class="col-12">
+                                                        <div class="tax-card">
+                                                            <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                                            ${ptList.map(pt => `
                                             <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
@@ -2788,10 +3015,10 @@
                                                 <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                             </div>
                                         `).join('')}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                        ` : ''}
+                                                ` : ''}
                         </div>`;
                 });
 
@@ -3537,7 +3764,6 @@
                             .map(v => v.gisid)
                         );
                     } else if (usageVariation === 'unmapped') {
-                        // Get all polygon gisids that are NOT in buildingVariations
                         const variationGisids = new Set(Object.keys(buildingVariations));
                         usageVariationGisids = new Set(
                             polygons
@@ -3746,15 +3972,12 @@
                     areaGisids
                 ].filter(set => set !== null);
 
-                // Start with all polygon gisids
                 let finalGisids = new Set(polygons.map(p => p.gisid));
 
-                // Intersect with each filter set
                 allFilterSets.forEach(filterSet => {
                     if (filterSet.size > 0) {
                         finalGisids = new Set([...finalGisids].filter(gisid => filterSet.has(gisid)));
                     } else {
-                        // If any filter set is empty, no results
                         finalGisids = new Set();
                     }
                 });
@@ -3786,6 +4009,7 @@
                                 old_assessment: poly.old_assessment || '',
                                 owner_name: poly.owner_name || '',
                                 phone_number: poly.phone_number || '',
+                                floors: buildingData?.number_floor || 0,
                                 originalData: poly
                             });
                             feature.setId(poly.gisid);
@@ -3808,7 +4032,6 @@
                 );
                 $('#featureCountBadge').text(`Buildings: ${visibleCount}`);
 
-                // Update quick stats
                 $('#statTotal').text(total);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(total - polygonDatas.length);
@@ -3826,26 +4049,24 @@
                 } else {
                     showToast(`✅ ${visibleCount} features match the selected filters`, 2000);
                 }
+
+                if (is3DMode) buildCesiumBuildings();
             }
 
             function resetAllFilters(silent = false) {
-                // Reset all dropdowns
                 $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter')
                     .val('all');
                 $('#usageVariationFilter, #areaVariationFilter, #assessmentCountFilter, #floorFilter, #shopFilter')
                     .val('all');
                 $('#amenitiesFilter').val([]);
-
-                // Reset area range
                 $('#minArea').val(0);
                 $('#maxArea').val(0);
-                $('#areaRange').val(0);
 
-                // ─── CLEAR SOURCE AND ADD ALL POLYGONS ───
                 polygonSource.clear();
                 polygons.forEach(poly => {
                     try {
                         let coords = JSON.parse(poly.coordinates);
+                        const buildingData = polygonDatas.find(d => d.gisid === poly.gisid);
                         const feature = new ol.Feature({
                             geometry: new ol.geom.Polygon([coords]),
                             gisid: poly.gisid,
@@ -3855,6 +4076,7 @@
                             old_assessment: poly.old_assessment || '',
                             owner_name: poly.owner_name || '',
                             phone_number: poly.phone_number || '',
+                            floors: buildingData?.number_floor || 0,
                             originalData: poly
                         });
                         feature.setId(poly.gisid);
@@ -3865,7 +4087,6 @@
                     }
                 });
 
-                // ─── UPDATE UI ───
                 const allFeatures = polygonSource.getFeatures();
                 $('#visibleCount').text(allFeatures.length);
                 $('#totalCount').text(allFeatures.length);
@@ -3874,7 +4095,6 @@
                 );
                 $('#featureCountBadge').text(`Buildings: ${allFeatures.length}`);
 
-                // Update quick stats
                 $('#statTotal').text(polygons.length);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(polygons.length - polygonDatas.length);
@@ -3887,6 +4107,8 @@
                 if (!silent) {
                     showToast('🔄 All filters reset - all features visible', 2000);
                 }
+
+                if (is3DMode) buildCesiumBuildings();
             }
 
             $('#applyFiltersBtn').on('click', function() {
@@ -3897,7 +4119,6 @@
                 resetAllFilters(false);
             });
 
-
             $('#minArea').on('change', function() {
                 let val = parseInt($(this).val()) || 0;
                 const maxVal = parseInt($('#maxArea').val()) || 0;
@@ -3905,7 +4126,6 @@
                     val = maxVal;
                     $(this).val(val);
                 }
-
             });
 
             $('#maxArea').on('change', function() {
@@ -3915,7 +4135,6 @@
                     val = minVal;
                     $(this).val(val);
                 }
-
             });
 
             // ─── FILTER SEARCH ───
@@ -4030,23 +4249,23 @@
 
             $('#fullscreenBtn').on('click', function() {
                 const $card = $('#mapCard');
-                const $container = $('#map');
                 const $btn = $(this);
 
                 if (!isFullscreen) {
                     $card.addClass('fullscreen-mode');
-                    $container.addClass('fullscreen');
+                    $('#map').addClass('fullscreen');
                     $btn.html('<i class="bi bi-fullscreen-exit"></i>');
                     isFullscreen = true;
                 } else {
                     $card.removeClass('fullscreen-mode');
-                    $container.removeClass('fullscreen');
+                    $('#map').removeClass('fullscreen');
                     $btn.html('<i class="bi bi-arrows-fullscreen"></i>');
                     isFullscreen = false;
                 }
 
                 setTimeout(function() {
                     map.updateSize();
+                    if (cesiumViewer) cesiumViewer.resize();
                 }, 150);
             });
 
@@ -4101,6 +4320,7 @@
             console.log('📊 Polygons:', polygons.length);
             console.log('📊 Lines:', lines.length);
             console.log('📊 Point Data:', pointDatas.length);
+            console.log('🌍 3D mode ready (standalone Cesium viewer) - Click the cube button to activate');
 
             setTimeout(() => {
                 showToast('👆 Click on any building to view details', 4000);

@@ -46,6 +46,8 @@
             justify-content: space-between;
             align-items: center;
             background: #f8f9fa;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         #map {
@@ -55,7 +57,7 @@
             position: relative;
         }
 
-        /* ─── Cesium 3D container (replaces the broken ol-cesium sync) ─── */
+        /* ─── Cesium 3D container ─── */
         #cesiumContainer {
             width: 100%;
             height: 800px;
@@ -101,6 +103,7 @@
             position: relative;
             z-index: 1001;
             background: #ffffff;
+            touch-action: manipulation;
         }
 
         .layer-toggle-btn:hover,
@@ -113,6 +116,16 @@
             background: #f0f0f0;
             transform: scale(1.05);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .layer-toggle-btn:active,
+        .location-toggle-btn:active,
+        .search-toggle-btn:active,
+        .label-toggle-btn:active,
+        .legend-toggle-btn:active,
+        .threed-toggle-btn:active,
+        .filter-toggle-btn:active {
+            transform: scale(0.95);
         }
 
         .label-toggle-btn.active-label {
@@ -140,7 +153,6 @@
             border-color: #0d6efd;
         }
 
-        /* 3D Button Styles */
         .threed-toggle-btn.active-3d {
             color: #0d6efd;
             background: #e3f0ff;
@@ -161,11 +173,9 @@
             0% {
                 opacity: 1;
             }
-
             50% {
                 opacity: 0.5;
             }
-
             100% {
                 opacity: 1;
             }
@@ -311,6 +321,7 @@
             padding: 8px 16px;
             cursor: pointer;
             transition: background 0.15s;
+            touch-action: manipulation;
         }
 
         .layer-dropdown-item:hover,
@@ -368,6 +379,7 @@
             color: #666;
             border-bottom: 2px solid transparent;
             transition: all 0.2s;
+            touch-action: manipulation;
         }
 
         .search-tab-btn.active {
@@ -514,12 +526,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: manipulation;
         }
 
         .fullscreen-btn:hover {
             background: #f0f0f0;
             transform: scale(1.05);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .fullscreen-btn:active {
+            transform: scale(0.95);
         }
 
         #map.fullscreen {
@@ -627,7 +644,6 @@
         }
 
         .bld-img-wrap img {
-
             height: 100%;
             object-fit: cover;
             transition: transform .4s ease;
@@ -889,6 +905,7 @@
             font-size: .9rem;
             cursor: pointer;
             transition: all .2s;
+            touch-action: manipulation;
         }
 
         .pdc-qc-btn {
@@ -1030,8 +1047,20 @@
         }
 
         /* ─── Responsive ─── */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
+            #map,
+            #cesiumContainer {
+                height: 650px;
+            }
 
+            .map-controls-stack {
+                right: 16px;
+                top: 16px;
+                gap: 7px;
+            }
+        }
+
+        @media (max-width: 768px) {
             #map,
             #cesiumContainer {
                 height: 500px;
@@ -1050,17 +1079,17 @@
             .legend-toggle-btn,
             .threed-toggle-btn,
             .filter-toggle-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 15px;
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
                 padding: 8px;
                 border-radius: 8px;
             }
 
             .fullscreen-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 15px;
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
                 padding: 8px;
                 right: 12px;
                 bottom: 12px;
@@ -1068,17 +1097,19 @@
 
             .layer-dropdown,
             .location-dropdown {
-                min-width: 180px;
+                min-width: 190px;
+                right: -5px;
             }
 
             .search-dropdown {
-                min-width: 280px;
+                min-width: 290px;
                 right: -10px;
             }
 
             .filter-dropdown {
-                min-width: 300px;
+                min-width: 310px;
                 right: -10px;
+                max-height: 75vh;
             }
 
             .bld-image-strip {
@@ -1090,16 +1121,32 @@
             }
 
             .point-data-card-grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr 1fr !important;
             }
 
             .quick-stats {
                 grid-template-columns: 1fr 1fr;
             }
+
+            .map-header {
+                padding: 10px 12px;
+            }
+
+            .map-header .badge {
+                font-size: 11px;
+            }
+
+            .map-header .text-muted {
+                font-size: 11px;
+            }
+
+            .search-result-actions .btn-sm {
+                font-size: 11px;
+                padding: 3px 8px;
+            }
         }
 
         @media (max-width: 480px) {
-
             #map,
             #cesiumContainer {
                 height: 400px;
@@ -1118,17 +1165,17 @@
             .legend-toggle-btn,
             .threed-toggle-btn,
             .filter-toggle-btn {
-                width: 34px;
-                height: 34px;
-                font-size: 13px;
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
                 padding: 6px;
                 border-radius: 6px;
             }
 
             .fullscreen-btn {
-                width: 34px;
-                height: 34px;
-                font-size: 13px;
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
                 padding: 6px;
                 right: 8px;
                 bottom: 8px;
@@ -1136,17 +1183,17 @@
 
             .layer-dropdown,
             .location-dropdown {
-                min-width: 160px;
+                min-width: 170px;
                 right: -5px;
             }
 
             .search-dropdown {
-                min-width: 240px;
+                min-width: 250px;
                 right: -15px;
             }
 
             .filter-dropdown {
-                min-width: 260px;
+                min-width: 270px;
                 right: -15px;
                 max-height: 70vh;
             }
@@ -1172,7 +1219,7 @@
             }
 
             .point-data-card-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
             }
 
             .point-data-card-header {
@@ -1196,12 +1243,184 @@
             .quick-stats {
                 grid-template-columns: 1fr 1fr;
                 font-size: 10px;
+                padding: 8px;
+            }
+
+            .map-header {
+                padding: 8px 10px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .map-header .badge {
+                font-size: 10px;
+            }
+
+            .map-header .text-muted {
+                font-size: 10px;
+            }
+
+            .dropdown-header {
+                font-size: 0.65rem;
+                padding: 6px 14px;
+            }
+
+            .filter-section {
+                padding: 6px 12px;
+            }
+
+            .filter-actions {
+                padding: 8px 12px;
+            }
+
+            .range-inputs input[type="number"] {
+                width: 60px;
+                font-size: 11px;
+                padding: 3px 6px;
+            }
+
+            .search-tab-btn {
+                font-size: 11px;
+                padding: 8px 0;
+            }
+
+            .search-result-title {
+                font-size: 12px;
+            }
+
+            .search-result-subtitle {
+                font-size: 10px;
+            }
+
+            .bld-modal-title {
+                font-size: 1rem;
+            }
+
+            .bld-header-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
+            }
+
+            .bld-modal-header {
+                padding: 12px 16px;
+            }
+
+            .bld-modal-body {
+                padding: 12px 16px !important;
+            }
+
+            .bld-modal-footer {
+                padding: 10px 16px;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .bld-info-row {
+                padding: 8px 10px;
+            }
+
+            .bld-info-val {
+                font-size: 0.8rem;
+            }
+
+            .bld-summary-card {
+                padding: 10px 12px;
+            }
+
+            .bld-summary-val {
+                font-size: 0.85rem;
+            }
+
+            .point-data-card {
+                padding: 12px 14px;
+            }
+
+            .tax-card {
+                padding: 8px 10px;
+            }
+
+            .tax-card-row {
+                font-size: 0.7rem;
+            }
+
+            .tax-card-value {
+                font-size: 0.7rem;
             }
         }
 
-        /* Touch-friendly */
-        @media (hover: none) and (pointer: coarse) {
+        /* ─── Extra small devices ─── */
+        @media (max-width: 360px) {
+            .map-controls-stack {
+                right: 4px;
+                top: 4px;
+                gap: 4px;
+            }
 
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+                padding: 5px;
+                border-radius: 5px;
+            }
+
+            .fullscreen-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+                padding: 5px;
+                right: 4px;
+                bottom: 4px;
+            }
+
+            .search-dropdown {
+                min-width: 200px;
+                right: -20px;
+            }
+
+            .filter-dropdown {
+                min-width: 220px;
+                right: -20px;
+            }
+
+            .layer-dropdown,
+            .location-dropdown {
+                min-width: 150px;
+                right: -10px;
+            }
+
+            .search-result-actions .btn-sm {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+
+            .bld-image-strip {
+                height: 100px;
+            }
+
+            .bld-img-label {
+                font-size: 0.6rem;
+                padding: 10px 8px 4px;
+            }
+
+            .quick-stats {
+                grid-template-columns: 1fr 1fr;
+                font-size: 9px;
+                padding: 6px;
+                gap: 4px;
+            }
+        }
+
+        /* ─── Touch-friendly enhancements ─── */
+        @media (hover: none) and (pointer: coarse) {
             .layer-toggle-btn,
             .location-toggle-btn,
             .search-toggle-btn,
@@ -1223,6 +1442,390 @@
                 font-size: 12px;
                 padding: 4px 12px;
             }
+
+            .layer-dropdown-item,
+            .location-dropdown-item {
+                padding: 10px 16px;
+                min-height: 44px;
+            }
+
+            .pdc-action-btn {
+                min-height: 36px;
+                min-width: 36px;
+            }
+
+            .bld-btn-save,
+            .bld-btn-cancel {
+                min-height: 40px;
+                padding: 8px 18px;
+            }
+        }
+
+        /* ─── Landscape phone mode ─── */
+        @media (max-height: 500px) and (orientation: landscape) {
+            #map,
+            #cesiumContainer {
+                height: 60vh;
+            }
+
+            .map-controls-stack {
+                right: 10px;
+                top: 10px;
+                gap: 5px;
+            }
+
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn {
+                width: 34px;
+                height: 34px;
+                font-size: 13px;
+                padding: 6px;
+            }
+
+            .fullscreen-btn {
+                width: 34px;
+                height: 34px;
+                font-size: 13px;
+                padding: 6px;
+            }
+
+            .filter-dropdown {
+                max-height: 60vh;
+            }
+
+            .filter-scroll-container {
+                max-height: 35vh;
+            }
+
+            .bld-image-strip {
+                height: 100px;
+            }
+        }
+
+        /* ─── Dark mode support ─── */
+        @media (prefers-color-scheme: dark) {
+            .map-card {
+                background: #1a1a2e;
+                border-color: #2d2d44;
+            }
+
+            .map-header {
+                background: #16213e;
+                border-color: #2d2d44;
+            }
+
+            .map-header .badge {
+                background: #0d6efd !important;
+            }
+
+            .map-header .text-muted {
+                color: #94a3b8 !important;
+            }
+
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn,
+            .fullscreen-btn {
+                background: #1a1a2e;
+                border-color: #2d2d44;
+                color: #e2e8f0;
+            }
+
+            .layer-toggle-btn:hover,
+            .location-toggle-btn:hover,
+            .search-toggle-btn:hover,
+            .label-toggle-btn:hover,
+            .legend-toggle-btn:hover,
+            .threed-toggle-btn:hover,
+            .filter-toggle-btn:hover,
+            .fullscreen-btn:hover {
+                background: #2d2d44;
+            }
+
+            .layer-dropdown,
+            .location-dropdown,
+            .search-dropdown,
+            .filter-dropdown {
+                background: #1a1a2e;
+                border-color: #2d2d44;
+            }
+
+            .dropdown-header {
+                background: #16213e;
+                color: #94a3b8;
+            }
+
+            .dropdown-divider {
+                background: #2d2d44;
+            }
+
+            .layer-dropdown-item,
+            .location-dropdown-item {
+                color: #e2e8f0;
+            }
+
+            .layer-dropdown-item:hover,
+            .location-dropdown-item:hover {
+                background: #2d2d44;
+            }
+
+            .layer-name,
+            .location-item-name {
+                color: #e2e8f0;
+            }
+
+            .filter-section-header {
+                color: #94a3b8;
+            }
+
+            .filter-field-group label {
+                color: #94a3b8;
+            }
+
+            .filter-field-group input {
+                background: #16213e;
+                border-color: #2d2d44;
+                color: #e2e8f0;
+            }
+
+            .filter-field-group input:focus {
+                border-color: #0d6efd;
+            }
+
+            .filter-actions {
+                background: #16213e;
+                border-color: #2d2d44;
+            }
+
+            .filter-stats {
+                color: #94a3b8;
+            }
+
+            .search-tab-btn {
+                color: #94a3b8;
+            }
+
+            .search-tab-btn.active {
+                color: #0d6efd;
+            }
+
+            .search-result-item {
+                border-color: #2d2d44;
+            }
+
+            .search-result-item:hover {
+                background: #2d2d44;
+            }
+
+            .search-result-title {
+                color: #e2e8f0;
+            }
+
+            .search-result-subtitle {
+                color: #94a3b8;
+            }
+
+            .range-inputs input[type="number"] {
+                background: #16213e;
+                border-color: #2d2d44;
+                color: #e2e8f0;
+            }
+
+            .range-separator {
+                color: #94a3b8;
+            }
+
+            .quick-stats {
+                background: #16213e;
+            }
+
+            .quick-stats .stat-item strong {
+                color: #e2e8f0;
+            }
+
+            .text-muted {
+                color: #94a3b8 !important;
+            }
+
+            .bld-modal-content {
+                background: #1a1a2e;
+            }
+
+            .bld-summary-strip {
+                background: #16213e;
+                border-color: #2d2d44;
+            }
+
+            .bld-summary-card {
+                border-color: #2d2d44;
+            }
+
+            .bld-summary-label {
+                color: #94a3b8;
+            }
+
+            .bld-summary-val {
+                color: #e2e8f0;
+            }
+
+            .bld-info-row {
+                background: #16213e;
+                border-color: #2d2d44;
+            }
+
+            .bld-info-label {
+                color: #94a3b8;
+            }
+
+            .bld-info-val {
+                color: #e2e8f0;
+            }
+
+            .bld-section-divider {
+                color: #94a3b8;
+                border-color: #2d2d44;
+            }
+
+            .tax-card {
+                background: #16213e;
+                border-color: #2d2d44;
+            }
+
+            .tax-card-title {
+                color: #94a3b8;
+                border-color: #2d2d44;
+            }
+
+            .tax-card-label {
+                color: #94a3b8;
+            }
+
+            .tax-card-value {
+                color: #e2e8f0;
+            }
+
+            .point-data-card {
+                background: #16213e;
+                border-color: #2d2d44;
+            }
+
+            .point-data-card:hover {
+                border-color: #0d6efd;
+            }
+
+            .point-data-card-title {
+                color: #e2e8f0;
+            }
+
+            .point-data-card-subtitle {
+                color: #94a3b8;
+            }
+
+            .pdc-field {
+                background: #1a1a2e;
+            }
+
+            .pdc-field-label {
+                color: #94a3b8;
+            }
+
+            .pdc-field-val {
+                color: #e2e8f0;
+            }
+
+            .bv-variation-strip {
+                background: #16213e;
+                border-color: #2d2d44;
+            }
+
+            .bv-variation-card .stat-label {
+                color: #94a3b8;
+            }
+
+            .bv-variation-card .stat-value {
+                color: #e2e8f0;
+            }
+
+            .bv-variation-card .stat-sub {
+                color: #94a3b8;
+            }
+
+            .bld-modal-footer {
+                background: #16213e;
+                border-color: #2d2d44;
+            }
+
+            .bld-footer-status {
+                color: #94a3b8;
+            }
+
+            .bld-btn-cancel {
+                background: #2d2d44;
+                color: #e2e8f0;
+            }
+
+            .bld-btn-cancel:hover {
+                background: #3d3d5c;
+            }
+
+            .bld-status-tag.complete {
+                background: #1a3d2e;
+                color: #4ade80;
+            }
+
+            .bld-status-tag.partial {
+                background: #3d3d1a;
+                color: #fbbf24;
+            }
+
+            .bld-status-tag.empty {
+                background: #3d1a1a;
+                color: #f87171;
+            }
+
+            .pdc-qc-btn {
+                background: #3d3d1a;
+                color: #fbbf24;
+            }
+
+            .pdc-qc-btn:hover {
+                background: #fbbf24;
+                color: #1a1a2e;
+            }
+
+            .location-toast {
+                background: rgba(30, 30, 60, 0.95);
+            }
+
+            .bld-image-strip {
+                background: #0a0a1a;
+            }
+
+            .bld-img-wrap {
+                background: #16213e;
+            }
+
+            .ol-page-title {
+                color: #e2e8f0;
+            }
+
+            .ol-page-sub {
+                color: #94a3b8;
+            }
+
+            .ds-pill.paid {
+                background: #1a3d2e;
+                color: #4ade80;
+            }
         }
     </style>
 @endpush
@@ -1233,7 +1836,7 @@
             <h1 class="ol-page-title">{{ ucfirst(auth()->user()->role) }} GIS Dashboard</h1>
             <p class="ol-page-sub">{{ now()->format('l, d F Y') }} — {{ auth()->user()->name ?? 'Executive Officer' }}</p>
         </div>
-        <div class="d-flex gap-2 align-items-center">
+        <div class="d-flex gap-2 align-items-center flex-wrap">
             <span class="ds-pill paid"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Live</span>
             <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
                 <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
@@ -1556,7 +2159,6 @@
                     url: droneImageURL,
                     imageExtent: imageExtent,
                     imageSmoothing: false,
-                    // Add crossOrigin for better loading
                     crossOrigin: 'anonymous'
                 }),
                 opacity: 0.90,
@@ -1614,7 +2216,7 @@
             let trackInterval = null;
             let isGettingLocation = false;
 
-            // ─── 3D MODE VARIABLES (standalone Cesium viewer — see toggle3DMode) ───
+            // ─── 3D MODE VARIABLES ───
             let is3DMode = false;
             let cesiumViewer = null;
             let cesiumBuildingEntities = [];
@@ -1979,7 +2581,7 @@
             // 1. FILTER TOGGLE
             $stack.append(`
                 <div class="custom-filter-toggle">
-                    <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
+                    <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters" aria-label="Toggle filters">
                         <i class="bi bi-funnel"></i>
                     </button>
                     <div class="filter-dropdown" id="filterDropdown">
@@ -2027,9 +2629,9 @@
                                 <div class="filter-section-header">Area Range (sqft)</div>
                                 <div class="filter-range">
                                     <div class="range-inputs">
-                                        <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
+                                        <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0" min="0">
                                         <span class="range-separator">to</span>
-                                        <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="0">
+                                        <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="0" min="0">
                                     </div>
                                 </div>
                             </div>
@@ -2194,7 +2796,7 @@
             // 2. LAYER SWITCHER
             $stack.append(`
                 <div class="custom-layer-switcher">
-                    <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
+                    <button class="layer-toggle-btn" id="layerToggleBtn" aria-label="Toggle layers"><i class="bi bi-layers"></i></button>
                     <div class="layer-dropdown" id="layerDropdown">
                         <div class="dropdown-header">Base Maps</div>
                         <div class="layer-dropdown-item active" data-layer-type="base" data-layer="OpenStreetMap">
@@ -2238,7 +2840,7 @@
             // 3. LOCATION SWITCHER
             $stack.append(`
                 <div class="custom-location-switcher">
-                    <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
+                    <button class="location-toggle-btn" id="locationToggleBtn" aria-label="Toggle location tools"><i class="bi bi-geo-alt"></i></button>
                     <div class="location-dropdown" id="locationDropdown">
                         <div class="dropdown-header">Location Tools</div>
                         <div class="location-dropdown-item" id="liveLocationItem">
@@ -2266,7 +2868,7 @@
             // 4. SEARCH SWITCHER
             $stack.append(`
                 <div class="custom-search-switcher">
-                    <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
+                    <button class="search-toggle-btn" id="searchToggleBtn" aria-label="Toggle search"><i class="bi bi-search"></i></button>
                     <div class="search-dropdown" id="searchDropdown">
                         <div class="d-flex border-bottom">
                             <button type="button" class="btn btn-sm flex-fill search-tab-btn active" data-tab="quick">Quick Search</button>
@@ -2309,7 +2911,7 @@
             // 5. LABEL TOGGLE
             $stack.append(`
                 <div class="custom-label-toggle">
-                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
+                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels" aria-label="Toggle labels">
                         <i class="bi bi-fonts"></i>
                     </button>
                 </div>
@@ -2318,7 +2920,7 @@
             // 6. LEGEND TOGGLE
             $stack.append(`
                 <div class="custom-legend-toggle">
-                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Legend">
+                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Legend" aria-label="Toggle legend">
                         <i class="bi bi-list-ul"></i>
                     </button>
                 </div>
@@ -2327,7 +2929,7 @@
             // 7. 3D TOGGLE BUTTON
             $stack.append(`
                 <div class="custom-threed-toggle">
-                    <button class="threed-toggle-btn" id="threedToggleBtn" title="Toggle 3D View">
+                    <button class="threed-toggle-btn" id="threedToggleBtn" title="Toggle 3D View" aria-label="Toggle 3D view">
                         <i class="bi bi-box"></i>
                     </button>
                 </div>
@@ -2335,7 +2937,7 @@
 
             // 8. FULLSCREEN BUTTON
             $mapContainer.append(`
-                <button class="fullscreen-btn" id="fullscreenBtn">
+                <button class="fullscreen-btn" id="fullscreenBtn" aria-label="Toggle fullscreen">
                     <i class="bi bi-arrows-fullscreen"></i>
                 </button>
             `);
@@ -2490,17 +3092,7 @@
                 });
             }
 
-            // ══════════════════════════════════════════════════════════════
-            // ─── STANDALONE CESIUM 3D VIEW ───
-            // ol-cesium is intentionally NOT used here: the npm package's
-            // browser bundle (dist/olcesium.umd.js) targets the modular
-            // `ol/*.js` package via a bundler and needs `ol` 6.x/7.x — it
-            // is not compatible with the monolithic ol@latest CDN build
-            // loaded on this page. Instead we spin up a plain Cesium.Viewer
-            // and draw the buildings as extruded polygon entities, reusing
-            // the same polygons/polygonDatas/buildingVariations data.
-            // ══════════════════════════════════════════════════════════════
-
+            // ─── CESIUM 3D VIEW ───
             const CESIUM_ION_TOKEN =
                 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
 
@@ -2534,10 +3126,7 @@
                         shouldAnimate: true
                     });
 
-                    // ─── ADD DRONE IMAGE ───
                     await addDroneImageToCesium();
-
-                    // ─── BUILD BUILDINGS ───
                     buildCesiumBuildings();
 
                     cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
@@ -2545,7 +3134,6 @@
                     cesiumViewer.scene.skyAtmosphere.show = true;
                     cesiumViewer.scene.fog.enabled = true;
 
-                    // Click handler
                     cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(
                         cesiumViewer.scene.canvas
                     );
@@ -2571,7 +3159,6 @@
                 }
             }
 
-            // ─── NEW: Function to add drone image to Cesium ───
             async function addDroneImageToCesium() {
                 if (!cesiumViewer) return;
                 if (!droneImageURL || droneImageURL === '') {
@@ -2580,24 +3167,21 @@
                 }
 
                 try {
-                    // Convert extent from EPSG:3857 to WGS84 degrees
                     const westSouth = ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857',
                         'EPSG:4326');
                     const eastNorth = ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857',
                         'EPSG:4326');
 
-                    // Create single tile provider
                     const provider = new Cesium.SingleTileImageryProvider({
                         url: droneImageURL,
                         rectangle: Cesium.Rectangle.fromDegrees(
-                            westSouth[0], // west
-                            westSouth[1], // south
-                            eastNorth[0], // east
-                            eastNorth[1] // north
+                            westSouth[0],
+                            westSouth[1],
+                            eastNorth[0],
+                            eastNorth[1]
                         )
                     });
 
-                    // Add to viewer with transparency
                     const droneLayer = new Cesium.ImageryLayer(provider, {
                         alpha: 0.80,
                         brightness: 1.0,
@@ -2607,8 +3191,6 @@
 
                     cesiumViewer.imageryLayers.add(droneLayer);
                     console.log('✅ Drone image added to Cesium 3D view');
-
-                    // Store reference for toggling
                     window.droneCesiumLayer = droneLayer;
 
                 } catch (e) {
@@ -2616,7 +3198,6 @@
                 }
             }
 
-            // ─── Toggle drone image in 3D ───
             function toggleDroneIn3D(show) {
                 if (window.droneCesiumLayer) {
                     window.droneCesiumLayer.show = show;
@@ -2634,8 +3215,6 @@
                         const ring = JSON.parse(poly.coordinates);
                         if (!Array.isArray(ring) || ring.length < 3) return;
 
-                        // Polygon coordinates on this page are stored in the map's
-                        // view projection (EPSG:3857); Cesium wants WGS84 degrees.
                         const lonLatFlat = [];
                         ring.forEach(pt => {
                             const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
@@ -2691,7 +3270,6 @@
                 const $threedBtn = $('#threedToggleBtn');
 
                 if (!is3DMode) {
-                    // ─── ENTER 3D MODE ───
                     const viewer = initCesiumViewer();
                     if (!viewer) return;
 
@@ -2707,7 +3285,6 @@
                     $threedBtn.addClass('active-3d').html('<i class="bi bi-box-fill"></i>');
                     showToast('🌍 3D mode activated - Buildings extruded', 3000);
                 } else {
-                    // ─── EXIT 3D MODE ───
                     $('#cesiumContainer').hide();
                     $('#map').show();
                     map.updateSize();
@@ -2733,7 +3310,6 @@
 
             // ─── FUNCTION TO SHOW BUILDING VIEW ───
             function showBuildingView(item) {
-                // ─── SET BASIC FIELDS ───
                 $('#bv_gisid').text(item.gisid || '-');
                 $('#bv_zone').text(item.zone || item.building_zone || '-');
                 $('#bv_building_name').text(item.building_name || '-');
@@ -2751,7 +3327,6 @@
                 const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
                 $('#bv_mapped').text(mappedCount);
 
-                // ─── VARIATION ───
                 const variation = buildingVariations[item.gisid];
                 if (variation) {
                     const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
@@ -2781,7 +3356,6 @@
                     $('#bv_variation_wrap').html('');
                 }
 
-                // ─── AMENITIES ───
                 const amenities = [
                     ['Lift Room', item.liftroom],
                     ['Head Room', item.headroom],
@@ -2807,11 +3381,9 @@
                 $('#bv_amenities').html(hasAmenities ? amenHtml :
                     '<span class="text-muted small">No amenities recorded</span>');
 
-                // ─── REMARKS ───
                 $('#bv_remarks').text(item.remarks || '—');
                 $('#bv_corp_remarks').text(item.corporationremarks || '—');
 
-                // ─── IMAGES ───
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
 
                 function loadImage(imgId, emptyId, errorId, imagePath) {
@@ -2847,7 +3419,6 @@
                 loadImage('bv_img1', 'bv_img1_empty', 'bv_img1_error', item.image);
                 loadImage('bv_img2', 'bv_img2_empty', 'bv_img2_error', item.image2);
 
-                // ─── BUTTON HANDLERS ───
                 $('#buildingViewPointsBtn').off('click').on('click', function() {
                     bootstrap.Modal.getInstance(document.getElementById('buildingViewModal')).hide();
                     openPointDetails(item.gisid);
@@ -3692,7 +4263,6 @@
             }
 
             function applyFilters() {
-                // ─── GET FILTER VALUES ───
                 const selectedUsage = $('#usageFilter').val();
                 const usageVariation = $('#usageVariationFilter').val();
                 const areaVariation = $('#areaVariationFilter').val();
@@ -3708,7 +4278,6 @@
                 const minArea = parseInt($('#minArea').val()) || 0;
                 const maxArea = parseInt($('#maxArea').val()) || 0;
 
-                // ─── CHECK IF ANY FILTER ACTIVE ───
                 const allUsageSelected = selectedUsage === 'all';
                 const allZonesSelected = selectedZone === 'all';
                 const allConstructionSelected = selectedConstruction === 'all';
@@ -3735,10 +4304,8 @@
                     return;
                 }
 
-                // ─── STEP 1: COLLECT GIS IDs FROM EACH FILTER ───
                 let filteredGisids = new Set();
 
-                // ─── 1A: USAGE FILTER ───
                 let usageGisids = null;
                 if (!allUsageSelected) {
                     usageGisids = new Set(
@@ -3748,7 +4315,6 @@
                     );
                 }
 
-                // ─── 1B: USAGE VARIATION FILTER ───
                 let usageVariationGisids = null;
                 if (!allUsageVariationSelected) {
                     if (usageVariation === 'match') {
@@ -3773,7 +4339,6 @@
                     }
                 }
 
-                // ─── 1C: AREA VARIATION FILTER ───
                 let areaVariationGisids = null;
                 if (!allAreaVariationSelected) {
                     if (areaVariation === 'match') {
@@ -3804,7 +4369,6 @@
                     }
                 }
 
-                // ─── 1D: ZONE FILTER ───
                 let zoneGisids = null;
                 if (!allZonesSelected) {
                     zoneGisids = new Set(
@@ -3814,7 +4378,6 @@
                     );
                 }
 
-                // ─── 1E: CONSTRUCTION FILTER ───
                 let constructionGisids = null;
                 if (!allConstructionSelected) {
                     constructionGisids = new Set(
@@ -3824,7 +4387,6 @@
                     );
                 }
 
-                // ─── 1F: BUILDING TYPE FILTER ───
                 let buildingTypeGisids = null;
                 if (!allBuildingTypesSelected) {
                     buildingTypeGisids = new Set(
@@ -3834,7 +4396,6 @@
                     );
                 }
 
-                // ─── 1G: AMENITIES FILTER ───
                 let amenitiesGisids = null;
                 if (!noAmenitiesSelected) {
                     amenitiesGisids = new Set(
@@ -3850,7 +4411,6 @@
                     );
                 }
 
-                // ─── 1H: UGD FILTER ───
                 let ugdGisids = null;
                 if (!allUgdSelected) {
                     ugdGisids = new Set(
@@ -3860,7 +4420,6 @@
                     );
                 }
 
-                // ─── 1I: SURVEY STATUS FILTER ───
                 let surveyStatusGisids = null;
                 if (!allSurveyStatusSelected) {
                     if (selectedSurveyStatus === 'surveyed') {
@@ -3885,7 +4444,6 @@
                     }
                 }
 
-                // ─── 1J: ASSESSMENT COUNT FILTER ───
                 let assessmentCountGisids = null;
                 if (!allAssessmentCountSelected) {
                     const gisidPointCount = {};
@@ -3907,7 +4465,6 @@
                     );
                 }
 
-                // ─── 1K: FLOOR FILTER ───
                 let floorGisids = null;
                 if (!allFloorSelected) {
                     floorGisids = new Set(
@@ -3925,7 +4482,6 @@
                     );
                 }
 
-                // ─── 1L: SHOP FILTER ───
                 let shopGisids = null;
                 if (!allShopSelected) {
                     shopGisids = new Set(
@@ -3942,7 +4498,6 @@
                     );
                 }
 
-                // ─── 1M: AREA RANGE FILTER ───
                 let areaGisids = null;
                 if (!areaDefault) {
                     areaGisids = new Set(
@@ -3955,7 +4510,6 @@
                     );
                 }
 
-                // ─── STEP 2: INTERSECT ALL FILTER SETS ───
                 const allFilterSets = [
                     usageGisids,
                     usageVariationGisids,
@@ -3982,7 +4536,6 @@
                     }
                 });
 
-                // ─── STEP 3: CLEAR SOURCE AND ADD FILTERED POLYGONS ───
                 polygonSource.clear();
 
                 let totalBuildings = 0;
@@ -4021,7 +4574,6 @@
                     }
                 });
 
-                // ─── STEP 4: UPDATE UI ───
                 const visibleCount = polygonSource.getFeatures().length;
                 const total = polygons.length;
 
@@ -4320,7 +4872,7 @@
             console.log('📊 Polygons:', polygons.length);
             console.log('📊 Lines:', lines.length);
             console.log('📊 Point Data:', pointDatas.length);
-            console.log('🌍 3D mode ready (standalone Cesium viewer) - Click the cube button to activate');
+            console.log('🌍 3D mode ready - Click the cube button to activate');
 
             setTimeout(() => {
                 showToast('👆 Click on any building to view details', 4000);
