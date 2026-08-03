@@ -2531,393 +2531,427 @@
     `);
 
     // ─── CESIUM 3D VIEW ───
-    const CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
+const CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
 
-    // ─── LOAD GLB MODEL ───
-    async function loadGLBModel() {
-        if (!cesiumViewer) return;
+// ─── LOAD GLB MODEL ───
+async function loadGLBModel() {
+    if (!cesiumViewer) return;
 
-        // Update this path to your actual GLB file location
-        // Example: const glbPath = "{{ asset('models/your-model.glb') }}";
-        const glbPath = "{{ asset('models/building.glb') }}"; // Update this path
+    // Update this path to your actual GLB file location
+    // Example: const glbPath = "{{ asset('models/your-model.glb') }}";
+    const glbPath = "{{ asset('models/building.glb') }}"; // Update this path
 
-        console.log('🔍 Loading GLB model from:', glbPath);
+    console.log('🔍 Loading GLB model from:', glbPath);
 
-        try {
-            // Check if file exists
-            const response = await fetch(glbPath);
-            if (!response.ok) {
-                console.warn('⚠️ GLB file not found at:', glbPath);
-                showToast('⚠️ 3D model file not found', 3000);
-                return;
-            }
-
-            // Position the model at the center of your ward extent
-            const center = ol.extent.getCenter(imageExtent);
-            const lonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
-
-            // Set height slightly above ground
-            const height = 5.0;
-
-            // Remove existing GLB entity if any
-            if (glbEntity) {
-                cesiumViewer.entities.remove(glbEntity);
-                glbEntity = null;
-            }
-
-            // Create the model entity
-            glbEntity = cesiumViewer.entities.add({
-                name: '3D Model',
-                position: Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], height),
-                model: {
-                    uri: glbPath,
-                    minimumPixelSize: 32,
-                    maximumScale: 20000,
-                    show: true,
-                    scale: 1.0
-                },
-                properties: {
-                    type: 'glb_model',
-                    file: glbPath
-                }
-            });
-
-            glbLoaded = true;
-            console.log('✅ GLB model loaded successfully!');
-
-            // Zoom to the model after it loads
-            setTimeout(() => {
-                if (glbEntity) {
-                    const position = glbEntity.position.getValue(Cesium.JulianDate.now());
-                    if (position) {
-                        cesiumViewer.camera.flyTo({
-                            destination: position,
-                            orientation: {
-                                heading: Cesium.Math.toRadians(0),
-                                pitch: Cesium.Math.toRadians(-30),
-                                roll: 0
-                            },
-                            duration: 2.0,
-                            distance: 100
-                        });
-                        showToast('🏢 3D Model loaded and zoomed', 3000);
-                    }
-                }
-            }, 1000);
-
-        } catch (e) {
-            console.error('❌ Error loading GLB model:', e);
-            showToast('⚠️ Failed to load 3D model', 4000);
-        }
-    }
-
-    // ─── FUNCTION TO ZOOM TO GLB MODEL ───
-    function zoomToGLBModel() {
-        if (!cesiumViewer || !glbEntity) {
-            showToast('⚠️ No 3D model loaded', 3000);
+    try {
+        // Check if file exists
+        const response = await fetch(glbPath);
+        if (!response.ok) {
+            console.warn('⚠️ GLB file not found at:', glbPath);
+            showToast('⚠️ 3D model file not found', 3000);
             return;
         }
 
-        try {
-            const position = glbEntity.position.getValue(Cesium.JulianDate.now());
-            if (position) {
-                cesiumViewer.camera.flyTo({
-                    destination: position,
-                    orientation: {
-                        heading: Cesium.Math.toRadians(0),
-                        pitch: Cesium.Math.toRadians(-30),
-                        roll: 0
-                    },
-                    duration: 2.0,
-                    distance: 50
-                });
-                showToast('🎯 Zoomed to 3D model', 2000);
-            }
-        } catch (e) {
-            console.error('Error zooming to model:', e);
-            showToast('⚠️ Could not zoom to model', 3000);
-        }
-    }
-
-    // ─── FUNCTION TO REMOVE GLB MODEL ───
-    function removeGLBModel() {
-        if (!cesiumViewer || !glbEntity) return;
-
-        try {
-            cesiumViewer.entities.remove(glbEntity);
-            glbEntity = null;
-            glbLoaded = false;
-            console.log('🗑️ GLB model removed');
-        } catch (e) {
-            console.error('Error removing GLB model:', e);
-        }
-    }
-
-    async function initCesiumViewer() {
-        if (cesiumViewer) return cesiumViewer;
-
-        if (typeof Cesium === 'undefined') {
-            showToast('⚠️ Cesium library failed to load.', 4000);
-            return null;
-        }
-
-        try {
-            Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
-
-            cesiumViewer = new Cesium.Viewer("cesiumContainer", {
-                baseLayer: Cesium.ImageryLayer.fromProviderAsync(
-                    Cesium.IonImageryProvider.fromAssetId(2)
-                ),
-                terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(1),
-                baseLayerPicker: false,
-                geocoder: false,
-                homeButton: false,
-                sceneModePicker: false,
-                navigationHelpButton: false,
-                animation: false,
-                timeline: false,
-                fullscreenButton: false,
-                infoBox: false,
-                selectionIndicator: false,
-                shadows: true,
-                shouldAnimate: true
-            });
-
-            await addDroneImageToCesium();
-            buildCesiumBuildings();
-            buildCesiumBoundary();
-
-            // Load the GLB model
-            await loadGLBModel();
-
-            cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
-            cesiumViewer.scene.globe.enableLighting = true;
-            cesiumViewer.scene.skyAtmosphere.show = true;
-            cesiumViewer.scene.fog.enabled = true;
-
-            cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(
-                cesiumViewer.scene.canvas
-            );
-
-            cesiumClickHandler.setInputAction(function(movement) {
-                const picked = cesiumViewer.scene.pick(movement.position);
-                if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
-                    showFeatureDetails({
-                        get: function(key) {
-                            return key === "gisid" ? picked.id.gisid : undefined;
-                        }
-                    });
-                }
-            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-            return cesiumViewer;
-
-        } catch (e) {
-            console.error('Cesium init error:', e);
-            showToast("3D initialization failed", 4000);
-            cesiumViewer = null;
-            return null;
-        }
-    }
-
-    async function addDroneImageToCesium() {
-        if (!cesiumViewer) return;
-        if (!droneImageURL || droneImageURL === '') {
-            console.log('No drone image available');
-            return;
-        }
-
-        try {
-            const westSouth = ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857', 'EPSG:4326');
-            const eastNorth = ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857', 'EPSG:4326');
-
-            const provider = new Cesium.SingleTileImageryProvider({
-                url: droneImageURL,
-                rectangle: Cesium.Rectangle.fromDegrees(
-                    westSouth[0],
-                    westSouth[1],
-                    eastNorth[0],
-                    eastNorth[1]
-                )
-            });
-
-            const droneLayer = new Cesium.ImageryLayer(provider, {
-                alpha: 0.80,
-                brightness: 1.0,
-                contrast: 1.0,
-                show: true
-            });
-
-            cesiumViewer.imageryLayers.add(droneLayer);
-            console.log('✅ Drone image added to Cesium 3D view');
-            window.droneCesiumLayer = droneLayer;
-
-        } catch (e) {
-            console.error('Error adding drone image to Cesium:', e);
-        }
-    }
-
-    function toggleDroneIn3D(show) {
-        if (window.droneCesiumLayer) {
-            window.droneCesiumLayer.show = show;
-        }
-    }
-
-    // ─── BUILD CESIUM BOUNDARY ───
-    function buildCesiumBoundary() {
-        if (!cesiumViewer) return;
-
-        try {
-            const features = boundarySource.getFeatures();
-            if (features.length === 0) {
-                console.log('⚠️ No boundary features to display in 3D');
-                return;
-            }
-
-            const feature = features[0];
-            const geometry = feature.getGeometry();
-
-            if (!geometry) return;
-
-            const coords = geometry.getCoordinates();
-            let flatCoords = [];
-
-            if (Array.isArray(coords) && coords.length > 0) {
-                const rings = coords[0] || coords;
-                rings.forEach(ring => {
-                    if (Array.isArray(ring) && ring.length > 0) {
-                        ring.forEach(pt => {
-                            if (Array.isArray(pt) && pt.length >= 2) {
-                                const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
-                                flatCoords.push(lonLat[0], lonLat[1]);
-                            }
-                        });
-                    }
-                });
-            }
-
-            if (flatCoords.length < 6) {
-                console.log('⚠️ Not enough coordinates for boundary');
-                return;
-            }
-
-            const entity = cesiumViewer.entities.add({
-                name: 'Ward Boundary',
-                polygon: {
-                    hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
-                    material: Cesium.Color.fromCssColorString('#FF9F1C').withAlpha(0.12),
-                    outline: true,
-                    outlineColor: Cesium.Color.fromCssColorString('#FF9F1C'),
-                    outlineWidth: 3,
-                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
-                }
-            });
-
-            cesiumBuildingEntities.push(entity);
-            console.log('✅ Boundary added to Cesium 3D view');
-
-        } catch (e) {
-            console.error('Error adding boundary to Cesium:', e);
-        }
-    }
-
-    function buildCesiumBuildings() {
-        if (!cesiumViewer) return;
-
-        cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
-        cesiumBuildingEntities = [];
-
-        polygons.forEach(poly => {
-            try {
-                const ring = JSON.parse(poly.coordinates);
-                if (!Array.isArray(ring) || ring.length < 3) return;
-
-                const lonLatFlat = [];
-                ring.forEach(pt => {
-                    const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
-                    lonLatFlat.push(lonLat[0], lonLat[1]);
-                });
-
-                const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
-                const usage = polygonData?.building_usage || 'OTHER';
-                const colorHex = usageColors[usage] || '#0f6b47';
-                const floors = parseInt(polygonData?.number_floor) || 0;
-                const height = Math.max((floors + 1) * 3.2, 3.2);
-
-                const entity = cesiumViewer.entities.add({
-                    gisid: poly.gisid,
-                    polygon: {
-                        hierarchy: Cesium.Cartesian3.fromDegreesArray(lonLatFlat),
-                        extrudedHeight: height,
-                        height: 0,
-                        material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.8),
-                        outline: true,
-                        outlineColor: Cesium.Color.WHITE,
-                        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-                        extrudedHeightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
-                    }
-                });
-                cesiumBuildingEntities.push(entity);
-            } catch (e) {
-                console.error('Cesium polygon build error:', e);
-            }
-        });
-
-        console.log('🏢 Cesium buildings drawn:', cesiumBuildingEntities.length);
-    }
-
-    function flyCesiumToWardExtent() {
-        if (!cesiumViewer) return;
+        // Position the model at the center of your ward extent
         const center = ol.extent.getCenter(imageExtent);
         const lonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
 
-        cesiumViewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], 350),
-            orientation: {
-                heading: Cesium.Math.toRadians(0),
-                pitch: Cesium.Math.toRadians(-55),
-                roll: 0
+        // Set height slightly above ground
+        const height = 5.0;
+
+        // Remove existing GLB entity if any
+        if (glbEntity) {
+            cesiumViewer.entities.remove(glbEntity);
+            glbEntity = null;
+        }
+
+        // Create the model entity
+        glbEntity = cesiumViewer.entities.add({
+            name: '3D Model',
+            position: Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], height),
+            model: {
+                uri: glbPath,
+                minimumPixelSize: 32,
+                maximumScale: 20000,
+                show: true,
+                scale: 1.0
             },
-            duration: 2.0
+            properties: {
+                type: 'glb_model',
+                file: glbPath
+            }
         });
+
+        glbLoaded = true;
+        console.log('✅ GLB model loaded successfully!');
+
+        // Zoom to the model after it loads
+        setTimeout(() => {
+            if (glbEntity) {
+                const position = glbEntity.position.getValue(Cesium.JulianDate.now());
+                if (position) {
+                    cesiumViewer.camera.flyTo({
+                        destination: position,
+                        orientation: {
+                            heading: Cesium.Math.toRadians(0),
+                            pitch: Cesium.Math.toRadians(-30),
+                            roll: 0
+                        },
+                        duration: 2.0,
+                        distance: 100
+                    });
+                    showToast('🏢 3D Model loaded and zoomed', 3000);
+                }
+            }
+        }, 1000);
+
+    } catch (e) {
+        console.error('❌ Error loading GLB model:', e);
+        showToast('⚠️ Failed to load 3D model', 4000);
+    }
+}
+
+// ─── FUNCTION TO ZOOM TO GLB MODEL ───
+function zoomToGLBModel() {
+    if (!cesiumViewer || !glbEntity) {
+        showToast('⚠️ No 3D model loaded', 3000);
+        return;
     }
 
-    // ─── TOGGLE 3D MODE ───
-    function toggle3DMode() {
-        const $threedBtn = $('#threedToggleBtn');
+    try {
+        const position = glbEntity.position.getValue(Cesium.JulianDate.now());
+        if (position) {
+            cesiumViewer.camera.flyTo({
+                destination: position,
+                orientation: {
+                    heading: Cesium.Math.toRadians(0),
+                    pitch: Cesium.Math.toRadians(-30),
+                    roll: 0
+                },
+                duration: 2.0,
+                distance: 50
+            });
+            showToast('🎯 Zoomed to 3D model', 2000);
+        }
+    } catch (e) {
+        console.error('Error zooming to model:', e);
+        showToast('⚠️ Could not zoom to model', 3000);
+    }
+}
 
-        if (!is3DMode) {
-            const viewer = initCesiumViewer();
-            if (!viewer) return;
+// ─── FUNCTION TO REMOVE GLB MODEL ───
+function removeGLBModel() {
+    if (!cesiumViewer || !glbEntity) return;
 
-            buildCesiumBuildings();
-            buildCesiumBoundary();
+    try {
+        cesiumViewer.entities.remove(glbEntity);
+        glbEntity = null;
+        glbLoaded = false;
+        console.log('🗑️ GLB model removed');
+    } catch (e) {
+        console.error('Error removing GLB model:', e);
+    }
+}
 
-            $('#map').hide();
-            $('#cesiumContainer').show();
-            setTimeout(() => viewer.resize(), 50);
+// ─── INIT CESIUM VIEWER ───
+async function initCesiumViewer() {
+    if (cesiumViewer) return cesiumViewer;
 
+    if (typeof Cesium === 'undefined') {
+        showToast('⚠️ Cesium library failed to load.', 4000);
+        return null;
+    }
+
+    try {
+        Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
+
+        // Create viewer with proper terrain
+        const terrainProvider = await Cesium.createWorldTerrainAsync();
+
+        cesiumViewer = new Cesium.Viewer("cesiumContainer", {
+            terrainProvider: terrainProvider,
+            baseLayerPicker: false,
+            geocoder: false,
+            homeButton: false,
+            sceneModePicker: false,
+            navigationHelpButton: false,
+            animation: false,
+            timeline: false,
+            fullscreenButton: false,
+            infoBox: false,
+            selectionIndicator: false,
+            shadows: true,
+            shouldAnimate: true
+        });
+
+        // Add base imagery
+        const imageryProvider = await Cesium.IonImageryProvider.fromAssetId(2);
+        cesiumViewer.imageryLayers.addImageryProvider(imageryProvider);
+
+        await addDroneImageToCesium();
+        buildCesiumBuildings();
+        buildCesiumBoundary();
+
+        // Load the GLB model
+        await loadGLBModel();
+
+        // Configure scene
+        cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
+        cesiumViewer.scene.globe.enableLighting = true;
+        cesiumViewer.scene.skyAtmosphere.show = true;
+        cesiumViewer.scene.fog.enabled = true;
+
+        // Add click handler
+        cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(
+            cesiumViewer.scene.canvas
+        );
+
+        cesiumClickHandler.setInputAction(function(movement) {
+            const picked = cesiumViewer.scene.pick(movement.position);
+            if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
+                showFeatureDetails({
+                    get: function(key) {
+                        return key === "gisid" ? picked.id.gisid : undefined;
+                    }
+                });
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        return cesiumViewer;
+
+    } catch (e) {
+        console.error('Cesium init error:', e);
+        showToast("3D initialization failed", 4000);
+        cesiumViewer = null;
+        return null;
+    }
+}
+
+// ─── ADD DRONE IMAGE TO CESIUM ───
+async function addDroneImageToCesium() {
+    if (!cesiumViewer) return;
+    if (!droneImageURL || droneImageURL === '') {
+        console.log('No drone image available');
+        return;
+    }
+
+    try {
+        const westSouth = ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857', 'EPSG:4326');
+        const eastNorth = ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857', 'EPSG:4326');
+
+        const provider = new Cesium.SingleTileImageryProvider({
+            url: droneImageURL,
+            rectangle: Cesium.Rectangle.fromDegrees(
+                westSouth[0],
+                westSouth[1],
+                eastNorth[0],
+                eastNorth[1]
+            )
+        });
+
+        const droneLayer = new Cesium.ImageryLayer(provider, {
+            alpha: 0.80,
+            brightness: 1.0,
+            contrast: 1.0,
+            show: true
+        });
+
+        cesiumViewer.imageryLayers.add(droneLayer);
+        console.log('✅ Drone image added to Cesium 3D view');
+        window.droneCesiumLayer = droneLayer;
+
+    } catch (e) {
+        console.error('Error adding drone image to Cesium:', e);
+    }
+}
+
+// ─── BUILD CESIUM BOUNDARY ───
+function buildCesiumBoundary() {
+    if (!cesiumViewer) return;
+
+    try {
+        const features = boundarySource.getFeatures();
+        if (features.length === 0) {
+            console.log('⚠️ No boundary features to display in 3D');
+            return;
+        }
+
+        const feature = features[0];
+        const geometry = feature.getGeometry();
+
+        if (!geometry) return;
+
+        const coords = geometry.getCoordinates();
+        let flatCoords = [];
+
+        if (Array.isArray(coords) && coords.length > 0) {
+            const rings = coords[0] || coords;
+            rings.forEach(ring => {
+                if (Array.isArray(ring) && ring.length > 0) {
+                    ring.forEach(pt => {
+                        if (Array.isArray(pt) && pt.length >= 2) {
+                            const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
+                            flatCoords.push(lonLat[0], lonLat[1]);
+                        }
+                    });
+                }
+            });
+        }
+
+        if (flatCoords.length < 6) {
+            console.log('⚠️ Not enough coordinates for boundary');
+            return;
+        }
+
+        const entity = cesiumViewer.entities.add({
+            name: 'Ward Boundary',
+            polygon: {
+                hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                material: Cesium.Color.fromCssColorString('#FF9F1C').withAlpha(0.12),
+                outline: true,
+                outlineColor: Cesium.Color.fromCssColorString('#FF9F1C'),
+                outlineWidth: 3,
+                height: 0,
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+            }
+        });
+
+        cesiumBuildingEntities.push(entity);
+        console.log('✅ Boundary added to Cesium 3D view');
+
+    } catch (e) {
+        console.error('Error adding boundary to Cesium:', e);
+    }
+}
+
+// ─── BUILD CESIUM BUILDINGS ───
+function buildCesiumBuildings() {
+    if (!cesiumViewer) return;
+
+    cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
+    cesiumBuildingEntities = [];
+
+    polygons.forEach(poly => {
+        try {
+            const ring = JSON.parse(poly.coordinates);
+            if (!Array.isArray(ring) || ring.length < 3) return;
+
+            const lonLatFlat = [];
+            ring.forEach(pt => {
+                const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
+                lonLatFlat.push(lonLat[0], lonLat[1]);
+            });
+
+            const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
+            const usage = polygonData?.building_usage || 'OTHER';
+            const colorHex = usageColors[usage] || '#0f6b47';
+            const floors = parseInt(polygonData?.number_floor) || 0;
+            const height = Math.max((floors + 1) * 3.2, 3.2);
+
+            const entity = cesiumViewer.entities.add({
+                gisid: poly.gisid,
+                polygon: {
+                    hierarchy: Cesium.Cartesian3.fromDegreesArray(lonLatFlat),
+                    extrudedHeight: height,
+                    height: 0,
+                    material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.8),
+                    outline: true,
+                    outlineColor: Cesium.Color.WHITE,
+                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                }
+            });
+            cesiumBuildingEntities.push(entity);
+        } catch (e) {
+            console.error('Cesium polygon build error:', e);
+        }
+    });
+
+    console.log('🏢 Cesium buildings drawn:', cesiumBuildingEntities.length);
+}
+
+// ─── FLY CESIUM TO WARD EXTENT ───
+function flyCesiumToWardExtent() {
+    if (!cesiumViewer) return;
+    const center = ol.extent.getCenter(imageExtent);
+    const lonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
+
+    cesiumViewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], 350),
+        orientation: {
+            heading: Cesium.Math.toRadians(0),
+            pitch: Cesium.Math.toRadians(-55),
+            roll: 0
+        },
+        duration: 2.0
+    });
+}
+
+// ─── TOGGLE 3D MODE ───
+function toggle3DMode() {
+    const $threedBtn = $('#threedToggleBtn');
+
+    if (!is3DMode) {
+        // Show loading toast
+        showToast('🌍 Loading 3D view...', 2000);
+
+        // Initialize viewer
+        const viewerPromise = initCesiumViewer();
+
+        if (!viewerPromise) {
+            showToast('⚠️ Failed to initialize 3D view', 3000);
+            return;
+        }
+
+        // Hide 2D map and show 3D container
+        $('#map').hide();
+        $('#cesiumContainer').show();
+
+        // Use setTimeout to ensure DOM is updated
+        setTimeout(() => {
+            if (cesiumViewer) {
+                // Force resize
+                cesiumViewer.forceResize();
+                cesiumViewer.scene.render();
+            }
+
+            // Fly to ward extent
             setTimeout(() => {
                 flyCesiumToWardExtent();
+
+                // If GLB is loaded, zoom to it after the ward extent fly
                 if (glbLoaded) {
-                    setTimeout(() => zoomToGLBModel(), 3000);
+                    setTimeout(() => zoomToGLBModel(), 2000);
                 }
             }, 500);
+        }, 300);
 
-            is3DMode = true;
-            $threedBtn.addClass('active-3d').html('<i class="bi bi-box-fill"></i>');
+        is3DMode = true;
+        $threedBtn.addClass('active-3d').html('<i class="bi bi-box-fill"></i>');
+
+        // Show success toast after a delay
+        setTimeout(() => {
             showToast('🌍 3D mode activated - Buildings extruded' + (glbLoaded ? ' & 3D Model loaded' : ''), 3000);
-        } else {
-            $('#cesiumContainer').hide();
-            $('#map').show();
-            map.updateSize();
+        }, 1000);
 
-            is3DMode = false;
-            $threedBtn.removeClass('active-3d').html('<i class="bi bi-box"></i>');
-            showToast('🗺️ 2D mode restored', 2000);
-        }
+    } else {
+        // Switch back to 2D
+        $('#cesiumContainer').hide();
+        $('#map').show();
+        map.updateSize();
+
+        is3DMode = false;
+        $threedBtn.removeClass('active-3d').html('<i class="bi bi-box"></i>');
+        showToast('🗺️ 2D mode restored', 2000);
     }
+}
 
+// ─── HANDLE MAP SIZE CHANGES ───
+$(window).on('resize', function() {
+    if (cesiumViewer && is3DMode) {
+        cesiumViewer.forceResize();
+        cesiumViewer.scene.render();
+    }
+});
     // ─── 3D TOGGLE EVENT HANDLER ───
     $(document).on('click', '#threedToggleBtn', function(e) {
         e.stopPropagation();
@@ -2936,12 +2970,7 @@
         }
     });
 
-    // ─── HANDLE MAP SIZE CHANGES ───
-    $(window).on('resize', function() {
-        if (cesiumViewer && is3DMode) {
-            cesiumViewer.resize();
-        }
-    });
+
 
     // ─── HELPER FUNCTIONS ───
 
