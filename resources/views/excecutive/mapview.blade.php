@@ -1522,7 +1522,7 @@
             }
 
             .map-header {
-                background: #16213e;
+                background: #a6bdfc;
                 border-color: #2d2d44;
             }
 
@@ -1567,7 +1567,7 @@
             }
 
             .dropdown-header {
-                background: #16213e;
+                background: #a6bdfc;;
                 color: #94a3b8;
             }
 
@@ -1599,7 +1599,7 @@
             }
 
             .filter-field-group input {
-                background: #16213e;
+                background: #a6bdfc;;
                 border-color: #2d2d44;
                 color: #e2e8f0;
             }
@@ -1609,7 +1609,7 @@
             }
 
             .filter-actions {
-                background: #16213e;
+                background: #a6bdfc;;
                 border-color: #2d2d44;
             }
 
@@ -1642,7 +1642,7 @@
             }
 
             .range-inputs input[type="number"] {
-                background: #16213e;
+                background: #a6bdfc;;
                 border-color: #2d2d44;
                 color: #e2e8f0;
             }
@@ -1652,7 +1652,7 @@
             }
 
             .quick-stats {
-                background: #16213e;
+                background: #a6bdfc;;
             }
 
             .quick-stats .stat-item strong {
@@ -1668,7 +1668,7 @@
             }
 
             .bld-summary-strip {
-                background: #16213e;
+                background: #a6bdfc;;
                 border-color: #2d2d44;
             }
 
@@ -1685,7 +1685,7 @@
             }
 
             .bld-info-row {
-                background: #16213e;
+                background: #a6bdfc;;
                 border-color: #2d2d44;
             }
 
@@ -1703,7 +1703,7 @@
             }
 
             .tax-card {
-                background: #16213e;
+                background: #a6bdfc;;
                 border-color: #2d2d44;
             }
 
@@ -1721,7 +1721,7 @@
             }
 
             .point-data-card {
-                background: #16213e;
+                background: #a6bdfc;;
                 border-color: #2d2d44;
             }
 
@@ -1750,7 +1750,7 @@
             }
 
             .bv-variation-strip {
-                background: #16213e;
+                background: #a6bdfc;;
                 border-color: #2d2d44;
             }
 
@@ -1767,7 +1767,7 @@
             }
 
             .bld-modal-footer {
-                background: #16213e;
+                background: #a6bdfc;;
                 border-color: #2d2d44;
             }
 
@@ -1818,7 +1818,7 @@
             }
 
             .bld-img-wrap {
-                background: #16213e;
+                background: #a6bdfc;;
             }
 
             .ol-page-title {
