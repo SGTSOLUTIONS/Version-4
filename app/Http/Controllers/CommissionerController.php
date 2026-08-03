@@ -635,7 +635,35 @@ class CommissionerController extends Controller
         }
         return $boundaries;
     }
+    private function getWardBoundary($corporationId, $wardId)
+    {
+        try {
+            $zoneIds = Zone::where('corp_id', $corporationId)
+                ->pluck('id')
+                ->toArray();
 
+            $ward = Ward::where('id', $wardId)
+                ->whereIn('zone_id', $zoneIds)
+                ->first();
+
+            if (!$ward || empty($ward->boundary)) {
+                return null;
+            }
+
+            $boundary = is_array($ward->boundary)
+                ? $ward->boundary
+                : json_decode($ward->boundary, true);
+
+            return [
+                'ward_id'  => $ward->id,
+                'ward_no'  => $ward->ward_no,
+                'boundary' => $boundary,
+            ];
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return null;
+        }
+    }
     // ════════════════════════════════════════════════════════════════
     // MAP VIEW METHODS
     // ════════════════════════════════════════════════════════════════
@@ -706,7 +734,7 @@ class CommissionerController extends Controller
             ->pluck('road_name');
 
         // ─── Analytics ───
-        $boundary = $this->getAllwardBoundary($corp,$wardId);
+        $boundary = $this->getwardBoundary($corp, $wardId);
         $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
         $buildingVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData);
         $buildingData = $this->getBuildingsWithUsageColors($wardId);
@@ -735,7 +763,7 @@ class CommissionerController extends Controller
                 $polygon->sqfeet = $totalSqfeet;
             }
         }
-return response()->json($boundary);
+        return response()->json($boundary);
         return view('excecutive.mapview', compact(
             'ward',
             'polygons',
