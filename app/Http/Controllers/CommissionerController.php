@@ -763,7 +763,6 @@ class CommissionerController extends Controller
                 $polygon->sqfeet = $totalSqfeet;
             }
         }
-        return response()->json($boundary);
         return view('excecutive.mapview', compact(
             'ward',
             'polygons',
