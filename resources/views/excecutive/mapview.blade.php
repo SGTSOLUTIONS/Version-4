@@ -2124,6 +2124,10 @@
             let currentPointGisid = null;
             let currentPointRecords = [];
 
+            // Debug boundary data
+            console.log('📊 Boundary Data:', boundary);
+            console.log('📊 Ward Data:', ward);
+
             const usageColors = {
                 'RESIDENTIAL': '#4CAF50',
                 'COMMERCIAL': '#2196F3',
@@ -2197,6 +2201,7 @@
             // ─── SOURCES ───
             const polygonSource = new ol.source.Vector();
             const lineSource = new ol.source.Vector();
+            const boundarySource = new ol.source.Vector(); // Add boundary source
 
             // ─── SEARCH INDEX ───
             let searchIndex = [];
@@ -2292,6 +2297,19 @@
                     stroke: new ol.style.Stroke({
                         color: '#ff0000',
                         width: 3
+                    })
+                });
+            }
+
+            function createBoundaryStyle() {
+                return new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#FF6B00',
+                        width: 4,
+                        lineDash: [10, 6]
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255, 107, 0, 0.05)'
                     })
                 });
             }
@@ -2508,65 +2526,104 @@
                 });
                 console.log('📊 Lines loaded:', lineSource.getFeatures().length);
             }
-             let boundaryLayer = null;
-                let boundarySource = null;
 
-                function loadBoundaryLayer() {
-                    try {
-                        if (!boundary || !boundary.coordinates) {
-                            console.log('No boundary data available');
+            // ─── LOAD BOUNDARY LAYER ───
+            function loadBoundaryLayer() {
+                try {
+                    boundarySource.clear();
+
+                    // Check if boundary data exists
+                    if (!boundary || !boundary.coordinates) {
+                        console.log('⚠️ No boundary data available');
+                        // Try to get boundary from ward data
+                        if (ward && ward.boundary && ward.boundary.coordinates) {
+                            boundary = ward.boundary;
+                        } else {
+                            console.log('❌ No boundary data found in ward either');
                             return;
                         }
+                    }
 
-                        // Create a source for the boundary
-                        boundarySource = new ol.source.Vector();
+                    console.log('📊 Processing boundary data:', boundary);
 
-                        // Parse the boundary coordinates
-                        // The coordinates are in GeoJSON MultiPolygon format: [[[[x1,y1], [x2,y2], ...]]]
-                        const coords = boundary.coordinates;
+                    let geometry = null;
+                    const coords = boundary.coordinates;
 
-                        let geometry;
+                    // Handle different coordinate structures
+                    try {
+                        // Check structure: [[[[x,y], [x,y], ...]]] - MultiPolygon
                         if (Array.isArray(coords) && coords.length > 0) {
-                            // Handle different coordinate structures
-                            if (Array.isArray(coords[0]) && Array.isArray(coords[0][0]) && Array.isArray(coords[0][0][0])) {
-                                // MultiPolygon structure: [[[[x,y], [x,y], ...]]]
+                            if (Array.isArray(coords[0]) && Array.isArray(coords[0][0]) && Array.isArray(coords[0][0][0]) && typeof coords[0][0][0][0] === 'number') {
+                                // MultiPolygon: [[[[x,y], [x,y], ...]]]
                                 geometry = new ol.geom.MultiPolygon(coords);
-                            } else if (Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
-                                // Polygon structure: [[[x,y], [x,y], ...]]
+                                console.log('✅ Parsed as MultiPolygon');
+                            }
+                            // Check structure: [[[x,y], [x,y], ...]] - Polygon
+                            else if (Array.isArray(coords[0]) && Array.isArray(coords[0][0]) && typeof coords[0][0][0] === 'number') {
                                 geometry = new ol.geom.Polygon(coords[0]);
-                            } else if (Array.isArray(coords[0]) && typeof coords[0][0] === 'number') {
-                                // LinearRing structure: [[x,y], [x,y], ...]
+                                console.log('✅ Parsed as Polygon');
+                            }
+                            // Check structure: [[x,y], [x,y], ...] - LinearRing
+                            else if (Array.isArray(coords[0]) && typeof coords[0][0] === 'number') {
                                 geometry = new ol.geom.Polygon([coords]);
-                            } else {
-                                console.error('Unrecognized boundary coordinate structure');
+                                console.log('✅ Parsed as LinearRing');
+                            }
+                            // Check if it's already a GeoJSON Feature
+                            else if (coords.type === 'MultiPolygon') {
+                                const format = new ol.format.GeoJSON();
+                                const feature = format.readFeature(coords);
+                                geometry = feature.getGeometry();
+                                console.log('✅ Parsed as GeoJSON MultiPolygon');
+                            }
+                            else {
+                                console.error('❌ Unrecognized boundary coordinate structure:', coords);
                                 return;
                             }
                         } else {
-                            console.error('Invalid boundary coordinates');
+                            console.error('❌ Invalid boundary coordinates array');
                             return;
                         }
+                    } catch (e) {
+                        console.error('❌ Error parsing boundary coordinates:', e);
+                        return;
+                    }
 
-                        // Create a feature for the boundary
-                        const boundaryFeature = new ol.Feature({
-                            geometry: geometry,
-                            type: 'boundary',
-                            ward_no: boundary.ward_no || ward.ward_no || 'N/A',
-                            ward_id: boundary.ward_id || ward.id || 'N/A'
-                        });
+                    if (!geometry) {
+                        console.error('❌ Failed to create geometry from boundary data');
+                        return;
+                    }
 
-                        // Style for the boundary - prominent outline with semi-transparent fill
-                        boundaryFeature.setStyle(new ol.style.Style({
+                    // Create the boundary feature
+                    const boundaryFeature = new ol.Feature({
+                        geometry: geometry,
+                        type: 'boundary',
+                        ward_no: boundary.ward_no || ward.ward_no || 'N/A',
+                        ward_id: boundary.ward_id || ward.id || 'N/A',
+                        name: `Ward ${boundary.ward_no || ward.ward_no || 'N/A'}`
+                    });
+
+                    // Set style with label
+                    const center = geometry.getInteriorPoint ? geometry.getInteriorPoint() : null;
+                    const styles = [
+                        new ol.style.Style({
                             stroke: new ol.style.Stroke({
-                                color: '#FF6B00', // Orange for visibility
+                                color: '#FF6B00',
                                 width: 4,
-                                lineDash: [8, 4] // Dashed for distinction
+                                lineDash: [10, 6]
                             }),
                             fill: new ol.style.Fill({
-                                color: 'rgba(255, 107, 0, 0.05)' // Very subtle fill
-                            }),
+                                color: 'rgba(255, 107, 0, 0.05)'
+                            })
+                        })
+                    ];
+
+                    // Add label if center is available
+                    if (center) {
+                        styles.push(new ol.style.Style({
+                            geometry: center,
                             text: new ol.style.Text({
-                                text: `Ward ${boundary.ward_no || ward.ward_no || ''}`,
-                                font: 'bold 18px Inter, sans-serif',
+                                text: `🏛️ Ward ${boundary.ward_no || ward.ward_no || ''}`,
+                                font: 'bold 16px Inter, sans-serif',
                                 fill: new ol.style.Fill({
                                     color: '#FF6B00'
                                 }),
@@ -2574,33 +2631,41 @@
                                     color: '#ffffff',
                                     width: 4
                                 }),
-                                placement: 'point',
-                                overflow: true
+                                backgroundFill: new ol.style.Fill({
+                                    color: 'rgba(255, 255, 255, 0.9)'
+                                }),
+                                backgroundStroke: new ol.style.Stroke({
+                                    color: '#FF6B00',
+                                    width: 2
+                                }),
+                                padding: [6, 12, 6, 12],
+                                overflow: true,
+                                textAlign: 'center',
+                                offsetY: 0
                             })
                         }));
-
-                        // Add to source
-                        boundarySource.addFeature(boundaryFeature);
-
-                        // Create the layer
-                        boundaryLayer = new ol.layer.Vector({
-                            source: boundarySource,
-                            visible: true,
-                            title: 'Ward Boundary',
-                            zIndex: 50 // Above other layers but below interaction layers
-                        });
-
-
-                        console.log('✅ Boundary layer loaded successfully');
-                        console.log(`📍 Ward ${boundary.ward_no || ward.ward_no || ''} boundary added`);
-
-                    } catch (e) {
-                        console.error('Error loading boundary layer:', e);
                     }
-                }
 
-                // Call the function to load the boundary
-                loadBoundaryLayer();
+                    boundaryFeature.setStyle(styles);
+                    boundarySource.addFeature(boundaryFeature);
+
+                    console.log('✅ Boundary layer loaded successfully');
+                    console.log(`📍 Ward ${boundary.ward_no || ward.ward_no || ''} boundary added`);
+                    console.log('📊 Boundary feature count:', boundarySource.getFeatures().length);
+
+                } catch (e) {
+                    console.error('❌ Error loading boundary layer:', e);
+                }
+            }
+
+            // ─── CREATE BOUNDARY LAYER ───
+            const boundaryLayer = new ol.layer.Vector({
+                source: boundarySource,
+                visible: true,
+                title: 'Ward Boundary',
+                zIndex: 50
+            });
+
             function updateFeatureCount() {
                 const count = polygonSource.getFeatures().length;
                 $('#featureCountBadge').text(`Buildings: ${count}`);
@@ -2617,6 +2682,7 @@
 
             loadPolygonSource();
             loadLineSource();
+            loadBoundaryLayer(); // Load boundary after other sources
             buildSearchIndex();
 
             // ─── CREATE LAYERS ───
@@ -2656,8 +2722,17 @@
             // ─── CREATE MAP ───
             const map = new ol.Map({
                 target: 'map',
-                layers: [osmLayer, satelliteLayer, streetViewLayer, droneLayer, polygonLayer, lineLayer,
-                    positionLayer, routeLayer, destinationLayer,boundaryLayer
+                layers: [
+                    osmLayer,
+                    satelliteLayer,
+                    streetViewLayer,
+                    droneLayer,
+                    boundaryLayer, // Add boundary layer
+                    polygonLayer,
+                    lineLayer,
+                    positionLayer,
+                    routeLayer,
+                    destinationLayer
                 ],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
@@ -2763,7 +2838,7 @@
                                     <option value="all">All</option>
                                     <option value="OLD">Old Assessment</option>
                                     <option value="NEW">New Assessment</option>
-                                    </select>
+                                </select>
                             </div>
                             <div class="dropdown-divider"></div>
                             <div class="filter-section">
@@ -2933,6 +3008,13 @@
                         <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Lines">
                             <div class="layer-icon"><i class="bi bi-vector-pen"></i></div>
                             <div class="layer-name">Lines</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">Boundary</div>
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Boundary">
+                            <div class="layer-icon"><i class="bi bi-border-outer"></i></div>
+                            <div class="layer-name">Ward Boundary</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
                     </div>
@@ -3230,6 +3312,7 @@
 
                     await addDroneImageToCesium();
                     buildCesiumBuildings();
+                    buildCesiumBoundary(); // Add boundary to Cesium
 
                     cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
                     cesiumViewer.scene.globe.enableLighting = true;
@@ -3306,6 +3389,67 @@
                 }
             }
 
+            // ─── BUILD CESIUM BOUNDARY ───
+            function buildCesiumBoundary() {
+                if (!cesiumViewer) return;
+
+                try {
+                    const features = boundarySource.getFeatures();
+                    if (features.length === 0) {
+                        console.log('⚠️ No boundary features to display in 3D');
+                        return;
+                    }
+
+                    const feature = features[0];
+                    const geometry = feature.getGeometry();
+
+                    if (!geometry) return;
+
+                    // Get coordinates in EPSG:4326
+                    const coords = geometry.getCoordinates();
+                    let flatCoords = [];
+
+                    // Flatten the coordinates
+                    if (Array.isArray(coords) && coords.length > 0) {
+                        const rings = coords[0] || coords;
+                        rings.forEach(ring => {
+                            if (Array.isArray(ring) && ring.length > 0) {
+                                ring.forEach(pt => {
+                                    if (Array.isArray(pt) && pt.length >= 2) {
+                                        const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
+                                        flatCoords.push(lonLat[0], lonLat[1]);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    if (flatCoords.length < 6) {
+                        console.log('⚠️ Not enough coordinates for boundary');
+                        return;
+                    }
+
+                    // Add boundary as a polygon in Cesium
+                    const entity = cesiumViewer.entities.add({
+                        name: 'Ward Boundary',
+                        polygon: {
+                            hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                            material: Cesium.Color.fromCssColorString('#FF6B00').withAlpha(0.1),
+                            outline: true,
+                            outlineColor: Cesium.Color.fromCssColorString('#FF6B00'),
+                            outlineWidth: 3,
+                            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                        }
+                    });
+
+                    cesiumBuildingEntities.push(entity);
+                    console.log('✅ Boundary added to Cesium 3D view');
+
+                } catch (e) {
+                    console.error('Error adding boundary to Cesium:', e);
+                }
+            }
+
             function buildCesiumBuildings() {
                 if (!cesiumViewer) return;
 
@@ -3376,6 +3520,7 @@
                     if (!viewer) return;
 
                     buildCesiumBuildings();
+                    buildCesiumBoundary();
 
                     $('#map').hide();
                     $('#cesiumContainer').show();
@@ -3907,6 +4052,7 @@
                     let layer;
                     if (layerTitle === 'Polygons') layer = polygonLayer;
                     else if (layerTitle === 'Lines') layer = lineLayer;
+                    else if (layerTitle === 'Boundary') layer = boundaryLayer;
 
                     if (layer) {
                         const visible = !layer.getVisible();
@@ -3947,6 +4093,10 @@
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
                                 <span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span>
                                 Lines (Roads)
+                            </div>
+                            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                                <span style="display:inline-block;width:20px;height:20px;background:#FF6B00;border-radius:4px;border:2px solid #fff;margin-right:10px;box-shadow:0 0 2px rgba(0,0,0,0.4);"></span>
+                                Ward Boundary
                             </div>
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
                                 <span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span>
@@ -4975,6 +5125,7 @@
             console.log('📊 Polygons:', polygons.length);
             console.log('📊 Lines:', lines.length);
             console.log('📊 Point Data:', pointDatas.length);
+            console.log('📊 Boundary:', boundary);
             console.log('🌍 3D mode ready - Click the cube button to activate');
 
             setTimeout(() => {
