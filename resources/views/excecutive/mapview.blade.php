@@ -2565,10 +2565,6 @@
                         console.log('✅ Found boundary in ward.boundary.coordinates');
                     } else {
                         console.log('❌ No boundary data available in any expected location');
-                        console.log('📊 Available data:', {
-                            boundary,
-                            ward
-                        });
                         return;
                     }
 
@@ -2661,46 +2657,17 @@
                     const styles = [
                         new ol.style.Style({
                             stroke: new ol.style.Stroke({
-                                color: '#FF6B00',
+                                color: 'YELLOW',
                                 width: 5,
                                 lineDash: [12, 8],
                                 lineCap: 'round',
                                 lineJoin: 'round'
                             }),
-                            fill: new ol.style.Fill({
-                                color: 'rgba(255, 107, 0, 0.06)'
-                            })
+
                         })
                     ];
 
-                    // Add label if center is available
-                    if (center) {
-                        styles.push(new ol.style.Style({
-                            geometry: center,
-                            text: new ol.style.Text({
-                                text: `🏛️ Ward ${wardNo}`,
-                                font: 'bold 20px Inter, sans-serif',
-                                fill: new ol.style.Fill({
-                                    color: '#FF6B00'
-                                }),
-                                stroke: new ol.style.Stroke({
-                                    color: '#ffffff',
-                                    width: 5
-                                }),
-                                backgroundFill: new ol.style.Fill({
-                                    color: 'rgba(255, 255, 255, 0.92)'
-                                }),
-                                backgroundStroke: new ol.style.Stroke({
-                                    color: '#FF6B00',
-                                    width: 3
-                                }),
-                                padding: [8, 16, 8, 16],
-                                overflow: true,
-                                textAlign: 'center',
-                                offsetY: 0
-                            })
-                        }));
-                    }
+
 
                     boundaryFeature.setStyle(styles);
                     boundarySource.addFeature(boundaryFeature);
@@ -2711,27 +2678,8 @@
                         );
                     console.log('📊 Boundary geometry type:', geometry.getType());
 
-                    // Fit the map to the boundary if it's the first load
-                    if (boundarySource.getFeatures().length > 0) {
-                        try {
-                            const extent = geometry.getExtent();
-                            if (extent && !isNaN(extent[0]) && !isNaN(extent[1]) && !isNaN(extent[2]) && !isNaN(
-                                    extent[3])) {
-                                map.getView().fit(extent, {
-                                    padding: [50, 50, 50, 50],
-                                    duration: 1000,
-                                    maxZoom: 20
-                                });
-                                console.log('📊 Map zoomed to boundary extent');
-                            }
-                        } catch (e) {
-                            console.warn('Could not fit to boundary extent:', e);
-                        }
-                    }
-
                 } catch (e) {
                     console.error('❌ Error loading boundary layer:', e);
-                    console.error('Error details:', e.stack);
                 }
             }
 
@@ -3420,6 +3368,46 @@
                     return null;
                 }
             }
+            // ─── CESIUM 3D MODEL LAYER ───
+let cesiumModelEntity = null;
+
+async function loadCesiumModel() {
+    if (!cesiumViewer) return;
+
+    try {
+        // Remove existing model if any
+        if (cesiumModelEntity) {
+            cesiumViewer.entities.remove(cesiumModelEntity);
+            cesiumModelEntity = null;
+        }
+
+        // Get center of the ward
+        const center = ol.extent.getCenter(imageExtent);
+        const lonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
+
+        // Create the model entity
+        cesiumModelEntity = cesiumViewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], 0),
+            model: {
+                uri: "/assets/Untitled.glb", // Your model path
+                scale: 200.0,
+                minimumPixelSize: 128,
+                maximumScale: 20000
+            }
+        });
+
+        console.log('✅ 3D Model loaded successfully');
+
+        // Fly to the model
+        cesiumViewer.flyTo(cesiumModelEntity, {
+            duration: 2,
+            offset: new Cesium.HeadingPitchRange(0.0, -0.5, 20.0)
+        });
+
+    } catch (e) {
+        console.error('❌ Error loading 3D model:', e);
+    }
+}
 
             async function addDroneImageToCesium() {
                 if (!cesiumViewer) return;
@@ -3892,11 +3880,11 @@
                             </div>
 
                             ${ptList.length ? `
-                                                    <div class="row mt-2 g-2">
-                                                        <div class="col-12">
-                                                            <div class="tax-card">
-                                                                <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                                                ${ptList.map(pt => `
+                                                        <div class="row mt-2 g-2">
+                                                            <div class="col-12">
+                                                                <div class="tax-card">
+                                                                    <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                                                    ${ptList.map(pt => `
                                             <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
@@ -3911,10 +3899,10 @@
                                                 <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                             </div>
                                         `).join('')}
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    ` : ''}
+                                                        ` : ''}
                         </div>`;
                 });
 
