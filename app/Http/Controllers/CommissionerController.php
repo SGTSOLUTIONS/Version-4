@@ -706,6 +706,7 @@ class CommissionerController extends Controller
             ->pluck('road_name');
 
         // ─── Analytics ───
+        $boundary = $this->getAllwardBoundary($corp,$wardId);
         $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
         $buildingVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData);
         $buildingData = $this->getBuildingsWithUsageColors($wardId);
@@ -734,7 +735,7 @@ class CommissionerController extends Controller
                 $polygon->sqfeet = $totalSqfeet;
             }
         }
-
+return response()->json($boundary);
         return view('excecutive.mapview', compact(
             'ward',
             'polygons',
@@ -742,6 +743,7 @@ class CommissionerController extends Controller
             'lines',
             'polygonDatas',
             'pointDatas',
+            'boundary',
             'misData',
             'uniqueRoadNames',
             'analytics',
