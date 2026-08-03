@@ -1531,7 +1531,7 @@
             }
 
             .map-header .text-muted {
-                color: #94a3b8 !important;
+                color: #073d0c !important;
             }
 
             .layer-toggle-btn,
@@ -1542,7 +1542,7 @@
             .threed-toggle-btn,
             .filter-toggle-btn,
             .fullscreen-btn {
-                background: #1a1a2e;
+                background: #069712;
                 border-color: #2d2d44;
                 color: #e2e8f0;
             }
@@ -1822,7 +1822,7 @@
             }
 
             .ol-page-title {
-                color: #e2e8f0;
+                color: #184109;
             }
 
             .ol-page-sub {
