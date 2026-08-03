@@ -3368,46 +3368,7 @@
                     return null;
                 }
             }
-            // ─── CESIUM 3D MODEL LAYER ───
-let cesiumModelEntity = null;
 
-async function loadCesiumModel() {
-    if (!cesiumViewer) return;
-
-    try {
-        // Remove existing model if any
-        if (cesiumModelEntity) {
-            cesiumViewer.entities.remove(cesiumModelEntity);
-            cesiumModelEntity = null;
-        }
-
-        // Get center of the ward
-        const center = ol.extent.getCenter(imageExtent);
-        const lonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
-
-        // Create the model entity
-        cesiumModelEntity = cesiumViewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], 0),
-            model: {
-                uri: "/assets/Untitled.glb", // Your model path
-                scale: 200.0,
-                minimumPixelSize: 128,
-                maximumScale: 20000
-            }
-        });
-
-        console.log('✅ 3D Model loaded successfully');
-
-        // Fly to the model
-        cesiumViewer.flyTo(cesiumModelEntity, {
-            duration: 2,
-            offset: new Cesium.HeadingPitchRange(0.0, -0.5, 20.0)
-        });
-
-    } catch (e) {
-        console.error('❌ Error loading 3D model:', e);
-    }
-}
 
             async function addDroneImageToCesium() {
                 if (!cesiumViewer) return;
