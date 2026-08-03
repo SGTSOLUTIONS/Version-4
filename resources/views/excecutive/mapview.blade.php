@@ -9,16 +9,30 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.127/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
     <style>
+        /* ─── Bright Theme Tokens ─── */
+        :root {
+            --brand-indigo: #6C5CE7;
+            --brand-indigo-dark: #5849c4;
+            --brand-pink: #FF3E9A;
+            --brand-orange: #FF9F1C;
+            --brand-teal: #00D9A3;
+            --brand-cyan: #00C2FF;
+            --brand-yellow: #FFD93D;
+            --brand-red: #FF4757;
+            --brand-bg-tint: #F5F3FF;
+            --brand-ink: #241C4F;
+        }
+
         /* ─── Base Styles ─── */
         .dropdown-header {
             padding: 8px 18px;
             font-size: 0.75rem;
-            font-weight: 600;
-            color: #6c757d;
+            font-weight: 700;
+            color: var(--brand-indigo-dark);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e5e7eb;
+            background: var(--brand-bg-tint);
+            border-bottom: 1px solid #E4DBFF;
             position: sticky;
             top: 0;
             z-index: 10;
@@ -27,25 +41,25 @@
         .dropdown-divider {
             height: 1px;
             margin: 0;
-            background: #e5e7eb;
+            background: #ECE7FF;
         }
 
         .map-card {
             background: #fff;
-            border-radius: 14px;
-            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            border: 2px solid #ECE7FF;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 6px 24px rgba(108, 92, 231, 0.12);
             position: relative;
         }
 
         .map-header {
             padding: 14px 18px;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 2px solid #ECE7FF;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #f8f9fa;
+            background: linear-gradient(90deg, #F5F3FF 0%, #FFF0F8 100%);
             flex-wrap: wrap;
             gap: 8px;
         }
@@ -86,14 +100,14 @@
         .threed-toggle-btn,
         .filter-toggle-btn {
             background: white;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 10px;
             cursor: pointer;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 3px 14px rgba(108, 92, 231, 0.18);
             font-size: 18px;
             transition: all 0.2s;
-            border: 1px solid #e5e7eb;
-            color: #333;
+            border: 2px solid #ECE7FF;
+            color: var(--brand-indigo);
             width: 44px;
             height: 44px;
             display: flex;
@@ -102,7 +116,6 @@
             flex-shrink: 0;
             position: relative;
             z-index: 1001;
-            background: #ffffff;
             touch-action: manipulation;
         }
 
@@ -113,9 +126,10 @@
         .legend-toggle-btn:hover,
         .threed-toggle-btn:hover,
         .filter-toggle-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            background: var(--brand-bg-tint);
+            transform: scale(1.06);
+            box-shadow: 0 6px 18px rgba(108, 92, 231, 0.28);
+            border-color: var(--brand-indigo);
         }
 
         .layer-toggle-btn:active,
@@ -129,34 +143,34 @@
         }
 
         .label-toggle-btn.active-label {
-            color: #0d6efd;
-            background: #e3f0ff;
-            border-color: #0d6efd;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand-indigo), var(--brand-pink));
+            border-color: var(--brand-indigo);
         }
 
         .location-toggle-btn.active-location {
-            color: #0d6efd;
-            background: #e3f0ff;
-            border-color: #0d6efd;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand-indigo), var(--brand-cyan));
+            border-color: var(--brand-indigo);
         }
 
         .location-toggle-btn.tracking {
-            color: #dc3545;
-            background: #fde8e8;
-            border-color: #dc3545;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand-red), var(--brand-orange));
+            border-color: var(--brand-red);
             animation: pulse 1.5s infinite;
         }
 
         .filter-toggle-btn.active-filter {
-            color: #0d6efd;
-            background: #e3f0ff;
-            border-color: #0d6efd;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand-indigo), var(--brand-pink));
+            border-color: var(--brand-indigo);
         }
 
         .threed-toggle-btn.active-3d {
-            color: #0d6efd;
-            background: #e3f0ff;
-            border-color: #0d6efd;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-cyan));
+            border-color: var(--brand-teal);
             animation: pulse 1.5s infinite;
         }
 
@@ -166,7 +180,7 @@
         }
 
         .threed-toggle-btn .bi-box-fill {
-            color: #0d6efd;
+            color: var(--brand-teal);
         }
 
         @keyframes pulse {
@@ -193,8 +207,9 @@
             right: 0;
             top: 48px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 14px;
+            box-shadow: 0 10px 32px rgba(108, 92, 231, 0.25);
+            border: 2px solid #ECE7FF;
             padding: 0;
             z-index: 1001;
             min-width: 240px;
@@ -240,17 +255,18 @@
         }
 
         .filter-scroll-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: var(--brand-bg-tint);
             border-radius: 3px;
         }
 
         .filter-scroll-container::-webkit-scrollbar-thumb {
-            background: #ccc;
+            background: var(--brand-indigo);
             border-radius: 3px;
+            opacity: 0.5;
         }
 
         .filter-scroll-container::-webkit-scrollbar-thumb:hover {
-            background: #999;
+            background: var(--brand-indigo-dark);
         }
 
         .filter-section {
@@ -259,8 +275,8 @@
 
         .filter-section-header {
             font-size: 11px;
-            font-weight: 600;
-            color: #666;
+            font-weight: 700;
+            color: var(--brand-indigo-dark);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 4px;
@@ -280,32 +296,32 @@
         .range-inputs input[type="number"] {
             width: 80px;
             padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
+            border-radius: 8px;
+            border: 2px solid #ECE7FF;
             font-size: 12px;
         }
 
         .range-separator {
-            color: #999;
+            color: #A99CFF;
             font-size: 12px;
         }
 
         .filter-actions {
             padding: 12px 16px;
-            border-top: 1px solid #e9ecef;
-            background: #f8f9fa;
-            border-radius: 0 0 12px 12px;
+            border-top: 2px solid #ECE7FF;
+            background: var(--brand-bg-tint);
+            border-radius: 0 0 14px 14px;
         }
 
         .filter-stats {
             font-size: 12px;
-            color: #666;
+            color: #7A6FB0;
             text-align: center;
             margin-top: 6px;
         }
 
         .filter-stats strong {
-            color: #0d6efd;
+            color: var(--brand-indigo);
         }
 
         .text-muted {
@@ -328,14 +344,14 @@
 
         .layer-dropdown-item:hover,
         .location-dropdown-item:hover {
-            background: #f5f5f5;
+            background: var(--brand-bg-tint);
         }
 
         .layer-icon,
         .location-item-icon {
             width: 28px;
             font-size: 16px;
-            color: #555;
+            color: var(--brand-indigo);
         }
 
         .layer-name,
@@ -351,24 +367,25 @@
         }
 
         .layer-dropdown-item.active .layer-check {
-            color: #0d6efd;
+            color: var(--brand-teal);
         }
 
         .location-item-badge {
             font-size: 11px;
             padding: 2px 10px;
             border-radius: 12px;
-            background: #e9ecef;
-            color: #666;
+            background: #ECE7FF;
+            color: var(--brand-indigo-dark);
+            font-weight: 700;
         }
 
         .location-item-badge.active {
-            background: #0d6efd;
+            background: var(--brand-teal);
             color: white;
         }
 
         .location-item-badge.tracking {
-            background: #dc3545;
+            background: var(--brand-red);
             color: white;
         }
 
@@ -378,19 +395,20 @@
             background: transparent;
             padding: 10px 0;
             font-size: 13px;
-            color: #666;
-            border-bottom: 2px solid transparent;
+            color: #7A6FB0;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
             transition: all 0.2s;
             touch-action: manipulation;
         }
 
         .search-tab-btn.active {
-            color: #0d6efd;
-            border-bottom-color: #0d6efd;
+            color: var(--brand-indigo);
+            border-bottom-color: var(--brand-pink);
         }
 
         .search-tab-btn:hover {
-            background: #f5f5f5;
+            background: var(--brand-bg-tint);
         }
 
         .search-results-container {
@@ -400,23 +418,23 @@
 
         .search-result-item {
             padding: 10px 16px;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid #F1EDFF;
             cursor: default;
         }
 
         .search-result-item:hover {
-            background: #f8f9fa;
+            background: var(--brand-bg-tint);
         }
 
         .search-result-title {
-            font-weight: 500;
-            color: #333;
+            font-weight: 600;
+            color: #2b2250;
             font-size: 14px;
         }
 
         .search-result-subtitle {
             font-size: 12px;
-            color: #888;
+            color: #8b81b8;
             margin-top: 2px;
         }
 
@@ -429,29 +447,29 @@
 
         .type-badge {
             font-size: 10px;
-            padding: 2px 8px;
+            padding: 3px 9px;
             border-radius: 12px;
             margin-left: 6px;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .type-badge.road {
-            background: #0dcaf0;
-            color: #000;
+            background: var(--brand-cyan);
+            color: #002233;
         }
 
         .type-badge.parcel {
-            background: #198754;
-            color: #fff;
+            background: var(--brand-teal);
+            color: #00291f;
         }
 
         .type-badge.point {
-            background: #ffc107;
-            color: #000;
+            background: var(--brand-yellow);
+            color: #4a3800;
         }
 
         .type-badge.assessment {
-            background: #0d6efd;
+            background: var(--brand-indigo);
             color: #fff;
         }
 
@@ -461,8 +479,8 @@
 
         .filter-field-group label {
             font-size: 11px;
-            color: #666;
-            font-weight: 600;
+            color: #7A6FB0;
+            font-weight: 700;
             display: block;
             margin-bottom: 3px;
         }
@@ -470,15 +488,15 @@
         .filter-field-group input {
             width: 100%;
             padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            border: 2px solid #ECE7FF;
+            border-radius: 8px;
             font-size: 13px;
         }
 
         .filter-field-group input:focus {
             outline: none;
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+            border-color: var(--brand-indigo);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
         }
 
         /* ─── Toast ─── */
@@ -493,13 +511,13 @@
 
         .location-toast {
             display: none;
-            background: rgba(0, 0, 0, 0.85);
+            background: linear-gradient(135deg, #241C4F 0%, #4B3B9E 100%);
             color: white;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
             white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 24px rgba(108, 92, 231, 0.4);
             transition: opacity 0.3s ease;
             pointer-events: none;
             max-width: 90%;
@@ -515,14 +533,14 @@
             bottom: 20px;
             z-index: 1000;
             background: white;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 10px;
             cursor: pointer;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 3px 14px rgba(108, 92, 231, 0.18);
             font-size: 18px;
             transition: all 0.2s;
-            border: 1px solid #e5e7eb;
-            color: #333;
+            border: 2px solid #ECE7FF;
+            color: var(--brand-indigo);
             width: 44px;
             height: 44px;
             display: flex;
@@ -532,9 +550,10 @@
         }
 
         .fullscreen-btn:hover {
-            background: #f0f0f0;
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            background: var(--brand-bg-tint);
+            transform: scale(1.06);
+            box-shadow: 0 6px 18px rgba(108, 92, 231, 0.28);
+            border-color: var(--brand-indigo);
         }
 
         .fullscreen-btn:active {
@@ -574,13 +593,13 @@
         /* ─── Modal Styles ─── */
         .bld-modal-content {
             border: none;
-            border-radius: 20px;
+            border-radius: 22px;
             overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, .18);
+            box-shadow: 0 30px 70px rgba(108, 92, 231, 0.28);
         }
 
         .bld-modal-header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #6C5CE7 0%, #FF3E9A 100%);
             border-bottom: none;
             padding: 18px 24px;
             color: #fff;
@@ -595,8 +614,8 @@
         .bld-header-icon {
             width: 44px;
             height: 44px;
-            background: rgba(255, 255, 255, .15);
-            border-radius: 12px;
+            background: rgba(255, 255, 255, .22);
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -608,34 +627,35 @@
         .bld-modal-title {
             margin: 0;
             font-size: 1.15rem;
-            font-weight: 700;
+            font-weight: 800;
             color: #fff;
             letter-spacing: .3px;
         }
 
         .bld-gisid-badge {
             font-size: .72rem;
-            background: rgba(255, 255, 255, .2);
+            background: rgba(255, 255, 255, .25);
             color: #fff;
-            border-radius: 6px;
+            border-radius: 8px;
             padding: 2px 10px;
             display: inline-block;
             margin-top: 4px;
             letter-spacing: .4px;
+            font-weight: 700;
         }
 
         .bld-image-strip {
             display: flex;
             gap: 0;
             height: 220px;
-            background: #0f172a;
+            background: #241C4F;
         }
 
         .bld-img-wrap {
             flex: 1;
             position: relative;
             overflow: hidden;
-            background: #1e293b;
+            background: #362a6e;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -660,16 +680,16 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(transparent, rgba(0, 0, 0, .65));
+            background: linear-gradient(transparent, rgba(36, 28, 79, .75));
             color: #fff;
             font-size: .78rem;
-            font-weight: 600;
+            font-weight: 700;
             padding: 18px 12px 8px;
             letter-spacing: .3px;
         }
 
         .bld-img-wrap .bld-img-empty {
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 0.9rem;
             display: flex;
             flex-direction: column;
@@ -679,11 +699,11 @@
 
         .bld-img-wrap .bld-img-empty i {
             font-size: 2rem;
-            opacity: 0.5;
+            opacity: 0.6;
         }
 
         .bld-img-wrap .bld-img-error {
-            color: #ef4444;
+            color: var(--brand-yellow);
             font-size: 0.85rem;
             display: flex;
             flex-direction: column;
@@ -695,8 +715,8 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0;
-            border-bottom: 1px solid #e5e7eb;
-            background: #f8fafc;
+            border-bottom: 2px solid #ECE7FF;
+            background: var(--brand-bg-tint);
         }
 
         .bld-summary-card {
@@ -705,7 +725,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            border-right: 1px solid #e5e7eb;
+            border-right: 1px solid #ECE7FF;
         }
 
         .bld-summary-card:last-child {
@@ -719,8 +739,8 @@
 
         .bld-summary-label {
             font-size: .68rem;
-            color: #000000;
-            font-weight: 600;
+            color: #6C5CE7;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .4px;
             line-height: 1;
@@ -728,8 +748,8 @@
 
         .bld-summary-val {
             font-size: .95rem;
-            font-weight: 700;
-            color: #1e293b;
+            font-weight: 800;
+            color: var(--brand-ink);
             margin-top: 2px;
         }
 
@@ -737,24 +757,24 @@
             display: flex;
             align-items: flex-start;
             gap: 10px;
-            background: #f8fafc;
-            border-radius: 10px;
+            background: var(--brand-bg-tint);
+            border-radius: 12px;
             padding: 10px 14px;
-            border: 1px solid #e5e7eb;
+            border: 2px solid #ECE7FF;
             height: 100%;
         }
 
         .bld-info-icon {
             font-size: 1rem;
-            color: #94a3b8;
+            color: var(--brand-pink);
             margin-top: 2px;
             flex-shrink: 0;
         }
 
         .bld-info-label {
             font-size: .68rem;
-            color: #64748b;
-            font-weight: 600;
+            color: #8b81b8;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .4px;
             line-height: 1;
@@ -762,20 +782,20 @@
 
         .bld-info-val {
             font-size: .9rem;
-            font-weight: 600;
-            color: #1e293b;
+            font-weight: 700;
+            color: var(--brand-ink);
             margin-top: 3px;
             word-break: break-word;
         }
 
         .bld-section-divider {
             font-size: .8rem;
-            font-weight: 700;
-            color: #475569;
+            font-weight: 800;
+            color: var(--brand-indigo);
             text-transform: uppercase;
             letter-spacing: .5px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #e5e7eb;
+            border-bottom: 3px solid var(--brand-yellow);
             display: flex;
             align-items: center;
         }
@@ -785,64 +805,64 @@
             align-items: center;
             gap: 4px;
             font-size: .7rem;
-            font-weight: 700;
+            font-weight: 800;
             padding: 3px 9px;
             border-radius: 20px;
             letter-spacing: .3px;
         }
 
         .bld-status-tag.complete {
-            background: #dcfce7;
-            color: #15803d;
+            background: #D6FFF0;
+            color: #00895C;
         }
 
         .bld-status-tag.partial {
-            background: #fef9c3;
-            color: #92400e;
+            background: #FFF3C4;
+            color: #A56900;
         }
 
         .bld-status-tag.empty {
-            background: #fee2e2;
-            color: #b91c1c;
+            background: #FFE1E8;
+            color: #C4174D;
         }
 
         .bld-btn-save {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            background: linear-gradient(135deg, var(--brand-indigo), var(--brand-pink));
             color: #fff;
             border: none;
-            border-radius: 10px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: 700;
             padding: 9px 22px;
             font-size: .875rem;
             transition: all .2s;
         }
 
         .bld-btn-save:hover {
-            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            background: linear-gradient(135deg, var(--brand-indigo-dark), var(--brand-pink));
             color: #fff;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, .3);
+            box-shadow: 0 6px 18px rgba(108, 92, 231, .4);
         }
 
         .bld-btn-cancel {
-            background: #f1f5f9;
-            color: #475569;
+            background: var(--brand-bg-tint);
+            color: var(--brand-indigo-dark);
             border: none;
-            border-radius: 10px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: 700;
             padding: 9px 20px;
             font-size: .875rem;
             transition: all .2s;
         }
 
         .bld-btn-cancel:hover {
-            background: #e2e8f0;
-            color: #1e293b;
+            background: #ECE7FF;
+            color: var(--brand-ink);
         }
 
         .bld-modal-footer {
-            background: #f8fafc;
-            border-top: 1px solid #e5e7eb;
+            background: var(--brand-bg-tint);
+            border-top: 2px solid #ECE7FF;
             padding: 14px 24px;
             display: flex;
             align-items: center;
@@ -851,13 +871,13 @@
 
         .bld-footer-status {
             font-size: .8rem;
-            color: #64748b;
+            color: #8b81b8;
         }
 
         .point-data-card {
             background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
+            border: 2px solid #ECE7FF;
+            border-radius: 16px;
             padding: 16px 18px;
             margin-bottom: 12px;
             position: relative;
@@ -865,8 +885,8 @@
         }
 
         .point-data-card:hover {
-            box-shadow: 0 4px 16px rgba(37, 99, 235, .1);
-            border-color: #93c5fd;
+            box-shadow: 0 6px 20px rgba(108, 92, 231, .18);
+            border-color: var(--brand-indigo);
         }
 
         .point-data-card-header {
@@ -878,13 +898,13 @@
 
         .point-data-card-title {
             font-size: .9rem;
-            font-weight: 700;
-            color: #1e293b;
+            font-weight: 800;
+            color: var(--brand-ink);
         }
 
         .point-data-card-subtitle {
             font-size: .75rem;
-            color: #64748b;
+            color: #8b81b8;
             margin-top: 2px;
         }
 
@@ -899,7 +919,7 @@
         .pdc-action-btn {
             width: 32px;
             height: 32px;
-            border-radius: 8px;
+            border-radius: 10px;
             border: none;
             display: flex;
             align-items: center;
@@ -911,33 +931,33 @@
         }
 
         .pdc-qc-btn {
-            background: #fef9c3;
-            color: #92400e;
+            background: var(--brand-yellow);
+            color: #4a3800;
         }
 
         .pdc-qc-btn:hover {
-            background: #92400e;
+            background: var(--brand-orange);
             color: #fff;
         }
 
         .pdc-field {
-            background: #f8fafc;
-            border-radius: 8px;
+            background: var(--brand-bg-tint);
+            border-radius: 10px;
             padding: 8px 10px;
         }
 
         .pdc-field-label {
             font-size: .65rem;
-            color: #94a3b8;
-            font-weight: 600;
+            color: #A99CFF;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .3px;
         }
 
         .pdc-field-val {
             font-size: .82rem;
-            color: #1e293b;
-            font-weight: 600;
+            color: var(--brand-ink);
+            font-weight: 700;
             margin-top: 1px;
             word-break: break-word;
         }
@@ -948,22 +968,22 @@
         }
 
         .tax-card {
-            background: #f8fafc;
-            border-radius: 10px;
+            background: var(--brand-bg-tint);
+            border-radius: 12px;
             padding: 12px 14px;
-            border: 1px solid #e5e7eb;
+            border: 2px solid #ECE7FF;
             margin-bottom: 8px;
             height: 100%;
         }
 
         .tax-card-title {
             font-size: .7rem;
-            font-weight: 700;
-            color: #64748b;
+            font-weight: 800;
+            color: var(--brand-indigo);
             text-transform: uppercase;
             letter-spacing: .3px;
             margin-bottom: 6px;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 2px solid #ECE7FF;
             padding-bottom: 4px;
         }
 
@@ -975,23 +995,23 @@
 
         .tax-card-label {
             font-size: .7rem;
-            color: #94a3b8;
+            color: #A99CFF;
         }
 
         .tax-card-value {
             font-size: .78rem;
-            font-weight: 600;
-            color: #1e293b;
+            font-weight: 700;
+            color: var(--brand-ink);
         }
 
         .bv-variation-strip {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
-            background: #f8fafc;
-            border-radius: 10px;
+            background: var(--brand-bg-tint);
+            border-radius: 12px;
             padding: 12px 16px;
-            border: 1px solid #e5e7eb;
+            border: 2px solid #ECE7FF;
             margin-bottom: 12px;
         }
 
@@ -1002,23 +1022,23 @@
 
         .bv-variation-card .stat-label {
             font-size: .65rem;
-            color: #64748b;
-            font-weight: 600;
+            color: #8b81b8;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .3px;
         }
 
         .bv-variation-card .stat-value {
             font-size: .9rem;
-            font-weight: 700;
-            color: #1e293b;
+            font-weight: 800;
+            color: var(--brand-ink);
             margin-top: 2px;
         }
 
         .bv-variation-card .stat-sub {
             font-size: .7rem;
-            font-weight: 600;
-            color: #94a3b8;
+            font-weight: 700;
+            color: #A99CFF;
         }
 
         /* ─── Quick Stats ─── */
@@ -1026,8 +1046,9 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 6px;
-            background: #f8fafc;
-            border-radius: 8px;
+            background: #fff;
+            border: 2px solid #ECE7FF;
+            border-radius: 10px;
             margin: 8px 16px;
             padding: 12px;
             font-size: 12px;
@@ -1040,12 +1061,12 @@
         }
 
         .quick-stats .stat-item strong {
-            color: #1e293b;
+            color: var(--brand-ink);
         }
 
         .quick-stats .stat-item .stat-value {
-            color: #0d6efd;
-            font-weight: 600;
+            color: var(--brand-pink);
+            font-weight: 800;
         }
 
         /* ─── Responsive ─── */
@@ -1087,7 +1108,7 @@
                 height: 40px;
                 font-size: 16px;
                 padding: 8px;
-                border-radius: 8px;
+                border-radius: 10px;
             }
 
             .fullscreen-btn {
@@ -1174,7 +1195,7 @@
                 height: 36px;
                 font-size: 14px;
                 padding: 6px;
-                border-radius: 6px;
+                border-radius: 8px;
             }
 
             .fullscreen-btn {
@@ -1206,7 +1227,7 @@
             .bld-summary-card {
                 flex: 1 1 100%;
                 border-right: none;
-                border-bottom: 1px solid #e5e7eb;
+                border-bottom: 1px solid #ECE7FF;
             }
 
             .bld-summary-strip {
@@ -1374,7 +1395,7 @@
                 height: 32px;
                 font-size: 12px;
                 padding: 5px;
-                border-radius: 5px;
+                border-radius: 6px;
             }
 
             .fullscreen-btn {
@@ -1514,325 +1535,11 @@
             }
         }
 
-        /* ─── Dark mode support ─── */
-        @media (prefers-color-scheme: dark) {
-            .map-card {
-                background: #1a1a2e;
-                border-color: #2d2d44;
-            }
-
-            .map-header {
-                background: #a6bdfc;
-                border-color: #2d2d44;
-            }
-
-            .map-header .badge {
-                background: #0d6efd !important;
-            }
-
-            .map-header .text-muted {
-                color: #073d0c !important;
-            }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn,
-            .fullscreen-btn {
-                background: #069712;
-                border-color: #2d2d44;
-                color: #e2e8f0;
-            }
-
-            .layer-toggle-btn:hover,
-            .location-toggle-btn:hover,
-            .search-toggle-btn:hover,
-            .label-toggle-btn:hover,
-            .legend-toggle-btn:hover,
-            .threed-toggle-btn:hover,
-            .filter-toggle-btn:hover,
-            .fullscreen-btn:hover {
-                background: #2d2d44;
-            }
-
-            .layer-dropdown,
-            .location-dropdown,
-            .search-dropdown,
-            .filter-dropdown {
-                background: #1a1a2e;
-                border-color: #2d2d44;
-            }
-
-            .dropdown-header {
-                background: #a6bdfc;;
-                color: #94a3b8;
-            }
-
-            .dropdown-divider {
-                background: #2d2d44;
-            }
-
-            .layer-dropdown-item,
-            .location-dropdown-item {
-                color: #e2e8f0;
-            }
-
-            .layer-dropdown-item:hover,
-            .location-dropdown-item:hover {
-                background: #2d2d44;
-            }
-
-            .layer-name,
-            .location-item-name {
-                color: #e2e8f0;
-            }
-
-            .filter-section-header {
-                color: #94a3b8;
-            }
-
-            .filter-field-group label {
-                color: #94a3b8;
-            }
-
-            .filter-field-group input {
-                background: #a6bdfc;;
-                border-color: #2d2d44;
-                color: #e2e8f0;
-            }
-
-            .filter-field-group input:focus {
-                border-color: #0d6efd;
-            }
-
-            .filter-actions {
-                background: #a6bdfc;;
-                border-color: #2d2d44;
-            }
-
-            .filter-stats {
-                color: #94a3b8;
-            }
-
-            .search-tab-btn {
-                color: #94a3b8;
-            }
-
-            .search-tab-btn.active {
-                color: #0d6efd;
-            }
-
-            .search-result-item {
-                border-color: #2d2d44;
-            }
-
-            .search-result-item:hover {
-                background: #2d2d44;
-            }
-
-            .search-result-title {
-                color: #e2e8f0;
-            }
-
-            .search-result-subtitle {
-                color: #94a3b8;
-            }
-
-            .range-inputs input[type="number"] {
-                background: #a6bdfc;;
-                border-color: #2d2d44;
-                color: #e2e8f0;
-            }
-
-            .range-separator {
-                color: #94a3b8;
-            }
-
-            .quick-stats {
-                background: #a6bdfc;;
-            }
-
-            .quick-stats .stat-item strong {
-                color: #e2e8f0;
-            }
-
-            .text-muted {
-                color: #94a3b8 !important;
-            }
-
-            .bld-modal-content {
-                background: #1a1a2e;
-            }
-
-            .bld-summary-strip {
-                background: #a6bdfc;;
-                border-color: #2d2d44;
-            }
-
-            .bld-summary-card {
-                border-color: #2d2d44;
-            }
-
-            .bld-summary-label {
-                color: #94a3b8;
-            }
-
-            .bld-summary-val {
-                color: #e2e8f0;
-            }
-
-            .bld-info-row {
-                background: #a6bdfc;;
-                border-color: #2d2d44;
-            }
-
-            .bld-info-label {
-                color: #94a3b8;
-            }
-
-            .bld-info-val {
-                color: #e2e8f0;
-            }
-
-            .bld-section-divider {
-                color: #94a3b8;
-                border-color: #2d2d44;
-            }
-
-            .tax-card {
-                background: #a6bdfc;;
-                border-color: #2d2d44;
-            }
-
-            .tax-card-title {
-                color: #94a3b8;
-                border-color: #2d2d44;
-            }
-
-            .tax-card-label {
-                color: #94a3b8;
-            }
-
-            .tax-card-value {
-                color: #e2e8f0;
-            }
-
-            .point-data-card {
-                background: #a6bdfc;;
-                border-color: #2d2d44;
-            }
-
-            .point-data-card:hover {
-                border-color: #0d6efd;
-            }
-
-            .point-data-card-title {
-                color: #e2e8f0;
-            }
-
-            .point-data-card-subtitle {
-                color: #94a3b8;
-            }
-
-            .pdc-field {
-                background: #1a1a2e;
-            }
-
-            .pdc-field-label {
-                color: #94a3b8;
-            }
-
-            .pdc-field-val {
-                color: #e2e8f0;
-            }
-
-            .bv-variation-strip {
-                background: #a6bdfc;;
-                border-color: #2d2d44;
-            }
-
-            .bv-variation-card .stat-label {
-                color: #94a3b8;
-            }
-
-            .bv-variation-card .stat-value {
-                color: #e2e8f0;
-            }
-
-            .bv-variation-card .stat-sub {
-                color: #94a3b8;
-            }
-
-            .bld-modal-footer {
-                background: #a6bdfc;;
-                border-color: #2d2d44;
-            }
-
-            .bld-footer-status {
-                color: #94a3b8;
-            }
-
-            .bld-btn-cancel {
-                background: #2d2d44;
-                color: #e2e8f0;
-            }
-
-            .bld-btn-cancel:hover {
-                background: #3d3d5c;
-            }
-
-            .bld-status-tag.complete {
-                background: #1a3d2e;
-                color: #4ade80;
-            }
-
-            .bld-status-tag.partial {
-                background: #3d3d1a;
-                color: #fbbf24;
-            }
-
-            .bld-status-tag.empty {
-                background: #3d1a1a;
-                color: #f87171;
-            }
-
-            .pdc-qc-btn {
-                background: #3d3d1a;
-                color: #fbbf24;
-            }
-
-            .pdc-qc-btn:hover {
-                background: #fbbf24;
-                color: #1a1a2e;
-            }
-
-            .location-toast {
-                background: rgba(30, 30, 60, 0.95);
-            }
-
-            .bld-image-strip {
-                background: #0a0a1a;
-            }
-
-            .bld-img-wrap {
-                background: #a6bdfc;;
-            }
-
-            .ol-page-title {
-                color: #184109;
-            }
-
-            .ol-page-sub {
-                color: #94a3b8;
-            }
-
-            .ds-pill.paid {
-                background: #1a3d2e;
-                color: #4ade80;
-            }
+        /* ─── Bright accent header pill ─── */
+        .ds-pill.paid {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-cyan));
+            color: #fff;
+            font-weight: 700;
         }
     </style>
 @endpush
@@ -1859,7 +1566,7 @@
 
     <div class="map-card" id="mapCard">
         <div class="map-header">
-            <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
+            <span class="badge" id="activeLayerBadge" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A);">OpenStreetMap</span>
             <span class="text-muted small" id="featureCountBadge">Buildings: 0</span>
         </div>
         <div id="map"></div>
@@ -1902,9 +1609,9 @@
                 </div>
                 <div class="modal-body" style="max-height: 65vh; overflow-y: auto; padding: 20px 24px;">
                     <div class="bld-summary-strip"
-                        style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px; margin-bottom: 20px;">
+                        style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 2px solid #ECE7FF; background: #F5F3FF; border-radius: 12px; margin-bottom: 20px;">
                         <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🧾</div>
                             <div>
                                 <div class="bld-summary-label">Assessments</div>
@@ -1912,7 +1619,7 @@
                             </div>
                         </div>
                         <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🏬</div>
                             <div>
                                 <div class="bld-summary-label">Shops</div>
@@ -1920,7 +1627,7 @@
                             </div>
                         </div>
                         <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🏢</div>
                             <div>
                                 <div class="bld-summary-label">Floors</div>
@@ -2135,15 +1842,16 @@
             console.log('📊 Boundary Data:', boundary);
             console.log('📊 Ward Data:', ward);
 
+            // ─── BRIGHT, HIGH-SATURATION USAGE PALETTE ───
             const usageColors = {
-                'RESIDENTIAL': '#4CAF50',
-                'COMMERCIAL': '#2196F3',
-                'INDUSTRIAL': '#FF9800',
-                'INSTITUTIONAL': '#9C27B0',
-                'MIXED': '#F44336',
-                'GOVERNMENT': '#607D8B',
-                'VACANT': '#FFD700',
-                'OTHER': '#9E9E9E'
+                'RESIDENTIAL': '#00D26A',
+                'COMMERCIAL': '#00B4FF',
+                'INDUSTRIAL': '#FF9F1C',
+                'INSTITUTIONAL': '#B84DFF',
+                'MIXED': '#FF3E5F',
+                'GOVERNMENT': '#6C5CE7',
+                'VACANT': '#FFD93D',
+                'OTHER': '#FF6FB5'
             };
 
             // ─── IMAGE EXTENT ───
@@ -2241,8 +1949,8 @@
                 const sqft = feature.get('sqfeet') || '0';
                 const polygonData = polygonDatas.find(d => d.gisid == gisid);
                 const buildingUsage = polygonData?.building_usage || feature.get('building_usage') || 'OTHER';
-                const strokeColor = usageColors[buildingUsage] || '#0d6efd';
-                const fillColor = polygonData ? `${strokeColor}33` : 'rgba(13, 110, 253, 0.15)';
+                const strokeColor = usageColors[buildingUsage] || '#6C5CE7';
+                const fillColor = polygonData ? `${strokeColor}40` : 'rgba(108, 92, 231, 0.18)';
                 const showLabels = $('#labelToggleBtn').hasClass('active-label');
 
                 try {
@@ -2268,13 +1976,13 @@
                                 text: gisid + ' GISID\n' + sqft + ' SQFT',
                                 font: 'bold 13px Arial',
                                 fill: new ol.style.Fill({
-                                    color: '#000'
+                                    color: '#241C4F'
                                 }),
                                 backgroundFill: new ol.style.Fill({
-                                    color: '#fff'
+                                    color: '#FFD93D'
                                 }),
                                 backgroundStroke: new ol.style.Stroke({
-                                    color: '#000',
+                                    color: '#241C4F',
                                     width: 1
                                 }),
                                 padding: [4, 6, 4, 6],
@@ -2289,11 +1997,11 @@
                 } catch (e) {
                     return new ol.style.Style({
                         stroke: new ol.style.Stroke({
-                            color: '#0d6efd',
+                            color: '#6C5CE7',
                             width: 4
                         }),
                         fill: new ol.style.Fill({
-                            color: 'rgba(13, 110, 253, 0.15)'
+                            color: 'rgba(108, 92, 231, 0.18)'
                         })
                     });
                 }
@@ -2302,7 +2010,7 @@
             function createLineStyle() {
                 return new ol.style.Style({
                     stroke: new ol.style.Stroke({
-                        color: '#ff0000',
+                        color: '#FF3E5F',
                         width: 3
                     })
                 });
@@ -2311,12 +2019,12 @@
             function createBoundaryStyle() {
                 return new ol.style.Style({
                     stroke: new ol.style.Stroke({
-                        color: '#FF6B00',
+                        color: '#FF9F1C',
                         width: 4,
                         lineDash: [10, 6]
                     }),
                     fill: new ol.style.Fill({
-                        color: 'rgba(255, 107, 0, 0.05)'
+                        color: 'rgba(255, 159, 28, 0.08)'
                     })
                 });
             }
@@ -2326,7 +2034,7 @@
                     image: new ol.style.Circle({
                         radius: 12,
                         fill: new ol.style.Fill({
-                            color: '#0d6efd'
+                            color: '#00B4FF'
                         }),
                         stroke: new ol.style.Stroke({
                             color: '#ffffff',
@@ -2337,13 +2045,13 @@
                         text: '📍 You',
                         font: 'bold 12px Arial',
                         fill: new ol.style.Fill({
-                            color: '#000'
+                            color: '#241C4F'
                         }),
                         backgroundFill: new ol.style.Fill({
                             color: '#fff'
                         }),
                         backgroundStroke: new ol.style.Stroke({
-                            color: '#ccc',
+                            color: '#00B4FF',
                             width: 1
                         }),
                         padding: [2, 6, 2, 6],
@@ -2358,7 +2066,7 @@
                     image: new ol.style.Circle({
                         radius: 10,
                         fill: new ol.style.Fill({
-                            color: '#dc3545'
+                            color: '#FF3E5F'
                         }),
                         stroke: new ol.style.Stroke({
                             color: '#ffffff',
@@ -2369,13 +2077,13 @@
                         text: '📍 Destination',
                         font: 'bold 12px Arial',
                         fill: new ol.style.Fill({
-                            color: '#000'
+                            color: '#241C4F'
                         }),
                         backgroundFill: new ol.style.Fill({
                             color: '#fff'
                         }),
                         backgroundStroke: new ol.style.Stroke({
-                            color: '#ccc',
+                            color: '#FF3E5F',
                             width: 1
                         }),
                         padding: [2, 6, 2, 6],
@@ -2657,7 +2365,7 @@
                     const styles = [
                         new ol.style.Style({
                             stroke: new ol.style.Stroke({
-                                color: 'YELLOW',
+                                color: '#FFD93D',
                                 width: 5,
                                 lineDash: [12, 8],
                                 lineCap: 'round',
@@ -2981,7 +2689,7 @@
                         </div>
                         <div class="dropdown-divider"></div>
                         <div class="filter-actions">
-                            <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn">
+                            <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A); border: none;">
                                 <i class="bi bi-check-circle"></i> Apply Filters
                             </button>
                             <button class="btn btn-outline-secondary btn-sm w-100 mt-2" id="resetFiltersBtn">
@@ -3107,7 +2815,7 @@
                                     <label>Phone Number</label>
                                     <input type="text" id="filterPhoneNumber" class="form-control" placeholder="Enter phone number...">
                                 </div>
-                                <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn">
+                                <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A); border: none;">
                                     <i class="bi bi-search me-1"></i>Search
                                 </button>
                             </div>
@@ -3461,9 +3169,9 @@
                         name: 'Ward Boundary',
                         polygon: {
                             hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
-                            material: Cesium.Color.fromCssColorString('#FF6B00').withAlpha(0.1),
+                            material: Cesium.Color.fromCssColorString('#FF9F1C').withAlpha(0.12),
                             outline: true,
-                            outlineColor: Cesium.Color.fromCssColorString('#FF6B00'),
+                            outlineColor: Cesium.Color.fromCssColorString('#FF9F1C'),
                             outlineWidth: 3,
                             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
                         }
@@ -3496,7 +3204,7 @@
 
                         const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const usage = polygonData?.building_usage || 'OTHER';
-                        const colorHex = usageColors[usage] || '#0d6efd';
+                        const colorHex = usageColors[usage] || '#6C5CE7';
                         const floors = parseInt(polygonData?.number_floor) || 0;
                         const height = Math.max((floors + 1) * 3.2, 3.2);
 
@@ -3506,7 +3214,7 @@
                                 hierarchy: Cesium.Cartesian3.fromDegreesArray(lonLatFlat),
                                 extrudedHeight: height,
                                 height: 0,
-                                material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.75),
+                                material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.8),
                                 outline: true,
                                 outlineColor: Cesium.Color.WHITE,
                                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
@@ -3846,7 +3554,7 @@
                                                                 <div class="tax-card">
                                                                     <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
                                                                     ${ptList.map(pt => `
-                                            <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                            <div style="border-bottom:1px dashed #ECE7FF; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
@@ -3979,12 +3687,12 @@
                 layers: [polygonLayer, lineLayer],
                 style: new ol.style.Style({
                     stroke: new ol.style.Stroke({
-                        color: '#0066cc',
+                        color: '#00B4FF',
                         width: 3,
                         lineDash: [4, 4]
                     }),
                     fill: new ol.style.Fill({
-                        color: 'rgba(0,102,204,0.1)'
+                        color: 'rgba(0,180,255,0.15)'
                     })
                 })
             });
@@ -4100,7 +3808,7 @@
             $('#legendToggleBtn').on('click', function() {
                 const usageLegend = Object.entries(usageColors).map(([usage, color]) => `
                     <div style="display:flex;align-items:center;margin-bottom:8px;">
-                        <span style="display:inline-block;width:20px;height:20px;background:${color};border:2px solid #fff;border-radius:4px;margin-right:10px;box-shadow:0 0 2px rgba(0,0,0,0.4);"></span>
+                        <span style="display:inline-block;width:20px;height:20px;background:${color};border:2px solid #fff;border-radius:6px;margin-right:10px;box-shadow:0 0 4px rgba(0,0,0,0.25);"></span>
                         <strong>${usage}</strong>
                     </div>
                 `).join('');
@@ -4110,30 +3818,30 @@
                     width: 500,
                     html: `
                         <div style="text-align:left;font-size:14px;">
-                            <h6 style="margin-bottom:10px;color:#198754;">Building Usage Colors</h6>
+                            <h6 style="margin-bottom:10px;color:#6C5CE7;">Building Usage Colors</h6>
                             ${usageLegend}
                             <hr style="margin:15px 0;">
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
-                                <span style="display:inline-block;width:20px;height:20px;background:rgba(13,110,253,0.15);border-radius:4px;border:2px solid #0d6efd;margin-right:10px;"></span>
+                                <span style="display:inline-block;width:20px;height:20px;background:rgba(108,92,231,0.18);border-radius:6px;border:2px solid #6C5CE7;margin-right:10px;"></span>
                                 Polygon (Building)
                             </div>
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
-                                <span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span>
+                                <span style="display:inline-block;width:20px;height:4px;background:#FF3E5F;border-radius:2px;margin-right:10px;"></span>
                                 Lines (Roads)
                             </div>
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
-                                <span style="display:inline-block;width:20px;height:20px;background:#FF6B00;border-radius:4px;border:2px solid #fff;margin-right:10px;box-shadow:0 0 2px rgba(0,0,0,0.4);"></span>
+                                <span style="display:inline-block;width:20px;height:20px;background:#FF9F1C;border-radius:6px;border:2px solid #fff;margin-right:10px;box-shadow:0 0 4px rgba(0,0,0,0.25);"></span>
                                 Ward Boundary
                             </div>
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
-                                <span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span>
+                                <span style="display:inline-block;width:20px;height:20px;background:#00B4FF;border-radius:50%;border:2px solid white;margin-right:10px;"></span>
                                 Current Location
                             </div>
                         </div>
                     `,
                     icon: 'info',
                     confirmButtonText: 'Close',
-                    confirmButtonColor: '#0d6efd'
+                    confirmButtonColor: '#6C5CE7'
                 });
             });
 
@@ -4434,7 +4142,7 @@
                                 <div class="search-result-subtitle">${displaySubtitle}</div>
                                 <div class="search-result-actions">
                                     <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                    <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}">View</button>
+                                    <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A); border: none;">View</button>
                                 </div>
                             </div>`;
                     });
@@ -5046,10 +4754,10 @@
                                 <span class="type-badge ${badgeClass}">${badgeText}</span>
                             </div>
                             <div class="search-result-subtitle">${item.subtitle}</div>
-                            ${details.length ? '<div class="search-result-subtitle" style="color:#666;">' + details.join(' | ') + '</div>' : ''}
+                            ${details.length ? '<div class="search-result-subtitle" style="color:#8b81b8;">' + details.join(' | ') + '</div>' : ''}
                             <div class="search-result-actions">
                                 <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}">View</button>
+                                <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A); border: none;">View</button>
                             </div>
                         </div>
                     `;
@@ -5117,7 +4825,7 @@
                     });
                     routeLine.setStyle(new ol.style.Style({
                         stroke: new ol.style.Stroke({
-                            color: '#dc3545',
+                            color: '#FF3E5F',
                             width: 4,
                             lineDash: [8, 6]
                         })
