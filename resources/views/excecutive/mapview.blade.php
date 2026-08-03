@@ -2689,7 +2689,7 @@
                         </div>
                         <div class="dropdown-divider"></div>
                         <div class="filter-actions">
-                            <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A); border: none;">
+                            <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">
                                 <i class="bi bi-check-circle"></i> Apply Filters
                             </button>
                             <button class="btn btn-outline-secondary btn-sm w-100 mt-2" id="resetFiltersBtn">
@@ -2815,7 +2815,7 @@
                                     <label>Phone Number</label>
                                     <input type="text" id="filterPhoneNumber" class="form-control" placeholder="Enter phone number...">
                                 </div>
-                                <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A); border: none;">
+                                <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">
                                     <i class="bi bi-search me-1"></i>Search
                                 </button>
                             </div>
@@ -3204,7 +3204,7 @@
 
                         const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const usage = polygonData?.building_usage || 'OTHER';
-                        const colorHex = usageColors[usage] || '#6C5CE7';
+                        const colorHex = usageColors[usage] || '#0f6b47';
                         const floors = parseInt(polygonData?.number_floor) || 0;
                         const height = Math.max((floors + 1) * 3.2, 3.2);
 
@@ -3554,7 +3554,7 @@
                                                                 <div class="tax-card">
                                                                     <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
                                                                     ${ptList.map(pt => `
-                                            <div style="border-bottom:1px dashed #ECE7FF; padding:6px 0; margin-bottom:4px;">
+                                            <div style="border-bottom:1px dashed #d7e8df; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
@@ -3818,11 +3818,11 @@
                     width: 500,
                     html: `
                         <div style="text-align:left;font-size:14px;">
-                            <h6 style="margin-bottom:10px;color:#6C5CE7;">Building Usage Colors</h6>
+                            <h6 style="margin-bottom:10px;color:#0f6b47;">Building Usage Colors</h6>
                             ${usageLegend}
                             <hr style="margin:15px 0;">
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
-                                <span style="display:inline-block;width:20px;height:20px;background:rgba(108,92,231,0.18);border-radius:6px;border:2px solid #6C5CE7;margin-right:10px;"></span>
+                                <span style="display:inline-block;width:20px;height:20px;background:rgba(15,107,71,0.18);border-radius:6px;border:2px solid #0f6b47;margin-right:10px;"></span>
                                 Polygon (Building)
                             </div>
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
@@ -3841,7 +3841,7 @@
                     `,
                     icon: 'info',
                     confirmButtonText: 'Close',
-                    confirmButtonColor: '#6C5CE7'
+                    confirmButtonColor: '#0f6b47'
                 });
             });
 
@@ -4142,7 +4142,7 @@
                                 <div class="search-result-subtitle">${displaySubtitle}</div>
                                 <div class="search-result-actions">
                                     <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                    <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A); border: none;">View</button>
+                                    <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">View</button>
                                 </div>
                             </div>`;
                     });
@@ -4754,10 +4754,10 @@
                                 <span class="type-badge ${badgeClass}">${badgeText}</span>
                             </div>
                             <div class="search-result-subtitle">${item.subtitle}</div>
-                            ${details.length ? '<div class="search-result-subtitle" style="color:#8b81b8;">' + details.join(' | ') + '</div>' : ''}
+                            ${details.length ? '<div class="search-result-subtitle" style="color:#5f7d70;">' + details.join(' | ') + '</div>' : ''}
                             <div class="search-result-actions">
                                 <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A); border: none;">View</button>
+                                <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">View</button>
                             </div>
                         </div>
                     `;
