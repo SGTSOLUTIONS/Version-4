@@ -2665,6 +2665,15 @@
                             </div>
                             <div class="dropdown-divider"></div>
                             <div class="filter-section">
+                                <div class="filter-section-header">Assessment Info</div>
+                                <select class="form-select form-select-sm" id="assessmentinfoFilter">
+                                    <option value="all">All</option>
+                                    <option value="OLD">Old Assessment</option>
+                                    <option value="NEW">New Assessment</option>
+                                    </select>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="filter-section">
                                 <div class="filter-section-header">Building Type</div>
                                 <select class="form-select form-select-sm" id="buildingTypeFilter">
                                     <option value="all">All</option>
@@ -4268,6 +4277,7 @@
                 const areaVariation = $('#areaVariationFilter').val();
                 const selectedZone = $('#zoneFilter').val();
                 const selectedConstruction = $('#constructionFilter').val();
+                const selectedAssessmentInfo = $('#assessmentinfoFilter').val();
                 const selectedBuildingType = $('#buildingTypeFilter').val();
                 const selectedAmenities = $('#amenitiesFilter').val() || [];
                 const selectedUgd = $('#ugdFilter').val();
@@ -4606,7 +4616,7 @@
             }
 
             function resetAllFilters(silent = false) {
-                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter')
+                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter,#assessmentinfoFilter')
                     .val('all');
                 $('#usageVariationFilter, #areaVariationFilter, #assessmentCountFilter, #floorFilter, #shopFilter')
                     .val('all');
