@@ -161,9 +161,11 @@
             0% {
                 opacity: 1;
             }
+
             50% {
                 opacity: 0.5;
             }
+
             100% {
                 opacity: 1;
             }
@@ -1029,6 +1031,7 @@
 
         /* ─── Responsive ─── */
         @media (max-width: 768px) {
+
             #map,
             #cesiumContainer {
                 height: 500px;
@@ -1096,6 +1099,7 @@
         }
 
         @media (max-width: 480px) {
+
             #map,
             #cesiumContainer {
                 height: 400px;
@@ -1229,7 +1233,7 @@
             <h1 class="ol-page-title">{{ ucfirst(auth()->user()->role) }} GIS Dashboard</h1>
             <p class="ol-page-sub">{{ now()->format('l, d F Y') }} — {{ auth()->user()->name ?? 'Executive Officer' }}</p>
         </div>
-        <div class="d-flex gap-2 align-items-center">
+        <div class="d-flex gap-2 align-items-center flex-wrap">
             <span class="ds-pill paid"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Live</span>
             <a href="{{ url('usage-variation/' . $ward->id) }}" class="btn btn-success btn-sm">
                 <i class="bi bi-bar-chart-line me-1"></i> Usage Variation
@@ -1245,7 +1249,7 @@
 
     <div class="map-card" id="mapCard">
         <div class="map-header">
-            <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
+            <span class="badge" id="activeLayerBadge" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A);">OpenStreetMap</span>
             <span class="text-muted small" id="featureCountBadge">Buildings: 0</span>
         </div>
         <div id="map"></div>
@@ -1270,42 +1274,51 @@
                     <div class="bld-img-wrap" id="bv_img1_wrap">
                         <img id="bv_img1" src="" style="display:none;"
                             onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
-                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i
+                                class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i
+                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
                     <div class="bld-img-wrap" id="bv_img2_wrap">
                         <img id="bv_img2" src="" style="display:none;"
                             onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
-                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i
+                                class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i
+                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
                 <div class="modal-body" style="max-height: 65vh; overflow-y: auto; padding: 20px 24px;">
-                    <div class="bld-summary-strip" style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; border-radius: 10px; margin-bottom: 20px;">
-                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                    <div class="bld-summary-strip"
+                        style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 2px solid #ECE7FF; background: #F5F3FF; border-radius: 12px; margin-bottom: 20px;">
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🧾</div>
                             <div>
                                 <div class="bld-summary-label">Assessments</div>
                                 <div class="bld-summary-val" id="bv_bills">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🏬</div>
                             <div>
                                 <div class="bld-summary-label">Shops</div>
                                 <div class="bld-summary-val" id="bv_shops">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb;">
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🏢</div>
                             <div>
                                 <div class="bld-summary-label">Floors</div>
                                 <div class="bld-summary-val" id="bv_floors">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
                             <div class="bld-summary-icon">✅</div>
                             <div>
                                 <div class="bld-summary-label">Mapped</div>
@@ -1425,14 +1438,17 @@
                     <div class="bld-header-inner">
                         <div class="bld-header-icon"><i class="bi bi-people"></i></div>
                         <div>
-                            <h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span id="pdGisid"></span></span>
+                            <h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span
+                                    id="pdGisid"></span></span>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small" id="pdBillSummary"></span></div>
-                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch" placeholder="Search by assessment, owner name, or phone number...">
+                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small"
+                            id="pdBillSummary"></span></div>
+                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch"
+                        placeholder="Search by assessment, owner name, or phone number...">
                     <div id="pointDetailsContainer"></div>
                 </div>
             </div>
@@ -1451,7 +1467,9 @@
                 </div>
                 <div class="modal-body p-4">
                     <input type="hidden" id="qc_point_data_id">
-                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment <span id="qc_assessment_display" class="fw-semibold"></span></p>
+                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment
+                        <span id="qc_assessment_display" class="fw-semibold"></span>
+                    </p>
                     <div class="mb-3">
                         <label class="bld-form-label">QC Usage</label>
                         <select class="form-select bld-input" id="qcusage">
@@ -1473,7 +1491,8 @@
                 </div>
                 <div class="modal-footer bld-modal-footer">
                     <button type="button" class="btn bld-btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save QC</button>
+                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save
+                        QC</button>
                 </div>
             </div>
         </div>
@@ -1495,21 +1514,27 @@
             let lines = @json($lines ?? [], JSON_HEX_TAG);
             let points = @json($points ?? [], JSON_HEX_TAG);
             let pointDatas = @json($pointDatas ?? [], JSON_HEX_TAG);
+            let boundary = @json($boundary ?? [], JSON_HEX_TAG);
             let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
             let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
             let ward = @json($ward ?? [], JSON_HEX_TAG);
             let currentPointGisid = null;
             let currentPointRecords = [];
 
+            // Debug boundary data
+            console.log('📊 Boundary Data:', boundary);
+            console.log('📊 Ward Data:', ward);
+
+            // ─── BRIGHT, HIGH-SATURATION USAGE PALETTE ───
             const usageColors = {
-                'RESIDENTIAL': '#4CAF50',
-                'COMMERCIAL': '#2196F3',
-                'INDUSTRIAL': '#FF9800',
-                'INSTITUTIONAL': '#9C27B0',
-                'MIXED': '#F44336',
-                'GOVERNMENT': '#607D8B',
-                'VACANT': '#FFD700',
-                'OTHER': '#9E9E9E'
+                'RESIDENTIAL': '#00D26A',
+                'COMMERCIAL': '#00B4FF',
+                'INDUSTRIAL': '#FF9F1C',
+                'INSTITUTIONAL': '#B84DFF',
+                'MIXED': '#FF3E5F',
+                'GOVERNMENT': '#6C5CE7',
+                'VACANT': '#FFD93D',
+                'OTHER': '#FF6FB5'
             };
 
             // ─── IMAGE EXTENT ───
@@ -1537,7 +1562,6 @@
                     url: droneImageURL,
                     imageExtent: imageExtent,
                     imageSmoothing: false,
-                    // Add crossOrigin for better loading
                     crossOrigin: 'anonymous'
                 }),
                 opacity: 0.90,
@@ -1575,6 +1599,7 @@
             // ─── SOURCES ───
             const polygonSource = new ol.source.Vector();
             const lineSource = new ol.source.Vector();
+            const boundarySource = new ol.source.Vector(); // Add boundary source
 
             // ─── SEARCH INDEX ───
             let searchIndex = [];
@@ -1595,7 +1620,7 @@
             let trackInterval = null;
             let isGettingLocation = false;
 
-            // ─── 3D MODE VARIABLES (standalone Cesium viewer — see toggle3DMode) ───
+            // ─── 3D MODE VARIABLES ───
             let is3DMode = false;
             let cesiumViewer = null;
             let cesiumBuildingEntities = [];
@@ -1607,8 +1632,8 @@
                 const sqft = feature.get('sqfeet') || '0';
                 const polygonData = polygonDatas.find(d => d.gisid == gisid);
                 const buildingUsage = polygonData?.building_usage || feature.get('building_usage') || 'OTHER';
-                const strokeColor = usageColors[buildingUsage] || '#0d6efd';
-                const fillColor = polygonData ? `${strokeColor}33` : 'rgba(13, 110, 253, 0.15)';
+                const strokeColor = usageColors[buildingUsage] || '#6C5CE7';
+                const fillColor = polygonData ? `${strokeColor}40` : 'rgba(108, 92, 231, 0.18)';
                 const showLabels = $('#labelToggleBtn').hasClass('active-label');
 
                 try {
@@ -1634,13 +1659,13 @@
                                 text: gisid + ' GISID\n' + sqft + ' SQFT',
                                 font: 'bold 13px Arial',
                                 fill: new ol.style.Fill({
-                                    color: '#000'
+                                    color: '#241C4F'
                                 }),
                                 backgroundFill: new ol.style.Fill({
-                                    color: '#fff'
+                                    color: '#FFD93D'
                                 }),
                                 backgroundStroke: new ol.style.Stroke({
-                                    color: '#000',
+                                    color: '#241C4F',
                                     width: 1
                                 }),
                                 padding: [4, 6, 4, 6],
@@ -1655,11 +1680,11 @@
                 } catch (e) {
                     return new ol.style.Style({
                         stroke: new ol.style.Stroke({
-                            color: '#0d6efd',
+                            color: '#6C5CE7',
                             width: 4
                         }),
                         fill: new ol.style.Fill({
-                            color: 'rgba(13, 110, 253, 0.15)'
+                            color: 'rgba(108, 92, 231, 0.18)'
                         })
                     });
                 }
@@ -1668,8 +1693,21 @@
             function createLineStyle() {
                 return new ol.style.Style({
                     stroke: new ol.style.Stroke({
-                        color: '#ff0000',
+                        color: '#FF3E5F',
                         width: 3
+                    })
+                });
+            }
+
+            function createBoundaryStyle() {
+                return new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#FF9F1C',
+                        width: 4,
+                        lineDash: [10, 6]
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255, 159, 28, 0.08)'
                     })
                 });
             }
@@ -1679,7 +1717,7 @@
                     image: new ol.style.Circle({
                         radius: 12,
                         fill: new ol.style.Fill({
-                            color: '#0d6efd'
+                            color: '#00B4FF'
                         }),
                         stroke: new ol.style.Stroke({
                             color: '#ffffff',
@@ -1690,13 +1728,13 @@
                         text: '📍 You',
                         font: 'bold 12px Arial',
                         fill: new ol.style.Fill({
-                            color: '#000'
+                            color: '#241C4F'
                         }),
                         backgroundFill: new ol.style.Fill({
                             color: '#fff'
                         }),
                         backgroundStroke: new ol.style.Stroke({
-                            color: '#ccc',
+                            color: '#00B4FF',
                             width: 1
                         }),
                         padding: [2, 6, 2, 6],
@@ -1711,7 +1749,7 @@
                     image: new ol.style.Circle({
                         radius: 10,
                         fill: new ol.style.Fill({
-                            color: '#dc3545'
+                            color: '#FF3E5F'
                         }),
                         stroke: new ol.style.Stroke({
                             color: '#ffffff',
@@ -1722,13 +1760,13 @@
                         text: '📍 Destination',
                         font: 'bold 12px Arial',
                         fill: new ol.style.Fill({
-                            color: '#000'
+                            color: '#241C4F'
                         }),
                         backgroundFill: new ol.style.Fill({
                             color: '#fff'
                         }),
                         backgroundStroke: new ol.style.Stroke({
-                            color: '#ccc',
+                            color: '#FF3E5F',
                             width: 1
                         }),
                         padding: [2, 6, 2, 6],
@@ -1887,6 +1925,163 @@
                 console.log('📊 Lines loaded:', lineSource.getFeatures().length);
             }
 
+            // ─── LOAD BOUNDARY LAYER ───
+            function loadBoundaryLayer() {
+                try {
+                    boundarySource.clear();
+
+                    // Check if boundary data exists - handle both structures
+                    let boundaryCoords = null;
+                    let wardNo = null;
+                    let wardId = null;
+
+                    // Try different possible structures
+                    if (boundary && boundary.boundary && boundary.boundary.coordinates) {
+                        // Structure: { ward_id, ward_no, boundary: { coordinates: [...] } }
+                        boundaryCoords = boundary.boundary.coordinates;
+                        wardNo = boundary.ward_no || ward.ward_no || 'N/A';
+                        wardId = boundary.ward_id || ward.id || 'N/A';
+                        console.log('✅ Found boundary at boundary.boundary.coordinates');
+                    } else if (boundary && boundary.coordinates) {
+                        // Structure: { ward_id, ward_no, coordinates: [...] }
+                        boundaryCoords = boundary.coordinates;
+                        wardNo = boundary.ward_no || ward.ward_no || 'N/A';
+                        wardId = boundary.ward_id || ward.id || 'N/A';
+                        console.log('✅ Found boundary at boundary.coordinates');
+                    } else if (ward && ward.boundary && ward.boundary.coordinates) {
+                        // Fallback to ward data
+                        boundaryCoords = ward.boundary.coordinates;
+                        wardNo = ward.ward_no || 'N/A';
+                        wardId = ward.id || 'N/A';
+                        console.log('✅ Found boundary in ward.boundary.coordinates');
+                    } else {
+                        console.log('❌ No boundary data available in any expected location');
+                        return;
+                    }
+
+                    if (!boundaryCoords || !Array.isArray(boundaryCoords) || boundaryCoords.length === 0) {
+                        console.error('❌ Invalid boundary coordinates:', boundaryCoords);
+                        return;
+                    }
+
+                    console.log('📊 Processing boundary coordinates:', boundaryCoords);
+
+                    let geometry = null;
+
+                    try {
+                        // Handle the specific structure from your data: [[[[x,y], [x,y], ...]]]
+                        if (Array.isArray(boundaryCoords) && boundaryCoords.length > 0) {
+                            // Check if it's a MultiPolygon structure: [[[[x,y], ...]]]
+                            if (Array.isArray(boundaryCoords[0]) &&
+                                Array.isArray(boundaryCoords[0][0]) &&
+                                Array.isArray(boundaryCoords[0][0][0]) &&
+                                typeof boundaryCoords[0][0][0][0] === 'number') {
+                                geometry = new ol.geom.MultiPolygon(boundaryCoords);
+                                console.log('✅ Parsed as MultiPolygon');
+                            }
+                            // Check if it's a Polygon structure: [[[x,y], ...]]
+                            else if (Array.isArray(boundaryCoords[0]) &&
+                                Array.isArray(boundaryCoords[0][0]) &&
+                                typeof boundaryCoords[0][0][0] === 'number') {
+                                geometry = new ol.geom.Polygon(boundaryCoords[0]);
+                                console.log('✅ Parsed as Polygon');
+                            }
+                            // Check if it's a LinearRing: [[x,y], ...]
+                            else if (Array.isArray(boundaryCoords[0]) &&
+                                typeof boundaryCoords[0][0] === 'number') {
+                                geometry = new ol.geom.Polygon([boundaryCoords]);
+                                console.log('✅ Parsed as LinearRing');
+                            }
+                            // Check if it's a Feature with geometry
+                            else if (boundaryCoords.type === 'MultiPolygon' || boundaryCoords.type === 'Polygon') {
+                                const format = new ol.format.GeoJSON();
+                                const feature = format.readFeature(boundaryCoords);
+                                geometry = feature.getGeometry();
+                                console.log('✅ Parsed as GeoJSON');
+                            } else {
+                                console.error('❌ Unrecognized boundary coordinate structure:', boundaryCoords);
+                                // Try to flatten and use as Polygon
+                                try {
+                                    const flatCoords = boundaryCoords[0][0] || boundaryCoords[0] || boundaryCoords;
+                                    if (Array.isArray(flatCoords) && flatCoords.length > 0) {
+                                        geometry = new ol.geom.Polygon([flatCoords]);
+                                        console.log('✅ Parsed using fallback flattening');
+                                    }
+                                } catch (e) {
+                                    console.error('❌ Fallback parsing failed:', e);
+                                }
+                            }
+                        } else {
+                            console.error('❌ Invalid boundary coordinates array');
+                            return;
+                        }
+                    } catch (e) {
+                        console.error('❌ Error parsing boundary coordinates:', e);
+                        return;
+                    }
+
+                    if (!geometry) {
+                        console.error('❌ Failed to create geometry from boundary data');
+                        return;
+                    }
+
+                    // Get the center for label placement
+                    let center = null;
+                    try {
+                        center = geometry.getInteriorPoint ? geometry.getInteriorPoint() :
+                            (geometry.getCoordinates ? new ol.geom.Point(ol.extent.getCenter(geometry
+                            .getExtent())) : null);
+                    } catch (e) {
+                        console.warn('Could not get center point:', e);
+                    }
+
+                    // Create the boundary feature
+                    const boundaryFeature = new ol.Feature({
+                        geometry: geometry,
+                        type: 'boundary',
+                        ward_no: wardNo,
+                        ward_id: wardId,
+                        name: `Ward ${wardNo}`
+                    });
+
+                    // Create styles with label
+                    const styles = [
+                        new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: '#FFD93D',
+                                width: 5,
+                                lineDash: [12, 8],
+                                lineCap: 'round',
+                                lineJoin: 'round'
+                            }),
+
+                        })
+                    ];
+
+
+
+                    boundaryFeature.setStyle(styles);
+                    boundarySource.addFeature(boundaryFeature);
+
+                    console.log('✅ Boundary layer loaded successfully!');
+                    console.log(
+                        `📍 Ward ${wardNo} boundary added with ${boundarySource.getFeatures().length} feature(s)`
+                        );
+                    console.log('📊 Boundary geometry type:', geometry.getType());
+
+                } catch (e) {
+                    console.error('❌ Error loading boundary layer:', e);
+                }
+            }
+
+            // ─── CREATE BOUNDARY LAYER ───
+            const boundaryLayer = new ol.layer.Vector({
+                source: boundarySource,
+                visible: true,
+                title: 'Ward Boundary',
+                zIndex: 50
+            });
+
             function updateFeatureCount() {
                 const count = polygonSource.getFeatures().length;
                 $('#featureCountBadge').text(`Buildings: ${count}`);
@@ -1903,6 +2098,7 @@
 
             loadPolygonSource();
             loadLineSource();
+            loadBoundaryLayer(); // Load boundary after other sources
             buildSearchIndex();
 
             // ─── CREATE LAYERS ───
@@ -1942,8 +2138,17 @@
             // ─── CREATE MAP ───
             const map = new ol.Map({
                 target: 'map',
-                layers: [osmLayer, satelliteLayer, streetViewLayer, droneLayer, polygonLayer, lineLayer,
-                    positionLayer, routeLayer, destinationLayer
+                layers: [
+                    osmLayer,
+                    satelliteLayer,
+                    streetViewLayer,
+                    droneLayer,
+                    boundaryLayer, // Add boundary layer
+                    polygonLayer,
+                    lineLayer,
+                    positionLayer,
+                    routeLayer,
+                    destinationLayer
                 ],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
@@ -1960,7 +2165,7 @@
             // 1. FILTER TOGGLE
             $stack.append(`
                 <div class="custom-filter-toggle">
-                    <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters">
+                    <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters" aria-label="Toggle filters">
                         <i class="bi bi-funnel"></i>
                     </button>
                     <div class="filter-dropdown" id="filterDropdown">
@@ -2008,9 +2213,9 @@
                                 <div class="filter-section-header">Area Range (sqft)</div>
                                 <div class="filter-range">
                                     <div class="range-inputs">
-                                        <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0">
+                                        <input type="number" id="minArea" class="form-control form-control-sm" placeholder="Min" value="0" min="0">
                                         <span class="range-separator">to</span>
-                                        <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="0">
+                                        <input type="number" id="maxArea" class="form-control form-control-sm" placeholder="Max" value="0" min="0">
                                     </div>
                                 </div>
                             </div>
@@ -2040,6 +2245,15 @@
                                     <option value="CAR_SHED">Car Shed</option>
                                     <option value="TEMPORARY">Temporary</option>
                                     <option value="UNDER_CONSTRUCTION">Under Construction</option>
+                                </select>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="filter-section">
+                                <div class="filter-section-header">Assessment Info</div>
+                                <select class="form-select form-select-sm" id="assessmentinfoFilter">
+                                    <option value="all">All</option>
+                                    <option value="OLD">Old Assessment</option>
+                                    <option value="NEW">New Assessment</option>
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
@@ -2158,7 +2372,7 @@
                         </div>
                         <div class="dropdown-divider"></div>
                         <div class="filter-actions">
-                            <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn">
+                            <button class="btn btn-primary btn-sm w-100" id="applyFiltersBtn" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">
                                 <i class="bi bi-check-circle"></i> Apply Filters
                             </button>
                             <button class="btn btn-outline-secondary btn-sm w-100 mt-2" id="resetFiltersBtn">
@@ -2175,7 +2389,7 @@
             // 2. LAYER SWITCHER
             $stack.append(`
                 <div class="custom-layer-switcher">
-                    <button class="layer-toggle-btn" id="layerToggleBtn"><i class="bi bi-layers"></i></button>
+                    <button class="layer-toggle-btn" id="layerToggleBtn" aria-label="Toggle layers"><i class="bi bi-layers"></i></button>
                     <div class="layer-dropdown" id="layerDropdown">
                         <div class="dropdown-header">Base Maps</div>
                         <div class="layer-dropdown-item active" data-layer-type="base" data-layer="OpenStreetMap">
@@ -2212,6 +2426,13 @@
                             <div class="layer-name">Lines</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">Boundary</div>
+                        <div class="layer-dropdown-item active" data-layer-type="vector" data-layer="Boundary">
+                            <div class="layer-icon"><i class="bi bi-border-outer"></i></div>
+                            <div class="layer-name">Ward Boundary</div>
+                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
+                        </div>
                     </div>
                 </div>
             `);
@@ -2219,7 +2440,7 @@
             // 3. LOCATION SWITCHER
             $stack.append(`
                 <div class="custom-location-switcher">
-                    <button class="location-toggle-btn" id="locationToggleBtn"><i class="bi bi-geo-alt"></i></button>
+                    <button class="location-toggle-btn" id="locationToggleBtn" aria-label="Toggle location tools"><i class="bi bi-geo-alt"></i></button>
                     <div class="location-dropdown" id="locationDropdown">
                         <div class="dropdown-header">Location Tools</div>
                         <div class="location-dropdown-item" id="liveLocationItem">
@@ -2247,7 +2468,7 @@
             // 4. SEARCH SWITCHER
             $stack.append(`
                 <div class="custom-search-switcher">
-                    <button class="search-toggle-btn" id="searchToggleBtn"><i class="bi bi-search"></i></button>
+                    <button class="search-toggle-btn" id="searchToggleBtn" aria-label="Toggle search"><i class="bi bi-search"></i></button>
                     <div class="search-dropdown" id="searchDropdown">
                         <div class="d-flex border-bottom">
                             <button type="button" class="btn btn-sm flex-fill search-tab-btn active" data-tab="quick">Quick Search</button>
@@ -2277,7 +2498,7 @@
                                     <label>Phone Number</label>
                                     <input type="text" id="filterPhoneNumber" class="form-control" placeholder="Enter phone number...">
                                 </div>
-                                <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn">
+                                <button class="btn btn-primary btn-sm w-100 mt-2" id="applyFilterBtn" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">
                                     <i class="bi bi-search me-1"></i>Search
                                 </button>
                             </div>
@@ -2290,7 +2511,7 @@
             // 5. LABEL TOGGLE
             $stack.append(`
                 <div class="custom-label-toggle">
-                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels">
+                    <button class="label-toggle-btn active-label" id="labelToggleBtn" title="Toggle Labels" aria-label="Toggle labels">
                         <i class="bi bi-fonts"></i>
                     </button>
                 </div>
@@ -2299,7 +2520,7 @@
             // 6. LEGEND TOGGLE
             $stack.append(`
                 <div class="custom-legend-toggle">
-                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Legend">
+                    <button class="legend-toggle-btn" id="legendToggleBtn" title="Toggle Legend" aria-label="Toggle legend">
                         <i class="bi bi-list-ul"></i>
                     </button>
                 </div>
@@ -2308,7 +2529,7 @@
             // 7. 3D TOGGLE BUTTON
             $stack.append(`
                 <div class="custom-threed-toggle">
-                    <button class="threed-toggle-btn" id="threedToggleBtn" title="Toggle 3D View">
+                    <button class="threed-toggle-btn" id="threedToggleBtn" title="Toggle 3D View" aria-label="Toggle 3D view">
                         <i class="bi bi-box"></i>
                     </button>
                 </div>
@@ -2316,7 +2537,7 @@
 
             // 8. FULLSCREEN BUTTON
             $mapContainer.append(`
-                <button class="fullscreen-btn" id="fullscreenBtn">
+                <button class="fullscreen-btn" id="fullscreenBtn" aria-label="Toggle fullscreen">
                     <i class="bi bi-arrows-fullscreen"></i>
                 </button>
             `);
@@ -2471,32 +2692,26 @@
                 });
             }
 
-            // ══════════════════════════════════════════════════════════════
-            // ─── STANDALONE CESIUM 3D VIEW ───
-            // ol-cesium is intentionally NOT used here: the npm package's
-            // browser bundle (dist/olcesium.umd.js) targets the modular
-            // `ol/*.js` package via a bundler and needs `ol` 6.x/7.x — it
-            // is not compatible with the monolithic ol@latest CDN build
-            // loaded on this page. Instead we spin up a plain Cesium.Viewer
-            // and draw the buildings as extruded polygon entities, reusing
-            // the same polygons/polygonDatas/buildingVariations data.
-            // ══════════════════════════════════════════════════════════════
-
+            // ─── CESIUM 3D VIEW ───
             const CESIUM_ION_TOKEN =
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1ZDQ3MmI5MC04ZjY4LTQyMjMtODA4Ni1jZmVjZTI1NDI1ODAiLCJpZCI6MjU5MDQ1LCJpYXQiOjE3Mzc2MjE5Nzd9.FqIhYpDCCR-sxsN_Cu5qXrVvKqG8OxOYzuDdxMUVh2Y';
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
 
-            function initCesiumViewer() {
+            async function initCesiumViewer() {
                 if (cesiumViewer) return cesiumViewer;
 
                 if (typeof Cesium === 'undefined') {
-                    showToast('⚠️ Cesium library failed to load. Check your connection and refresh.', 4000);
+                    showToast('⚠️ Cesium library failed to load.', 4000);
                     return null;
                 }
 
                 try {
                     Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
 
-                    cesiumViewer = new Cesium.Viewer('cesiumContainer', {
+                    cesiumViewer = new Cesium.Viewer("cesiumContainer", {
+                        baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+                            Cesium.IonImageryProvider.fromAssetId(2)
+                        ),
+                        terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(1),
                         baseLayerPicker: false,
                         geocoder: false,
                         homeButton: false,
@@ -2506,33 +2721,150 @@
                         timeline: false,
                         fullscreenButton: false,
                         infoBox: false,
-                        selectionIndicator: false
+                        selectionIndicator: false,
+                        shadows: true,
+                        shouldAnimate: true
                     });
 
-                    cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
+                    await addDroneImageToCesium();
+                    buildCesiumBuildings();
+                    buildCesiumBoundary(); // Add boundary to Cesium
 
-                    // Click-to-inspect a building, mirroring the 2D map behaviour
-                    cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(cesiumViewer.scene.canvas);
+                    cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
+                    cesiumViewer.scene.globe.enableLighting = true;
+                    cesiumViewer.scene.skyAtmosphere.show = true;
+                    cesiumViewer.scene.fog.enabled = true;
+
+                    cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(
+                        cesiumViewer.scene.canvas
+                    );
+
                     cesiumClickHandler.setInputAction(function(movement) {
                         const picked = cesiumViewer.scene.pick(movement.position);
                         if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
                             showFeatureDetails({
                                 get: function(key) {
-                                    return key === 'gisid' ? picked.id.gisid : undefined;
+                                    return key === "gisid" ? picked.id.gisid : undefined;
                                 }
                             });
                         }
                     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-                    buildCesiumBuildings();
-
-                    console.log('✅ Cesium 3D viewer initialized');
                     return cesiumViewer;
-                } catch (error) {
-                    console.error('❌ Cesium init failed:', error);
-                    showToast('⚠️ 3D mode not available: ' + error.message, 4000);
+
+                } catch (e) {
+                    console.error('Cesium init error:', e);
+                    showToast("3D initialization failed", 4000);
                     cesiumViewer = null;
                     return null;
+                }
+            }
+
+
+            async function addDroneImageToCesium() {
+                if (!cesiumViewer) return;
+                if (!droneImageURL || droneImageURL === '') {
+                    console.log('No drone image available');
+                    return;
+                }
+
+                try {
+                    const westSouth = ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857',
+                        'EPSG:4326');
+                    const eastNorth = ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857',
+                        'EPSG:4326');
+
+                    const provider = new Cesium.SingleTileImageryProvider({
+                        url: droneImageURL,
+                        rectangle: Cesium.Rectangle.fromDegrees(
+                            westSouth[0],
+                            westSouth[1],
+                            eastNorth[0],
+                            eastNorth[1]
+                        )
+                    });
+
+                    const droneLayer = new Cesium.ImageryLayer(provider, {
+                        alpha: 0.80,
+                        brightness: 1.0,
+                        contrast: 1.0,
+                        show: true
+                    });
+
+                    cesiumViewer.imageryLayers.add(droneLayer);
+                    console.log('✅ Drone image added to Cesium 3D view');
+                    window.droneCesiumLayer = droneLayer;
+
+                } catch (e) {
+                    console.error('Error adding drone image to Cesium:', e);
+                }
+            }
+
+            function toggleDroneIn3D(show) {
+                if (window.droneCesiumLayer) {
+                    window.droneCesiumLayer.show = show;
+                }
+            }
+
+            // ─── BUILD CESIUM BOUNDARY ───
+            function buildCesiumBoundary() {
+                if (!cesiumViewer) return;
+
+                try {
+                    const features = boundarySource.getFeatures();
+                    if (features.length === 0) {
+                        console.log('⚠️ No boundary features to display in 3D');
+                        return;
+                    }
+
+                    const feature = features[0];
+                    const geometry = feature.getGeometry();
+
+                    if (!geometry) return;
+
+                    // Get coordinates in EPSG:4326
+                    const coords = geometry.getCoordinates();
+                    let flatCoords = [];
+
+                    // Flatten the coordinates
+                    if (Array.isArray(coords) && coords.length > 0) {
+                        const rings = coords[0] || coords;
+                        rings.forEach(ring => {
+                            if (Array.isArray(ring) && ring.length > 0) {
+                                ring.forEach(pt => {
+                                    if (Array.isArray(pt) && pt.length >= 2) {
+                                        const lonLat = ol.proj.transform(pt, 'EPSG:3857',
+                                            'EPSG:4326');
+                                        flatCoords.push(lonLat[0], lonLat[1]);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    if (flatCoords.length < 6) {
+                        console.log('⚠️ Not enough coordinates for boundary');
+                        return;
+                    }
+
+                    // Add boundary as a polygon in Cesium
+                    const entity = cesiumViewer.entities.add({
+                        name: 'Ward Boundary',
+                        polygon: {
+                            hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                            material: Cesium.Color.fromCssColorString('#FF9F1C').withAlpha(0.12),
+                            outline: true,
+                            outlineColor: Cesium.Color.fromCssColorString('#FF9F1C'),
+                            outlineWidth: 3,
+                            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                        }
+                    });
+
+                    cesiumBuildingEntities.push(entity);
+                    console.log('✅ Boundary added to Cesium 3D view');
+
+                } catch (e) {
+                    console.error('Error adding boundary to Cesium:', e);
                 }
             }
 
@@ -2547,8 +2879,6 @@
                         const ring = JSON.parse(poly.coordinates);
                         if (!Array.isArray(ring) || ring.length < 3) return;
 
-                        // Polygon coordinates on this page are stored in the map's
-                        // view projection (EPSG:3857); Cesium wants WGS84 degrees.
                         const lonLatFlat = [];
                         ring.forEach(pt => {
                             const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
@@ -2557,7 +2887,7 @@
 
                         const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const usage = polygonData?.building_usage || 'OTHER';
-                        const colorHex = usageColors[usage] || '#0d6efd';
+                        const colorHex = usageColors[usage] || '#0f6b47';
                         const floors = parseInt(polygonData?.number_floor) || 0;
                         const height = Math.max((floors + 1) * 3.2, 3.2);
 
@@ -2567,7 +2897,7 @@
                                 hierarchy: Cesium.Cartesian3.fromDegreesArray(lonLatFlat),
                                 extrudedHeight: height,
                                 height: 0,
-                                material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.75),
+                                material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.8),
                                 outline: true,
                                 outlineColor: Cesium.Color.WHITE,
                                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
@@ -2604,11 +2934,11 @@
                 const $threedBtn = $('#threedToggleBtn');
 
                 if (!is3DMode) {
-                    // ─── ENTER 3D MODE ───
                     const viewer = initCesiumViewer();
                     if (!viewer) return;
 
                     buildCesiumBuildings();
+                    buildCesiumBoundary();
 
                     $('#map').hide();
                     $('#cesiumContainer').show();
@@ -2620,7 +2950,6 @@
                     $threedBtn.addClass('active-3d').html('<i class="bi bi-box-fill"></i>');
                     showToast('🌍 3D mode activated - Buildings extruded', 3000);
                 } else {
-                    // ─── EXIT 3D MODE ───
                     $('#cesiumContainer').hide();
                     $('#map').show();
                     map.updateSize();
@@ -2646,7 +2975,6 @@
 
             // ─── FUNCTION TO SHOW BUILDING VIEW ───
             function showBuildingView(item) {
-                // ─── SET BASIC FIELDS ───
                 $('#bv_gisid').text(item.gisid || '-');
                 $('#bv_zone').text(item.zone || item.building_zone || '-');
                 $('#bv_building_name').text(item.building_name || '-');
@@ -2664,7 +2992,6 @@
                 const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
                 $('#bv_mapped').text(mappedCount);
 
-                // ─── VARIATION ───
                 const variation = buildingVariations[item.gisid];
                 if (variation) {
                     const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
@@ -2694,7 +3021,6 @@
                     $('#bv_variation_wrap').html('');
                 }
 
-                // ─── AMENITIES ───
                 const amenities = [
                     ['Lift Room', item.liftroom],
                     ['Head Room', item.headroom],
@@ -2720,11 +3046,9 @@
                 $('#bv_amenities').html(hasAmenities ? amenHtml :
                     '<span class="text-muted small">No amenities recorded</span>');
 
-                // ─── REMARKS ───
                 $('#bv_remarks').text(item.remarks || '—');
                 $('#bv_corp_remarks').text(item.corporationremarks || '—');
 
-                // ─── IMAGES ───
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
 
                 function loadImage(imgId, emptyId, errorId, imagePath) {
@@ -2760,7 +3084,6 @@
                 loadImage('bv_img1', 'bv_img1_empty', 'bv_img1_error', item.image);
                 loadImage('bv_img2', 'bv_img2_empty', 'bv_img2_error', item.image2);
 
-                // ─── BUTTON HANDLERS ───
                 $('#buildingViewPointsBtn').off('click').on('click', function() {
                     bootstrap.Modal.getInstance(document.getElementById('buildingViewModal')).hide();
                     openPointDetails(item.gisid);
@@ -2909,12 +3232,12 @@
                             </div>
 
                             ${ptList.length ? `
-                                        <div class="row mt-2 g-2">
-                                            <div class="col-12">
-                                                <div class="tax-card">
-                                                    <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                                    ${ptList.map(pt => `
-                                            <div style="border-bottom:1px dashed #e5e7eb; padding:6px 0; margin-bottom:4px;">
+                                                        <div class="row mt-2 g-2">
+                                                            <div class="col-12">
+                                                                <div class="tax-card">
+                                                                    <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                                                    ${ptList.map(pt => `
+                                            <div style="border-bottom:1px dashed #d7e8df; padding:6px 0; margin-bottom:4px;">
                                                 <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
                                                 <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
@@ -2928,10 +3251,10 @@
                                                 <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                             </div>
                                         `).join('')}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        ` : ''}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        ` : ''}
                         </div>`;
                 });
 
@@ -3047,12 +3370,12 @@
                 layers: [polygonLayer, lineLayer],
                 style: new ol.style.Style({
                     stroke: new ol.style.Stroke({
-                        color: '#0066cc',
+                        color: '#00B4FF',
                         width: 3,
                         lineDash: [4, 4]
                     }),
                     fill: new ol.style.Fill({
-                        color: 'rgba(0,102,204,0.1)'
+                        color: 'rgba(0,180,255,0.15)'
                     })
                 })
             });
@@ -3147,6 +3470,7 @@
                     let layer;
                     if (layerTitle === 'Polygons') layer = polygonLayer;
                     else if (layerTitle === 'Lines') layer = lineLayer;
+                    else if (layerTitle === 'Boundary') layer = boundaryLayer;
 
                     if (layer) {
                         const visible = !layer.getVisible();
@@ -3167,7 +3491,7 @@
             $('#legendToggleBtn').on('click', function() {
                 const usageLegend = Object.entries(usageColors).map(([usage, color]) => `
                     <div style="display:flex;align-items:center;margin-bottom:8px;">
-                        <span style="display:inline-block;width:20px;height:20px;background:${color};border:2px solid #fff;border-radius:4px;margin-right:10px;box-shadow:0 0 2px rgba(0,0,0,0.4);"></span>
+                        <span style="display:inline-block;width:20px;height:20px;background:${color};border:2px solid #fff;border-radius:6px;margin-right:10px;box-shadow:0 0 4px rgba(0,0,0,0.25);"></span>
                         <strong>${usage}</strong>
                     </div>
                 `).join('');
@@ -3177,26 +3501,30 @@
                     width: 500,
                     html: `
                         <div style="text-align:left;font-size:14px;">
-                            <h6 style="margin-bottom:10px;color:#198754;">Building Usage Colors</h6>
+                            <h6 style="margin-bottom:10px;color:#0f6b47;">Building Usage Colors</h6>
                             ${usageLegend}
                             <hr style="margin:15px 0;">
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
-                                <span style="display:inline-block;width:20px;height:20px;background:rgba(13,110,253,0.15);border-radius:4px;border:2px solid #0d6efd;margin-right:10px;"></span>
+                                <span style="display:inline-block;width:20px;height:20px;background:rgba(15,107,71,0.18);border-radius:6px;border:2px solid #0f6b47;margin-right:10px;"></span>
                                 Polygon (Building)
                             </div>
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
-                                <span style="display:inline-block;width:20px;height:4px;background:#ff0000;border-radius:2px;margin-right:10px;"></span>
+                                <span style="display:inline-block;width:20px;height:4px;background:#FF3E5F;border-radius:2px;margin-right:10px;"></span>
                                 Lines (Roads)
                             </div>
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
-                                <span style="display:inline-block;width:20px;height:20px;background:#0d6efd;border-radius:50%;border:2px solid white;margin-right:10px;"></span>
+                                <span style="display:inline-block;width:20px;height:20px;background:#FF9F1C;border-radius:6px;border:2px solid #fff;margin-right:10px;box-shadow:0 0 4px rgba(0,0,0,0.25);"></span>
+                                Ward Boundary
+                            </div>
+                            <div style="display:flex;align-items:center;margin-bottom:8px;">
+                                <span style="display:inline-block;width:20px;height:20px;background:#00B4FF;border-radius:50%;border:2px solid white;margin-right:10px;"></span>
                                 Current Location
                             </div>
                         </div>
                     `,
                     icon: 'info',
                     confirmButtonText: 'Close',
-                    confirmButtonColor: '#0d6efd'
+                    confirmButtonColor: '#0f6b47'
                 });
             });
 
@@ -3497,7 +3825,7 @@
                                 <div class="search-result-subtitle">${displaySubtitle}</div>
                                 <div class="search-result-actions">
                                     <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                    <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}">View</button>
+                                    <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">View</button>
                                 </div>
                             </div>`;
                     });
@@ -3605,12 +3933,12 @@
             }
 
             function applyFilters() {
-                // ─── GET FILTER VALUES ───
                 const selectedUsage = $('#usageFilter').val();
                 const usageVariation = $('#usageVariationFilter').val();
                 const areaVariation = $('#areaVariationFilter').val();
                 const selectedZone = $('#zoneFilter').val();
                 const selectedConstruction = $('#constructionFilter').val();
+                const selectedAssessmentInfo = $('#assessmentinfoFilter').val();
                 const selectedBuildingType = $('#buildingTypeFilter').val();
                 const selectedAmenities = $('#amenitiesFilter').val() || [];
                 const selectedUgd = $('#ugdFilter').val();
@@ -3621,7 +3949,6 @@
                 const minArea = parseInt($('#minArea').val()) || 0;
                 const maxArea = parseInt($('#maxArea').val()) || 0;
 
-                // ─── CHECK IF ANY FILTER ACTIVE ───
                 const allUsageSelected = selectedUsage === 'all';
                 const allZonesSelected = selectedZone === 'all';
                 const allConstructionSelected = selectedConstruction === 'all';
@@ -3648,10 +3975,8 @@
                     return;
                 }
 
-                // ─── STEP 1: COLLECT GIS IDs FROM EACH FILTER ───
                 let filteredGisids = new Set();
 
-                // ─── 1A: USAGE FILTER ───
                 let usageGisids = null;
                 if (!allUsageSelected) {
                     usageGisids = new Set(
@@ -3661,7 +3986,6 @@
                     );
                 }
 
-                // ─── 1B: USAGE VARIATION FILTER ───
                 let usageVariationGisids = null;
                 if (!allUsageVariationSelected) {
                     if (usageVariation === 'match') {
@@ -3686,7 +4010,6 @@
                     }
                 }
 
-                // ─── 1C: AREA VARIATION FILTER ───
                 let areaVariationGisids = null;
                 if (!allAreaVariationSelected) {
                     if (areaVariation === 'match') {
@@ -3717,7 +4040,6 @@
                     }
                 }
 
-                // ─── 1D: ZONE FILTER ───
                 let zoneGisids = null;
                 if (!allZonesSelected) {
                     zoneGisids = new Set(
@@ -3727,7 +4049,6 @@
                     );
                 }
 
-                // ─── 1E: CONSTRUCTION FILTER ───
                 let constructionGisids = null;
                 if (!allConstructionSelected) {
                     constructionGisids = new Set(
@@ -3737,7 +4058,6 @@
                     );
                 }
 
-                // ─── 1F: BUILDING TYPE FILTER ───
                 let buildingTypeGisids = null;
                 if (!allBuildingTypesSelected) {
                     buildingTypeGisids = new Set(
@@ -3747,7 +4067,6 @@
                     );
                 }
 
-                // ─── 1G: AMENITIES FILTER ───
                 let amenitiesGisids = null;
                 if (!noAmenitiesSelected) {
                     amenitiesGisids = new Set(
@@ -3763,7 +4082,6 @@
                     );
                 }
 
-                // ─── 1H: UGD FILTER ───
                 let ugdGisids = null;
                 if (!allUgdSelected) {
                     ugdGisids = new Set(
@@ -3773,7 +4091,6 @@
                     );
                 }
 
-                // ─── 1I: SURVEY STATUS FILTER ───
                 let surveyStatusGisids = null;
                 if (!allSurveyStatusSelected) {
                     if (selectedSurveyStatus === 'surveyed') {
@@ -3798,7 +4115,6 @@
                     }
                 }
 
-                // ─── 1J: ASSESSMENT COUNT FILTER ───
                 let assessmentCountGisids = null;
                 if (!allAssessmentCountSelected) {
                     const gisidPointCount = {};
@@ -3820,7 +4136,6 @@
                     );
                 }
 
-                // ─── 1K: FLOOR FILTER ───
                 let floorGisids = null;
                 if (!allFloorSelected) {
                     floorGisids = new Set(
@@ -3838,7 +4153,6 @@
                     );
                 }
 
-                // ─── 1L: SHOP FILTER ───
                 let shopGisids = null;
                 if (!allShopSelected) {
                     shopGisids = new Set(
@@ -3855,7 +4169,6 @@
                     );
                 }
 
-                // ─── 1M: AREA RANGE FILTER ───
                 let areaGisids = null;
                 if (!areaDefault) {
                     areaGisids = new Set(
@@ -3868,7 +4181,6 @@
                     );
                 }
 
-                // ─── STEP 2: INTERSECT ALL FILTER SETS ───
                 const allFilterSets = [
                     usageGisids,
                     usageVariationGisids,
@@ -3895,7 +4207,6 @@
                     }
                 });
 
-                // ─── STEP 3: CLEAR SOURCE AND ADD FILTERED POLYGONS ───
                 polygonSource.clear();
 
                 let totalBuildings = 0;
@@ -3934,7 +4245,6 @@
                     }
                 });
 
-                // ─── STEP 4: UPDATE UI ───
                 const visibleCount = polygonSource.getFeatures().length;
                 const total = polygons.length;
 
@@ -3967,7 +4277,7 @@
             }
 
             function resetAllFilters(silent = false) {
-                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter')
+                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter,#assessmentinfoFilter')
                     .val('all');
                 $('#usageVariationFilter, #areaVariationFilter, #assessmentCountFilter, #floorFilter, #shopFilter')
                     .val('all');
@@ -4127,10 +4437,10 @@
                                 <span class="type-badge ${badgeClass}">${badgeText}</span>
                             </div>
                             <div class="search-result-subtitle">${item.subtitle}</div>
-                            ${details.length ? '<div class="search-result-subtitle" style="color:#666;">' + details.join(' | ') + '</div>' : ''}
+                            ${details.length ? '<div class="search-result-subtitle" style="color:#5f7d70;">' + details.join(' | ') + '</div>' : ''}
                             <div class="search-result-actions">
                                 <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}">View</button>
+                                <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">View</button>
                             </div>
                         </div>
                     `;
@@ -4198,7 +4508,7 @@
                     });
                     routeLine.setStyle(new ol.style.Style({
                         stroke: new ol.style.Stroke({
-                            color: '#dc3545',
+                            color: '#FF3E5F',
                             width: 4,
                             lineDash: [8, 6]
                         })
@@ -4233,7 +4543,8 @@
             console.log('📊 Polygons:', polygons.length);
             console.log('📊 Lines:', lines.length);
             console.log('📊 Point Data:', pointDatas.length);
-            console.log('🌍 3D mode ready (standalone Cesium viewer) - Click the cube button to activate');
+            console.log('📊 Boundary:', boundary);
+            console.log('🌍 3D mode ready - Click the cube button to activate');
 
             setTimeout(() => {
                 showToast('👆 Click on any building to view details', 4000);
