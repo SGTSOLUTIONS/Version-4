@@ -1552,27 +1552,12 @@
         };
 
         // ─── IMAGE EXTENT ───
-        let imageExtentRaw = [{
-                {
-                    $ward - > extent_left ?? 0
-                }
-            },
-            {
-                {
-                    $ward - > extent_bottom ?? 0
-                }
-            },
-            {
-                {
-                    $ward - > extent_right ?? 0
-                }
-            },
-            {
-                {
-                    $ward - > extent_top ?? 0
-                }
-            }
-        ];
+        let imageExtentRaw = [
+    {{ $ward->extent_left ?? 0 }},
+    {{ $ward->extent_bottom ?? 0 }},
+    {{ $ward->extent_right ?? 0 }},
+    {{ $ward->extent_top ?? 0 }}
+];
 
         const isLatLon = imageExtentRaw[0] > -180 && imageExtentRaw[0] < 180 &&
             imageExtentRaw[1] > -90 && imageExtentRaw[1] < 90;
