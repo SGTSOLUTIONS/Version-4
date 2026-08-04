@@ -180,11 +180,9 @@
         0% {
             opacity: 1;
         }
-
         50% {
             opacity: 0.5;
         }
-
         100% {
             opacity: 1;
         }
@@ -1049,7 +1047,6 @@
 
     /* ─── Responsive ─── */
     @media (max-width: 768px) {
-
         #map,
         #cesiumContainer {
             height: 500px;
@@ -1117,7 +1114,6 @@
     }
 
     @media (max-width: 480px) {
-
         #map,
         #cesiumContainer {
             height: 400px;
@@ -1219,7 +1215,6 @@
 
     /* Touch-friendly */
     @media (hover: none) and (pointer: coarse) {
-
         .layer-toggle-btn,
         .location-toggle-btn,
         .search-toggle-btn,
@@ -1248,7 +1243,7 @@
 @section('content')
 <div class="ol-page-header">
     <div>
-        <h1 class="ol-page-title">{{ ucfirst(auth()->user()->role) }} GIS Dashboards</h1>
+        <h1 class="ol-page-title">{{ ucfirst(auth()->user()->role) }} GIS Dashboard</h1>
         <p class="ol-page-sub">{{ now()->format('l, d F Y') }} — {{ auth()->user()->name ?? 'Executive Officer' }}</p>
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
@@ -1552,26 +1547,11 @@
         };
 
         // ─── IMAGE EXTENT ───
-        let imageExtentRaw = [{
-                {
-                    $ward - > extent_left ?? 0
-                }
-            },
-            {
-                {
-                    $ward - > extent_bottom ?? 0
-                }
-            },
-            {
-                {
-                    $ward - > extent_right ?? 0
-                }
-            },
-            {
-                {
-                    $ward - > extent_top ?? 0
-                }
-            }
+        let imageExtentRaw = [
+            {{ $ward->extent_left ?? 0 }},
+            {{ $ward->extent_bottom ?? 0 }},
+            {{ $ward->extent_right ?? 0 }},
+            {{ $ward->extent_top ?? 0 }}
         ];
 
         const isLatLon = imageExtentRaw[0] > -180 && imageExtentRaw[0] < 180 &&
@@ -3247,11 +3227,7 @@
                 method: 'GET',
                 data: {
                     gisid: gisid,
-                    ward_id: {
-                        {
-                            $ward - > id
-                        }
-                    }
+                    ward_id: {{ $ward->id }}
                 },
                 success: function(res) {
                     if (res.status) {
@@ -3606,11 +3582,7 @@
                     qcusage: $('#qcusage').val(),
                     qcsqfeet: $('#qcsqfeet').val(),
                     qc_remarks: $('#qc_remarks').val(),
-                    ward_id: {
-                        {
-                            $ward - > id
-                        }
-                    }
+                    ward_id: {{ $ward->id }}
                 },
                 success: function(res) {
                     const idx = pointDatas.findIndex(p => p.id == id);
