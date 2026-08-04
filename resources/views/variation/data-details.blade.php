@@ -1687,6 +1687,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <!-- Add this button in the modal footer or header -->
+<button type="button" class="btn btn-success" onclick="exportAllAssessments('{{ $gisid }}')">
+    <i class="bi bi-file-earmark-excel me-1"></i> Export All Assessments
+</button>
                     <a href="#" class="btn btn-export btn-export-pdf" id="exportSinglePdfBtn">
                         <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
                     </a>
@@ -1752,190 +1756,241 @@
                 });
             };
 
-            // ─── RENDER DETAILS ───
-            function renderDetails(data, gisid) {
-                $('#exportSinglePdfBtn').attr(
-                    'href',
-                    "/data-variation/single-pdf/{{ $ward->id }}/" + gisid
-                );
+           // In your data-details.blade.php, update the renderDetails function:
 
-                let html = `
-                    <div class="detail-modal-content">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="detail-section">
-                                    <h6><i class="bi bi-building text-primary me-2"></i>Building Details</h6>
-                                    <div class="detail-item">
-                                        <span class="label">GIS ID</span>
-                                        <span class="value"><code>${data.gisid}</code></span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Area</span>
-                                        <span class="value">${data.building.area.toFixed(2)} sqft</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Usage</span>
-                                        <span class="value">${data.building.usage || 'N/A'}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Number of Floors</span>
-                                        <span class="value">${data.building.details?.number_floor || 'N/A'}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Basement</span>
-                                        <span class="value">${data.building.details?.basement || 'N/A'}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Percentage</span>
-                                        <span class="value">${data.building.details?.percentage || 'N/A'}%</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Polygon Sqfeet</span>
-                                        <span class="value">${data.building.details?.sqfeet?.toFixed(2) || 'N/A'}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="detail-section">
-                                    <h6><i class="bi bi-file-earmark-text text-success me-2"></i>Assessment Details</h6>
-                                    <div class="detail-item">
-                                        <span class="label">Area</span>
-                                        <span class="value">${data.assessment.area.toFixed(2)} sqft</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Usage</span>
-                                        <span class="value">${data.assessment.usage || 'N/A'}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Count</span>
-                                        <span class="value">${data.assessment.count}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">All Usages</span>
-                                        <span class="value">${data.assessment.all_usages.join(', ') || 'None'}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Has Multiple</span>
-                                        <span class="value">${data.assessment.has_multiple ? 'Yes' : 'No'}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Assessment Type</span>
-                                        <span class="value">
-                                            <span class="badge badge-assessment-type ${(data.assessment.details?.assessment_type_status || 'N/A').toLowerCase().replace(/\s/g, '')}">
-                                                ${data.assessment.details?.assessment_type_status || 'N/A'}
-                                            </span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+function renderDetails(data, gisid) {
+    $('#exportSinglePdfBtn').attr(
+        'href',
+        "/data-variation/single-pdf/{{ $ward->id }}/" + gisid
+    );
+
+    let html = `
+        <div class="detail-modal-content">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="detail-section">
+                        <h6><i class="bi bi-building text-primary me-2"></i>Building Details</h6>
+                        <div class="detail-item">
+                            <span class="label">GIS ID</span>
+                            <span class="value"><code>${data.gisid}</code></span>
                         </div>
-
-                        <div class="row mt-2">
-                            <div class="col-md-6">
-                                <div class="detail-section ${data.area_comparison.area_status === 'VARIATION' ? 'warning' : 'success'}">
-                                    <h6><i class="bi bi-arrows-expand text-cyan me-2"></i>Area Comparison</h6>
-                                    <div class="detail-item">
-                                        <span class="label">Status</span>
-                                        <span class="value">
-                                            <span class="badge badge-area ${data.area_comparison.area_status === 'VARIATION' ? 'variation' : 'match'}">
-                                                ${data.area_comparison.area_status}
-                                            </span>
-                                        </span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Building Area</span>
-                                        <span class="value">${data.area_comparison.building_area.toFixed(2)} sqft</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Assessment Area</span>
-                                        <span class="value">${data.area_comparison.assessment_area.toFixed(2)} sqft</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Variation</span>
-                                        <span class="value ${data.area_comparison.area_variation > 0 ? 'text-danger' : 'text-success'}">
-                                            ${data.area_comparison.area_variation > 0 ? '+' : ''}${data.area_comparison.area_variation.toFixed(2)} sqft
-                                        </span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Variation %</span>
-                                        <span class="value">${data.area_comparison.variation_percentage}%</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="detail-section ${data.usage_comparison.usage_status === 'VARIATION' ? 'danger' : (data.usage_comparison.usage_status === 'PARTIAL_MATCH' ? 'warning' : 'success')}">
-                                    <h6><i class="bi bi-tags text-amber me-2"></i>Usage Comparison</h6>
-                                    <div class="detail-item">
-                                        <span class="label">Status</span>
-                                        <span class="value">
-                                            <span class="badge badge-status ${data.usage_comparison.usage_badge_class}">
-                                                ${data.usage_comparison.usage_status_label}
-                                            </span>
-                                        </span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Building Usage</span>
-                                        <span class="value">${data.usage_comparison.building_usage || 'N/A'}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Assessment Usage</span>
-                                        <span class="value">${data.usage_comparison.assessment_usage || 'N/A'}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">All Assessment Usages</span>
-                                        <span class="value">${data.usage_comparison.all_assessment_usages.join(', ') || 'None'}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Has Mismatch</span>
-                                        <span class="value">${data.usage_comparison.has_mismatch ? 'Yes' : 'No'}</span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span class="label">Has Partial Match</span>
-                                        <span class="value">${data.usage_comparison.has_partial_match ? 'Yes' : 'No'}</span>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="detail-item">
+                            <span class="label">Area</span>
+                            <span class="value">${data.building.area.toFixed(2)} sqft</span>
                         </div>
-
-                        <div class="row mt-2">
-                            <div class="col-12">
-                                <div class="detail-section">
-                                    <h6><i class="bi bi-list-ul me-2"></i>Assessment Points</h6>
-                                    ${data.assessment.details?.points && data.assessment.details.points.length > 0 ? `
-                                        <div class="assessment-points-list">
-                                            ${data.assessment.details.points.map(p => `
-                                                <div class="point-item">
-                                                    <span class="fw-bold">${p.assessment}</span>
-                                                    <span class="text-muted">|</span>
-                                                    ${p.point_area.toFixed(2)} sqft
-                                                    <span class="text-muted">|</span>
-                                                    Usage: ${p.qcusage || p.bill_usage || 'N/A'}
-                                                    <span class="text-muted">|</span>
-                                                    Type: ${p.assessment_type || 'N/A'}
-                                                    ${p.mis_data ? `<span class="badge bg-info ms-1">MIS: ${p.mis_data.plot_area || 'N/A'}</span>` : ''}
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    ` : `
-                                        <div class="text-muted">No assessment points available</div>
-                                    `}
-                                </div>
-                            </div>
+                        <div class="detail-item">
+                            <span class="label">Usage</span>
+                            <span class="value">${data.building.usage || 'N/A'}</span>
                         </div>
-
-                        <div class="row mt-2">
-                            <div class="col-12">
-                                <div class="detail-section">
-                                    <h6><i class="bi bi-database text-secondary me-2"></i>Raw Data</h6>
-                                    <pre style="background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e5e7eb;font-size:0.75rem;max-height:200px;overflow:auto;">${JSON.stringify(data.raw_data, null, 2)}</pre>
-                                </div>
-                            </div>
+                        <div class="detail-item">
+                            <span class="label">Number of Floors</span>
+                            <span class="value">${data.building.details?.number_floor || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Basement</span>
+                            <span class="value">${data.building.details?.basement || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Percentage</span>
+                            <span class="value">${data.building.details?.percentage || 'N/A'}%</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Polygon Sqfeet</span>
+                            <span class="value">${data.building.details?.sqfeet?.toFixed(2) || 'N/A'}</span>
                         </div>
                     </div>
-                `;
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-section">
+                        <h6><i class="bi bi-file-earmark-text text-success me-2"></i>Assessment Details</h6>
+                        <div class="detail-item">
+                            <span class="label">Area</span>
+                            <span class="value">${data.assessment.area.toFixed(2)} sqft</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Usage</span>
+                            <span class="value">${data.assessment.usage || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Count</span>
+                            <span class="value">${data.assessment.count}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">All Usages</span>
+                            <span class="value">${data.assessment.all_usages.join(', ') || 'None'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Has Multiple</span>
+                            <span class="value">${data.assessment.has_multiple ? 'Yes' : 'No'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Assessment Type</span>
+                            <span class="value">
+                                <span class="badge badge-assessment-type ${(data.assessment.details?.assessment_type_status || 'N/A').toLowerCase().replace(/\s/g, '')}">
+                                    ${data.assessment.details?.assessment_type_status || 'N/A'}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                $('#modalBody').html(html);
-            }
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <div class="detail-section ${data.area_comparison.area_status === 'VARIATION' ? 'warning' : 'success'}">
+                        <h6><i class="bi bi-arrows-expand text-cyan me-2"></i>Area Comparison</h6>
+                        <div class="detail-item">
+                            <span class="label">Status</span>
+                            <span class="value">
+                                <span class="badge badge-area ${data.area_comparison.area_status === 'VARIATION' ? 'variation' : 'match'}">
+                                    ${data.area_comparison.area_status}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Building Area</span>
+                            <span class="value">${data.area_comparison.building_area.toFixed(2)} sqft</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Assessment Area</span>
+                            <span class="value">${data.area_comparison.assessment_area.toFixed(2)} sqft</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Variation</span>
+                            <span class="value ${data.area_comparison.area_variation > 0 ? 'text-danger' : 'text-success'}">
+                                ${data.area_comparison.area_variation > 0 ? '+' : ''}${data.area_comparison.area_variation.toFixed(2)} sqft
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Variation %</span>
+                            <span class="value">${data.area_comparison.variation_percentage}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="detail-section ${data.usage_comparison.usage_status === 'VARIATION' ? 'danger' : (data.usage_comparison.usage_status === 'PARTIAL_MATCH' ? 'warning' : 'success')}">
+                        <h6><i class="bi bi-tags text-amber me-2"></i>Usage Comparison</h6>
+                        <div class="detail-item">
+                            <span class="label">Status</span>
+                            <span class="value">
+                                <span class="badge badge-status ${data.usage_comparison.usage_badge_class}">
+                                    ${data.usage_comparison.usage_status_label}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Building Usage</span>
+                            <span class="value">${data.usage_comparison.building_usage || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Assessment Usage</span>
+                            <span class="value">${data.usage_comparison.assessment_usage || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">All Assessment Usages</span>
+                            <span class="value">${data.usage_comparison.all_assessment_usages.join(', ') || 'None'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Has Mismatch</span>
+                            <span class="value">${data.usage_comparison.has_mismatch ? 'Yes' : 'No'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Has Partial Match</span>
+                            <span class="value">${data.usage_comparison.has_partial_match ? 'Yes' : 'No'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col-12">
+                    <div class="detail-section">
+                        <h6><i class="bi bi-list-ul me-2"></i>Assessment Points</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Assessment</th>
+                                        <th>Area (sqft)</th>
+                                        <th>Usage</th>
+                                        <th>Assessment Type</th>
+                                        <th>Owner</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.assessment.details?.points && data.assessment.details.points.length > 0 ?
+                                        data.assessment.details.points.map((p, idx) => `
+                                            <tr>
+                                                <td>${idx + 1}</td>
+                                                <td><code>${p.assessment || 'N/A'}</code></td>
+                                                <td>${p.point_area ? p.point_area.toFixed(2) : 'N/A'}</td>
+                                                <td>${p.qcusage || p.bill_usage || 'N/A'}</td>
+                                                <td>${p.assessment_type || 'N/A'}</td>
+                                                <td>${p.owner_name || 'N/A'}</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-export-excel"
+                                                        onclick="exportSingleAssessment('${data.gisid}', '${p.assessment}', '${p.assessment_type || 'N/A'}')"
+                                                        title="Export this assessment to Excel">
+                                                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                                                    </button>
+                                                    ${p.mis_data ? `<span class="badge bg-info ms-1">MIS: ${p.mis_data.plot_area || 'N/A'}</span>` : ''}
+                                                </td>
+                                            </tr>
+                                        `).join('')
+                                    : `
+                                        <tr>
+                                            <td colspan="7" class="text-muted text-center">No assessment points available</td>
+                                        </tr>
+                                    `}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="col-12">
+                    <div class="detail-section">
+                        <h6><i class="bi bi-database text-secondary me-2"></i>Raw Data</h6>
+                        <pre style="background:#f8fafc;padding:12px;border-radius:8px;border:1px solid #e5e7eb;font-size:0.75rem;max-height:200px;overflow:auto;">${JSON.stringify(data.raw_data, null, 2)}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    $('#modalBody').html(html);
+}
+
+// ─── EXPORT SINGLE ASSESSMENT ───
+window.exportSingleAssessment = function(gisid, assessmentNo, assessmentType) {
+    const wardId = {{ $ward->id }};
+
+    Swal.fire({
+        title: 'Exporting Assessment...',
+        text: `Exporting assessment ${assessmentNo} to Excel`,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Build the export URL with assessment filter
+    const params = new URLSearchParams({
+        gisid: gisid,
+        assessment: assessmentNo,
+        assessment_type: assessmentType
+    });
+
+    window.location.href = `/data-variation/export-assessment/${wardId}?${params.toString()}`;
+
+    setTimeout(() => {
+        Swal.close();
+    }, 3000);
+};
 
             // ─── EXPORT FILTERED ───
             $('#exportFilteredBtn').on('click', function() {
@@ -1959,7 +2014,25 @@
                     Swal.close();
                 }, 2000);
             });
+// ─── EXPORT ALL ASSESSMENTS ───
+window.exportAllAssessments = function(gisid) {
+    const wardId = {{ $ward->id }};
 
+    Swal.fire({
+        title: 'Exporting All Assessments...',
+        text: `Exporting all assessments for building ${gisid}`,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    window.location.href = `/data-variation/export-building-assessments/${wardId}/${gisid}`;
+
+    setTimeout(() => {
+        Swal.close();
+    }, 3000);
+};
             console.log('✅ Data Variation page ready with pagination');
             console.log(`📊 Total buildings: {{ $pagination['total'] ?? 0 }}`);
         });

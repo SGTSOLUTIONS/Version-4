@@ -12,7 +12,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 class CommissionerController extends Controller
 {
     /**
@@ -1642,4 +1647,407 @@ class CommissionerController extends Controller
             'professional_tax' => $empty,
         ];
     }
+     public function exportSingleAssessment(Request $request, $wardId)
+    {
+        $gisid = $request->query('gisid');
+        $assessmentNo = $request->query('assessment');
+        $assessmentType = $request->query('assessment_type', 'N/A');
+
+        // Get all data for this building
+        $buildingData = $this->getBuildingVariationData($wardId, $gisid);
+
+        // Filter to get specific assessment
+        $assessmentData = null;
+        $allPoints = $buildingData['assessment']['details']['points'] ?? [];
+
+        foreach ($allPoints as $point) {
+            if ($point['assessment'] == $assessmentNo) {
+                $assessmentData = $point;
+                break;
+            }
+        }
+
+        if (!$assessmentData) {
+            return redirect()->back()->with('error', 'Assessment not found');
+        }
+
+        // Create Excel file
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set title
+        $sheet->setTitle('Assessment Details');
+
+        // ─── HEADER SECTION ───
+        $sheet->mergeCells('A1:I1');
+        $sheet->setCellValue('A1', 'ASSESSMENT DETAILS REPORT');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->mergeCells('A2:I2');
+        $sheet->setCellValue('A2', "Ward: {$buildingData['ward']->ward_no} | GIS ID: {$gisid} | Assessment: {$assessmentNo}");
+        $sheet->getStyle('A2')->getFont()->setSize(12);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // ─── BUILDING DETAILS ───
+        $row = 4;
+        $sheet->setCellValue("A{$row}", 'BUILDING DETAILS');
+        $sheet->mergeCells("A{$row}:I{$row}");
+        $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle("A{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF4472C4');
+        $sheet->getStyle("A{$row}")->getFont()->getColor()->setARGB('FFFFFFFF');
+
+        $row++;
+        $details = [
+            ['GIS ID', $gisid],
+            ['Building Area (sqft)', $buildingData['building']['area'] ?? 0],
+            ['Building Usage', $buildingData['building']['usage'] ?? 'N/A'],
+            ['Number of Floors', $buildingData['building']['details']['number_floor'] ?? 'N/A'],
+            ['Basement', $buildingData['building']['details']['basement'] ?? 'N/A'],
+            ['Polygon Sqfeet', $buildingData['polygon']['sqfeet'] ?? 0],
+        ];
+
+        foreach ($details as $detail) {
+            $sheet->setCellValue("A{$row}", $detail[0]);
+            $sheet->setCellValue("B{$row}", $detail[1]);
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true);
+            $row++;
+        }
+
+        $row++;
+
+        // ─── ASSESSMENT DETAILS ───
+        $sheet->setCellValue("A{$row}", 'ASSESSMENT DETAILS');
+        $sheet->mergeCells("A{$row}:I{$row}");
+        $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle("A{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF70AD47');
+        $sheet->getStyle("A{$row}")->getFont()->getColor()->setARGB('FFFFFFFF');
+
+        $row++;
+        $assessmentDetails = [
+            ['Assessment No', $assessmentData['assessment'] ?? 'N/A'],
+            ['Assessment Type', $assessmentData['assessment_type'] ?? 'N/A'],
+            ['Point Area (sqft)', $assessmentData['point_area'] ?? 0],
+            ['QC Usage', $assessmentData['qcusage'] ?? 'N/A'],
+            ['Bill Usage', $assessmentData['bill_usage'] ?? 'N/A'],
+            ['Owner Name', $assessmentData['owner_name'] ?? 'N/A'],
+            ['Phone Number', $assessmentData['phone_number'] ?? 'N/A'],
+            ['Door No', $assessmentData['door_no'] ?? 'N/A'],
+            ['Street Name', $assessmentData['street_name'] ?? 'N/A'],
+        ];
+
+        foreach ($assessmentDetails as $detail) {
+            $sheet->setCellValue("A{$row}", $detail[0]);
+            $sheet->setCellValue("B{$row}", $detail[1]);
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true);
+            $row++;
+        }
+
+        $row++;
+
+        // ─── MIS DATA ───
+        if (!empty($assessmentData['mis_data'])) {
+            $sheet->setCellValue("A{$row}", 'MIS DATA');
+            $sheet->mergeCells("A{$row}:I{$row}");
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(14);
+            $sheet->getStyle("A{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFED7D31');
+            $sheet->getStyle("A{$row}")->getFont()->getColor()->setARGB('FFFFFFFF');
+
+            $row++;
+            $misFields = [
+                'Assessment', 'Owner Name', 'Plot Area', 'Half Year Tax', 'Balance',
+                'New Door No', 'Old Door No', 'Ward No', 'Road Name', 'Type'
+            ];
+
+            // Header row
+            $col = 'A';
+            foreach ($misFields as $field) {
+                $sheet->setCellValue($col . $row, $field);
+                $sheet->getStyle($col . $row)->getFont()->setBold(true);
+                $sheet->getStyle($col . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFD9E1F2');
+                $col++;
+            }
+            $row++;
+
+            // Data row
+            $col = 'A';
+            $mis = $assessmentData['mis_data'];
+            $map = [
+                'assessment' => $mis['assessment'] ?? 'N/A',
+                'owner_name' => $mis['owner_name'] ?? 'N/A',
+                'plot_area' => $mis['plot_area'] ?? 0,
+                'half_year_tax' => $mis['half_year_tax'] ?? 0,
+                'balance' => $mis['balance'] ?? 0,
+                'new_door_no' => $mis['new_door_no'] ?? 'N/A',
+                'old_door_no' => $mis['old_door_no'] ?? 'N/A',
+                'ward_no' => $mis['ward_no'] ?? 'N/A',
+                'road_name' => $mis['road_name'] ?? 'N/A',
+                'type' => $mis['type'] ?? 'N/A',
+            ];
+
+            foreach ($map as $value) {
+                $sheet->setCellValue($col . $row, $value);
+                $col++;
+            }
+            $row += 2;
+        }
+
+        // ─── COMPARISON DATA ───
+        $sheet->setCellValue("A{$row}", 'COMPARISON DATA');
+        $sheet->mergeCells("A{$row}:I{$row}");
+        $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle("A{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF7030A0');
+        $sheet->getStyle("A{$row}")->getFont()->getColor()->setARGB('FFFFFFFF');
+
+        $row++;
+        $comparison = [
+            ['Total Building Area', $buildingData['area_comparison']['building_area'] ?? 0],
+            ['Total Assessment Area', $buildingData['area_comparison']['assessment_area'] ?? 0],
+            ['Area Variation', $buildingData['area_comparison']['area_variation'] ?? 0],
+            ['Variation Percentage', ($buildingData['area_comparison']['variation_percentage'] ?? 0) . '%'],
+            ['Area Status', $buildingData['area_comparison']['area_status'] ?? 'N/A'],
+            ['Usage Status', $buildingData['usage_comparison']['usage_status_label'] ?? 'N/A'],
+        ];
+
+        foreach ($comparison as $detail) {
+            $sheet->setCellValue("A{$row}", $detail[0]);
+            $sheet->setCellValue("B{$row}", $detail[1]);
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true);
+
+            // Color code the status
+            if (strpos($detail[0], 'Status') !== false) {
+                if ($detail[1] == 'VARIATION' || $detail[1] == 'Mismatch') {
+                    $sheet->getStyle("B{$row}")->getFont()->getColor()->setARGB('FFFF0000');
+                } elseif ($detail[1] == 'MATCH' || $detail[1] == 'Match') {
+                    $sheet->getStyle("B{$row}")->getFont()->getColor()->setARGB('FF00B050');
+                }
+            }
+            $row++;
+        }
+
+        // ─── AUTO SIZE COLUMNS ───
+        foreach (range('A', 'I') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // ─── DOWNLOAD ───
+        $filename = "Assessment_{$assessmentNo}_GIS_{$gisid}_" . date('Y-m-d') . ".xlsx";
+
+        $writer = new Xlsx($spreadsheet);
+
+        return new StreamedResponse(function() use ($writer) {
+            $writer->save('php://output');
+        }, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+    public function exportBuildingAssessments(Request $request, $wardId, $gisid)
+    {
+        $buildingData = $this->getBuildingVariationData($wardId, $gisid);
+
+        if (!$buildingData) {
+            return redirect()->back()->with('error', 'Building not found');
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('All Assessments');
+
+        // ─── HEADER ───
+        $sheet->mergeCells('A1:M1');
+        $sheet->setCellValue('A1', "ALL ASSESSMENTS FOR BUILDING - GIS ID: {$gisid}");
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->mergeCells('A2:M2');
+        $sheet->setCellValue('A2', "Ward: {$buildingData['ward']->ward_no} | Building Area: {$buildingData['building']['area']} sqft");
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // ─── HEADERS ───
+        $row = 4;
+        $headers = [
+            '#', 'Assessment No', 'Assessment Type', 'Point Area (sqft)',
+            'QC Usage', 'Bill Usage', 'Owner Name', 'Phone',
+            'Door No', 'Street', 'MIS Assessment', 'MIS Area', 'MIS Tax'
+        ];
+
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . $row, $header);
+            $sheet->getStyle($col . $row)->getFont()->setBold(true);
+            $sheet->getStyle($col . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FF4472C4');
+            $sheet->getStyle($col . $row)->getFont()->getColor()->setARGB('FFFFFFFF');
+            $col++;
+        }
+
+        // ─── DATA ───
+        $row++;
+        $points = $buildingData['assessment']['details']['points'] ?? [];
+
+        foreach ($points as $idx => $point) {
+            $col = 'A';
+            $sheet->setCellValue($col . $row, $idx + 1);
+            $col++;
+            $sheet->setCellValue($col . $row, $point['assessment'] ?? 'N/A');
+            $col++;
+            $sheet->setCellValue($col . $row, $point['assessment_type'] ?? 'N/A');
+            $col++;
+            $sheet->setCellValue($col . $row, $point['point_area'] ?? 0);
+            $col++;
+            $sheet->setCellValue($col . $row, $point['qcusage'] ?? 'N/A');
+            $col++;
+            $sheet->setCellValue($col . $row, $point['bill_usage'] ?? 'N/A');
+            $col++;
+            $sheet->setCellValue($col . $row, $point['owner_name'] ?? 'N/A');
+            $col++;
+            $sheet->setCellValue($col . $row, $point['phone_number'] ?? 'N/A');
+            $col++;
+            $sheet->setCellValue($col . $row, $point['door_no'] ?? 'N/A');
+            $col++;
+            $sheet->setCellValue($col . $row, $point['street_name'] ?? 'N/A');
+            $col++;
+
+            $mis = $point['mis_data'] ?? [];
+            $sheet->setCellValue($col . $row, $mis['assessment'] ?? 'N/A');
+            $col++;
+            $sheet->setCellValue($col . $row, $mis['plot_area'] ?? 0);
+            $col++;
+            $sheet->setCellValue($col . $row, $mis['half_year_tax'] ?? 0);
+
+            $row++;
+        }
+
+        // ─── AUTO SIZE ───
+        foreach (range('A', 'M') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // ─── DOWNLOAD ───
+        $filename = "Building_Assessments_{$gisid}_" . date('Y-m-d') . ".xlsx";
+
+        $writer = new Xlsx($spreadsheet);
+
+        return new StreamedResponse(function() use ($writer) {
+            $writer->save('php://output');
+        }, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
+    private function getBuildingVariationData($wardId, $gisid)
+    {
+        // Get ward
+        $ward = \App\Models\Ward::find($wardId);
+        if (!$ward) return null;
+
+        // Get polygon
+        $polygonsTable = "polygons_{$wardId}";
+        if (!Schema::hasTable($polygonsTable)) return null;
+
+        $polygon = DB::table($polygonsTable)->where('gisid', $gisid)->first();
+        if (!$polygon) return null;
+
+        // Get polygon data
+        $polygonDataTable = "polygon_data_{$wardId}";
+        $polygonData = null;
+        if (Schema::hasTable($polygonDataTable)) {
+            $polygonData = DB::table($polygonDataTable)->where('gisid', $gisid)->first();
+        }
+
+        // Get point data
+        $pointDataTable = "point_data_{$wardId}";
+        $pointData = collect();
+        if (Schema::hasTable($pointDataTable)) {
+            $pointData = DB::table($pointDataTable)->where('point_gisid', $gisid)->get();
+        }
+
+        // Get MIS data
+        $corpId = \App\Models\Zone::find($ward->zone_id)->corp_id ?? null;
+        $misTable = "mis_{$corpId}";
+        $misData = collect();
+        if (Schema::hasTable($misTable)) {
+            $assessments = $pointData->pluck('assessment')->filter()->toArray();
+            if (!empty($assessments)) {
+                $misData = DB::table($misTable)->whereIn('assessment', $assessments)->get()->keyBy('assessment');
+            }
+        }
+
+        // Build response
+        $buildingArea = $polygon->sqfeet ?? 0;
+        $numberFloor = $polygonData->number_floor ?? 0;
+        $basement = $polygonData->basement ?? 0;
+        if ($numberFloor > 0) {
+            $buildingArea *= $numberFloor;
+        }
+        if ($basement > 0) {
+            $buildingArea += ($polygon->sqfeet ?? 0) * $basement;
+        }
+
+        $assessmentArea = 0;
+        $points = [];
+        foreach ($pointData as $pd) {
+            $pointArea = 0;
+            if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
+                $pointArea = $pd->qcsqfeet;
+            } elseif ($misData->has($pd->assessment) && !empty($misData[$pd->assessment]->plot_area)) {
+                $pointArea = $misData[$pd->assessment]->plot_area;
+            }
+            $assessmentArea += $pointArea;
+
+            $mis = $misData->get($pd->assessment);
+            $points[] = [
+                'assessment' => $pd->assessment ?? 'N/A',
+                'assessment_type' => $pd->assessment_type ?? 'N/A',
+                'point_area' => $pointArea,
+                'qcusage' => $pd->qcusage ?? 'N/A',
+                'bill_usage' => $pd->bill_usage ?? 'N/A',
+                'owner_name' => $mis->owner_name ?? $pd->owner_name ?? 'N/A',
+                'phone_number' => $mis->phone_number ?? $pd->phone_number ?? 'N/A',
+                'door_no' => $mis->new_door_no ?? $pd->door_no ?? 'N/A',
+                'street_name' => $mis->road_name ?? $pd->street_name ?? 'N/A',
+                'mis_data' => $mis ? (array) $mis : null,
+            ];
+        }
+
+        $areaVariation = $buildingArea - $assessmentArea;
+        $variationPercentage = $buildingArea > 0 ? round((abs($areaVariation) / $buildingArea) * 100, 1) : 0;
+
+        return [
+            'ward' => $ward,
+            'polygon' => (array) $polygon,
+            'building' => [
+                'area' => $buildingArea,
+                'usage' => $polygonData->building_usage ?? 'N/A',
+                'details' => [
+                    'number_floor' => $numberFloor,
+                    'basement' => $basement,
+                    'percentage' => $polygonData->percentage ?? null,
+                    'sqfeet' => $polygon->sqfeet ?? 0,
+                ]
+            ],
+            'assessment' => [
+                'area' => $assessmentArea,
+                'usage' => $points[0]['qcusage'] ?? $points[0]['bill_usage'] ?? 'N/A',
+                'count' => count($points),
+                'all_usages' => array_unique(array_column($points, 'qcusage')),
+                'details' => ['points' => $points]
+            ],
+            'area_comparison' => [
+                'building_area' => $buildingArea,
+                'assessment_area' => $assessmentArea,
+                'area_variation' => $areaVariation,
+                'variation_percentage' => $variationPercentage,
+                'area_status' => abs($areaVariation) > 1 ? 'VARIATION' : 'MATCH',
+            ],
+            'usage_comparison' => [
+                'usage_status' => 'UNKNOWN',
+                'usage_status_label' => 'Unknown',
+                'usage_badge_class' => 'no-data',
+            ]
+        ];
+    }
+
 }

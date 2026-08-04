@@ -68,6 +68,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/data-variation/single-pdf/{wardId}/{gisid}', [VariationController::class, 'exportSinglePdf'])->name('data-variation.single-pdf');
     Route::get('/data-variation/details/{wardId}/{gisid}', [VariationController::class, 'getBuildingDetails'])->name('data-variation.details');
     Route::get('/data-variation/paginated/{wardId}', [VariationController::class, 'getPaginatedData'])->name('data-variation.paginated');
+    // Export single assessment to Excel
+Route::get('/data-variation/export-assessment/{wardId}', [VariationController::class, 'exportSingleAssessment'])
+    ->name('data-variation.export-assessment');
+
+// Alternative: Export all assessments for a building
+Route::get('/data-variation/export-building-assessments/{wardId}/{gisid}', [VariationController::class, 'exportBuildingAssessments'])
+    ->name('data-variation.export-building-assessments');
+
     Route::post('/variation/filter', [VariationController::class, 'filterVariations'])->name('variation.filter');
     Route::post('/variation/export', [VariationController::class, 'exportVariations'])->name('variation.export');
     Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])->name('variation.usage');
