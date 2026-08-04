@@ -1166,10 +1166,7 @@ public function dataControll($wardId, Request $request)
 
         return $pdf->download("FORM2_{$gisid}_" . date('Y-m-d_H-i-s') . ".pdf");
     }
-    /**
-     * Export single assessment PDF
-     */
-    public function exportSingleAssessmentPdf(Request $request, $wardId)
+public function exportSingleAssessmentPdf(Request $request, $wardId)
     {
         $gisid = $request->query('gisid');
         $assessmentNo = $request->query('assessment');
@@ -1218,7 +1215,7 @@ public function dataControll($wardId, Request $request)
             'assessmentNo' => $assessmentNo,
             'assessmentType' => $assessmentType,
             'date' => now()->format('d-m-Y'),
-            'time' => now()->format('h:i A'),
+            'time' => now()->format('h-i-A'), // Changed: h:i A to h-i-A to avoid colon
         ]);
 
         $pdf->setPaper('A4', 'portrait');
@@ -1228,7 +1225,10 @@ public function dataControll($wardId, Request $request)
             'isRemoteEnabled' => true,
         ]);
 
-        $filename = "Assessment_{$assessmentNo}_GIS_{$gisid}_" . date('Y-m-d') . ".pdf";
+        // Sanitize filename - remove invalid characters
+        $safeGisid = preg_replace('/[\/\\\:]/', '-', $gisid);
+        $safeAssessmentNo = preg_replace('/[\/\\\:]/', '-', $assessmentNo);
+        $filename = "Assessment_{$safeAssessmentNo}_GIS_{$safeGisid}_" . date('Y-m-d') . ".pdf";
 
         return $pdf->download($filename);
     }
@@ -1263,7 +1263,7 @@ public function dataControll($wardId, Request $request)
             'gisid' => $gisid,
             'buildingData' => $buildingData,
             'date' => now()->format('d-m-Y'),
-            'time' => now()->format('h:i A'),
+            'time' => now()->format('h-i-A'), // Changed: h:i A to h-i-A to avoid colon
         ]);
 
         $pdf->setPaper('A4', 'portrait');
@@ -1273,7 +1273,9 @@ public function dataControll($wardId, Request $request)
             'isRemoteEnabled' => true,
         ]);
 
-        $filename = "All_Assessments_GIS_{$gisid}_" . date('Y-m-d') . ".pdf";
+        // Sanitize filename - remove invalid characters
+        $safeGisid = preg_replace('/[\/\\\:]/', '-', $gisid);
+        $filename = "All_Assessments_GIS_{$safeGisid}_" . date('Y-m-d') . ".pdf";
 
         return $pdf->download($filename);
     }
