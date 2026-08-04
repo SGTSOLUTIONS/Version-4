@@ -55,7 +55,6 @@
             position: relative;
         }
 
-        /* ─── Cesium 3D container (replaces the broken ol-cesium sync) ─── */
         #cesiumContainer {
             width: 100%;
             height: 800px;
@@ -63,7 +62,6 @@
             display: none;
         }
 
-        /* ─── Map Controls Stack ─── */
         .map-controls-stack {
             position: absolute;
             right: 20px;
@@ -140,7 +138,6 @@
             border-color: #0d6efd;
         }
 
-        /* 3D Button Styles */
         .threed-toggle-btn.active-3d {
             color: #0d6efd;
             background: #e3f0ff;
@@ -158,17 +155,9 @@
         }
 
         @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-
-            100% {
-                opacity: 1;
-            }
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         /* ─── Dropdowns ─── */
@@ -198,25 +187,15 @@
             display: block;
         }
 
-        .layer-dropdown {
-            min-width: 220px;
-        }
-
-        .location-dropdown {
-            min-width: 200px;
-        }
-
-        .search-dropdown {
-            min-width: 320px;
-        }
-
+        .layer-dropdown { min-width: 220px; }
+        .location-dropdown { min-width: 200px; }
+        .search-dropdown { min-width: 320px; }
         .filter-dropdown {
             min-width: 350px;
             max-height: 80vh;
             overflow: hidden;
         }
 
-        /* ─── Filter Scroll Container ─── */
         .filter-scroll-container {
             max-height: 55vh;
             overflow-y: auto;
@@ -226,17 +205,14 @@
         .filter-scroll-container::-webkit-scrollbar {
             width: 6px;
         }
-
         .filter-scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 3px;
         }
-
         .filter-scroll-container::-webkit-scrollbar-thumb {
             background: #ccc;
             border-radius: 3px;
         }
-
         .filter-scroll-container::-webkit-scrollbar-thumb:hover {
             background: #999;
         }
@@ -421,25 +397,10 @@
             font-weight: 600;
         }
 
-        .type-badge.road {
-            background: #0dcaf0;
-            color: #000;
-        }
-
-        .type-badge.parcel {
-            background: #198754;
-            color: #fff;
-        }
-
-        .type-badge.point {
-            background: #ffc107;
-            color: #000;
-        }
-
-        .type-badge.assessment {
-            background: #0d6efd;
-            color: #fff;
-        }
+        .type-badge.road { background: #0dcaf0; color: #000; }
+        .type-badge.parcel { background: #198754; color: #fff; }
+        .type-badge.point { background: #ffc107; color: #000; }
+        .type-badge.assessment { background: #0d6efd; color: #fff; }
 
         .filter-field-group {
             margin-bottom: 10px;
@@ -494,7 +455,6 @@
             -webkit-backdrop-filter: blur(10px);
         }
 
-        /* ─── Fullscreen ─── */
         .fullscreen-btn {
             position: absolute;
             right: 20px;
@@ -552,677 +512,110 @@
             height: calc(100vh - 5px);
         }
 
-        /* ─── Modal Styles ─── */
-        .bld-modal-content {
-            border: none;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, .18);
-        }
-
-        .bld-modal-header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
-            border-bottom: none;
-            padding: 18px 24px;
-            color: #fff;
-        }
-
-        .bld-header-inner {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .bld-header-icon {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, .15);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .bld-modal-title {
-            margin: 0;
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: .3px;
-        }
-
-        .bld-gisid-badge {
-            font-size: .72rem;
-            background: rgba(255, 255, 255, .2);
-            color: #fff;
-            border-radius: 6px;
-            padding: 2px 10px;
-            display: inline-block;
-            margin-top: 4px;
-            letter-spacing: .4px;
-        }
-
-        .bld-image-strip {
-            display: flex;
-            gap: 0;
-            height: 220px;
-            background: #0f172a;
-        }
-
-        .bld-img-wrap {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            background: #1e293b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .bld-img-wrap+.bld-img-wrap {
-            border-left: 3px solid #fff;
-        }
-
-        .bld-img-wrap img {
-
-            height: 100%;
-            object-fit: cover;
-            transition: transform .4s ease;
-        }
-
-        .bld-img-wrap:hover img {
-            transform: scale(1.04);
-        }
-
-        .bld-img-label {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(transparent, rgba(0, 0, 0, .65));
-            color: #fff;
-            font-size: .78rem;
-            font-weight: 600;
-            padding: 18px 12px 8px;
-            letter-spacing: .3px;
-        }
-
-        .bld-img-wrap .bld-img-empty {
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 0.9rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .bld-img-wrap .bld-img-empty i {
-            font-size: 2rem;
-            opacity: 0.5;
-        }
-
-        .bld-img-wrap .bld-img-error {
-            color: #ef4444;
-            font-size: 0.85rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .bld-summary-strip {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0;
-            border-bottom: 1px solid #e5e7eb;
-            background: #f8fafc;
-        }
-
-        .bld-summary-card {
-            flex: 1 1 120px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-right: 1px solid #e5e7eb;
-        }
-
-        .bld-summary-card:last-child {
-            border-right: none;
-        }
-
-        .bld-summary-icon {
-            font-size: 1.3rem;
-            line-height: 1;
-        }
-
-        .bld-summary-label {
-            font-size: .68rem;
-            color: #000000;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .4px;
-            line-height: 1;
-        }
-
-        .bld-summary-val {
-            font-size: .95rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-top: 2px;
-        }
-
-        .bld-info-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 10px 14px;
-            border: 1px solid #e5e7eb;
-            height: 100%;
-        }
-
-        .bld-info-icon {
-            font-size: 1rem;
-            color: #94a3b8;
-            margin-top: 2px;
-            flex-shrink: 0;
-        }
-
-        .bld-info-label {
-            font-size: .68rem;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .4px;
-            line-height: 1;
-        }
-
-        .bld-info-val {
-            font-size: .9rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-top: 3px;
-            word-break: break-word;
-        }
-
-        .bld-section-divider {
-            font-size: .8rem;
-            font-weight: 700;
-            color: #475569;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-        }
-
-        .bld-status-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: .7rem;
-            font-weight: 700;
-            padding: 3px 9px;
-            border-radius: 20px;
-            letter-spacing: .3px;
-        }
-
-        .bld-status-tag.complete {
-            background: #dcfce7;
-            color: #15803d;
-        }
-
-        .bld-status-tag.partial {
-            background: #fef9c3;
-            color: #92400e;
-        }
-
-        .bld-status-tag.empty {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .bld-btn-save {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            padding: 9px 22px;
-            font-size: .875rem;
-            transition: all .2s;
-        }
-
-        .bld-btn-save:hover {
-            background: linear-gradient(135deg, #1d4ed8, #1e40af);
-            color: #fff;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, .3);
-        }
-
-        .bld-btn-cancel {
-            background: #f1f5f9;
-            color: #475569;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            padding: 9px 20px;
-            font-size: .875rem;
-            transition: all .2s;
-        }
-
-        .bld-btn-cancel:hover {
-            background: #e2e8f0;
-            color: #1e293b;
-        }
-
-        .bld-modal-footer {
-            background: #f8fafc;
-            border-top: 1px solid #e5e7eb;
-            padding: 14px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .bld-footer-status {
-            font-size: .8rem;
-            color: #64748b;
-        }
-
-        .point-data-card {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            padding: 16px 18px;
-            margin-bottom: 12px;
-            position: relative;
-            transition: box-shadow .2s, border-color .2s;
-        }
-
-        .point-data-card:hover {
-            box-shadow: 0 4px 16px rgba(37, 99, 235, .1);
-            border-color: #93c5fd;
-        }
-
-        .point-data-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-
-        .point-data-card-title {
-            font-size: .9rem;
-            font-weight: 700;
-            color: #1e293b;
-        }
-
-        .point-data-card-subtitle {
-            font-size: .75rem;
-            color: #64748b;
-            margin-top: 2px;
-        }
-
-        .point-data-card-actions {
-            display: flex;
-            gap: 6px;
-            flex-shrink: 0;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .pdc-action-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .9rem;
-            cursor: pointer;
-            transition: all .2s;
-        }
-
-        .pdc-qc-btn {
-            background: #fef9c3;
-            color: #92400e;
-        }
-
-        .pdc-qc-btn:hover {
-            background: #92400e;
-            color: #fff;
-        }
-
-        .pdc-field {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 8px 10px;
-        }
-
-        .pdc-field-label {
-            font-size: .65rem;
-            color: #94a3b8;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-        }
-
-        .pdc-field-val {
-            font-size: .82rem;
-            color: #1e293b;
-            font-weight: 600;
-            margin-top: 1px;
-            word-break: break-word;
-        }
-
-        .pdc-field-val.empty {
-            color: #cbd5e1;
-            font-style: italic;
-        }
-
-        .tax-card {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 12px 14px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 8px;
-            height: 100%;
-        }
-
-        .tax-card-title {
-            font-size: .7rem;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-            margin-bottom: 6px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 4px;
-        }
-
-        .tax-card-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-        }
-
-        .tax-card-label {
-            font-size: .7rem;
-            color: #94a3b8;
-        }
-
-        .tax-card-value {
-            font-size: .78rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .bv-variation-strip {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 12px 16px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 12px;
-        }
-
-        .bv-variation-card {
-            flex: 1;
-            min-width: 120px;
-        }
-
-        .bv-variation-card .stat-label {
-            font-size: .65rem;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-        }
-
-        .bv-variation-card .stat-value {
-            font-size: .9rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-top: 2px;
-        }
-
-        .bv-variation-card .stat-sub {
-            font-size: .7rem;
-            font-weight: 600;
-            color: #94a3b8;
-        }
-
-        /* ─── Quick Stats ─── */
-        .quick-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            background: #f8fafc;
-            border-radius: 8px;
-            margin: 8px 16px;
-            padding: 12px;
-            font-size: 12px;
-        }
-
-        .quick-stats .stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-        }
-
-        .quick-stats .stat-item strong {
-            color: #1e293b;
-        }
-
-        .quick-stats .stat-item .stat-value {
-            color: #0d6efd;
-            font-weight: 600;
-        }
-
-        /* ─── Responsive ─── */
+        /* ─── Modal Styles (keeping existing) ─── */
+        .bld-modal-content { border: none; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.18); }
+        .bld-modal-header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); border-bottom: none; padding: 18px 24px; color: #fff; }
+        .bld-header-inner { display: flex; align-items: center; gap: 14px; }
+        .bld-header-icon { width: 44px; height: 44px; background: rgba(255,255,255,.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #fff; flex-shrink: 0; }
+        .bld-modal-title { margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff; letter-spacing: .3px; }
+        .bld-gisid-badge { font-size: .72rem; background: rgba(255,255,255,.2); color: #fff; border-radius: 6px; padding: 2px 10px; display: inline-block; margin-top: 4px; letter-spacing: .4px; }
+        .bld-image-strip { display: flex; gap: 0; height: 220px; background: #0f172a; }
+        .bld-img-wrap { flex: 1; position: relative; overflow: hidden; background: #1e293b; display: flex; align-items: center; justify-content: center; }
+        .bld-img-wrap + .bld-img-wrap { border-left: 3px solid #fff; }
+        .bld-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
+        .bld-img-wrap:hover img { transform: scale(1.04); }
+        .bld-img-label { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,.65)); color: #fff; font-size: .78rem; font-weight: 600; padding: 18px 12px 8px; letter-spacing: .3px; }
+        .bld-img-wrap .bld-img-empty { color: rgba(255,255,255,0.4); font-size: 0.9rem; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .bld-img-wrap .bld-img-empty i { font-size: 2rem; opacity: 0.5; }
+        .bld-img-wrap .bld-img-error { color: #ef4444; font-size: 0.85rem; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .bld-summary-strip { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; }
+        .bld-summary-card { flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb; }
+        .bld-summary-card:last-child { border-right: none; }
+        .bld-summary-icon { font-size: 1.3rem; line-height: 1; }
+        .bld-summary-label { font-size: .68rem; color: #000000; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; line-height: 1; }
+        .bld-summary-val { font-size: .95rem; font-weight: 700; color: #1e293b; margin-top: 2px; }
+        .bld-info-row { display: flex; align-items: flex-start; gap: 10px; background: #f8fafc; border-radius: 10px; padding: 10px 14px; border: 1px solid #e5e7eb; height: 100%; }
+        .bld-info-icon { font-size: 1rem; color: #94a3b8; margin-top: 2px; flex-shrink: 0; }
+        .bld-info-label { font-size: .68rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; line-height: 1; }
+        .bld-info-val { font-size: .9rem; font-weight: 600; color: #1e293b; margin-top: 3px; word-break: break-word; }
+        .bld-section-divider { font-size: .8rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .5px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; display: flex; align-items: center; }
+        .bld-status-tag { display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; letter-spacing: .3px; }
+        .bld-status-tag.complete { background: #dcfce7; color: #15803d; }
+        .bld-status-tag.partial { background: #fef9c3; color: #92400e; }
+        .bld-status-tag.empty { background: #fee2e2; color: #b91c1c; }
+        .bld-btn-save { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: none; border-radius: 10px; font-weight: 600; padding: 9px 22px; font-size: .875rem; transition: all .2s; }
+        .bld-btn-save:hover { background: linear-gradient(135deg, #1d4ed8, #1e40af); color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,.3); }
+        .bld-btn-cancel { background: #f1f5f9; color: #475569; border: none; border-radius: 10px; font-weight: 600; padding: 9px 20px; font-size: .875rem; transition: all .2s; }
+        .bld-btn-cancel:hover { background: #e2e8f0; color: #1e293b; }
+        .bld-modal-footer { background: #f8fafc; border-top: 1px solid #e5e7eb; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+        .bld-footer-status { font-size: .8rem; color: #64748b; }
+        .point-data-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; position: relative; transition: box-shadow .2s, border-color .2s; }
+        .point-data-card:hover { box-shadow: 0 4px 16px rgba(37,99,235,.1); border-color: #93c5fd; }
+        .point-data-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .point-data-card-title { font-size: .9rem; font-weight: 700; color: #1e293b; }
+        .point-data-card-subtitle { font-size: .75rem; color: #64748b; margin-top: 2px; }
+        .point-data-card-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+        .pdc-action-btn { width: 32px; height: 32px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; font-size: .9rem; cursor: pointer; transition: all .2s; }
+        .pdc-qc-btn { background: #fef9c3; color: #92400e; }
+        .pdc-qc-btn:hover { background: #92400e; color: #fff; }
+        .pdc-field { background: #f8fafc; border-radius: 8px; padding: 8px 10px; }
+        .pdc-field-label { font-size: .65rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+        .pdc-field-val { font-size: .82rem; color: #1e293b; font-weight: 600; margin-top: 1px; word-break: break-word; }
+        .pdc-field-val.empty { color: #cbd5e1; font-style: italic; }
+        .tax-card { background: #f8fafc; border-radius: 10px; padding: 12px 14px; border: 1px solid #e5e7eb; margin-bottom: 8px; height: 100%; }
+        .tax-card-title { font-size: .7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 6px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+        .tax-card-row { display: flex; justify-content: space-between; padding: 2px 0; }
+        .tax-card-label { font-size: .7rem; color: #94a3b8; }
+        .tax-card-value { font-size: .78rem; font-weight: 600; color: #1e293b; }
+        .bv-variation-strip { display: flex; flex-wrap: wrap; gap: 12px; background: #f8fafc; border-radius: 10px; padding: 12px 16px; border: 1px solid #e5e7eb; margin-bottom: 12px; }
+        .bv-variation-card { flex: 1; min-width: 120px; }
+        .bv-variation-card .stat-label { font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+        .bv-variation-card .stat-value { font-size: .9rem; font-weight: 700; color: #1e293b; margin-top: 2px; }
+        .bv-variation-card .stat-sub { font-size: .7rem; font-weight: 600; color: #94a3b8; }
+        .quick-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f8fafc; border-radius: 8px; margin: 8px 16px; padding: 12px; font-size: 12px; }
+        .quick-stats .stat-item { display: flex; justify-content: space-between; padding: 2px 0; }
+        .quick-stats .stat-item strong { color: #1e293b; }
+        .quick-stats .stat-item .stat-value { color: #0d6efd; font-weight: 600; }
+
+        /* Responsive */
         @media (max-width: 768px) {
-
-            #map,
-            #cesiumContainer {
-                height: 500px;
-            }
-
-            .map-controls-stack {
-                right: 12px;
-                top: 12px;
-                gap: 6px;
-            }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 15px;
-                padding: 8px;
-                border-radius: 8px;
-            }
-
-            .fullscreen-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 15px;
-                padding: 8px;
-                right: 12px;
-                bottom: 12px;
-            }
-
-            .layer-dropdown,
-            .location-dropdown {
-                min-width: 180px;
-            }
-
-            .search-dropdown {
-                min-width: 280px;
-                right: -10px;
-            }
-
-            .filter-dropdown {
-                min-width: 300px;
-                right: -10px;
-            }
-
-            .bld-image-strip {
-                height: 150px;
-            }
-
-            .bld-summary-card {
-                flex: 1 1 45%;
-            }
-
-            .point-data-card-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .quick-stats {
-                grid-template-columns: 1fr 1fr;
-            }
+            #map, #cesiumContainer { height: 500px; }
+            .map-controls-stack { right: 12px; top: 12px; gap: 6px; }
+            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn, .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn, .filter-toggle-btn { width: 38px; height: 38px; font-size: 15px; padding: 8px; border-radius: 8px; }
+            .fullscreen-btn { width: 38px; height: 38px; font-size: 15px; padding: 8px; right: 12px; bottom: 12px; }
+            .layer-dropdown, .location-dropdown { min-width: 180px; }
+            .search-dropdown { min-width: 280px; right: -10px; }
+            .filter-dropdown { min-width: 300px; right: -10px; }
+            .bld-image-strip { height: 150px; }
+            .bld-summary-card { flex: 1 1 45%; }
+            .point-data-card-grid { grid-template-columns: 1fr 1fr; }
+            .quick-stats { grid-template-columns: 1fr 1fr; }
         }
 
         @media (max-width: 480px) {
-
-            #map,
-            #cesiumContainer {
-                height: 400px;
-            }
-
-            .map-controls-stack {
-                right: 8px;
-                top: 8px;
-                gap: 5px;
-            }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                width: 34px;
-                height: 34px;
-                font-size: 13px;
-                padding: 6px;
-                border-radius: 6px;
-            }
-
-            .fullscreen-btn {
-                width: 34px;
-                height: 34px;
-                font-size: 13px;
-                padding: 6px;
-                right: 8px;
-                bottom: 8px;
-            }
-
-            .layer-dropdown,
-            .location-dropdown {
-                min-width: 160px;
-                right: -5px;
-            }
-
-            .search-dropdown {
-                min-width: 240px;
-                right: -15px;
-            }
-
-            .filter-dropdown {
-                min-width: 260px;
-                right: -15px;
-                max-height: 70vh;
-            }
-
-            .bld-summary-card {
-                flex: 1 1 100%;
-                border-right: none;
-                border-bottom: 1px solid #e5e7eb;
-            }
-
-            .bld-summary-strip {
-                flex-direction: column;
-            }
-
-            .bld-image-strip {
-                height: 120px;
-                flex-direction: column;
-            }
-
-            .bld-img-wrap+.bld-img-wrap {
-                border-left: none;
-                border-top: 3px solid #fff;
-            }
-
-            .point-data-card-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .point-data-card-header {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .point-data-card-actions {
-                justify-content: flex-start;
-            }
-
-            .search-result-actions {
-                flex-direction: column;
-                gap: 4px;
-            }
-
-            .search-result-actions .btn-sm {
-                width: 100%;
-            }
-
-            .quick-stats {
-                grid-template-columns: 1fr 1fr;
-                font-size: 10px;
-            }
+            #map, #cesiumContainer { height: 400px; }
+            .map-controls-stack { right: 8px; top: 8px; gap: 5px; }
+            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn, .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn, .filter-toggle-btn { width: 34px; height: 34px; font-size: 13px; padding: 6px; border-radius: 6px; }
+            .fullscreen-btn { width: 34px; height: 34px; font-size: 13px; padding: 6px; right: 8px; bottom: 8px; }
+            .layer-dropdown, .location-dropdown { min-width: 160px; right: -5px; }
+            .search-dropdown { min-width: 240px; right: -15px; }
+            .filter-dropdown { min-width: 260px; right: -15px; max-height: 70vh; }
+            .bld-summary-card { flex: 1 1 100%; border-right: none; border-bottom: 1px solid #e5e7eb; }
+            .bld-summary-strip { flex-direction: column; }
+            .bld-image-strip { height: 120px; flex-direction: column; }
+            .bld-img-wrap + .bld-img-wrap { border-left: none; border-top: 3px solid #fff; }
+            .point-data-card-grid { grid-template-columns: 1fr; }
+            .point-data-card-header { flex-direction: column; gap: 8px; }
+            .point-data-card-actions { justify-content: flex-start; }
+            .search-result-actions { flex-direction: column; gap: 4px; }
+            .search-result-actions .btn-sm { width: 100%; }
+            .quick-stats { grid-template-columns: 1fr 1fr; font-size: 10px; }
         }
 
-        /* Touch-friendly */
         @media (hover: none) and (pointer: coarse) {
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                min-height: 44px;
-                min-width: 44px;
-            }
-
-            .fullscreen-btn {
-                min-height: 44px;
-                min-width: 44px;
-            }
-
-            .search-result-actions .btn-sm {
-                min-height: 34px;
-                font-size: 12px;
-                padding: 4px 12px;
-            }
+            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn, .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn, .filter-toggle-btn { min-height: 44px; min-width: 44px; }
+            .fullscreen-btn { min-height: 44px; min-width: 44px; }
+            .search-result-actions .btn-sm { min-height: 34px; font-size: 12px; padding: 4px 12px; }
         }
     </style>
 @endpush
@@ -1256,7 +649,8 @@
         <div id="cesiumContainer"></div>
     </div>
 
-    <!-- Modals remain the same as original -->
+    <!-- Modals (keeping all existing modal code) -->
+    <!-- Building View Modal -->
     <div class="modal fade" id="buildingViewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1272,53 +666,42 @@
                 </div>
                 <div class="bld-image-strip">
                     <div class="bld-img-wrap" id="bv_img1_wrap">
-                        <img id="bv_img1" src="" style="display:none;"
-                            onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
-                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i
-                                class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i
-                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <img id="bv_img1" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
+                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
                     <div class="bld-img-wrap" id="bv_img2_wrap">
-                        <img id="bv_img2" src="" style="display:none;"
-                            onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
-                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i
-                                class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i
-                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <img id="bv_img2" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
+                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
                 <div class="modal-body" style="max-height: 65vh; overflow-y: auto; padding: 20px 24px;">
-                    <div class="bld-summary-strip"
-                        style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 2px solid #ECE7FF; background: #F5F3FF; border-radius: 12px; margin-bottom: 20px;">
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
+                    <div class="bld-summary-strip" style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 2px solid #ECE7FF; background: #F5F3FF; border-radius: 12px; margin-bottom: 20px;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🧾</div>
                             <div>
                                 <div class="bld-summary-label">Assessments</div>
                                 <div class="bld-summary-val" id="bv_bills">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🏬</div>
                             <div>
                                 <div class="bld-summary-label">Shops</div>
                                 <div class="bld-summary-val" id="bv_shops">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🏢</div>
                             <div>
                                 <div class="bld-summary-label">Floors</div>
                                 <div class="bld-summary-val" id="bv_floors">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
                             <div class="bld-summary-icon">✅</div>
                             <div>
                                 <div class="bld-summary-label">Mapped</div>
@@ -1431,6 +814,7 @@
         </div>
     </div>
 
+    <!-- Point Details Modal -->
     <div class="modal fade" id="pointDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1438,23 +822,21 @@
                     <div class="bld-header-inner">
                         <div class="bld-header-icon"><i class="bi bi-people"></i></div>
                         <div>
-                            <h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span
-                                    id="pdGisid"></span></span>
+                            <h5 class="bld-modal-title">Assessment Records</h5><span class="bld-gisid-badge">GIS ID: <span id="pdGisid"></span></span>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small"
-                            id="pdBillSummary"></span></div>
-                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch"
-                        placeholder="Search by assessment, owner name, or phone number...">
+                    <div class="d-flex justify-content-between align-items-center mb-3"><span class="text-muted small" id="pdBillSummary"></span></div>
+                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch" placeholder="Search by assessment, owner name, or phone number...">
                     <div id="pointDetailsContainer"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- QC Modal -->
     <div class="modal fade" id="qcModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1467,9 +849,7 @@
                 </div>
                 <div class="modal-body p-4">
                     <input type="hidden" id="qc_point_data_id">
-                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment
-                        <span id="qc_assessment_display" class="fw-semibold"></span>
-                    </p>
+                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment <span id="qc_assessment_display" class="fw-semibold"></span></p>
                     <div class="mb-3">
                         <label class="bld-form-label">QC Usage</label>
                         <select class="form-select bld-input" id="qcusage">
@@ -1491,8 +871,7 @@
                 </div>
                 <div class="modal-footer bld-modal-footer">
                     <button type="button" class="btn bld-btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save
-                        QC</button>
+                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save QC</button>
                 </div>
             </div>
         </div>
@@ -1521,9 +900,14 @@
             let currentPointGisid = null;
             let currentPointRecords = [];
 
-            // Debug boundary data
-            console.log('📊 Boundary Data:', boundary);
-            console.log('📊 Ward Data:', ward);
+            console.log('📊 Data Loaded:', {
+                polygons: polygons.length,
+                lines: lines.length,
+                points: points.length,
+                pointDatas: pointDatas.length,
+                boundary: boundary ? 'present' : 'missing',
+                ward: ward ? 'present' : 'missing'
+            });
 
             // ─── BRIGHT, HIGH-SATURATION USAGE PALETTE ───
             const usageColors = {
@@ -1599,7 +983,7 @@
             // ─── SOURCES ───
             const polygonSource = new ol.source.Vector();
             const lineSource = new ol.source.Vector();
-            const boundarySource = new ol.source.Vector(); // Add boundary source
+            const boundarySource = new ol.source.Vector();
 
             // ─── SEARCH INDEX ───
             let searchIndex = [];
@@ -1702,12 +1086,14 @@
             function createBoundaryStyle() {
                 return new ol.style.Style({
                     stroke: new ol.style.Stroke({
-                        color: '#FF9F1C',
-                        width: 4,
-                        lineDash: [10, 6]
+                        color: '#FFD93D',
+                        width: 5,
+                        lineDash: [12, 8],
+                        lineCap: 'round',
+                        lineJoin: 'round'
                     }),
                     fill: new ol.style.Fill({
-                        color: 'rgba(255, 159, 28, 0.08)'
+                        color: 'rgba(255, 217, 61, 0.08)'
                     })
                 });
             }
@@ -1930,26 +1316,22 @@
                 try {
                     boundarySource.clear();
 
-                    // Check if boundary data exists - handle both structures
                     let boundaryCoords = null;
                     let wardNo = null;
                     let wardId = null;
 
                     // Try different possible structures
                     if (boundary && boundary.boundary && boundary.boundary.coordinates) {
-                        // Structure: { ward_id, ward_no, boundary: { coordinates: [...] } }
                         boundaryCoords = boundary.boundary.coordinates;
                         wardNo = boundary.ward_no || ward.ward_no || 'N/A';
                         wardId = boundary.ward_id || ward.id || 'N/A';
                         console.log('✅ Found boundary at boundary.boundary.coordinates');
                     } else if (boundary && boundary.coordinates) {
-                        // Structure: { ward_id, ward_no, coordinates: [...] }
                         boundaryCoords = boundary.coordinates;
                         wardNo = boundary.ward_no || ward.ward_no || 'N/A';
                         wardId = boundary.ward_id || ward.id || 'N/A';
                         console.log('✅ Found boundary at boundary.coordinates');
                     } else if (ward && ward.boundary && ward.boundary.coordinates) {
-                        // Fallback to ward data
                         boundaryCoords = ward.boundary.coordinates;
                         wardNo = ward.ward_no || 'N/A';
                         wardId = ward.id || 'N/A';
@@ -1964,12 +1346,10 @@
                         return;
                     }
 
-                    console.log('📊 Processing boundary coordinates:', boundaryCoords);
-
                     let geometry = null;
 
                     try {
-                        // Handle the specific structure from your data: [[[[x,y], [x,y], ...]]]
+                        // Handle the specific structure from your data
                         if (Array.isArray(boundaryCoords) && boundaryCoords.length > 0) {
                             // Check if it's a MultiPolygon structure: [[[[x,y], ...]]]
                             if (Array.isArray(boundaryCoords[0]) &&
@@ -2025,16 +1405,6 @@
                         return;
                     }
 
-                    // Get the center for label placement
-                    let center = null;
-                    try {
-                        center = geometry.getInteriorPoint ? geometry.getInteriorPoint() :
-                            (geometry.getCoordinates ? new ol.geom.Point(ol.extent.getCenter(geometry
-                            .getExtent())) : null);
-                    } catch (e) {
-                        console.warn('Could not get center point:', e);
-                    }
-
                     // Create the boundary feature
                     const boundaryFeature = new ol.Feature({
                         geometry: geometry,
@@ -2044,30 +1414,11 @@
                         name: `Ward ${wardNo}`
                     });
 
-                    // Create styles with label
-                    const styles = [
-                        new ol.style.Style({
-                            stroke: new ol.style.Stroke({
-                                color: '#FFD93D',
-                                width: 5,
-                                lineDash: [12, 8],
-                                lineCap: 'round',
-                                lineJoin: 'round'
-                            }),
-
-                        })
-                    ];
-
-
-
-                    boundaryFeature.setStyle(styles);
+                    boundaryFeature.setStyle(createBoundaryStyle());
                     boundarySource.addFeature(boundaryFeature);
 
                     console.log('✅ Boundary layer loaded successfully!');
-                    console.log(
-                        `📍 Ward ${wardNo} boundary added with ${boundarySource.getFeatures().length} feature(s)`
-                        );
-                    console.log('📊 Boundary geometry type:', geometry.getType());
+                    console.log(`📍 Ward ${wardNo} boundary added`);
 
                 } catch (e) {
                     console.error('❌ Error loading boundary layer:', e);
@@ -2098,7 +1449,7 @@
 
             loadPolygonSource();
             loadLineSource();
-            loadBoundaryLayer(); // Load boundary after other sources
+            loadBoundaryLayer();
             buildSearchIndex();
 
             // ─── CREATE LAYERS ───
@@ -2143,7 +1494,7 @@
                     satelliteLayer,
                     streetViewLayer,
                     droneLayer,
-                    boundaryLayer, // Add boundary layer
+                    boundaryLayer,
                     polygonLayer,
                     lineLayer,
                     positionLayer,
@@ -2162,7 +1513,8 @@
             const $stack = $('#mapControlsStack');
 
             // ─── CONTROLS INJECTION ───
-            // 1. FILTER TOGGLE
+
+            // 1. FILTER TOGGLE (ADD THIS FIRST - MOST IMPORTANT!)
             $stack.append(`
                 <div class="custom-filter-toggle">
                     <button class="filter-toggle-btn" id="filterToggleBtn" title="Toggle Filters" aria-label="Toggle filters">
@@ -2171,6 +1523,7 @@
                     <div class="filter-dropdown" id="filterDropdown">
                         <div class="dropdown-header">🔍 Filter Features</div>
                         <div class="filter-scroll-container">
+                            <!-- Building Usage -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Building Usage</div>
                                 <select class="form-select form-select-sm" id="usageFilter">
@@ -2186,6 +1539,8 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Usage Variation -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Usage Variation</div>
                                 <select class="form-select form-select-sm" id="usageVariationFilter">
@@ -2197,6 +1552,8 @@
                                 <small class="text-muted">Compare building usage with assessment records</small>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Area Variation -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Area Variation</div>
                                 <select class="form-select form-select-sm" id="areaVariationFilter">
@@ -2209,6 +1566,8 @@
                                 <small class="text-muted">Compare building area with assessment area</small>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Area Range -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Area Range (sqft)</div>
                                 <div class="filter-range">
@@ -2220,6 +1579,8 @@
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Zonation -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Zonation</div>
                                 <select class="form-select form-select-sm" id="zoneFilter">
@@ -2234,6 +1595,8 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Construction Type -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Construction Type</div>
                                 <select class="form-select form-select-sm" id="constructionFilter">
@@ -2248,6 +1611,8 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Assessment Info -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Assessment Info</div>
                                 <select class="form-select form-select-sm" id="assessmentinfoFilter">
@@ -2257,6 +1622,8 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Building Type -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Building Type</div>
                                 <select class="form-select form-select-sm" id="buildingTypeFilter">
@@ -2285,6 +1652,8 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Amenities -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Amenities</div>
                                 <select class="form-select form-select-sm" id="amenitiesFilter" multiple size="4">
@@ -2303,6 +1672,8 @@
                                 <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- UGD Status -->
                             <div class="filter-section">
                                 <div class="filter-section-header">UGD Status</div>
                                 <select class="form-select form-select-sm" id="ugdFilter">
@@ -2319,6 +1690,8 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Survey Status -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Survey Status</div>
                                 <select class="form-select form-select-sm" id="surveyStatusFilter">
@@ -2329,6 +1702,8 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Assessment Count -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Assessment Count</div>
                                 <select class="form-select form-select-sm" id="assessmentCountFilter">
@@ -2340,6 +1715,8 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Number of Floors -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Number of Floors</div>
                                 <select class="form-select form-select-sm" id="floorFilter">
@@ -2352,6 +1729,8 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Number of Shops -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Number of Shops</div>
                                 <select class="form-select form-select-sm" id="shopFilter">
@@ -2363,6 +1742,8 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
+
+                            <!-- Quick Stats -->
                             <div class="quick-stats" id="quickStats">
                                 <div class="stat-item"><strong>Total:</strong> <span class="stat-value" id="statTotal">0</span></div>
                                 <div class="stat-item"><strong>Surveyed:</strong> <span class="stat-value" id="statSurveyed">0</span></div>
@@ -2693,8 +2074,7 @@
             }
 
             // ─── CESIUM 3D VIEW ───
-            const CESIUM_ION_TOKEN =
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
+            const CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
 
             async function initCesiumViewer() {
                 if (cesiumViewer) return cesiumViewer;
@@ -2728,7 +2108,7 @@
 
                     await addDroneImageToCesium();
                     buildCesiumBuildings();
-                    buildCesiumBoundary(); // Add boundary to Cesium
+                    buildCesiumBoundary();
 
                     cesiumViewer.scene.globe.depthTestAgainstTerrain = true;
                     cesiumViewer.scene.globe.enableLighting = true;
@@ -2760,7 +2140,6 @@
                 }
             }
 
-
             async function addDroneImageToCesium() {
                 if (!cesiumViewer) return;
                 if (!droneImageURL || droneImageURL === '') {
@@ -2769,10 +2148,8 @@
                 }
 
                 try {
-                    const westSouth = ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857',
-                        'EPSG:4326');
-                    const eastNorth = ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857',
-                        'EPSG:4326');
+                    const westSouth = ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857', 'EPSG:4326');
+                    const eastNorth = ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857', 'EPSG:4326');
 
                     const provider = new Cesium.SingleTileImageryProvider({
                         url: droneImageURL,
@@ -2833,8 +2210,7 @@
                             if (Array.isArray(ring) && ring.length > 0) {
                                 ring.forEach(pt => {
                                     if (Array.isArray(pt) && pt.length >= 2) {
-                                        const lonLat = ol.proj.transform(pt, 'EPSG:3857',
-                                            'EPSG:4326');
+                                        const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
                                         flatCoords.push(lonLat[0], lonLat[1]);
                                     }
                                 });
@@ -2852,9 +2228,9 @@
                         name: 'Ward Boundary',
                         polygon: {
                             hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
-                            material: Cesium.Color.fromCssColorString('#FF9F1C').withAlpha(0.12),
+                            material: Cesium.Color.fromCssColorString('#FFD93D').withAlpha(0.12),
                             outline: true,
-                            outlineColor: Cesium.Color.fromCssColorString('#FF9F1C'),
+                            outlineColor: Cesium.Color.fromCssColorString('#FFD93D'),
                             outlineWidth: 3,
                             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
                         }
@@ -3039,12 +2415,10 @@
                 amenities.forEach(([label, val]) => {
                     if (val === 'Yes' || val === true || val === 1) {
                         hasAmenities = true;
-                        amenHtml +=
-                            `<span class="bld-status-tag complete"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                        amenHtml += `<span class="bld-status-tag complete"><i class="bi bi-check-circle"></i> ${label}</span>`;
                     }
                 });
-                $('#bv_amenities').html(hasAmenities ? amenHtml :
-                    '<span class="text-muted small">No amenities recorded</span>');
+                $('#bv_amenities').html(hasAmenities ? amenHtml : '<span class="text-muted small">No amenities recorded</span>');
 
                 $('#bv_remarks').text(item.remarks || '—');
                 $('#bv_corp_remarks').text(item.corporationremarks || '—');
@@ -3057,8 +2431,7 @@
                     const $error = $('#' + errorId);
 
                     if (imagePath) {
-                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath
-                            .replace(/^\/+/, '');
+                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath.replace(/^\/+/, '');
                         $img.attr('src', fullPath).show();
                         $empty.hide();
                         $error.hide();
@@ -3133,8 +2506,7 @@
                     const qcFilled = [pd.qcusage, pd.qcsqfeet, pd.qc_remarks]
                         .filter(val => val !== null && val !== '' && val !== undefined).length;
                     const qcClass = qcFilled === 3 ? 'complete' : qcFilled === 0 ? 'empty' : 'partial';
-                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' :
-                        'QC Partial';
+                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' : 'QC Partial';
 
                     html += `
                         <div class="point-data-card" data-id="${pd.id}">
@@ -3232,29 +2604,29 @@
                             </div>
 
                             ${ptList.length ? `
-                                                        <div class="row mt-2 g-2">
-                                                            <div class="col-12">
-                                                                <div class="tax-card">
-                                                                    <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                                                    ${ptList.map(pt => `
-                                            <div style="border-bottom:1px dashed #d7e8df; padding:6px 0; margin-bottom:4px;">
-                                                <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
-                                                <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
-                                            </div>
+                            <div class="row mt-2 g-2">
+                                <div class="col-12">
+                                    <div class="tax-card">
+                                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                        ${ptList.map(pt => `
+                                        <div style="border-bottom:1px dashed #d7e8df; padding:6px 0; margin-bottom:4px;">
+                                            <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                            <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                            <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                            <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                            <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                            <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                            <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                            <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                            <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                            <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                            <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                        </div>
                                         `).join('')}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>`;
                 });
 
@@ -3300,8 +2672,7 @@
 
             $('#saveQcBtn').on('click', function() {
                 const id = $('#qc_point_data_id').val();
-                const $btn = $(this).prop('disabled', true).html(
-                    '<span class="spinner-border spinner-border-sm"></span> Saving...');
+                const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
 
                 $.ajax({
                     url: `/point-data/${id}/qc`,
@@ -3328,12 +2699,10 @@
                         }
                     },
                     error: function(xhr) {
-                        showToast(xhr.responseJSON?.message || 'Failed to save QC data.',
-                            4000);
+                        showToast(xhr.responseJSON?.message || 'Failed to save QC data.', 4000);
                     },
                     complete: function() {
-                        $btn.prop('disabled', false).html(
-                            '<i class="bi bi-save me-1"></i>Save QC');
+                        $btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save QC');
                     }
                 });
             });
@@ -3418,7 +2787,7 @@
                 $('#filterDropdown').removeClass('active');
             });
 
-            // Filter Toggle
+            // Filter Toggle - FIXED EVENT HANDLER
             $(document).on('click', '#filterToggleBtn', function(e) {
                 e.stopPropagation();
                 $('#filterDropdown').toggleClass('active');
@@ -3426,6 +2795,8 @@
                 $('.layer-dropdown').removeClass('active');
                 $('.location-dropdown').removeClass('active');
                 $('.search-dropdown').removeClass('active');
+
+                // Update stats when filter panel opens
                 if ($('#filterDropdown').hasClass('active')) {
                     updateFilterStats();
                 }
@@ -3513,7 +2884,7 @@
                                 Lines (Roads)
                             </div>
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
-                                <span style="display:inline-block;width:20px;height:20px;background:#FF9F1C;border-radius:6px;border:2px solid #fff;margin-right:10px;box-shadow:0 0 4px rgba(0,0,0,0.25);"></span>
+                                <span style="display:inline-block;width:20px;height:20px;background:#FFD93D;border-radius:6px;border:2px solid #fff;margin-right:10px;box-shadow:0 0 4px rgba(0,0,0,0.25);"></span>
                                 Ward Boundary
                             </div>
                             <div style="display:flex;align-items:center;margin-bottom:8px;">
@@ -3556,10 +2927,7 @@
                             const lat = pos.coords.latitude;
                             const projected = ol.proj.fromLonLat([lon, lat]);
                             currentPosition = projected;
-                            currentLocation = {
-                                lon,
-                                lat
-                            };
+                            currentLocation = { lon, lat };
 
                             if (!positionFeature) {
                                 positionFeature = new ol.Feature({
@@ -3576,17 +2944,14 @@
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        const p = ol.proj.fromLonLat([newPos.coords
-                                            .longitude, newPos.coords.latitude
-                                        ]);
+                                        const p = ol.proj.fromLonLat([newPos.coords.longitude, newPos.coords.latitude]);
                                         currentPosition = p;
                                         currentLocation = {
                                             lon: newPos.coords.longitude,
                                             lat: newPos.coords.latitude
                                         };
                                         if (positionFeature) {
-                                            positionFeature.getGeometry()
-                                                .setCoordinates(p);
+                                            positionFeature.getGeometry().setCoordinates(p);
                                         }
                                     },
                                     function(error) {
@@ -3646,10 +3011,7 @@
                             const lat = pos.coords.latitude;
                             const projected = ol.proj.fromLonLat([lon, lat]);
                             currentPosition = projected;
-                            currentLocation = {
-                                lon,
-                                lat
-                            };
+                            currentLocation = { lon, lat };
 
                             if (!positionFeature) {
                                 positionFeature = new ol.Feature({
@@ -3676,17 +3038,14 @@
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        const p = ol.proj.fromLonLat([newPos.coords
-                                            .longitude, newPos.coords.latitude
-                                        ]);
+                                        const p = ol.proj.fromLonLat([newPos.coords.longitude, newPos.coords.latitude]);
                                         currentPosition = p;
                                         currentLocation = {
                                             lon: newPos.coords.longitude,
                                             lat: newPos.coords.latitude
                                         };
                                         if (positionFeature) {
-                                            positionFeature.getGeometry()
-                                                .setCoordinates(p);
+                                            positionFeature.getGeometry().setCoordinates(p);
                                         }
                                         routePoints.push(p);
                                         updateRouteLine();
@@ -3926,8 +3285,7 @@
                 const total = polygonSource.getFeatures().length;
                 $('#visibleCount').text(total);
                 $('#totalCount').text(polygons.length);
-                $('#filterStats').html(
-                    `Showing: <strong>${total}</strong> of <strong>${polygons.length}</strong> features`);
+                $('#filterStats').html(`Showing: <strong>${total}</strong> of <strong>${polygons.length}</strong> features`);
                 updateFeatureCount();
                 updateQuickStats();
             }
@@ -4033,8 +3391,7 @@
                     } else if (areaVariation === 'low_variation') {
                         areaVariationGisids = new Set(
                             Object.values(buildingVariations)
-                            .filter(v => parseFloat(v.variation_percentage) < 5 && parseFloat(v
-                                .variation_percentage) > 0)
+                            .filter(v => parseFloat(v.variation_percentage) < 5 && parseFloat(v.variation_percentage) > 0)
                             .map(v => v.gisid)
                         );
                     }
@@ -4106,8 +3463,7 @@
                         surveyStatusGisids = new Set(
                             polygonDatas
                             .filter(d => {
-                                const pointCount = pointDatas.filter(pd => pd.point_gisid === d.gisid)
-                                    .length;
+                                const pointCount = pointDatas.filter(pd => pd.point_gisid === d.gisid).length;
                                 return pointCount > 0 && pointCount < (d.number_bill || 0);
                             })
                             .map(d => d.gisid)
@@ -4250,16 +3606,13 @@
 
                 $('#visibleCount').text(visibleCount);
                 $('#totalCount').text(total);
-                $('#filterStats').html(
-                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`
-                );
+                $('#filterStats').html(`Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
                 $('#featureCountBadge').text(`Buildings: ${visibleCount}`);
 
                 $('#statTotal').text(total);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(total - polygonDatas.length);
-                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status ===
-                    'VARIATION').length);
+                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION').length);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -4277,7 +3630,7 @@
             }
 
             function resetAllFilters(silent = false) {
-                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter,#assessmentinfoFilter')
+                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter, #assessmentinfoFilter')
                     .val('all');
                 $('#usageVariationFilter, #areaVariationFilter, #assessmentCountFilter, #floorFilter, #shopFilter')
                     .val('all');
@@ -4313,16 +3666,13 @@
                 const allFeatures = polygonSource.getFeatures();
                 $('#visibleCount').text(allFeatures.length);
                 $('#totalCount').text(allFeatures.length);
-                $('#filterStats').html(
-                    `Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`
-                );
+                $('#filterStats').html(`Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`);
                 $('#featureCountBadge').text(`Buildings: ${allFeatures.length}`);
 
                 $('#statTotal').text(polygons.length);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(polygons.length - polygonDatas.length);
-                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status ===
-                    'VARIATION').length);
+                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION').length);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -4334,6 +3684,7 @@
                 if (is3DMode) buildCesiumBuildings();
             }
 
+            // --- FILTER EVENT HANDLERS ---
             $('#applyFiltersBtn').on('click', function() {
                 applyFilters();
             });
@@ -4342,21 +3693,10 @@
                 resetAllFilters(false);
             });
 
-            $('#minArea').on('change', function() {
-                let val = parseInt($(this).val()) || 0;
-                const maxVal = parseInt($('#maxArea').val()) || 0;
-                if (val > maxVal) {
-                    val = maxVal;
-                    $(this).val(val);
-                }
-            });
-
-            $('#maxArea').on('change', function() {
-                let val = parseInt($(this).val()) || 0;
-                const minVal = parseInt($('#minArea').val()) || 0;
-                if (val < minVal) {
-                    val = minVal;
-                    $(this).val(val);
+            // Quick filter stats update when dropdown opens
+            $(document).on('click', '#filterToggleBtn', function() {
+                if ($('#filterDropdown').hasClass('active')) {
+                    updateFilterStats();
                 }
             });
 
@@ -4381,8 +3721,7 @@
                         match = match && itemAssessment.includes(assessment);
                     }
                     if (oldAssessment) {
-                        const itemOldAssessment = (item.old_assessment || '').toString()
-                            .toLowerCase();
+                        const itemOldAssessment = (item.old_assessment || '').toString().toLowerCase();
                         match = match && itemOldAssessment.includes(oldAssessment);
                     }
                     if (ownerName) {
@@ -4449,12 +3788,11 @@
                 showToast('✅ Found ' + matches.length + ' results', 2000);
             });
 
-            $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress',
-                function(e) {
-                    if (e.which === 13) {
-                        $('#applyFilterBtn').click();
-                    }
-                });
+            $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress', function(e) {
+                if (e.which === 13) {
+                    $('#applyFilterBtn').click();
+                }
+            });
 
             $('#gisSearchInput').on('keypress', function(e) {
                 if (e.which === 13) {
@@ -4543,7 +3881,7 @@
             console.log('📊 Polygons:', polygons.length);
             console.log('📊 Lines:', lines.length);
             console.log('📊 Point Data:', pointDatas.length);
-            console.log('📊 Boundary:', boundary);
+            console.log('📊 Boundary:', boundary ? 'present' : 'missing');
             console.log('🌍 3D mode ready - Click the cube button to activate');
 
             setTimeout(() => {
