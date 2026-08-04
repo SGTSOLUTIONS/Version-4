@@ -2627,8 +2627,18 @@
                     showToast('❌ Invalid item', 3000);
                     return;
                 }
-                let coords = null;
                 const gisid = item.id || item.point_gisid;
+
+                // ─── 3D MODE: fly Cesium camera to the entity instead of the hidden 2D map ───
+                if (is3DMode) {
+                    if (flyCesiumToFeature(gisid)) {
+                        return;
+                    }
+                    showToast(`⚠️ GIS ID ${gisid} is not currently visible in 3D (check filters)`, 3000);
+                    return;
+                }
+
+                let coords = null;
                 const features = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
                 if (features.length > 0) {
                     coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
@@ -2660,6 +2670,11 @@
             }
 
             function zoomToExtent() {
+                if (is3DMode) {
+                    flyCesiumToWardExtent();
+                    showToast('📍 Zoomed to ward extent (3D)', 2000);
+                    return;
+                }
                 map.getView().fit(imageExtent, {
                     padding: [50, 50, 50, 50],
                     duration: 1000,
@@ -2868,31 +2883,44 @@
                 }
             }
 
+            // ─── BUILD CESIUM BUILDINGS (now respects active 2D filters + label toggle) ───
             function buildCesiumBuildings() {
                 if (!cesiumViewer) return;
 
                 cesiumBuildingEntities.forEach(e => cesiumViewer.entities.remove(e));
                 cesiumBuildingEntities = [];
 
-                polygons.forEach(poly => {
-                    try {
-                        const ring = JSON.parse(poly.coordinates);
-                        if (!Array.isArray(ring) || ring.length < 3) return;
+                const showLabels = $('#labelToggleBtn').hasClass('active-label');
 
+                // Use whatever is currently visible in polygonSource — this is already
+                // the filtered set after applyFilters()/resetAllFilters() run.
+                polygonSource.getFeatures().forEach(feature => {
+                    try {
+                        const gisid = feature.get('gisid');
+                        const geometry = feature.getGeometry();
+                        if (!geometry) return;
+
+                        const outerRing = geometry.getCoordinates()[0];
                         const lonLatFlat = [];
-                        ring.forEach(pt => {
+                        let sumLon = 0,
+                            sumLat = 0;
+
+                        outerRing.forEach(pt => {
                             const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
                             lonLatFlat.push(lonLat[0], lonLat[1]);
+                            sumLon += lonLat[0];
+                            sumLat += lonLat[1];
                         });
 
-                        const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
+                        const polygonData = polygonDatas.find(d => d.gisid == gisid);
                         const usage = polygonData?.building_usage || 'OTHER';
                         const colorHex = usageColors[usage] || '#0f6b47';
                         const floors = parseInt(polygonData?.number_floor) || 0;
                         const height = Math.max((floors + 1) * 3.2, 3.2);
+                        const sqfeet = feature.get('sqfeet') || '0';
 
-                        const entity = cesiumViewer.entities.add({
-                            gisid: poly.gisid,
+                        const entityOptions = {
+                            gisid: gisid,
                             polygon: {
                                 hierarchy: Cesium.Cartesian3.fromDegreesArray(lonLatFlat),
                                 extrudedHeight: height,
@@ -2903,14 +2931,49 @@
                                 heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
                                 extrudedHeightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
                             }
-                        });
+                        };
+
+                        if (showLabels && outerRing.length > 0) {
+                            const centerLon = sumLon / outerRing.length;
+                            const centerLat = sumLat / outerRing.length;
+                            entityOptions.position = Cesium.Cartesian3.fromDegrees(centerLon, centerLat,
+                                height + 2);
+                            entityOptions.label = {
+                                text: gisid + ' GISID\n' + sqfeet + ' SQFT',
+                                font: 'bold 13px Arial',
+                                fillColor: Cesium.Color.fromCssColorString('#241C4F'),
+                                showBackground: true,
+                                backgroundColor: Cesium.Color.fromCssColorString('#FFD93D').withAlpha(
+                                    0.9),
+                                backgroundPadding: new Cesium.Cartesian2(6, 4),
+                                pixelOffset: new Cesium.Cartesian2(0, -10),
+                                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                                heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
+                            };
+                        }
+
+                        const entity = cesiumViewer.entities.add(entityOptions);
                         cesiumBuildingEntities.push(entity);
                     } catch (e) {
                         console.error('Cesium polygon build error:', e);
                     }
                 });
 
-                console.log('🏢 Cesium buildings drawn:', cesiumBuildingEntities.length);
+                console.log('🏢 Cesium buildings drawn:', cesiumBuildingEntities.length, '(filtered set)');
+            }
+
+            // ─── FLY CESIUM CAMERA TO A SPECIFIC BUILDING (used by search Zoom/View) ───
+            function flyCesiumToFeature(gisid) {
+                if (!cesiumViewer) return false;
+                const entity = cesiumBuildingEntities.find(e => e.gisid === gisid);
+                if (entity) {
+                    cesiumViewer.flyTo(entity, {
+                        duration: 1.5,
+                        offset: new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-45), 120)
+                    });
+                    return true;
+                }
+                return false;
             }
 
             function flyCesiumToWardExtent() {
@@ -3466,6 +3529,7 @@
                 } else if (layerTitle === 'Drone View') {
                     const visible = toggleDroneLayer();
                     $(this).toggleClass('active', visible);
+                    toggleDroneIn3D(visible);
                 } else if (layerType === 'vector') {
                     let layer;
                     if (layerTitle === 'Polygons') layer = polygonLayer;
@@ -3480,11 +3544,12 @@
                 }
             });
 
-            // Label Toggle
+            // Label Toggle — now also refreshes Cesium labels when in 3D mode
             $('#labelToggleBtn').on('click', function() {
                 $(this).toggleClass('active-label');
                 polygonLayer.setStyle(createPolygonStyle);
                 polygonLayer.changed();
+                if (is3DMode) buildCesiumBuildings();
             });
 
             // Legend Toggle
@@ -4273,6 +4338,7 @@
                     showToast(`✅ ${visibleCount} features match the selected filters`, 2000);
                 }
 
+                // ─── keep the 3D view in sync with the active filter ───
                 if (is3DMode) buildCesiumBuildings();
             }
 
@@ -4331,6 +4397,7 @@
                     showToast('🔄 All filters reset - all features visible', 2000);
                 }
 
+                // ─── keep the 3D view in sync with the reset filter ───
                 if (is3DMode) buildCesiumBuildings();
             }
 
