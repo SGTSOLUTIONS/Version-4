@@ -1248,7 +1248,7 @@
 @section('content')
 <div class="ol-page-header">
     <div>
-        <h1 class="ol-page-title">{{ ucfirst(auth()->user()->role) }} GIS Dashboard</h1>
+        <h1 class="ol-page-title">{{ ucfirst(auth()->user()->role) }} GIS Dashboards</h1>
         <p class="ol-page-sub">{{ now()->format('l, d F Y') }} — {{ auth()->user()->name ?? 'Executive Officer' }}</p>
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
