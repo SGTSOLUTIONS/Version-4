@@ -44,10 +44,8 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'profileShow'])->name('profile');
-    // Add this inside the auth middleware group
     Route::put('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
     Route::post('/save-feature', [FeatureController::class, 'addFeature']);
     Route::post('/polygon-split', [FeatureController::class, 'polygonSplit']);
@@ -55,12 +53,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/delete-feature', [FeatureController::class, 'polygonDelete']);
     Route::post('/point-data/{id}/qc', [CommissionerController::class, 'qcUpdate'])->name('qcUpdate');
 
-    Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])
-        ->name('area.variation');
-
-    Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])
-        ->name('usage.variation');
-    // In routes/web.php
+    Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])->name('area.variation');
+    Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])->name('usage.variation');
 
     Route::get('/data-controll/{wardId}', [VariationController::class, 'dataControll'])->name('variation.show');
     Route::get('/data-variation/export/{wardId}', [VariationController::class, 'exportVariation'])->name('data-variation.export');
@@ -68,12 +62,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/data-variation/single-pdf/{wardId}/{gisid}', [VariationController::class, 'exportSinglePdf'])->name('data-variation.single-pdf');
     Route::get('/data-variation/details/{wardId}/{gisid}', [VariationController::class, 'getBuildingDetails'])->name('data-variation.details');
     Route::get('/data-variation/paginated/{wardId}', [VariationController::class, 'getPaginatedData'])->name('data-variation.paginated');
-    // Add these inside the auth middleware group
-Route::get('/data-variation/export-assessment-pdf/{wardId}', [VariationController::class, 'exportSingleAssessmentPdf'])
-    ->name('data-variation.export-assessment-pdf');
 
-Route::get('/data-variation/export-all-assessment-pdf/{wardId}/{gisid}', [VariationController::class, 'exportAllAssessmentsPdf'])
-    ->name('data-variation.export-all-assessment-pdf');
+    // Assessment PDF routes
+    Route::get('/data-variation/export-assessment-pdf/{wardId}', [VariationController::class, 'exportSingleAssessmentPdf'])
+        ->name('data-variation.export-assessment-pdf');
+
+    Route::get('/data-variation/export-all-assessment-pdf/{wardId}/{gisid}', [VariationController::class, 'exportAllAssessmentsPdf'])
+        ->name('data-variation.export-all-assessment-pdf');
+
+
     Route::post('/variation/filter', [VariationController::class, 'filterVariations'])->name('variation.filter');
     Route::post('/variation/export', [VariationController::class, 'exportVariations'])->name('variation.export');
     Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])->name('variation.usage');

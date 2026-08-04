@@ -1166,6 +1166,116 @@ public function dataControll($wardId, Request $request)
 
         return $pdf->download("FORM2_{$gisid}_" . date('Y-m-d_H-i-s') . ".pdf");
     }
+    /**
+     * Export single assessment PDF
+     */
+    public function exportSingleAssessmentPdf(Request $request, $wardId)
+    {
+        $gisid = $request->query('gisid');
+        $assessmentNo = $request->query('assessment');
+        $assessmentType = $request->query('assessment_type', 'N/A');
 
+        $ward = Ward::findOrFail($wardId);
+        $zone = Zone::findOrFail($ward->zone_id);
+        $corp = $zone->corp_id;
+        $wardNo = $ward->ward_no;
+
+        // Get building data
+        $polygons = DB::table("polygons_{$wardId}")->where('gisid', $gisid)->get();
+        $polygonDatas = DB::table("polygon_data_{$wardId}")->where('gisid', $gisid)->get();
+        $pointDatas = DB::table("point_data_{$wardId}")->where('point_gisid', $gisid)->get();
+        $misData = DB::table("mis_{$corp}")->where('ward_no', $wardNo)->get();
+
+        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData);
+        $buildingData = $buildingVariations[$gisid] ?? null;
+
+        if (!$buildingData) {
+            return redirect()->back()->with('error', 'Building not found');
+        }
+
+        // Filter to get specific assessment
+        $assessmentData = null;
+        $allPoints = $buildingData['assessment']['details']['points'] ?? [];
+
+        foreach ($allPoints as $point) {
+            if ($point['assessment'] == $assessmentNo) {
+                $assessmentData = $point;
+                break;
+            }
+        }
+
+        if (!$assessmentData) {
+            return redirect()->back()->with('error', 'Assessment not found');
+        }
+
+        // Generate PDF
+        $pdf = Pdf::loadView('variation.single-assessment-pdf', [
+            'ward' => $ward,
+            'zone' => $zone,
+            'gisid' => $gisid,
+            'buildingData' => $buildingData,
+            'assessmentData' => $assessmentData,
+            'assessmentNo' => $assessmentNo,
+            'assessmentType' => $assessmentType,
+            'date' => now()->format('d-m-Y'),
+            'time' => now()->format('h:i A'),
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->setOptions([
+            'defaultFont' => 'DejaVu Sans',
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+        ]);
+
+        $filename = "Assessment_{$assessmentNo}_GIS_{$gisid}_" . date('Y-m-d') . ".pdf";
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Export all assessments for a building to PDF
+     */
+    public function exportAllAssessmentsPdf($wardId, $gisid)
+    {
+        $ward = Ward::findOrFail($wardId);
+        $zone = Zone::findOrFail($ward->zone_id);
+        $corp = $zone->corp_id;
+        $wardNo = $ward->ward_no;
+
+        // Get building data
+        $polygons = DB::table("polygons_{$wardId}")->where('gisid', $gisid)->get();
+        $polygonDatas = DB::table("polygon_data_{$wardId}")->where('gisid', $gisid)->get();
+        $pointDatas = DB::table("point_data_{$wardId}")->where('point_gisid', $gisid)->get();
+        $misData = DB::table("mis_{$corp}")->where('ward_no', $wardNo)->get();
+
+        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData);
+        $buildingData = $buildingVariations[$gisid] ?? null;
+
+        if (!$buildingData) {
+            return redirect()->back()->with('error', 'Building not found');
+        }
+
+        // Generate PDF with all assessments
+        $pdf = Pdf::loadView('variation.all-assessments-pdf', [
+            'ward' => $ward,
+            'zone' => $zone,
+            'gisid' => $gisid,
+            'buildingData' => $buildingData,
+            'date' => now()->format('d-m-Y'),
+            'time' => now()->format('h:i A'),
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->setOptions([
+            'defaultFont' => 'DejaVu Sans',
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+        ]);
+
+        $filename = "All_Assessments_GIS_{$gisid}_" . date('Y-m-d') . ".pdf";
+
+        return $pdf->download($filename);
+    }
 
 }

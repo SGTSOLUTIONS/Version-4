@@ -44,9 +44,6 @@
         .section-title.purple {
             background: #7030A0;
         }
-        .section-title.red {
-            background: #C00000;
-        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -76,18 +73,6 @@
             color: #FF0000;
             font-weight: bold;
         }
-        .status-warning {
-            color: #FF8C00;
-            font-weight: bold;
-        }
-        .footer {
-            margin-top: 20px;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-            font-size: 8px;
-            color: #666;
-            text-align: center;
-        }
         .badge {
             display: inline-block;
             padding: 1px 8px;
@@ -115,18 +100,41 @@
             background: #e2e3e5;
             color: #383d41;
         }
-        .row {
+        .footer {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            font-size: 8px;
+            color: #666;
+            text-align: center;
+        }
+        .signature-block {
+            margin-top: 30px;
+            border-top: 2px solid #333;
+            padding-top: 15px;
+        }
+        .sig-row {
             display: table;
             width: 100%;
         }
-        .col-6 {
+        .sig-col {
             display: table-cell;
-            width: 50%;
+            text-align: center;
             padding: 0 5px;
+            width: 25%;
         }
-        .mis-data-table td {
-            font-size: 8px;
-            padding: 2px 4px;
+        .sig-col .sig-line {
+            border-bottom: 1px solid #000;
+            height: 30px;
+            margin-bottom: 3px;
+        }
+        .sig-col .sig-label {
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .sig-col .sig-sub {
+            font-size: 7px;
+            color: #666;
         }
     </style>
 </head>
@@ -225,33 +233,24 @@
     @if (!empty($assessmentData['mis_data']))
     <div class="section">
         <div class="section-title orange">MIS DATA</div>
-        <table class="mis-data-table">
+        <table>
             <thead>
                 <tr>
-                    <th>Assessment</th>
-                    <th>Owner Name</th>
-                    <th>Plot Area</th>
-                    <th>Half Year Tax</th>
-                    <th>Balance</th>
-                    <th>Door No</th>
-                    <th>Ward No</th>
-                    <th>Road Name</th>
-                    <th>Type</th>
+                    <th>Field</th>
+                    <th>Value</th>
                 </tr>
             </thead>
             <tbody>
                 @php $mis = $assessmentData['mis_data']; @endphp
-                <tr>
-                    <td>{{ $mis['assessment'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['owner_name'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['plot_area'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['half_year_tax'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['balance'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['new_door_no'] ?? $mis['old_door_no'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['ward_no'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['road_name'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['type'] ?? 'N/A' }}</td>
-                </tr>
+                <tr><td>Assessment</td><td>{{ $mis['assessment'] ?? 'N/A' }}</td></tr>
+                <tr><td>Owner Name</td><td>{{ $mis['owner_name'] ?? 'N/A' }}</td></tr>
+                <tr><td>Plot Area</td><td>{{ $mis['plot_area'] ?? 'N/A' }}</td></tr>
+                <tr><td>Half Year Tax</td><td>{{ $mis['half_year_tax'] ?? 'N/A' }}</td></tr>
+                <tr><td>Balance</td><td>{{ $mis['balance'] ?? 'N/A' }}</td></tr>
+                <tr><td>Door No</td><td>{{ $mis['new_door_no'] ?? $mis['old_door_no'] ?? 'N/A' }}</td></tr>
+                <tr><td>Ward No</td><td>{{ $mis['ward_no'] ?? 'N/A' }}</td></tr>
+                <tr><td>Road Name</td><td>{{ $mis['road_name'] ?? 'N/A' }}</td></tr>
+                <tr><td>Type</td><td>{{ $mis['type'] ?? 'N/A' }}</td></tr>
             </tbody>
         </table>
     </div>
@@ -299,31 +298,29 @@
     </div>
 
     <!-- SIGNATURE BLOCK -->
-    <div style="margin-top: 30px; border-top: 2px solid #333; padding-top: 15px;">
-        <table style="border: none; width: 100%;">
-            <tr style="border: none;">
-                <td style="border: none; width: 25%; text-align: center; vertical-align: top;">
-                    <div style="border-bottom: 1px solid #000; height: 30px; margin-bottom: 3px;"></div>
-                    <div style="font-size: 9px; font-weight: bold;">Assessor</div>
-                    <div style="font-size: 7px; color: #666;">Signature with Date</div>
-                </td>
-                <td style="border: none; width: 25%; text-align: center; vertical-align: top;">
-                    <div style="border-bottom: 1px solid #000; height: 30px; margin-bottom: 3px;"></div>
-                    <div style="font-size: 9px; font-weight: bold;">Assistant Revenue Officer</div>
-                    <div style="font-size: 7px; color: #666;">Signature with Date</div>
-                </td>
-                <td style="border: none; width: 25%; text-align: center; vertical-align: top;">
-                    <div style="border-bottom: 1px solid #000; height: 30px; margin-bottom: 3px;"></div>
-                    <div style="font-size: 9px; font-weight: bold;">Zonal Officer</div>
-                    <div style="font-size: 7px; color: #666;">Signature with Date</div>
-                </td>
-                <td style="border: none; width: 25%; text-align: center; vertical-align: top;">
-                    <div style="border-bottom: 1px solid #000; height: 30px; margin-bottom: 3px;"></div>
-                    <div style="font-size: 9px; font-weight: bold;">City Revenue Officer</div>
-                    <div style="font-size: 7px; color: #666;">Signature with Date</div>
-                </td>
-            </tr>
-        </table>
+    <div class="signature-block">
+        <div class="sig-row">
+            <div class="sig-col">
+                <div class="sig-line"></div>
+                <div class="sig-label">Assessor</div>
+                <div class="sig-sub">Signature with Date</div>
+            </div>
+            <div class="sig-col">
+                <div class="sig-line"></div>
+                <div class="sig-label">Assistant Revenue Officer</div>
+                <div class="sig-sub">Signature with Date</div>
+            </div>
+            <div class="sig-col">
+                <div class="sig-line"></div>
+                <div class="sig-label">Zonal Officer</div>
+                <div class="sig-sub">Signature with Date</div>
+            </div>
+            <div class="sig-col">
+                <div class="sig-line"></div>
+                <div class="sig-label">City Revenue Officer</div>
+                <div class="sig-sub">Signature with Date</div>
+            </div>
+        </div>
     </div>
 
     <!-- SYSTEM REFERENCE -->
