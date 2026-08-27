@@ -1582,8 +1582,8 @@
                             <div class="tab-pane fade show active" id="basic-tab">
                                 <input type="text" class="form-control" id="point_gisid" name="point_gisid" hidden>
                                 <div class="row g-3">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" id="qrCodeAssessmentBtn" data-point-id="">
-    <i class="bi bi-qr-code"></i> QR Code
+                                    <button type="button" class="btn btn-primary" id="qrCodeAssessmentBtn" data-point-id="">
+    <i class="bi bi-qr-code me-1"></i> Generate QR Code
 </button>
                                     <div class="col-md-4">
                                         <label for="assessment_type" class="form-label">
@@ -4713,35 +4713,91 @@
                 $('#searchToggleBtn').removeClass('active-search');
             });
 
-           $('#qrCodeAssessmentBtn').on('click', function() {
-    const pointId = $(this).data('point-id');
-    // If pointId is empty, try to get it from the form
-    const gisid = $('#point_gisid').val() || $('#building_gisid').val();
+          $('#qrCodeAssessmentBtn').on('click', function() {
+    // Get the point ID from the form
+    const pointId = $('#point_gisid').val() || $('#building_gisid').val();
     
+    if (!pointId) {
+        Swal.fire('Error', 'Point ID not found', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const $btn = $(this);
+    const originalHtml = $btn.html();
+    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Generating...').prop('disabled', true);
+    
+    // Make AJAX request to get QR code
     $.ajax({
         url: "{{ route('qrCodeAssessment') }}",
         type: "POST",
         data: {
-            point_id: pointId || gisid,
+            point_id: pointId,
             _token: "{{ csrf_token() }}"
         },
-        success: function(response) {
-            console.log(response);
-            // Handle success - maybe show QR code in a modal
-            if (response.qr_code_url) {
-                // Show QR code image
-                Swal.fire({
-                    title: 'QR Code',
-                    imageUrl: response.qr_code_url,
-                    imageWidth: 300,
-                    imageHeight: 300,
-                    confirmButtonText: 'Close'
-                });
+        xhrFields: {
+            responseType: 'blob' // Important: tells jQuery to handle binary data
+        },
+        success: function(response, status, xhr) {
+            // Create a download link
+            const blob = new Blob([response], { type: 'image/png' });
+            const url = window.URL.createObjectURL(blob);
+            
+            // Get filename from Content-Disposition header or use default
+            let filename = 'QR_Code.png';
+            const disposition = xhr.getResponseHeader('Content-Disposition');
+            if (disposition && disposition.indexOf('filename=') !== -1) {
+                const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                if (matches && matches[1]) {
+                    filename = matches[1].replace(/['"]/g, '');
+                }
             }
+            
+            // Trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            
+            // Reset button
+            $btn.html(originalHtml).prop('disabled', false);
+            
+            // Show success message
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'QR Code downloaded successfully',
+                timer: 2000,
+                showConfirmButton: false
+            });
         },
         error: function(xhr) {
-            console.log(xhr.responseText);
-            Swal.fire('Error', 'Something went wrong', 'error');
+            console.error('Error:', xhr);
+            
+            let errorMsg = 'Failed to generate QR code';
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response.message) {
+                    errorMsg = response.message;
+                }
+            } catch (e) {
+                // If response is not JSON
+                if (xhr.status === 404) {
+                    errorMsg = 'Point data not found';
+                } else if (xhr.status === 422) {
+                    errorMsg = 'Please provide a valid Point ID';
+                }
+            }
+            
+            Swal.fire('Error', errorMsg, 'error');
+            
+            // Reset button
+            $btn.html(originalHtml).prop('disabled', false);
         }
     });
 });
