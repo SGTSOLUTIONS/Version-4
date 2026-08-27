@@ -1582,9 +1582,9 @@
                             <div class="tab-pane fade show active" id="basic-tab">
                                 <input type="text" class="form-control" id="point_gisid" name="point_gisid" hidden>
                                 <div class="row g-3">
-                                    <button class="btn-primary" id="qrCodeAssessmentBtn" data-point-id="">
-                                        QrCode
-                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="qrCodeAssessmentBtn" data-point-id="">
+    <i class="bi bi-qr-code"></i> QR Code
+</button>
                                     <div class="col-md-4">
                                         <label for="assessment_type" class="form-label">
                                             Assessment Type <span class="text-danger">*</span>
@@ -4713,34 +4713,38 @@
                 $('#searchToggleBtn').removeClass('active-search');
             });
 
-            $('#qrCodeAssessmentBtn').on('click', function() {
-
-                const pointId = $(this).data('point-id');
-
-                $.ajax({
-                    url: "{{ route('qrCodeAssessment') }}",
-                    type: "POST",
-                    data: {
-                        point_id: pointId,
-                        _token: "{{ csrf_token() }}"
-                    },
-
-                    success: function(response) {
-
-                        console.log(response);
-
-                        alert('Point ID: ' + response.point_id);
-                    },
-
-                    error: function(xhr) {
-
-                        console.log(xhr.responseText);
-
-                        alert('Something went wrong');
-                    }
+           $('#qrCodeAssessmentBtn').on('click', function() {
+    const pointId = $(this).data('point-id');
+    // If pointId is empty, try to get it from the form
+    const gisid = $('#point_gisid').val() || $('#building_gisid').val();
+    
+    $.ajax({
+        url: "{{ route('qrCodeAssessment') }}",
+        type: "POST",
+        data: {
+            point_id: pointId || gisid,
+            _token: "{{ csrf_token() }}"
+        },
+        success: function(response) {
+            console.log(response);
+            // Handle success - maybe show QR code in a modal
+            if (response.qr_code_url) {
+                // Show QR code image
+                Swal.fire({
+                    title: 'QR Code',
+                    imageUrl: response.qr_code_url,
+                    imageWidth: 300,
+                    imageHeight: 300,
+                    confirmButtonText: 'Close'
                 });
-
-            });
+            }
+        },
+        error: function(xhr) {
+            console.log(xhr.responseText);
+            Swal.fire('Error', 'Something went wrong', 'error');
+        }
+    });
+});
             // ✅ FIX: Add 'function' keyword
             function loadPointDataForEdit(id, dataid) {
                 // Show loading indicator
