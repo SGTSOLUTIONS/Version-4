@@ -1277,7 +1277,7 @@
                                         </select>
                                         <div id="percentage_error" class="error-message text-danger small"></div>
                                     </div>
-                                      <div class="col-md-3 mb-3"><label class="form-label">Basement</label><input
+                                    <div class="col-md-3 mb-3"><label class="form-label">Basement</label><input
                                             type="number" class="form-control" name="basement" id="basement"
                                             min="0" placeholder="Number of basements">
                                         <div id="basement_error" class="error-message text-danger small"></div>
@@ -1528,337 +1528,325 @@
 
     {{-- ── Edit Point Data Modal ── --}}
     <div class="modal fade" id="pointDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
-        <div class="modal-content bld-modal-content">
-            <div class="modal-header bld-modal-header" style="background: linear-gradient(135deg,#2563eb,#1d4ed8);">
-                <div class="bld-header-inner">
-                    <div class="bld-header-icon"><i class="bi bi-pencil-square"></i></div>
-                    <div>
-                        <h5 class="modal-title bld-modal-title">Edit Point Data</h5>
+        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content bld-modal-content">
+                <div class="modal-header bld-modal-header" style="background: linear-gradient(135deg,#2563eb,#1d4ed8);">
+                    <div class="bld-header-inner">
+                        <div class="bld-header-icon"><i class="bi bi-pencil-square"></i></div>
+                        <div>
+                            <h5 class="modal-title bld-modal-title">Edit Point Data</h5>
+                        </div>
                     </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
+                <div class="modal-body p-4">
 
-                <form id="pointDetailsForm" class="needs-validation" novalidate>
-                    @csrf
+                    <form id="pointDetailsForm" class="needs-validation" novalidate>
+                        @csrf
 
-                    <!-- Tabs -->
-                    <ul class="nav nav-tabs mb-3" id="pointDetailsTabs" role="tablist">
-                        <li class="nav-item">
-                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#basic-tab"
-                                type="button">
-                                Basic Info
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#water-tab"
-                                type="button">
-                                Water Tax
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ugd-tab" type="button">
-                                UGD Tax
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pt-tab" type="button">
-                                Professional Tax
-                            </button>
-                        </li>
-                    </ul>
 
-                    <div class="tab-content">
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs mb-3" id="pointDetailsTabs" role="tablist">
 
-                        <!-- BASIC INFO -->
-                        <div class="tab-pane fade show active" id="basic-tab">
-                            <input type="text" class="form-control" id="point_gisid" name="point_gisid" hidden>
-
-                            <!-- ✅ NEW: QR Code Button Section -->
-                            <div class="row g-3 mb-3">
-                                <div class="col-12">
-                                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                                        <div>
-                                            <i class="bi bi-qr-code text-primary" style="font-size: 1.5rem;"></i>
-                                            <span class="ms-2 fw-semibold">QR Code Assessment</span>
-                                        </div>
-                                        <button type="button"
-                                            class="btn btn-outline-primary"
-                                            id="qrCodeAssessmentBtn"
-                                            data-qr-assessment="scan"
-                                            data-point-id=""
-                                            data-action="assess">
-                                            <i class="bi bi-qr-code-scan me-1"></i>
-                                            Scan QR Code
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="assessment_type" class="form-label">
-                                        Assessment Type <span class="text-danger">*</span>
-                                    </label>
-                                    <select class="form-control" id="assessment_type" name="assessment_type"
-                                        required>
-                                        <option value="">-- Select Assessment Type --</option>
-                                        <option value="OLD">OLD</option>
-                                        <option value="NEW">NEW</option>
-                                        <option value="VACANT">VACANT</option>
-                                        <option value="OTHER_WARD">OTHER WARD</option>
-                                    </select>
-                                    <div class="invalid-feedback">
-                                        Please select assessment type.
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="assessment" class="form-label">Assessment <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="assessment" name="assessment"
-                                        required>
-                                    <div class="invalid-feedback">Please enter assessment number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="old_assessment" class="form-label">Old Assessment</label>
-                                    <input type="text" class="form-control" id="old_assessment"
-                                        name="old_assessment">
-                                    <div class="invalid-feedback">Please enter old assessment number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="zone" class="form-label">Zone <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="zone" name="zone"
-                                        required>
-                                    <div class="invalid-feedback">Please enter zone.</div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="owner_name" class="form-label">Owner Name <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="owner_name" name="owner_name"
-                                        required>
-                                    <div class="invalid-feedback">Please enter owner name.</div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="present_owner_name" class="form-label">Present Owner Name</label>
-                                    <input type="text" class="form-control" id="present_owner_name"
-                                        name="present_owner_name">
-                                    <div class="invalid-feedback">Please enter present owner name.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="phone_number" class="form-label">Phone Number <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="phone_number" name="phone_number"
-                                        pattern="[0-9]{10}" required>
-                                    <div class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="old_door_no" class="form-label">Old Door No</label>
-                                    <input type="text" class="form-control" id="old_door_no" name="old_door_no">
-                                    <div class="invalid-feedback">Please enter old door number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="new_door_no" class="form-label">New Door No <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="new_door_no" name="new_door_no"
-                                        required>
-                                    <div class="invalid-feedback">Please enter new door number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="aadhar_no" class="form-label">Aadhar No</label>
-                                    <input type="text" class="form-control" id="aadhar_no" name="aadhar_no"
-                                        pattern="[0-9]{12}">
-                                    <div class="invalid-feedback">Please enter a valid 12-digit Aadhar number.
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="ration_no" class="form-label">Ration No</label>
-                                    <input type="text" class="form-control" id="ration_no" name="ration_no">
-                                    <div class="invalid-feedback">Please enter ration number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="floor" class="form-label">Floor <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="floor" name="floor"
-                                        required>
-                                    <div class="invalid-feedback">Please enter floor number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="number_persons" class="form-label">Number Persons</label>
-                                    <input type="number" class="form-control" id="number_persons"
-                                        name="number_persons" min="1">
-                                    <div class="invalid-feedback">Please enter a valid number (minimum 1).</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="bill_usage" class="form-label">Bill Usage <span
-                                            class="text-danger">*</span></label>
-                                    <select class="form-select" id="bill_usage" name="bill_usage" required>
-                                        <option value="">Select</option>
-                                        <option value="RESIDENTIAL">Residential</option>
-                                        <option value="COMMERCIAL">Commercial</option>
-                                    </select>
-                                    <div class="invalid-feedback">Please select bill usage type.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="eb" class="form-label">EB</label>
-                                    <input type="text" class="form-control" id="eb" name="eb">
-                                    <div class="invalid-feedback">Please enter EB number.</div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for="worker_name" class="form-label">Worker Name</label>
-                                    <input type="text" class="form-control" id="worker_name" name="worker_name">
-                                    <div class="invalid-feedback">Please enter worker name.</div>
-                                </div>
-
-                                <div class="col-md-12">
-                                    <label for="remarks" class="form-label">Remarks</label>
-                                    <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
-                                    <div class="invalid-feedback">Please enter remarks.</div>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <!-- WATER TAX -->
-                        <div class="tab-pane fade" id="water-tab">
-
-                            <div class="row g-3">
-
-                                <div class="col-md-4">
-                                    <label for="watertax_no" class="form-label">Water Tax No <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="watertax_no" name="watertax_no"
-                                        required>
-                                    <div class="invalid-feedback">Please enter water tax number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="old_watertax_no" class="form-label">Old Water Tax No</label>
-                                    <input type="text" class="form-control" id="old_watertax_no"
-                                        name="old_watertax_no">
-                                    <div class="invalid-feedback">Please enter old water tax number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="water_usage" class="form-label">Water Usage <span
-                                            class="text-danger">*</span></label>
-                                    <select class="form-select" id="water_usage" name="water_usage" required>
-                                        <option value="">Select</option>
-                                        <option value="Resdentrial">Residential</option>
-                                        <option value="Commercial">Commercial</option>
-                                        <option value="Industrial">Industrial</option>
-                                        <option value="Institutional">Institutional</option>
-                                    </select>
-                                    <div class="invalid-feedback">Please select water usage type.</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="water_DBC_type" class="form-label">Water DBC Type</label>
-                                    <input type="text" class="form-control" id="water_DBC_type"
-                                        name="water_DBC_type">
-                                    <div class="invalid-feedback">Please enter DBC type.</div>
-                                </div>
-
-                                <div class="col-md-12">
-                                    <label for="water_slab_description" class="form-label">Water Slab
-                                        Description</label>
-                                    <textarea class="form-control" id="water_slab_description" name="water_slab_description" rows="2"></textarea>
-                                    <div class="invalid-feedback">Please enter slab description.</div>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <!-- UGD TAX -->
-                        <div class="tab-pane fade" id="ugd-tab">
-
-                            <div class="row g-3">
-
-                                <div class="col-md-4">
-                                    <label for="ugd_no" class="form-label">UGD No <span
-                                            class="text-danger">*</span></label>
-                                    <input class="form-control" id="ugd_no" name="ugd_no" required>
-                                    <div class="invalid-feedback">Please enter UGD number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="old_ugd_no" class="form-label">Old UGD No</label>
-                                    <input class="form-control" id="old_ugd_no" name="old_ugd_no">
-                                    <div class="invalid-feedback">Please enter old UGD number.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="ugd_usage" class="form-label">UGD Usage <span
-                                            class="text-danger">*</span></label>
-                                    <input class="form-control" id="ugd_usage" name="ugd_usage" required>
-                                    <div class="invalid-feedback">Please enter UGD usage.</div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="ugd_DBC_type" class="form-label">UGD DBC Type</label>
-                                    <input class="form-control" id="ugd_DBC_type" name="ugd_DBC_type">
-                                    <div class="invalid-feedback">Please enter DBC type.</div>
-                                </div>
-
-                                <div class="col-md-8">
-                                    <label for="ugd_slab_description" class="form-label">UGD Slab
-                                        Description</label>
-                                    <textarea class="form-control" id="ugd_slab_description" name="ugd_slab_description" rows="2"></textarea>
-                                    <div class="invalid-feedback">Please enter slab description.</div>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <!-- PROFESSIONAL TAX -->
-                        <div class="tab-pane fade" id="pt-tab">
-
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">Professional Tax</h5>
-
-                                <button type="button" class="btn btn-primary btn-sm" id="addProfessionalBtn">
-                                    <i class="bi bi-plus-circle"></i>
-                                    Add Professional Tax
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#basic-tab"
+                                    type="button">
+                                    Basic Info
                                 </button>
+                            </li>
+
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#water-tab"
+                                    type="button">
+                                    Water Tax
+                                </button>
+                            </li>
+
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ugd-tab" type="button">
+                                    UGD Tax
+                                </button>
+                            </li>
+
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pt-tab" type="button">
+                                    Professional Tax
+                                </button>
+                            </li>
+
+                        </ul>
+
+                        <div class="tab-content">
+
+                            <!-- BASIC INFO -->
+                            <div class="tab-pane fade show active" id="basic-tab">
+                                <input type="text" class="form-control" id="point_gisid" name="point_gisid" hidden>
+                                <div class="row g-3">
+                                    <button class="btn-primary" id="qrCodeAssessmentBtn" data-point-id="">
+                                    </button>
+                                    <div class="col-md-4">
+                                        <label for="assessment_type" class="form-label">
+                                            Assessment Type <span class="text-danger">*</span>
+                                        </label>
+
+                                        <select class="form-control" id="assessment_type" name="assessment_type"
+                                            required>
+                                            <option value="">-- Select Assessment Type --</option>
+                                            <option value="OLD">OLD</option>
+                                            <option value="NEW">NEW</option>
+                                            <option value="VACANT">VACANT</option>
+                                            <option value="OTHER_WARD">OTHER WARD</option>
+                                        </select>
+
+                                        <div class="invalid-feedback">
+                                            Please select assessment type.
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="assessment" class="form-label">Assessment <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="assessment" name="assessment"
+                                            required>
+                                        <div class="invalid-feedback">Please enter assessment number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="old_assessment" class="form-label">Old Assessment</label>
+                                        <input type="text" class="form-control" id="old_assessment"
+                                            name="old_assessment">
+                                        <div class="invalid-feedback">Please enter old assessment number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="zone" class="form-label">Zone <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="zone" name="zone"
+                                            required>
+                                        <div class="invalid-feedback">Please enter zone.</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="owner_name" class="form-label">Owner Name <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="owner_name" name="owner_name"
+                                            required>
+                                        <div class="invalid-feedback">Please enter owner name.</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="present_owner_name" class="form-label">Present Owner Name</label>
+                                        <input type="text" class="form-control" id="present_owner_name"
+                                            name="present_owner_name">
+                                        <div class="invalid-feedback">Please enter present owner name.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="phone_number" class="form-label">Phone Number <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="phone_number" name="phone_number"
+                                            pattern="[0-9]{10}" required>
+                                        <div class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="old_door_no" class="form-label">Old Door No</label>
+                                        <input type="text" class="form-control" id="old_door_no" name="old_door_no">
+                                        <div class="invalid-feedback">Please enter old door number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="new_door_no" class="form-label">New Door No <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="new_door_no" name="new_door_no"
+                                            required>
+                                        <div class="invalid-feedback">Please enter new door number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="aadhar_no" class="form-label">Aadhar No</label>
+                                        <input type="text" class="form-control" id="aadhar_no" name="aadhar_no"
+                                            pattern="[0-9]{12}">
+                                        <div class="invalid-feedback">Please enter a valid 12-digit Aadhar number.
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="ration_no" class="form-label">Ration No</label>
+                                        <input type="text" class="form-control" id="ration_no" name="ration_no">
+                                        <div class="invalid-feedback">Please enter ration number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="floor" class="form-label">Floor <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="floor" name="floor"
+                                            required>
+                                        <div class="invalid-feedback">Please enter floor number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="number_persons" class="form-label">Number Persons</label>
+                                        <input type="number" class="form-control" id="number_persons"
+                                            name="number_persons" min="1">
+                                        <div class="invalid-feedback">Please enter a valid number (minimum 1).</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="bill_usage" class="form-label">Bill Usage <span
+                                                class="text-danger">*</span></label>
+                                        <select class="form-select" id="bill_usage" name="bill_usage" required>
+                                            <option value="">Select</option>
+                                            <option value="RESIDENTIAL">Residential</option>
+                                            <option value="COMMERCIAL">Commercial</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select bill usage type.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="eb" class="form-label">EB</label>
+                                        <input type="text" class="form-control" id="eb" name="eb">
+                                        <div class="invalid-feedback">Please enter EB number.</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="worker_name" class="form-label">Worker Name</label>
+                                        <input type="text" class="form-control" id="worker_name" name="worker_name">
+                                        <div class="invalid-feedback">Please enter worker name.</div>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label for="remarks" class="form-label">Remarks</label>
+                                        <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
+                                        <div class="invalid-feedback">Please enter remarks.</div>
+                                    </div>
+
+                                </div>
+
                             </div>
 
-                            <div id="professionalContainer"></div>
+                            <!-- WATER TAX -->
+                            <div class="tab-pane fade" id="water-tab">
+
+                                <div class="row g-3">
+
+                                    <div class="col-md-4">
+                                        <label for="watertax_no" class="form-label">Water Tax No <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="watertax_no" name="watertax_no"
+                                            required>
+                                        <div class="invalid-feedback">Please enter water tax number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="old_watertax_no" class="form-label">Old Water Tax No</label>
+                                        <input type="text" class="form-control" id="old_watertax_no"
+                                            name="old_watertax_no">
+                                        <div class="invalid-feedback">Please enter old water tax number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="water_usage" class="form-label">Water Usage <span
+                                                class="text-danger">*</span></label>
+                                        <select class="form-select" id="water_usage" name="water_usage" required>
+                                            <option value="">Select</option>
+                                            <option value="Resdentrial">Residential</option>
+                                            <option value="Commercial">Commercial</option>
+                                            <option value="Industrial">Industrial</option>
+                                            <option value="Institutional">Institutional</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select water usage type.</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="water_DBC_type" class="form-label">Water DBC Type</label>
+                                        <input type="text" class="form-control" id="water_DBC_type"
+                                            name="water_DBC_type">
+                                        <div class="invalid-feedback">Please enter DBC type.</div>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label for="water_slab_description" class="form-label">Water Slab
+                                            Description</label>
+                                        <textarea class="form-control" id="water_slab_description" name="water_slab_description" rows="2"></textarea>
+                                        <div class="invalid-feedback">Please enter slab description.</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- UGD TAX -->
+                            <div class="tab-pane fade" id="ugd-tab">
+
+                                <div class="row g-3">
+
+                                    <div class="col-md-4">
+                                        <label for="ugd_no" class="form-label">UGD No <span
+                                                class="text-danger">*</span></label>
+                                        <input class="form-control" id="ugd_no" name="ugd_no" required>
+                                        <div class="invalid-feedback">Please enter UGD number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="old_ugd_no" class="form-label">Old UGD No</label>
+                                        <input class="form-control" id="old_ugd_no" name="old_ugd_no">
+                                        <div class="invalid-feedback">Please enter old UGD number.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="ugd_usage" class="form-label">UGD Usage <span
+                                                class="text-danger">*</span></label>
+                                        <input class="form-control" id="ugd_usage" name="ugd_usage" required>
+                                        <div class="invalid-feedback">Please enter UGD usage.</div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label for="ugd_DBC_type" class="form-label">UGD DBC Type</label>
+                                        <input class="form-control" id="ugd_DBC_type" name="ugd_DBC_type">
+                                        <div class="invalid-feedback">Please enter DBC type.</div>
+                                    </div>
+
+                                    <div class="col-md-8">
+                                        <label for="ugd_slab_description" class="form-label">UGD Slab
+                                            Description</label>
+                                        <textarea class="form-control" id="ugd_slab_description" name="ugd_slab_description" rows="2"></textarea>
+                                        <div class="invalid-feedback">Please enter slab description.</div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- PROFESSIONAL TAX -->
+                            <div class="tab-pane fade" id="pt-tab">
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">Professional Tax</h5>
+
+                                    <button type="button" class="btn btn-primary btn-sm" id="addProfessionalBtn">
+                                        <i class="bi bi-plus-circle"></i>
+                                        Add Professional Tax
+                                    </button>
+                                </div>
+
+                                <div id="professionalContainer"></div>
+
+                            </div>
 
                         </div>
 
-                    </div>
+                        <!-- Hidden fields for form validation tracking -->
+                        <input type="hidden" id="validationTrigger" name="validationTrigger" value="false">
 
-                    <!-- Hidden fields for form validation tracking -->
-                    <input type="hidden" id="validationTrigger" name="validationTrigger" value="false">
-
-                </form>
-            </div>
-            <div class="modal-footer bld-modal-footer">
-                <button type="button" class="btn bld-btn-save" id="savePointDetails">
-                    <i class="bi bi-save me-1"></i>Update Point Data
-                </button>
+                    </form>
+                </div>
+                <div class="modal-footer bld-modal-footer">
+                    <button type="button" class="btn bld-btn-save" id="savePointDetails">
+                        <i class="bi bi-save me-1"></i>Update Point Data
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
     <div class="modal fade" id="lineDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -4719,30 +4707,18 @@
                 e.stopPropagation();
                 const id = $(this).data('id');
                 const dataid = $(this).data('dataid');
-                loadPointDataForEdit(id,dataid);
+                loadPointDataForEdit(id, dataid);
                 $('#searchDropdown').removeClass('show');
                 $('#searchToggleBtn').removeClass('active-search');
             });
-// In your loadPointDataForEdit function, after setting the form data:
-$('#qrCodeAssessmentBtn').data('point-id', pd.id);
 
-// QR Code button click handler
-$('#qrCodeAssessmentBtn').on('click', function() {
+            $('#qrCodeAssessmentBtn').on('click', function () {
     const pointId = $(this).data('point-id');
-    const action = $(this).data('action');
-    const qrType = $(this).data('qr-assessment');
 
-    console.log('QR Code Assessment triggered:', {
-        pointId: pointId,
-        action: action,
-        qrType: qrType
-    });
-
-    // Your QR code scanning logic here
-    // For example, you could trigger a camera scan or load a QR modal
+    alert('Point ID: ' + pointId);
 });
             // ✅ FIX: Add 'function' keyword
-            function loadPointDataForEdit(id,dataid) {
+            function loadPointDataForEdit(id, dataid) {
                 // Show loading indicator
                 showFlashMessage('Loading data...', 'info');
 
@@ -4803,7 +4779,7 @@ $('#qrCodeAssessmentBtn').on('click', function() {
                         $('#eb').val(pd.eb || '');
                         $('#worker_name').val(pd.worker_name || '');
                         $('#remarks').val(pd.remarks || '');
-$('#qrCodeAssessmentBtn').data('point-id', pd.id);
+                        $('#qrCodeAssessmentBtn').data('point-id', pd.id);
                         // ─── WATER TAX ───
                         if (wt) {
                             $('#watertax_no').val(wt.watertax_no || '');
