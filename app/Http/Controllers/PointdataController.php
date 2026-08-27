@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
-
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 class PointdataController extends Controller
 {
     public function store(Request $request)
@@ -862,6 +862,9 @@ class PointdataController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+
+
     public function pointDataUpdate(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -1151,5 +1154,170 @@ class PointdataController extends Controller
         $results = $query->orderByDesc('id')->limit(50)->get();
 
         return response()->json(['success' => true, 'data' => $results]);
+    }
+public function qrCodeAssessment(Request $request)
+    {
+        // Validate
+        $request->validate([
+            'point_id' => 'required|integer',
+        ]);
+
+        // Logged-in user
+        $user = User::find(Auth::id());
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        // Ward
+        $ward = Ward::find($user->ward_id);
+
+        if (!$ward) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ward not found'
+            ], 404);
+        }
+
+        // Zone
+        $zone = Zone::find($ward->zone_id);
+
+        if (!$zone) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Zone not found'
+            ], 404);
+        }
+
+        // Corporation
+        $corporation = Corporation::find($zone->corp_id);
+
+        if (!$corporation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Corporation not found'
+            ], 404);
+        }
+
+        $wardId = $ward->id;
+        $corpId = $corporation->id;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Point Data Table
+        |--------------------------------------------------------------------------
+        */
+
+        $pointDataTable = "point_data_{$wardId}";
+
+        $pointId = $request->point_id;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get Point Data
+        |--------------------------------------------------------------------------
+        */
+
+        $pointData = DB::table($pointDataTable)
+            ->where('id', $pointId)
+            ->first();
+
+        if (!$pointData) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Point data not found'
+            ], 404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get Assessment Information
+        |--------------------------------------------------------------------------
+        |
+        | Change these column names if your actual columns are different.
+        |
+        */
+
+        $assessmentId = $pointData->id;
+
+        $assessmentNumber = $pointData->assessment
+            ?? $pointData->Assessment
+            ?? null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ward Number
+        |--------------------------------------------------------------------------
+        */
+
+        $wardNumber = $ward->ward_no
+            ?? $ward->ward_number
+            ?? $ward->id;
+
+        /*
+        |--------------------------------------------------------------------------
+        | QR DATA
+        |--------------------------------------------------------------------------
+        |
+        | This is the actual information stored inside the QR code.
+        |
+        */
+
+        $qrData = [
+            'ward_no' => $wardNumber,
+            'assessment_id' => $assessmentId,
+            'assessment_number' => $assessmentNumber,
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Convert QR data to JSON
+        |--------------------------------------------------------------------------
+        */
+
+        $qrContent = json_encode(
+            $qrData,
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Generate QR
+        |--------------------------------------------------------------------------
+        */
+
+        $qrCode = QrCode::format('png')
+            ->size(500)
+            ->margin(2)
+            ->errorCorrection('H')
+            ->generate($qrContent);
+
+        /*
+        |--------------------------------------------------------------------------
+        | File Name
+        |--------------------------------------------------------------------------
+        */
+
+        $fileName = 'QR_Ward_' .
+            $wardNumber .
+            '_Assessment_' .
+            $assessmentNumber .
+            '.png';
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return QR as download
+        |--------------------------------------------------------------------------
+        */
+
+        return response($qrCode)
+            ->header('Content-Type', 'image/png')
+            ->header(
+                'Content-Disposition',
+                'attachment; filename="' . $fileName . '"'
+            );
     }
 }

@@ -27,7 +27,8 @@ Route::prefix('infrastructure')->group(function () {
 Route::get('/', function () {
     return view('welcome');
 });
-
+Route::post('/qr-code-assessment', [PointdataController::class, 'qrCodeAssessment'])
+    ->name('qrCodeAssessment');
 // Guest routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

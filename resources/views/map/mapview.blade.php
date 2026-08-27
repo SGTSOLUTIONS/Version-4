@@ -4713,11 +4713,34 @@
                 $('#searchToggleBtn').removeClass('active-search');
             });
 
-            $('#qrCodeAssessmentBtn').on('click', function () {
-    const pointId = $(this).data('point-id');
+            $('#qrCodeAssessmentBtn').on('click', function() {
 
-    alert('Point ID: ' + pointId);
-});
+                const pointId = $(this).data('point-id');
+
+                $.ajax({
+                    url: "{{ route('qrCodeAssessment') }}",
+                    type: "POST",
+                    data: {
+                        point_id: pointId,
+                        _token: "{{ csrf_token() }}"
+                    },
+
+                    success: function(response) {
+
+                        console.log(response);
+
+                        alert('Point ID: ' + response.point_id);
+                    },
+
+                    error: function(xhr) {
+
+                        console.log(xhr.responseText);
+
+                        alert('Something went wrong');
+                    }
+                });
+
+            });
             // ✅ FIX: Add 'function' keyword
             function loadPointDataForEdit(id, dataid) {
                 // Show loading indicator
