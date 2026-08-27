@@ -1583,6 +1583,7 @@
                                 <input type="text" class="form-control" id="point_gisid" name="point_gisid" hidden>
                                 <div class="row g-3">
                                     <button class="btn-primary" id="qrCodeAssessmentBtn" data-point-id="">
+                                        QrCode
                                     </button>
                                     <div class="col-md-4">
                                         <label for="assessment_type" class="form-label">
