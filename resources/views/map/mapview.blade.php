@@ -4756,9 +4756,7 @@
         return { blob, filename };
     })
     .then(({ blob, filename }) => {
-        if (!blob || blob.size === 0) {
-            throw new Error('Received an empty QR code file');
-        }
+        if (!blob || blob.size === 0) throw new Error('Received an empty QR code file');
 
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -4769,13 +4767,7 @@
         document.body.removeChild(link);
         setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: 'QR Code downloaded successfully',
-            timer: 2000,
-            showConfirmButton: false
-        });
+        Swal.fire({ icon: 'success', title: 'Success!', text: 'QR Code downloaded successfully', timer: 2000, showConfirmButton: false });
     })
     .catch((err) => {
         Swal.fire('Error', err.message || 'Failed to generate QR code', 'error');
