@@ -4714,68 +4714,84 @@
                 $('#searchToggleBtn').removeClass('active-search');
             });
 
-           $('#qrCodeAssessmentBtn').on('click', function (e) {
-    e.preventDefault();
+            $('#qrCodeAssessmentBtn').on('click', function(e) {
+                e.preventDefault();
 
-    const pointId = $('#point_gisid').val();
-    if (!pointId) {
-        Swal.fire('Error', 'Point ID not found', 'error');
-        return;
-    }
+                const pointId = $('#point_gisid').val();
+                if (!pointId) {
+                    Swal.fire('Error', 'Point ID not found', 'error');
+                    return;
+                }
 
-    const $btn = $(this);
-    const originalHtml = $btn.html();
-    $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Generating...').prop('disabled', true);
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+                $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Generating...').prop('disabled',
+                    true);
 
-    fetch("{{ route('qrCodeAssessment') }}", {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': "{{ csrf_token() }}",
-            'Accept': 'application/json'
-        },
-        body: new URLSearchParams({ point_id: pointId })
-    })
-    .then(async (response) => {
-        if (!response.ok) {
-            let msg = 'Failed to generate QR code';
-            try {
-                const err = await response.json();
-                if (err.message) msg = err.message;
-            } catch (_) {}
-            throw new Error(msg);
-        }
+                fetch("{{ route('qrCodeAssessment') }}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                            'Accept': 'application/json'
+                        },
+                        body: new URLSearchParams({
+                            point_id: pointId
+                        })
+                    })
+                    .then(async (response) => {
+                        if (!response.ok) {
+                            let msg = 'Failed to generate QR code';
+                            try {
+                                const err = await response.json();
+                                if (err.message) msg = err.message;
+                            } catch (_) {}
+                            throw new Error(msg);
+                        }
 
-        let filename = 'QR_Code.png';
-        const disposition = response.headers.get('Content-Disposition');
-        if (disposition) {
-            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-            if (matches && matches[1]) filename = matches[1].replace(/['"]/g, '');
-        }
+                        let filename = 'QR_Code.png';
+                        const disposition = response.headers.get('Content-Disposition');
+                        if (disposition) {
+                            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
+                                disposition);
+                            if (matches && matches[1]) filename = matches[1].replace(/['"]/g, '');
+                        }
 
-        const blob = await response.blob();
-        return { blob, filename };
-    })
-    .then(({ blob, filename }) => {
-        if (!blob || blob.size === 0) throw new Error('Received an empty QR code file');
+                        const blob = await response.blob();
+                        return {
+                            blob,
+                            filename
+                        };
+                    })
+                    .then(({
+                        blob,
+                        filename
+                    }) => {
+                        if (!blob || blob.size === 0) throw new Error('Received an empty QR code file');
 
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 
-        Swal.fire({ icon: 'success', title: 'Success!', text: 'QR Code downloaded successfully', timer: 2000, showConfirmButton: false });
-    })
-    .catch((err) => {
-        Swal.fire('Error', err.message || 'Failed to generate QR code', 'error');
-    })
-    .finally(() => {
-        $btn.html(originalHtml).prop('disabled', false);
-    });
-});
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'QR Code downloaded successfully',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    })
+                    .catch((err) => {
+                        Swal.fire('Error', err.message || 'Failed to generate QR code', 'error');
+                    })
+                    .finally(() => {
+                        $btn.html(originalHtml).prop('disabled', false);
+                    });
+            });
             // ✅ FIX: Add 'function' keyword
             function loadPointDataForEdit(id, dataid) {
                 // Show loading indicator
