@@ -1,24 +1,14 @@
 <?php
-
-namespace App\Imports;
-
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Concerns\OnEachRow;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Concerns\WithBatchInserts;
-use Maatwebsite\Excel\Row;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
-class MisImport implements OnEachRow, WithHeadingRow, WithChunkReading, WithBatchInserts
+class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
 {
     protected $corporationId;
     protected $tableName;
-
-    protected $skippedRows = [];
-    protected $updatedRows = [];
-    protected $insertedRows = [];
 
     public function __construct($corporationId)
     {
@@ -26,115 +16,81 @@ class MisImport implements OnEachRow, WithHeadingRow, WithChunkReading, WithBatc
         $this->tableName = "mis_" . $corporationId;
     }
 
-    public function onRow(Row $row)
+    public function collection(Collection $rows)
     {
-        if (!Schema::hasTable($this->tableName)) {
-            throw new \Exception("MIS table {$this->tableName} not found.");
-        }
+        $data = [];
+        $now = now();
 
-        $index = $row->getIndex();
-        $row = $row->toArray();
+        foreach ($rows as $row) {
 
-        try {
-
-            $assessment = trim($row['assessment'] ?? '');
-
-            // Only assessment empty check
-            if ($assessment == '') {
-                $this->skippedRows[] = [
-                    'row' => $index,
-                    'reason' => 'Assessment Empty'
-                ];
-                return;
+            if (empty($row['assessment'])) {
+                continue;
             }
 
-            $data = [
+            $data[] = [
                 'corporation_id' => $this->corporationId,
 
-                'gisid' => $row['gisid'] ?? null,
-                'ward_no' => $row['ward_no'] ?? null,
-                'assessment' => $assessment,
+                'gisid'          => $row['gisid'] ?? null,
+                'ward_no'        => $row['ward_no'] ?? null,
+                'assessment'     => trim($row['assessment']),
                 'old_assessment' => $row['old_assessment'] ?? null,
-                'road_name' => $row['road_name'] ?? null,
-                'owner_name' => $row['owner_name'] ?? null,
-                'old_door_no' => $row['old_door_no'] ?? null,
-                'new_door_no' => $row['new_door_no'] ?? null,
-                'phone_number' => $row['phone_number'] ?? null,
+                'road_name'      => $row['road_name'] ?? null,
+                'owner_name'     => $row['owner_name'] ?? null,
+                'old_door_no'    => $row['old_door_no'] ?? null,
+                'new_door_no'    => $row['new_door_no'] ?? null,
+                'phone_number'   => $row['phone_number'] ?? null,
 
-                'plot_area' => $this->parseDecimal($row['plot_area'] ?? null),
-                'half_year_tax' => $this->parseDecimal($row['half_year_tax'] ?? null),
-                'balance' => $this->parseDecimal($row['balance'] ?? null),
+                'plot_area'      => $this->decimal($row['plot_area'] ?? null),
+                'half_year_tax'  => $this->decimal($row['half_year_tax'] ?? null),
+                'balance'        => $this->decimal($row['balance'] ?? null),
 
-                // No enum validation
-                'usage' => $row['usage'] ?? null,
-                'type' => $row['type'] ?? null,
+                'usage'          => $row['usage'] ?? null,
+                'type'           => $row['type'] ?? null,
+                'zone'           => $row['zone'] ?? null,
 
-                'zone' => $row['zone'] ?? null,
-            ];
-
-            $exists = DB::table($this->tableName)
-                ->where('corporation_id', $this->corporationId)
-                ->where('assessment', $assessment)
-                ->first();
-
-            if ($exists) {
-
-                DB::table($this->tableName)
-                    ->where('id', $exists->id)
-                    ->update(array_merge($data, [
-                        'updated_at' => now()
-                    ]));
-
-                $this->updatedRows[] = $assessment;
-
-            } else {
-
-                DB::table($this->tableName)
-                    ->insert(array_merge($data, [
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]));
-
-                $this->insertedRows[] = $assessment;
-            }
-
-        } catch (\Exception $e) {
-
-            Log::error($e->getMessage());
-
-            $this->skippedRows[] = [
-                'row' => $index,
-                'reason' => $e->getMessage()
+                'created_at'     => $now,
+                'updated_at'     => $now,
             ];
         }
+
+        if (empty($data)) {
+            return;
+        }
+
+        DB::table($this->tableName)->upsert(
+            $data,
+            ['corporation_id', 'assessment'],
+            [
+                'gisid',
+                'ward_no',
+                'old_assessment',
+                'road_name',
+                'owner_name',
+                'old_door_no',
+                'new_door_no',
+                'phone_number',
+                'plot_area',
+                'half_year_tax',
+                'balance',
+                'usage',
+                'type',
+                'zone',
+                'updated_at',
+            ]
+        );
     }
 
     public function chunkSize(): int
     {
-        return 1000;
+        return 5000;
     }
 
-    public function batchSize(): int
-    {
-        return 1000;
-    }
-
-    private function parseDecimal($value)
+    private function decimal($value)
     {
         if ($value === null || $value === '') {
             return null;
         }
 
         return (float) preg_replace('/[^0-9.\-]/', '', $value);
-    }
-
-    public function getStats()
-    {
-        return [
-            'inserted' => count($this->insertedRows),
-            'updated' => count($this->updatedRows),
-            'skipped' => count($this->skippedRows),
-            'skipped_details' => $this->skippedRows,
-        ];
     }
 }
