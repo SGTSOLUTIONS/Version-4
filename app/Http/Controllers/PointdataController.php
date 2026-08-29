@@ -1157,71 +1157,71 @@ class PointdataController extends Controller
         return response()->json(['success' => true, 'data' => $results]);
     }
     public function qrCodeAssessment(Request $request)
-{
-    $request->validate([
-        'point_id' => 'required|integer',
-    ]);
+    {
+        $request->validate([
+            'point_id' => 'required|integer',
+        ]);
 
-    $user = User::find(Auth::id());
-    if (!$user) {
-        return response()->json(['success' => false, 'message' => 'User not found'], 404);
+        $user = User::find(Auth::id());
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User not found'], 404);
+        }
+
+        $ward = Ward::find($user->ward_id);
+        if (!$ward) {
+            return response()->json(['success' => false, 'message' => 'Ward not found'], 404);
+        }
+
+        $zone = Zone::find($ward->zone_id);
+        if (!$zone) {
+            return response()->json(['success' => false, 'message' => 'Zone not found'], 404);
+        }
+
+        $corporation = Corporation::find($zone->corp_id);
+        if (!$corporation) {
+            return response()->json(['success' => false, 'message' => 'Corporation not found'], 404);
+        }
+
+        $wardId = $ward->id;
+        $pointDataTable = "point_data_{$wardId}";
+        $pointId = $request->point_id;
+
+        if (!Schema::hasTable($pointDataTable)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Table {$pointDataTable} not found"
+            ], 404);
+        }
+
+        $pointData = DB::table($pointDataTable)->where('id', $pointId)->first();
+
+        if (!$pointData) {
+            return response()->json([
+                'success' => false,
+                'message' => "Point data not found for ID: {$pointId}"
+            ], 404);
+        }
+
+        $wardNumber = $ward->ward_no ?? $ward->ward_number ?? $ward->id;
+        $assessmentNumber = $pointData->assessment ?? 'N/A';
+
+        // Build the URL for the assessment details page
+        $baseUrl = "https://ccmc.sgtsolutions.in";
+        $qrUrl = $baseUrl . "/view-assessment/" . $wardNumber . "/" . $pointData->id;
+
+        // Generate QR code
+        $qrCode = QrCode::format('png')
+            ->size(500)
+            ->margin(2)
+            ->errorCorrection('H')
+            ->generate($qrUrl);
+
+        $fileName = 'QR_Ward_' . $wardNumber . '_Assessment_' . $assessmentNumber . '.png';
+
+        return response($qrCode)
+            ->header('Content-Type', 'image/png')
+            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
     }
-
-    $ward = Ward::find($user->ward_id);
-    if (!$ward) {
-        return response()->json(['success' => false, 'message' => 'Ward not found'], 404);
-    }
-
-    $zone = Zone::find($ward->zone_id);
-    if (!$zone) {
-        return response()->json(['success' => false, 'message' => 'Zone not found'], 404);
-    }
-
-    $corporation = Corporation::find($zone->corp_id);
-    if (!$corporation) {
-        return response()->json(['success' => false, 'message' => 'Corporation not found'], 404);
-    }
-
-    $wardId = $ward->id;
-    $pointDataTable = "point_data_{$wardId}";
-    $pointId = $request->point_id;
-
-    if (!Schema::hasTable($pointDataTable)) {
-        return response()->json([
-            'success' => false,
-            'message' => "Table {$pointDataTable} not found"
-        ], 404);
-    }
-
-    $pointData = DB::table($pointDataTable)->where('id', $pointId)->first();
-
-    if (!$pointData) {
-        return response()->json([
-            'success' => false,
-            'message' => "Point data not found for ID: {$pointId}"
-        ], 404);
-    }
-
-    $wardNumber = $ward->ward_no ?? $ward->ward_number ?? $ward->id;
-    $assessmentNumber = $pointData->assessment ?? 'N/A';
-
-    // Build the URL for the assessment details page
-    $baseUrl = "https://ccmc.sgtsolutions.in";
-    $qrUrl = $baseUrl . "/view-assessment/" . $wardNumber . "/" . $pointData->id;
-
-    // Generate QR code
-    $qrCode = QrCode::format('png')
-        ->size(500)
-        ->margin(2)
-        ->errorCorrection('H')
-        ->generate($qrUrl);
-
-    $fileName = 'QR_Ward_' . $wardNumber . '_Assessment_' . $assessmentNumber . '.png';
-
-    return response($qrCode)
-        ->header('Content-Type', 'image/png')
-        ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
-}
     public function showQr($wardNo, $pointId)
     {
         try {
