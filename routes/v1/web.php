@@ -31,13 +31,6 @@ Route::post('/qr-code-assessment', [PointdataController::class, 'qrCodeAssessmen
     ->name('qrCodeAssessment');
     Route::get('/view-assessment/{wardNo}/{pointId}', [PointdataController::class, 'showQr'])
     ->name('view.assessment');
- // Import status routes - add these near the top of your routes file
-Route::get('/import-status/{corporationId}/{type?}', [CorporationController::class, 'getImportStatus'])
-    ->name('import.status');
-Route::get('/import-status-all/{corporationId}', [CorporationController::class, 'getAllImportStatuses'])
-    ->name('import.status.all');
-Route::delete('/import-status-clear/{corporationId}/{type?}', [CorporationController::class, 'clearImportStatus'])
-    ->name('import.status.clear');
 // Guest routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
