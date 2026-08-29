@@ -1582,6 +1582,7 @@
                             <div class="tab-pane fade show active" id="basic-tab">
                                 <input type="text" class="form-control" id="point_gisid" name="point_gisid" hidden>
                                 <div class="row g-3">
+                                     <input type="text" class="form-control" id="id" name="id" hidden>
                                     <button type="button" class="btn btn-primary" id="qrCodeAssessmentBtn"
                                         data-point-id="">
                                         <i class="bi bi-qr-code me-1"></i> Generate QR Code
@@ -4717,7 +4718,7 @@
             $('#qrCodeAssessmentBtn').on('click', function(e) {
                 e.preventDefault();
 
-                const pointId = $('#point_gisid').val();
+                const pointId = $('#id').val();
                 if (!pointId) {
                     Swal.fire('Error', 'Point ID not found', 'error');
                     return;
@@ -4837,6 +4838,7 @@
 
                         // ─── BASIC INFO ───
                         $('#point_gisid').val(pd.point_gisid || '');
+                         $('#id').val(pd.id || '');
                         $('#assessment_type').val(pd.assessment_type || '');
                         $('#assessment').val(pd.assessment || '');
                         $('#old_assessment').val(pd.old_assessment || '');
