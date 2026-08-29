@@ -39,7 +39,6 @@ class MisImport implements OnEachRow, WithHeadingRow, WithChunkReading, WithBatc
         try {
 
             $assessment = trim($row['assessment'] ?? '');
-
             if ($assessment == '') {
                 $this->skippedRows[] = [
                     'row' => $index,

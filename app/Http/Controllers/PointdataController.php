@@ -1221,6 +1221,7 @@ public function qrCodeAssessment(Request $request)
         |--------------------------------------------------------------------------
         */
 
+
         $pointData = DB::table($pointDataTable)
             ->where('id', $pointId)
             ->first();
@@ -1228,7 +1229,7 @@ public function qrCodeAssessment(Request $request)
         if (!$pointData) {
             return response()->json([
                 'success' => false,
-                'message' => 'Point data not found'
+                'message' => $pointData
             ], 404);
         }
 
