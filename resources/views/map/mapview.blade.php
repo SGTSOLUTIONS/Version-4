@@ -1234,6 +1234,16 @@
                                             id="building_gisid" value="" readonly>
                                         <div id="building_gisid_error" class="error-message text-danger small"></div>
                                     </div>
+                                    <div class="col-md-3 mb-3">
+    <label class="form-label">GIS ID</label>
+    <div class="input-group">
+        <input type="text" class="form-control" name="building_gisid" id="building_gisid" value="" readonly>
+        <button class="btn btn-success" type="button" id="openGmapBtn" title="Open in Google Maps">
+            <i class="fas fa-map-marked-alt"></i>
+        </button>
+    </div>
+    <div id="building_gisid_error" class="error-message text-danger small"></div>
+</div>
                                     <div class="col-md-3 mb-3"><label class="form-label">Zonenation</label><select
                                             class="form-select" name="building_zone" id="building_zone">
                                             <option value="">Select Zone</option>
@@ -1515,11 +1525,13 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0;">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i
                                 class="fas fa-times me-2"></i>Close</button>
                         <button type="submit" class="btn btn-primary" id="buildingsubmitBtn"><i
                                 class="fas fa-save me-2"></i>Save Building Data</button>
+
                     </div>
                 </form>
             </div>
@@ -5006,7 +5018,78 @@
                 $('#quickSearchTab').toggle(tab === 'quick');
                 $('#filterTab').toggle(tab === 'filter');
             });
+// ─── GOOGLE MAPS FROM BUILDING MODAL ───
+$(document).on('click', '#openGmapBtn', function() {
+    const gisid = $('#building_gisid').val();
 
+    if (!gisid) {
+        showFlashMessage('GIS ID not found', 'error');
+        return;
+    }
+
+    openGoogleMapsByGisId(gisid);
+});
+
+// ─── GOOGLE MAPS FROM POINT DETAILS MODAL ───
+$(document).on('click', '#pointGmapBtn', function() {
+    const gisid = $('#point_gisid').val();
+
+    if (!gisid) {
+        showFlashMessage('GIS ID not found', 'error');
+        return;
+    }
+
+    openGoogleMapsByGisId(gisid);
+});
+
+// ─── GOOGLE MAPS FROM SEARCH RESULTS ───
+$(document).on('click', '.gmap-btn', function(e) {
+    e.stopPropagation();
+    const gisid = $(this).data('gisid');
+    openGoogleMapsByGisId(gisid);
+});
+
+// ─── HELPER: Open Google Maps by GIS ID ───
+function openGoogleMapsByGisId(gisid) {
+    if (!gisid) {
+        showFlashMessage('GIS ID not found', 'error');
+        return false;
+    }
+
+    // Find the point with matching GIS ID
+    const point = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
+
+    if (!point) {
+        showFlashMessage('No point coordinates found for GIS ID: ' + gisid, 'error');
+        return false;
+    }
+
+    try {
+        // Parse coordinates (they should be in EPSG:3857)
+        let coords = typeof point.coordinates === 'string'
+            ? JSON.parse(point.coordinates)
+            : point.coordinates;
+
+        // Convert from EPSG:3857 to WGS84 (latitude/longitude)
+        const lonLat = ol.proj.toLonLat(coords);
+        const lat = lonLat[1];
+        const lng = lonLat[0];
+
+        // Build Google Maps URL
+        const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+        // Open in new tab
+        window.open(googleMapsUrl, '_blank');
+
+        showFlashMessage('Opening Google Maps for GIS ID: ' + gisid, 'success');
+        return true;
+
+    } catch (e) {
+        console.error('Error opening Google Maps:', e);
+        showFlashMessage('Error opening Google Maps: ' + e.message, 'error');
+        return false;
+    }
+}
         });
     </script>
 @endpush
