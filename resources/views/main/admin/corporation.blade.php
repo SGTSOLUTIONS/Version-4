@@ -1237,86 +1237,102 @@
             // =============================================
             // IMPORT STATS MODAL
             // =============================================
-            function showImportStats(stats) {
+           function showImportStats(stats) {
                 let html = '<div class="row g-3">';
                 let hasErrors = false;
                 let hasData = false;
 
                 const importTypes = {
-                    'mis': {
-                        label: 'MIS Data',
-                        icon: 'bi-building',
-                        color: '#1679AB'
-                    },
-                    'water_tax': {
-                        label: 'Water Tax',
-                        icon: 'bi-droplet',
-                        color: '#3b82f6'
-                    },
-                    'ugd_tax': {
-                        label: 'UGD Tax',
-                        icon: 'bi-pipe',
-                        color: '#8b5cf6'
-                    },
-                    'professional_tax': {
-                        label: 'Professional Tax',
-                        icon: 'bi-briefcase',
-                        color: '#f59e0b'
-                    }
+                    'mis': { label: 'MIS Data', icon: 'bi-building', color: '#1679AB' },
+                    'water_tax': { label: 'Water Tax', icon: 'bi-droplet', color: '#3b82f6' },
+                    'ugd_tax': { label: 'UGD Tax', icon: 'bi-pipe', color: '#8b5cf6' },
+                    'professional_tax': { label: 'Professional Tax', icon: 'bi-briefcase', color: '#f59e0b' }
                 };
 
-                $.each(stats, function(key, value) {
-                    if (value.error) {
-                        hasErrors = true;
-                        html += `
-                            <div class="col-12">
-                                <div class="alert alert-danger mb-0">
-                                    <strong>${importTypes[key]?.label || key}:</strong><br>
-                                    ❌ ${escapeHtml(value.message)}
-                                </div>
-                            </div>
-                        `;
-                    } else if (value.inserted !== undefined || value.updated !== undefined || value
-                        .skipped !== undefined) {
-                        hasData = true;
-                        let total = (value.inserted || 0) + (value.updated || 0);
-                        let color = importTypes[key]?.color || '#6b7280';
+                // Check if stats has the queued flag
+                if (stats.queued) {
+                    html = `
+                        <div class="col-12 text-center py-4">
+                            <i class="bi bi-clock-history" style="font-size: 48px; color: #f59e0b;"></i>
+                            <h6 class="mt-2">Imports Queued</h6>
+                            <p class="text-muted">Your imports have been queued for background processing.</p>
+                            <p class="text-muted small">Check back in a few minutes for results.</p>
+                        </div>
+                    `;
+                    $('#importStatsBody').html(html);
+                    $('#importStatsModal').modal('show');
+                    return;
+                }
 
-                        html += `
-                            <div class="col-md-6">
-                                <div class="import-stat-card">
-                                    <div class="stat-icon" style="color: ${color}">
-                                        <i class="bi ${importTypes[key]?.icon || 'bi-file-spreadsheet'}"></i>
+                // Check if stats has the message (no files)
+                if (stats.message && stats.message.includes('No files were imported')) {
+                    html = `
+                        <div class="col-12 text-center py-4">
+                            <i class="bi bi-info-circle" style="font-size: 48px; color: #6b7280;"></i>
+                            <h6 class="mt-2">No Files Imported</h6>
+                            <p class="text-muted">The corporation was created without any data imports.</p>
+                            <p class="text-muted small">You can import data later from the corporation details page.</p>
+                        </div>
+                    `;
+                    $('#importStatsBody').html(html);
+                    $('#importStatsModal').modal('show');
+                    return;
+                }
+
+                // Process actual stats
+                $.each(stats, function(key, value) {
+                    if (value && typeof value === 'object') {
+                        if (value.error) {
+                            hasErrors = true;
+                            html += `
+                                <div class="col-12">
+                                    <div class="alert alert-danger mb-0">
+                                        <strong>${importTypes[key]?.label || key}:</strong><br>
+                                        ❌ ${escapeHtml(value.message || value.error)}
                                     </div>
-                                    <div class="stat-title">${importTypes[key]?.label || key}</div>
-                                    <div class="stat-numbers">
-                                        <span>Total: <strong>${total}</strong></span>
-                                        <span class="num-inserted">+${value.inserted || 0}</span>
-                                        <span class="num-updated">↻${value.updated || 0}</span>
-                                        ${value.skipped > 0 ? `<span class="num-skipped">⚠${value.skipped}</span>` : ''}
-                                    </div>
-                                    ${value.skipped > 0 && value.skipped_details && value.skipped_details.length > 0 ? `
-                                    <div class="mt-2 text-start" style="font-size: 12px;">
-                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
-                                            View skipped details (${value.skipped})
-                                        </button>
-                                        <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
-                                            ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
-                                            ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
-                                        </div>
-                                    </div>
-                                    ` : ''}
                                 </div>
-                            </div>
-                        `;
+                            `;
+                        } else if (value.inserted !== undefined || value.updated !== undefined || value.skipped !== undefined) {
+                            hasData = true;
+                            let total = (value.inserted || 0) + (value.updated || 0);
+                            let color = importTypes[key]?.color || '#6b7280';
+
+                            html += `
+                                <div class="col-md-6">
+                                    <div class="import-stat-card">
+                                        <div class="stat-icon" style="color: ${color}">
+                                            <i class="bi ${importTypes[key]?.icon || 'bi-file-spreadsheet'}"></i>
+                                        </div>
+                                        <div class="stat-title">${importTypes[key]?.label || key}</div>
+                                        <div class="stat-numbers">
+                                            <span>Total: <strong>${total}</strong></span>
+                                            <span class="num-inserted">+${value.inserted || 0}</span>
+                                            <span class="num-updated">↻${value.updated || 0}</span>
+                                            ${value.skipped > 0 ? `<span class="num-skipped">⚠${value.skipped}</span>` : ''}
+                                        </div>
+                                        ${value.skipped > 0 && value.skipped_details && value.skipped_details.length > 0 ? `
+                                        <div class="mt-2 text-start" style="font-size: 12px;">
+                                            <button class="btn btn-sm btn-outline-danger" onclick="toggleSkippedDetails(this)">
+                                                View skipped details (${value.skipped})
+                                            </button>
+                                            <div class="skipped-details" style="display:none; margin-top: 6px; max-height: 100px; overflow-y: auto; background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 11px; color: #991b1b;">
+                                                ${value.skipped_details.map(d => `Row ${d.row}: ${escapeHtml(d.reason)}`).join('<br>')}
+                                                ${value.skipped > value.skipped_details.length ? `<br>... and ${value.skipped - value.skipped_details.length} more` : ''}
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }
                     }
                 });
 
                 if (!hasData && !hasErrors) {
                     html = `
                         <div class="col-12 text-center py-4">
-                            <i class="bi bi-check-circle" style="font-size: 48px; color: #10b981;"></i>
-                            <h6 class="mt-2">No files were imported</h6>
+                            <i class="bi bi-info-circle" style="font-size: 48px; color: #6b7280;"></i>
+                            <h6 class="mt-2">No Files Imported</h6>
                             <p class="text-muted">The corporation was created without any data imports.</p>
                         </div>
                     `;
@@ -1346,7 +1362,6 @@
                 $('#importStatsBody').html(html);
                 $('#importStatsModal').modal('show');
             }
-
             window.toggleSkippedDetails = function(btn) {
                 const details = $(btn).next('.skipped-details');
                 details.slideToggle();

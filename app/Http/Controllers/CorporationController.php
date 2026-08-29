@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class CorporationController extends Controller
@@ -44,12 +45,10 @@ class CorporationController extends Controller
                 ->select('corporations.*')
                 ->selectRaw('ST_AsGeoJSON(boundary) as boundary_geojson');
 
-            // Commissioner can see only their corporation
             if ($user->role == 'commissioner') {
                 $query->where('id', $user->corporation_id);
             }
 
-            // Admin can use filters
             if ($request->filled('corp_name')) {
                 $query->where('name', 'like', '%' . $request->corp_name . '%');
             }
@@ -85,7 +84,6 @@ class CorporationController extends Controller
             $statsKey = "{$type}_import_final_stats_{$corporationId}";
             $errorKey = "{$type}_import_error_{$corporationId}";
 
-            // Check if completed
             $stats = Cache::get($statsKey);
             if ($stats) {
                 return response()->json([
@@ -95,7 +93,6 @@ class CorporationController extends Controller
                 ]);
             }
 
-            // Check for error
             $error = Cache::get($errorKey);
             if ($error) {
                 return response()->json([
@@ -105,7 +102,6 @@ class CorporationController extends Controller
                 ]);
             }
 
-            // Check for progress
             $progress = Cache::get($progressKey);
             if ($progress) {
                 return response()->json([
@@ -115,7 +111,6 @@ class CorporationController extends Controller
                 ]);
             }
 
-            // Check if queued
             $status = Cache::get($statusKey);
             if ($status === 'queued') {
                 return response()->json([
@@ -192,8 +187,7 @@ class CorporationController extends Controller
     }
 
     // =====================================================================
-    // GeoJSON -> WKT helpers (boundary column is GEOMETRY, so it can only
-    // accept WKT/WKB via ST_GeomFromText, never raw JSON text)
+    // GeoJSON -> WKT helpers
     // =====================================================================
 
     private function extractGeoJsonGeometry($file): array
@@ -263,11 +257,6 @@ class CorporationController extends Controller
         return implode(',', array_map(fn($polygon) => '(' . $this->polygonToWkt($polygon) . ')', $polygons));
     }
 
-    /**
-     * Write WKT into the GEOMETRY column via raw SQL. SRID 0 is used so MySQL
-     * does not enforce lon/lat range validation (these coordinates are
-     * projected meters, not degrees).
-     */
     private function saveBoundary(int $corporationId, string $wkt): void
     {
         DB::statement(
@@ -276,10 +265,6 @@ class CorporationController extends Controller
         );
     }
 
-    /**
-     * Fetch a corporation with boundary safely converted to GeoJSON text,
-     * instead of raw binary — safe to pass to response()->json().
-     */
     private function findWithGeoJson(int $id): Corporation
     {
         return Corporation::query()
@@ -289,26 +274,33 @@ class CorporationController extends Controller
     }
 
     /**
-     * Process imports asynchronously using jobs (NO TIMEOUT ISSUE)
+     * Run imports synchronously (directly) - FIXED VERSION
      */
-    private function processImportsAsync(Request $request, int $corporationId): array
+    private function runImportsSync(Request $request, int $corporationId): array
     {
         $importStats = [];
 
         // Process MIS Import
         if ($request->hasFile('mis_file')) {
             try {
-                $path = $request->file('mis_file')->store('imports/mis');
-                ProcessMisImport::dispatch($path, $corporationId)->onQueue('imports');
-                Cache::put("mis_import_status_{$corporationId}", 'queued', 3600);
-                $importStats['mis'] = [
-                    'status' => 'queued',
-                    'message' => 'MIS import queued for processing'
-                ];
+                Log::info("Starting MIS import for corporation: {$corporationId}");
+                
+                // Set memory limit and execution time
+                ini_set('memory_limit', '2048M');
+                set_time_limit(0);
+                
+                $misImport = new MisImport($corporationId);
+                Excel::import($misImport, $request->file('mis_file'));
+                $importStats['mis'] = $misImport->getStats();
+                
+                Log::info("MIS import completed for corporation: {$corporationId}", $importStats['mis']);
             } catch (\Exception $e) {
+                Log::error("MIS import failed: " . $e->getMessage());
                 $importStats['mis'] = [
-                    'status' => 'error',
-                    'message' => 'Failed to queue MIS import: ' . $e->getMessage()
+                    'error' => $e->getMessage(),
+                    'inserted' => 0,
+                    'updated' => 0,
+                    'skipped' => 0
                 ];
             }
         }
@@ -316,55 +308,119 @@ class CorporationController extends Controller
         // Process Water Tax Import
         if ($request->hasFile('water_tax_file')) {
             try {
-                $path = $request->file('water_tax_file')->store('imports/water_tax');
-                ProcessWaterTaxImport::dispatch($path, $corporationId)->onQueue('imports');
-                Cache::put("water_tax_import_status_{$corporationId}", 'queued', 3600);
-                $importStats['water_tax'] = [
-                    'status' => 'queued',
-                    'message' => 'Water Tax import queued for processing'
-                ];
+                Log::info("Starting Water Tax import for corporation: {$corporationId}");
+                
+                $waterTaxImport = new WaterTaxImport($corporationId);
+                Excel::import($waterTaxImport, $request->file('water_tax_file'));
+                $importStats['water_tax'] = method_exists($waterTaxImport, 'getStats') 
+                    ? $waterTaxImport->getStats() 
+                    : ['message' => 'Imported successfully'];
+                    
+                Log::info("Water Tax import completed for corporation: {$corporationId}");
             } catch (\Exception $e) {
-                $importStats['water_tax'] = [
-                    'status' => 'error',
-                    'message' => 'Failed to queue Water Tax import: ' . $e->getMessage()
-                ];
+                Log::error("Water Tax import failed: " . $e->getMessage());
+                $importStats['water_tax'] = ['error' => $e->getMessage()];
             }
         }
 
         // Process UGD Tax Import
         if ($request->hasFile('ugd_tax_file')) {
             try {
-                $path = $request->file('ugd_tax_file')->store('imports/ugd_tax');
-                ProcessUgdTaxImport::dispatch($path, $corporationId)->onQueue('imports');
-                Cache::put("ugd_tax_import_status_{$corporationId}", 'queued', 3600);
-                $importStats['ugd_tax'] = [
-                    'status' => 'queued',
-                    'message' => 'UGD Tax import queued for processing'
-                ];
+                Log::info("Starting UGD Tax import for corporation: {$corporationId}");
+                
+                $ugdTaxImport = new UgdTaxImport($corporationId);
+                Excel::import($ugdTaxImport, $request->file('ugd_tax_file'));
+                $importStats['ugd_tax'] = method_exists($ugdTaxImport, 'getStats') 
+                    ? $ugdTaxImport->getStats() 
+                    : ['message' => 'Imported successfully'];
+                    
+                Log::info("UGD Tax import completed for corporation: {$corporationId}");
             } catch (\Exception $e) {
-                $importStats['ugd_tax'] = [
-                    'status' => 'error',
-                    'message' => 'Failed to queue UGD Tax import: ' . $e->getMessage()
-                ];
+                Log::error("UGD Tax import failed: " . $e->getMessage());
+                $importStats['ugd_tax'] = ['error' => $e->getMessage()];
             }
         }
 
         // Process Professional Tax Import
         if ($request->hasFile('professional_tax_file')) {
             try {
+                Log::info("Starting Professional Tax import for corporation: {$corporationId}");
+                
+                $professionalTaxImport = new ProfessionalTaxImport($corporationId);
+                Excel::import($professionalTaxImport, $request->file('professional_tax_file'));
+                $importStats['professional_tax'] = method_exists($professionalTaxImport, 'getStats') 
+                    ? $professionalTaxImport->getStats() 
+                    : ['message' => 'Imported successfully'];
+                    
+                Log::info("Professional Tax import completed for corporation: {$corporationId}");
+            } catch (\Exception $e) {
+                Log::error("Professional Tax import failed: " . $e->getMessage());
+                $importStats['professional_tax'] = ['error' => $e->getMessage()];
+            }
+        }
+
+        return $importStats;
+    }
+
+    /**
+     * Process imports - tries queue first, falls back to sync if queue fails
+     */
+    private function processImports(Request $request, int $corporationId): array
+    {
+        $importStats = [];
+        $queueAvailable = false;
+        
+        // Check if queue is available
+        try {
+            // Try to dispatch to queue
+            if ($request->hasFile('mis_file')) {
+                $path = $request->file('mis_file')->store('imports/mis');
+                ProcessMisImport::dispatch($path, $corporationId)->onQueue('imports');
+                Cache::put("mis_import_status_{$corporationId}", 'queued', 3600);
+                $queueAvailable = true;
+            }
+            
+            if ($request->hasFile('water_tax_file')) {
+                $path = $request->file('water_tax_file')->store('imports/water_tax');
+                ProcessWaterTaxImport::dispatch($path, $corporationId)->onQueue('imports');
+                Cache::put("water_tax_import_status_{$corporationId}", 'queued', 3600);
+                $queueAvailable = true;
+            }
+            
+            if ($request->hasFile('ugd_tax_file')) {
+                $path = $request->file('ugd_tax_file')->store('imports/ugd_tax');
+                ProcessUgdTaxImport::dispatch($path, $corporationId)->onQueue('imports');
+                Cache::put("ugd_tax_import_status_{$corporationId}", 'queued', 3600);
+                $queueAvailable = true;
+            }
+            
+            if ($request->hasFile('professional_tax_file')) {
                 $path = $request->file('professional_tax_file')->store('imports/professional_tax');
                 ProcessProfessionalTaxImport::dispatch($path, $corporationId)->onQueue('imports');
                 Cache::put("professional_tax_import_status_{$corporationId}", 'queued', 3600);
-                $importStats['professional_tax'] = [
-                    'status' => 'queued',
-                    'message' => 'Professional Tax import queued for processing'
-                ];
-            } catch (\Exception $e) {
-                $importStats['professional_tax'] = [
-                    'status' => 'error',
-                    'message' => 'Failed to queue Professional Tax import: ' . $e->getMessage()
-                ];
+                $queueAvailable = true;
             }
+        } catch (\Exception $e) {
+            Log::warning("Queue dispatch failed, falling back to sync: " . $e->getMessage());
+            $queueAvailable = false;
+        }
+
+        // If queue is not available or failed, run sync
+        if (!$queueAvailable && ($request->hasFile('mis_file') || $request->hasFile('water_tax_file') || 
+            $request->hasFile('ugd_tax_file') || $request->hasFile('professional_tax_file'))) {
+            
+            Log::info("Running imports synchronously for corporation: {$corporationId}");
+            $importStats = $this->runImportsSync($request, $corporationId);
+            
+            // Store stats in cache for status checking
+            foreach ($importStats as $type => $stats) {
+                Cache::put("{$type}_import_final_stats_{$corporationId}", $stats, 86400);
+                Cache::put("{$type}_import_status_{$corporationId}", 'completed', 86400);
+            }
+        } elseif ($queueAvailable) {
+            // Queue was successful
+            $importStats['message'] = 'Imports queued successfully. They will be processed in the background.';
+            $importStats['queued'] = true;
         }
 
         return $importStats;
@@ -400,11 +456,6 @@ class CorporationController extends Controller
         }
 
         try {
-            // --- Everything that is NOT safely transactional happens first,
-            // OUTSIDE of DB::beginTransaction(). File uploads and GeoJSON
-            // parsing can fail independently of the DB, and the boundary
-            // file is only parsed here (not yet written) so nothing DB-side
-            // has happened yet if this throws.
             $profileImagePath = $request->hasFile('image')
                 ? CommonHelper::uploadProfileImage($request->file('image'), 'corporation/profile')
                 : 'https://ui-avatars.com/api/?name=' . urlencode($request->name) . '&background=1679AB&color=fff';
@@ -435,27 +486,22 @@ class CorporationController extends Controller
 
             DB::commit();
 
-            // --- DDL runs AFTER the transaction is committed. CREATE TABLE
-            // triggers an implicit commit in MySQL, so it can never safely
-            // live inside a transaction anyway — running it after commit()
-            // keeps Laravel's transaction bookkeeping and MySQL's actual
-            // transaction state in sync.
+            // Create tables
             $createTable = $this->corporationService->createCorporationTables($corporation->id);
 
             if (!$createTable) {
                 throw new \Exception('Corporation was saved, but its data tables could not be created.');
             }
 
-            // Process imports asynchronously (NO TIMEOUT ISSUE)
-            $importStats = $this->processImportsAsync($request, $corporation->id);
+            // Process imports (sync or async)
+            $importStats = $this->processImports($request, $corporation->id);
 
             return response()->json([
                 'status'       => true,
-                'message'      => 'Corporation created successfully. Imports are being processed in the background.',
+                'message'      => 'Corporation created successfully with data imports.',
                 'data'         => $this->findWithGeoJson($corporation->id),
                 'import_stats' => $importStats,
-                'corporation_id' => $corporation->id,
-                'status_check_url' => '/import-status/' . $corporation->id
+                'corporation_id' => $corporation->id
             ]);
 
         } catch (\Throwable $e) {
@@ -464,12 +510,16 @@ class CorporationController extends Controller
                 DB::rollBack();
             }
 
+            Log::error("Corporation creation failed: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-            ]);
+            ], 500);
         }
     }
 
@@ -516,22 +566,12 @@ class CorporationController extends Controller
         }
 
         try {
-            // --- DDL FIRST, OUTSIDE any transaction. This is the key fix:
-            // CREATE TABLE causes MySQL to implicitly commit any open
-            // transaction, which desyncs Laravel's transaction counter from
-            // MySQL's actual state and produces "There is no active
-            // transaction" on the later DB::commit() call. Running it here,
-            // before beginTransaction(), avoids that entirely. This matters
-            // most for corporations that were bulk-inserted directly via SQL
-            // and never had their tables created through store().
             $createTable = $this->corporationService->createCorporationTables($corporation->id);
 
             if (!$createTable) {
                 throw new \Exception('Corporation data tables could not be created or verified.');
             }
 
-            // --- Parse (but don't yet persist) anything that can fail
-            // independently of the DB, same reasoning as in store().
             $wkt = null;
             if ($request->hasFile('boundary_file')) {
                 $geometry = $this->extractGeoJsonGeometry($request->file('boundary_file'));
@@ -572,12 +612,12 @@ class CorporationController extends Controller
 
             DB::commit();
 
-            // Process imports asynchronously
-            $importStats = $this->processImportsAsync($request, $corporation->id);
+            // Process imports
+            $importStats = $this->processImports($request, $corporation->id);
 
             return response()->json([
                 'status'       => true,
-                'message'      => 'Corporation updated successfully. Imports are being processed.',
+                'message'      => 'Corporation updated successfully with data imports.',
                 'data'         => $this->findWithGeoJson($corporation->id),
                 'import_stats' => $importStats,
                 'corporation_id' => $corporation->id
@@ -600,8 +640,6 @@ class CorporationController extends Controller
     public function destroy(Corporation $corporation)
     {
         try {
-            // DDL (DROP TABLE) also happens outside any transaction, for the
-            // same reason as above.
             $this->corporationService->dropCorporationTables($corporation->id);
 
             DB::beginTransaction();
@@ -625,7 +663,6 @@ class CorporationController extends Controller
                     DB::rollBack();
                 }
             } catch (\Throwable $rollbackError) {
-                // Ignore rollback errors
             }
 
             return response()->json([
