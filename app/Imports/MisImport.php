@@ -17,7 +17,10 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
 
     protected $skippedRows = [];
 
-    // Keep this SMALL to avoid MySQL 1390
+    protected $insertedCount = 0;
+    protected $updatedCount = 0;
+
+    // Keep batch small to avoid MySQL 1390 error
     protected $batchSize = 500;
 
     public function __construct($corporationId)
@@ -31,7 +34,6 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
      */
     public function collection(Collection $rows)
     {
-        // Check table
         if (!Schema::hasTable($this->tableName)) {
             throw new \Exception(
                 "MIS table {$this->tableName} not found."
@@ -44,21 +46,9 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
 
             try {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Assessment
-                |--------------------------------------------------------------------------
-                */
-
                 $assessment = trim(
                     (string) ($row['assessment'] ?? '')
                 );
-
-                /*
-                |--------------------------------------------------------------------------
-                | Ward
-                |--------------------------------------------------------------------------
-                */
 
                 $wardNo = trim(
                     (string) ($row['ward_no'] ?? '')
@@ -100,7 +90,7 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
 
                 /*
                 |--------------------------------------------------------------------------
-                | Bulk Upsert
+                | Process Every 500 Rows
                 |--------------------------------------------------------------------------
                 */
 
@@ -126,7 +116,7 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
 
         /*
         |--------------------------------------------------------------------------
-        | Remaining Rows
+        | Process Remaining Rows
         |--------------------------------------------------------------------------
         */
 
@@ -139,7 +129,7 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
     }
 
     /**
-     * Prepare one row
+     * Prepare data
      */
     protected function prepareData($row)
     {
@@ -212,7 +202,7 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
     }
 
     /**
-     * Bulk insert/update
+     * Insert / Update batch
      */
     protected function upsertBatch(array $batch)
     {
@@ -220,34 +210,119 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
             return;
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Get all assessments in this batch
+        |--------------------------------------------------------------------------
+        */
+
+        $assessments = [];
+
+        foreach ($batch as $row) {
+
+            $key = $row['ward_no'] . '|' . $row['assessment'];
+
+            $assessments[$key] = [
+                'ward_no' => $row['ward_no'],
+                'assessment' => $row['assessment'],
+            ];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Check existing records in ONE query
+        |--------------------------------------------------------------------------
+        */
+
+        $existing = DB::table($this->tableName)
+            ->where('corporation_id', $this->corporationId)
+            ->where(function ($query) use ($assessments) {
+
+                foreach ($assessments as $item) {
+
+                    $query->orWhere(function ($q) use ($item) {
+
+                        $q->where(
+                            'ward_no',
+                            $item['ward_no']
+                        );
+
+                        $q->where(
+                            'assessment',
+                            $item['assessment']
+                        );
+
+                    });
+                }
+
+            })
+            ->get([
+                'ward_no',
+                'assessment'
+            ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create existing lookup
+        |--------------------------------------------------------------------------
+        */
+
+        $existingLookup = [];
+
+        foreach ($existing as $record) {
+
+            $key =
+                $record->ward_no .
+                '|' .
+                $record->assessment;
+
+            $existingLookup[$key] = true;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Count INSERT / UPDATE
+        |--------------------------------------------------------------------------
+        */
+
+        foreach ($batch as $row) {
+
+            $key =
+                $row['ward_no'] .
+                '|' .
+                $row['assessment'];
+
+            if (isset($existingLookup[$key])) {
+
+                $this->updatedCount++;
+
+            } else {
+
+                $this->insertedCount++;
+
+                // Important:
+                // If the same key appears twice in this
+                // Excel batch, second one should be treated
+                // as update.
+                $existingLookup[$key] = true;
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Bulk UPSERT
+        |--------------------------------------------------------------------------
+        */
+
         DB::table($this->tableName)->upsert(
 
             $batch,
-
-            /*
-            |--------------------------------------------------------------------------
-            | MATCHING KEY
-            |--------------------------------------------------------------------------
-            |
-            | Same corporation + ward + assessment
-            | = UPDATE
-            |
-            | Otherwise
-            | = INSERT
-            |
-            */
 
             [
                 'corporation_id',
                 'ward_no',
                 'assessment'
             ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Columns to UPDATE
-            |--------------------------------------------------------------------------
-            */
 
             [
                 'gisid',
@@ -277,7 +352,7 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
     }
 
     /**
-     * Parse decimal values
+     * Parse decimal
      */
     private function parseDecimal($value)
     {
@@ -310,7 +385,6 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
         $allowed = [
 
             'usage' => [
-
                 'Residential',
                 'Commercial',
                 'Industrial',
@@ -322,11 +396,9 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
                 'School',
                 'Temple',
                 'Others'
-
             ],
 
             'type' => [
-
                 'Owner',
                 'Tenant',
                 'Mixed',
@@ -337,7 +409,6 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
                 'Private Limited',
                 'Public Limited',
                 'Others'
-
             ]
 
         ];
@@ -360,11 +431,17 @@ class MisImport implements ToCollection, WithHeadingRow, WithChunkReading
     }
 
     /**
-     * Import statistics
+     * Get import statistics
      */
     public function getStats()
     {
         return [
+
+            'inserted' =>
+                $this->insertedCount,
+
+            'updated' =>
+                $this->updatedCount,
 
             'skipped' =>
                 count($this->skippedRows),
