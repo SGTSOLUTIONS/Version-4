@@ -31,6 +31,10 @@ Route::post('/qr-code-assessment', [PointdataController::class, 'qrCodeAssessmen
     ->name('qrCodeAssessment');
     Route::get('/view-assessment/{wardNo}/{pointId}', [PointdataController::class, 'showQr'])
     ->name('view.assessment');
+    Route::get('/import-status/{corporationId}/{type?}', [CorporationController::class, 'getImportStatus'])
+    ->name('import.status');
+Route::get('/import-status-all/{corporationId}', [CorporationController::class, 'getAllImportStatuses'])
+    ->name('import.status.all');
 // Guest routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
