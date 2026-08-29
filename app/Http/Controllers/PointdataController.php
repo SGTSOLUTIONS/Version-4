@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 class PointdataController extends Controller
 {
     public function store(Request $request)
@@ -1155,7 +1156,7 @@ class PointdataController extends Controller
 
         return response()->json(['success' => true, 'data' => $results]);
     }
-public function qrCodeAssessment(Request $request)
+    public function qrCodeAssessment(Request $request)
 {
     $request->validate([
         'point_id' => 'required|integer',
@@ -1185,7 +1186,6 @@ public function qrCodeAssessment(Request $request)
     $pointDataTable = "point_data_{$wardId}";
     $pointId = $request->point_id;
 
-    // Check if table exists
     if (!Schema::hasTable($pointDataTable)) {
         return response()->json([
             'success' => false,
@@ -1193,41 +1193,28 @@ public function qrCodeAssessment(Request $request)
         ], 404);
     }
 
-    // Get point data
     $pointData = DB::table($pointDataTable)->where('id', $pointId)->first();
 
-    // FIXED: Proper error message
     if (!$pointData) {
         return response()->json([
             'success' => false,
-            'message' => "Point data not found for ID: {$wardId} in table: {$pointDataTable}"
+            'message' => "Point data not found for ID: {$pointId}"
         ], 404);
     }
 
-    // Get assessment number (try different column names)
-    $assessmentNumber = $pointData->assessment
-        ?? $pointData->assessment_number
-        ?? $pointData->Assessment
-        ?? 'N/A';
-
     $wardNumber = $ward->ward_no ?? $ward->ward_number ?? $ward->id;
+    $assessmentNumber = $pointData->assessment ?? 'N/A';
 
-    // QR data
-    $qrData = [
-        'ward_no' => $wardNumber,
-        'assessment_id' => $pointData->id,
-        'assessment_number' => $assessmentNumber,
-        'gisid' => $pointData->point_gisid ?? $pointData->gisid ?? null,
-    ];
-
-    $qrContent = json_encode($qrData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    // Build the URL for the assessment details page
+    $baseUrl = "https://ccmc.sgtsolutions.in";
+    $qrUrl = $baseUrl . "/view-assessment/" . $wardNumber . "/" . $pointData->id;
 
     // Generate QR code
     $qrCode = QrCode::format('png')
         ->size(500)
         ->margin(2)
         ->errorCorrection('H')
-        ->generate($qrContent);
+        ->generate($qrUrl);
 
     $fileName = 'QR_Ward_' . $wardNumber . '_Assessment_' . $assessmentNumber . '.png';
 
@@ -1235,4 +1222,89 @@ public function qrCodeAssessment(Request $request)
         ->header('Content-Type', 'image/png')
         ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
 }
+    public function showQr($wardNo, $pointId)
+    {
+        try {
+            // Find the ward by ward number
+            $ward = Ward::where('ward_no', $wardNo)->first();
+
+            if (!$ward) {
+                abort(404, 'Ward not found');
+            }
+
+            $zone = Zone::find($ward->zone_id);
+            if (!$zone) {
+                abort(404, 'Zone not found');
+            }
+
+            $corporation = Corporation::find($zone->corp_id);
+            if (!$corporation) {
+                abort(404, 'Corporation not found');
+            }
+
+            $wardId = $ward->id;
+            $corpId = $corporation->id;
+
+            // Table names
+            $pointDataTable = "point_data_{$wardId}";
+            $waterTaxTable = "water_tax_{$corpId}";
+            $ugdTaxTable = "ugd_tax_{$corpId}";
+            $professionalTaxTable = "professional_tax_{$corpId}";
+            $polygonDataTable = "polygon_data_{$wardId}";
+
+            // Get point data
+            $pointData = DB::table($pointDataTable)
+                ->where('id', $pointId)
+                ->first();
+
+            if (!$pointData) {
+                abort(404, 'Assessment not found');
+            }
+
+            // Get water tax details
+            $waterTax = DB::table($waterTaxTable)
+                ->where('assessment', $pointData->assessment)
+                ->first();
+
+            // Get UGD tax details
+            $ugdTax = DB::table($ugdTaxTable)
+                ->where('assessment', $pointData->assessment)
+                ->first();
+
+            // Get professional tax details
+            $professionalTax = DB::table($professionalTaxTable)
+                ->where('gisid', $pointData->point_gisid)
+                ->where('assessment', $pointData->assessment)
+                ->get();
+
+            // Get building details from polygon data
+            $buildingData = DB::table($polygonDataTable)
+                ->where('gisid', $pointData->point_gisid)
+                ->first();
+
+            // Prepare data for view
+            $data = [
+                'ward' => $ward,
+                'ward_no' => $wardNo,
+                'zone' => $zone,
+                'corporation' => $corporation,
+                'point_data' => $pointData,
+                'water_tax' => $waterTax,
+                'ugd_tax' => $ugdTax,
+                'professional_tax' => $professionalTax,
+                'building_data' => $buildingData,
+                'assessment_number' => $pointData->assessment,
+                'qr_data' => [
+                    'ward_no' => $wardNo,
+                    'assessment_id' => $pointData->id,
+                    'assessment_number' => $pointData->assessment,
+                ]
+            ];
+
+            return view('assessment-details', $data);
+
+        } catch (\Exception $e) {
+            abort(500, 'Error loading assessment details: ' . $e->getMessage());
+        }
+    }
 }

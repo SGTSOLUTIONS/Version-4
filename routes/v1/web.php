@@ -29,6 +29,8 @@ Route::get('/', function () {
 });
 Route::post('/qr-code-assessment', [PointdataController::class, 'qrCodeAssessment'])
     ->name('qrCodeAssessment');
+    Route::get('/view-assessment/{wardNo}/{pointId}', [PointdataController::class, 'showQr'])
+    ->name('view.assessment');
 // Guest routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
