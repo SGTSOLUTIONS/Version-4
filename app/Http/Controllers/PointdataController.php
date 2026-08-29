@@ -1200,7 +1200,7 @@ public function qrCodeAssessment(Request $request)
     if (!$pointData) {
         return response()->json([
             'success' => false,
-            'message' => "Point data not found for ID: {$pointId} in table: {$pointDataTable}"
+            'message' => "Point data not found for ID: {$wardId} in table: {$pointDataTable}"
         ], 404);
     }
 
