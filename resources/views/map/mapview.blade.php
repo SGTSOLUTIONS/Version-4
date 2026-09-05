@@ -1975,9 +1975,7 @@ const boundaryLayer = new ol.layer.Vector({
             width: 4,
             lineDash: [8, 4]
         }),
-        fill: new ol.style.Fill({
-            color: 'rgba(255,0,0,0.05)'
-        })
+     
     }),
     visible: true,
     title: 'Ward Boundary',
