@@ -12,8 +12,6 @@ class MapController extends Controller
 {
     public function map()
     {
-
-
         $user = Auth::user();
 
         if (!in_array($user->role, ['teamleader', 'surveyor'])) {
@@ -21,34 +19,23 @@ class MapController extends Controller
         }
 
         if ($user->isTeamLeader()) {
-
-            // Team Leader's own ward
             $wardId = $user->ward_id;
         } elseif ($user->isSurveyor()) {
-
-            // Surveyor has no Team Leader assigned
             if (!$user->teamLeader) {
                 return back()->with('error', 'No Team Leader assigned.');
             }
-
-            // Team Leader has no ward assigned
             if (empty($user->teamLeader->ward_id)) {
                 return back()->with('error', 'Your Team Leader has no Ward assigned.');
             }
-
-            // Use Team Leader's ward
             $wardId = $user->teamLeader->ward_id;
         }
 
         $ward = Ward::findOrFail($wardId);
-
-        $ward = Ward::findOrFail($wardId);
-
         $zoneId = $ward->zone_id;
         $zone = Zone::findOrFail($zoneId);
-
         $corp = $zone->corp_id;
         $wardNo = $ward->ward_no;
+        
         $polygonsTableName = "polygons_{$wardId}";
         $linesTableName = "lines_{$wardId}";
         $pointsTableName = "points_{$wardId}";
@@ -67,45 +54,33 @@ class MapController extends Controller
         $polygonDatas = DB::table($polygonDataTableName)->get();
         $pointDatas = DB::table($pointDataTableName)->get();
 
+        // ✅ ADD BOUNDARY DATA
+        $boundary = null;
+        if (!empty($ward->boundary)) {
+            if (is_array($ward->boundary)) {
+                $boundary = $ward->boundary;
+            } elseif (is_string($ward->boundary)) {
+                $boundary = json_decode($ward->boundary, true);
+            }
+        }
+
         // MIS + Water Tax
         $misData = DB::table($misTableName . ' as mis')
-            ->leftJoin(
-                $waterTaxTableName . ' as wt',
-                'mis.assessment',
-                '=',
-                'wt.assessment'
-            )
-            ->leftJoin(
-                $ugdtable . ' as ugd',
-                'mis.assessment',
-                '=',
-                'ugd.assessment'
-            )
-            ->leftJoin(
-                $prefessionaltax . ' as pt',
-                'mis.assessment',
-                '=',
-                'pt.assessment'
-            )
+            ->leftJoin($waterTaxTableName . ' as wt', 'mis.assessment', '=', 'wt.assessment')
+            ->leftJoin($ugdtable . ' as ugd', 'mis.assessment', '=', 'ugd.assessment')
+            ->leftJoin($prefessionaltax . ' as pt', 'mis.assessment', '=', 'pt.assessment')
             ->where('mis.ward_no', $wardNo)
             ->select(
                 'mis.*',
-
-                // Water Tax
                 'wt.watertax_no',
                 'wt.old_watertax_no',
-
-                // UGD Tax
                 'ugd.ugd_no',
                 'ugd.old_ugd_no',
-
-                // Professional Tax
                 'pt.pt_number',
                 'pt.old_pt_number'
             )
             ->get();
 
-        // Unique Road Names
         $uniqueRoadNames = DB::table($misTableName)
             ->select('road_name')
             ->whereNotNull('road_name')
@@ -122,7 +97,8 @@ class MapController extends Controller
             'polygonDatas',
             'pointDatas',
             'misData',
-            'uniqueRoadNames'
+            'uniqueRoadNames',
+            'boundary'  // ✅ PASS BOUNDARY TO VIEW
         ));
     }
 }

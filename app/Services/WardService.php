@@ -234,11 +234,17 @@ class WardService
                     ?? $feature['properties']['ROAD_NAME']
                     ?? $feature['properties']['RoadName']
                     ?? null;
+                    $pincode = $feature['properties']['pincode']
+                    ?? $feature['properties']['pincode']
+                    ?? $feature['properties']['pincode']
+                    ?? null;
+
 
                 $lineData = [
                     'type'        => 'LineString',
                     'coordinates' => json_encode($coords, JSON_UNESCAPED_UNICODE),
                     'road_name'   => $roadName,
+                    'pincode'   => $pincode,
                     'updated_at'  => now(),
                 ];
 
@@ -374,6 +380,7 @@ class WardService
                 $t->string('type')->default('LineString');
                 $t->json('coordinates')->nullable();
                 $t->string('road_name')->nullable();
+                 $t->string('pincode')->nullable();
                 $t->timestamps();
                 $t->softDeletes();
             });
