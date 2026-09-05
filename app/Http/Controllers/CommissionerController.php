@@ -467,14 +467,10 @@ class CommissionerController extends Controller
                 'total_credits' => $totalHalfYearTax,
                 'half_year_balance' => $totalBalance,
                 'year_collection' => $totalHalfYearTax * 2,
-<<<<<<< Updated upstream
                 // FIX: was `$totalBalance - $totalHalfYearTax` which produces a
                 // negative "total paid" figure in normal cases. Paid = tax billed
                 // minus what's still outstanding.
                 'total_collection' => $totalHalfYearTax - $totalBalance,
-=======
-                'total_collection' => $totalBalance - $totalHalfYearTax,
->>>>>>> Stashed changes
                 'surveyed' => $surveyedAssessments,
                 'connected' => $connectedAssessments,
                 'mis_count' => $misCount,
@@ -899,11 +895,7 @@ class CommissionerController extends Controller
                 }
             }
 
-<<<<<<< Updated upstream
             return view('excecutive.mapview', compact(
-=======
-            return view('executive.mapview', compact(
->>>>>>> Stashed changes
                 'ward',
                 'polygons',
                 'points',

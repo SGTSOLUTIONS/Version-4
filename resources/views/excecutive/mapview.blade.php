@@ -155,17 +155,9 @@
         }
 
         @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-
-            100% {
-                opacity: 1;
-            }
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         /* ─── Dropdowns ─── */
@@ -195,18 +187,9 @@
             display: block;
         }
 
-        .layer-dropdown {
-            min-width: 220px;
-        }
-
-        .location-dropdown {
-            min-width: 200px;
-        }
-
-        .search-dropdown {
-            min-width: 320px;
-        }
-
+        .layer-dropdown { min-width: 220px; }
+        .location-dropdown { min-width: 200px; }
+        .search-dropdown { min-width: 320px; }
         .filter-dropdown {
             min-width: 350px;
             max-height: 80vh;
@@ -222,17 +205,14 @@
         .filter-scroll-container::-webkit-scrollbar {
             width: 6px;
         }
-
         .filter-scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 3px;
         }
-
         .filter-scroll-container::-webkit-scrollbar-thumb {
             background: #ccc;
             border-radius: 3px;
         }
-
         .filter-scroll-container::-webkit-scrollbar-thumb:hover {
             background: #999;
         }
@@ -417,25 +397,10 @@
             font-weight: 600;
         }
 
-        .type-badge.road {
-            background: #0dcaf0;
-            color: #000;
-        }
-
-        .type-badge.parcel {
-            background: #198754;
-            color: #fff;
-        }
-
-        .type-badge.point {
-            background: #ffc107;
-            color: #000;
-        }
-
-        .type-badge.assessment {
-            background: #0d6efd;
-            color: #fff;
-        }
+        .type-badge.road { background: #0dcaf0; color: #000; }
+        .type-badge.parcel { background: #198754; color: #fff; }
+        .type-badge.point { background: #ffc107; color: #000; }
+        .type-badge.assessment { background: #0d6efd; color: #fff; }
 
         .filter-field-group {
             margin-bottom: 10px;
@@ -547,7 +512,6 @@
             height: calc(100vh - 5px);
         }
 
-<<<<<<< Updated upstream
         /* ─── Modal Styles ─── */
         .bld-modal-content { border: none; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.18); }
         .bld-modal-header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); border-bottom: none; padding: 18px 24px; color: #fff; }
@@ -612,677 +576,46 @@
         .quick-stats .stat-item { display: flex; justify-content: space-between; padding: 2px 0; }
         .quick-stats .stat-item strong { color: #1e293b; }
         .quick-stats .stat-item .stat-value { color: #0d6efd; font-weight: 600; }
-=======
-        /* ─── Modal Styles (keeping existing) ─── */
-        .bld-modal-content {
-            border: none;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, .18);
-        }
-
-        .bld-modal-header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
-            border-bottom: none;
-            padding: 18px 24px;
-            color: #fff;
-        }
-
-        .bld-header-inner {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .bld-header-icon {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, .15);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .bld-modal-title {
-            margin: 0;
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: .3px;
-        }
-
-        .bld-gisid-badge {
-            font-size: .72rem;
-            background: rgba(255, 255, 255, .2);
-            color: #fff;
-            border-radius: 6px;
-            padding: 2px 10px;
-            display: inline-block;
-            margin-top: 4px;
-            letter-spacing: .4px;
-        }
-
-        .bld-image-strip {
-            display: flex;
-            gap: 0;
-            height: 220px;
-            background: #0f172a;
-        }
-
-        .bld-img-wrap {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            background: #1e293b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .bld-img-wrap+.bld-img-wrap {
-            border-left: 3px solid #fff;
-        }
-
-        .bld-img-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform .4s ease;
-        }
-
-        .bld-img-wrap:hover img {
-            transform: scale(1.04);
-        }
-
-        .bld-img-label {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(transparent, rgba(0, 0, 0, .65));
-            color: #fff;
-            font-size: .78rem;
-            font-weight: 600;
-            padding: 18px 12px 8px;
-            letter-spacing: .3px;
-        }
-
-        .bld-img-wrap .bld-img-empty {
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 0.9rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .bld-img-wrap .bld-img-empty i {
-            font-size: 2rem;
-            opacity: 0.5;
-        }
-
-        .bld-img-wrap .bld-img-error {
-            color: #ef4444;
-            font-size: 0.85rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .bld-summary-strip {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0;
-            border-bottom: 1px solid #e5e7eb;
-            background: #f8fafc;
-        }
-
-        .bld-summary-card {
-            flex: 1 1 120px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-right: 1px solid #e5e7eb;
-        }
-
-        .bld-summary-card:last-child {
-            border-right: none;
-        }
-
-        .bld-summary-icon {
-            font-size: 1.3rem;
-            line-height: 1;
-        }
-
-        .bld-summary-label {
-            font-size: .68rem;
-            color: #000000;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .4px;
-            line-height: 1;
-        }
-
-        .bld-summary-val {
-            font-size: .95rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-top: 2px;
-        }
-
-        .bld-info-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 10px 14px;
-            border: 1px solid #e5e7eb;
-            height: 100%;
-        }
-
-        .bld-info-icon {
-            font-size: 1rem;
-            color: #94a3b8;
-            margin-top: 2px;
-            flex-shrink: 0;
-        }
-
-        .bld-info-label {
-            font-size: .68rem;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .4px;
-            line-height: 1;
-        }
-
-        .bld-info-val {
-            font-size: .9rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-top: 3px;
-            word-break: break-word;
-        }
-
-        .bld-section-divider {
-            font-size: .8rem;
-            font-weight: 700;
-            color: #475569;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-        }
-
-        .bld-status-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: .7rem;
-            font-weight: 700;
-            padding: 3px 9px;
-            border-radius: 20px;
-            letter-spacing: .3px;
-        }
-
-        .bld-status-tag.complete {
-            background: #dcfce7;
-            color: #15803d;
-        }
-
-        .bld-status-tag.partial {
-            background: #fef9c3;
-            color: #92400e;
-        }
-
-        .bld-status-tag.empty {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .bld-btn-save {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            padding: 9px 22px;
-            font-size: .875rem;
-            transition: all .2s;
-        }
-
-        .bld-btn-save:hover {
-            background: linear-gradient(135deg, #1d4ed8, #1e40af);
-            color: #fff;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, .3);
-        }
-
-        .bld-btn-cancel {
-            background: #f1f5f9;
-            color: #475569;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            padding: 9px 20px;
-            font-size: .875rem;
-            transition: all .2s;
-        }
-
-        .bld-btn-cancel:hover {
-            background: #e2e8f0;
-            color: #1e293b;
-        }
-
-        .bld-modal-footer {
-            background: #f8fafc;
-            border-top: 1px solid #e5e7eb;
-            padding: 14px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .bld-footer-status {
-            font-size: .8rem;
-            color: #64748b;
-        }
-
-        .point-data-card {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            padding: 16px 18px;
-            margin-bottom: 12px;
-            position: relative;
-            transition: box-shadow .2s, border-color .2s;
-        }
-
-        .point-data-card:hover {
-            box-shadow: 0 4px 16px rgba(37, 99, 235, .1);
-            border-color: #93c5fd;
-        }
-
-        .point-data-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-
-        .point-data-card-title {
-            font-size: .9rem;
-            font-weight: 700;
-            color: #1e293b;
-        }
-
-        .point-data-card-subtitle {
-            font-size: .75rem;
-            color: #64748b;
-            margin-top: 2px;
-        }
-
-        .point-data-card-actions {
-            display: flex;
-            gap: 6px;
-            flex-shrink: 0;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .pdc-action-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .9rem;
-            cursor: pointer;
-            transition: all .2s;
-        }
-
-        .pdc-qc-btn {
-            background: #fef9c3;
-            color: #92400e;
-        }
-
-        .pdc-qc-btn:hover {
-            background: #92400e;
-            color: #fff;
-        }
-
-        .pdc-field {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 8px 10px;
-        }
-
-        .pdc-field-label {
-            font-size: .65rem;
-            color: #94a3b8;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-        }
-
-        .pdc-field-val {
-            font-size: .82rem;
-            color: #1e293b;
-            font-weight: 600;
-            margin-top: 1px;
-            word-break: break-word;
-        }
-
-        .pdc-field-val.empty {
-            color: #cbd5e1;
-            font-style: italic;
-        }
-
-        .tax-card {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 12px 14px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 8px;
-            height: 100%;
-        }
-
-        .tax-card-title {
-            font-size: .7rem;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-            margin-bottom: 6px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 4px;
-        }
-
-        .tax-card-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-        }
-
-        .tax-card-label {
-            font-size: .7rem;
-            color: #94a3b8;
-        }
-
-        .tax-card-value {
-            font-size: .78rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .bv-variation-strip {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 12px 16px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 12px;
-        }
-
-        .bv-variation-card {
-            flex: 1;
-            min-width: 120px;
-        }
-
-        .bv-variation-card .stat-label {
-            font-size: .65rem;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-        }
-
-        .bv-variation-card .stat-value {
-            font-size: .9rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-top: 2px;
-        }
-
-        .bv-variation-card .stat-sub {
-            font-size: .7rem;
-            font-weight: 600;
-            color: #94a3b8;
-        }
-
-        .quick-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            background: #f8fafc;
-            border-radius: 8px;
-            margin: 8px 16px;
-            padding: 12px;
-            font-size: 12px;
-        }
-
-        .quick-stats .stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-        }
-
-        .quick-stats .stat-item strong {
-            color: #1e293b;
-        }
-
-        .quick-stats .stat-item .stat-value {
-            color: #0d6efd;
-            font-weight: 600;
-        }
->>>>>>> Stashed changes
 
         /* Responsive */
         @media (max-width: 768px) {
-
-            #map,
-            #cesiumContainer {
-                height: 500px;
-            }
-
-            .map-controls-stack {
-                right: 12px;
-                top: 12px;
-                gap: 6px;
-            }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 15px;
-                padding: 8px;
-                border-radius: 8px;
-            }
-
-            .fullscreen-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 15px;
-                padding: 8px;
-                right: 12px;
-                bottom: 12px;
-            }
-
-            .layer-dropdown,
-            .location-dropdown {
-                min-width: 180px;
-            }
-
-            .search-dropdown {
-                min-width: 280px;
-                right: -10px;
-            }
-
-            .filter-dropdown {
-                min-width: 300px;
-                right: -10px;
-            }
-
-            .bld-image-strip {
-                height: 150px;
-            }
-
-            .bld-summary-card {
-                flex: 1 1 45%;
-            }
-
-            .point-data-card-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .quick-stats {
-                grid-template-columns: 1fr 1fr;
-            }
+            #map, #cesiumContainer { height: 500px; }
+            .map-controls-stack { right: 12px; top: 12px; gap: 6px; }
+            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn, .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn, .filter-toggle-btn { width: 38px; height: 38px; font-size: 15px; padding: 8px; border-radius: 8px; }
+            .fullscreen-btn { width: 38px; height: 38px; font-size: 15px; padding: 8px; right: 12px; bottom: 12px; }
+            .layer-dropdown, .location-dropdown { min-width: 180px; }
+            .search-dropdown { min-width: 280px; right: -10px; }
+            .filter-dropdown { min-width: 300px; right: -10px; }
+            .bld-image-strip { height: 150px; }
+            .bld-summary-card { flex: 1 1 45%; }
+            .point-data-card-grid { grid-template-columns: 1fr 1fr; }
+            .quick-stats { grid-template-columns: 1fr 1fr; }
         }
 
         @media (max-width: 480px) {
-
-            #map,
-            #cesiumContainer {
-                height: 400px;
-            }
-
-            .map-controls-stack {
-                right: 8px;
-                top: 8px;
-                gap: 5px;
-            }
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                width: 34px;
-                height: 34px;
-                font-size: 13px;
-                padding: 6px;
-                border-radius: 6px;
-            }
-
-            .fullscreen-btn {
-                width: 34px;
-                height: 34px;
-                font-size: 13px;
-                padding: 6px;
-                right: 8px;
-                bottom: 8px;
-            }
-
-            .layer-dropdown,
-            .location-dropdown {
-                min-width: 160px;
-                right: -5px;
-            }
-
-            .search-dropdown {
-                min-width: 240px;
-                right: -15px;
-            }
-
-            .filter-dropdown {
-                min-width: 260px;
-                right: -15px;
-                max-height: 70vh;
-            }
-
-            .bld-summary-card {
-                flex: 1 1 100%;
-                border-right: none;
-                border-bottom: 1px solid #e5e7eb;
-            }
-
-            .bld-summary-strip {
-                flex-direction: column;
-            }
-
-            .bld-image-strip {
-                height: 120px;
-                flex-direction: column;
-            }
-
-            .bld-img-wrap+.bld-img-wrap {
-                border-left: none;
-                border-top: 3px solid #fff;
-            }
-
-            .point-data-card-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .point-data-card-header {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .point-data-card-actions {
-                justify-content: flex-start;
-            }
-
-            .search-result-actions {
-                flex-direction: column;
-                gap: 4px;
-            }
-
-            .search-result-actions .btn-sm {
-                width: 100%;
-            }
-
-            .quick-stats {
-                grid-template-columns: 1fr 1fr;
-                font-size: 10px;
-            }
+            #map, #cesiumContainer { height: 400px; }
+            .map-controls-stack { right: 8px; top: 8px; gap: 5px; }
+            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn, .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn, .filter-toggle-btn { width: 34px; height: 34px; font-size: 13px; padding: 6px; border-radius: 6px; }
+            .fullscreen-btn { width: 34px; height: 34px; font-size: 13px; padding: 6px; right: 8px; bottom: 8px; }
+            .layer-dropdown, .location-dropdown { min-width: 160px; right: -5px; }
+            .search-dropdown { min-width: 240px; right: -15px; }
+            .filter-dropdown { min-width: 260px; right: -15px; max-height: 70vh; }
+            .bld-summary-card { flex: 1 1 100%; border-right: none; border-bottom: 1px solid #e5e7eb; }
+            .bld-summary-strip { flex-direction: column; }
+            .bld-image-strip { height: 120px; flex-direction: column; }
+            .bld-img-wrap + .bld-img-wrap { border-left: none; border-top: 3px solid #fff; }
+            .point-data-card-grid { grid-template-columns: 1fr; }
+            .point-data-card-header { flex-direction: column; gap: 8px; }
+            .point-data-card-actions { justify-content: flex-start; }
+            .search-result-actions { flex-direction: column; gap: 4px; }
+            .search-result-actions .btn-sm { width: 100%; }
+            .quick-stats { grid-template-columns: 1fr 1fr; font-size: 10px; }
         }
 
         @media (hover: none) and (pointer: coarse) {
-
-            .layer-toggle-btn,
-            .location-toggle-btn,
-            .search-toggle-btn,
-            .label-toggle-btn,
-            .legend-toggle-btn,
-            .threed-toggle-btn,
-            .filter-toggle-btn {
-                min-height: 44px;
-                min-width: 44px;
-            }
-
-            .fullscreen-btn {
-                min-height: 44px;
-                min-width: 44px;
-            }
-
-            .search-result-actions .btn-sm {
-                min-height: 34px;
-                font-size: 12px;
-                padding: 4px 12px;
-            }
+            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn, .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn, .filter-toggle-btn { min-height: 44px; min-width: 44px; }
+            .fullscreen-btn { min-height: 44px; min-width: 44px; }
+            .search-result-actions .btn-sm { min-height: 34px; font-size: 12px; padding: 4px 12px; }
         }
     </style>
 @endpush
@@ -1309,8 +642,7 @@
 
     <div class="map-card" id="mapCard">
         <div class="map-header">
-            <span class="badge" id="activeLayerBadge"
-                style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A);">OpenStreetMap</span>
+            <span class="badge" id="activeLayerBadge" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A);">OpenStreetMap</span>
             <span class="text-muted small" id="featureCountBadge">Buildings: 0</span>
         </div>
         <div id="map"></div>
@@ -1333,53 +665,42 @@
                 </div>
                 <div class="bld-image-strip">
                     <div class="bld-img-wrap" id="bv_img1_wrap">
-                        <img id="bv_img1" src="" style="display:none;"
-                            onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
-                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i
-                                class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i
-                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <img id="bv_img1" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
+                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
                     <div class="bld-img-wrap" id="bv_img2_wrap">
-                        <img id="bv_img2" src="" style="display:none;"
-                            onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
-                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i
-                                class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i
-                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <img id="bv_img2" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
+                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
                 <div class="modal-body" style="max-height: 65vh; overflow-y: auto; padding: 20px 24px;">
-                    <div class="bld-summary-strip"
-                        style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 2px solid #ECE7FF; background: #F5F3FF; border-radius: 12px; margin-bottom: 20px;">
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
+                    <div class="bld-summary-strip" style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 2px solid #ECE7FF; background: #F5F3FF; border-radius: 12px; margin-bottom: 20px;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🧾</div>
                             <div>
                                 <div class="bld-summary-label">Assessments</div>
                                 <div class="bld-summary-val" id="bv_bills">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🏬</div>
                             <div>
                                 <div class="bld-summary-label">Shops</div>
                                 <div class="bld-summary-val" id="bv_shops">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🏢</div>
                             <div>
                                 <div class="bld-summary-label">Floors</div>
                                 <div class="bld-summary-val" id="bv_floors">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card"
-                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
+                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
                             <div class="bld-summary-icon">✅</div>
                             <div>
                                 <div class="bld-summary-label">Mapped</div>
@@ -1505,36 +826,18 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2 align-items-center">
-<<<<<<< Updated upstream
                         <button type="button" class="btn btn-light btn-sm" id="qrCodeAssessmentBtn" data-point-id="">
                             <i class="bi bi-qr-code me-1"></i> QR Code
-=======
-                        {{-- QR CODE EXPORT BUTTON --}}
-                        <button type="button" class="btn btn-light btn-sm" id="qrCodeAssessmentBtn"
-                            style="border-radius:8px; font-weight:600; background:rgba(255,255,255,0.2); color:#fff; border:1px solid rgba(255,255,255,0.3);">
-                            <i class="bi bi-qr-code me-1"></i> Export QR
->>>>>>> Stashed changes
                         </button>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                 </div>
                 <div class="modal-body p-4">
-<<<<<<< Updated upstream
                     <input type="hidden" id="pointId" name="pointId" value="">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="text-muted small" id="pdBillSummary"></span>
                     </div>
                     <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch" placeholder="Search by assessment, owner name, or phone number...">
-=======
-                    {{-- Hidden field to store point ID for QR export --}}
-                    <input type="hidden" id="pdPointId" value="">
-
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-muted small" id="pdBillSummary"></span>
-                    </div>
-                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch"
-                        placeholder="Search by assessment, owner name, or phone number...">
->>>>>>> Stashed changes
                     <div id="pointDetailsContainer"></div>
                 </div>
             </div>
@@ -1554,8 +857,7 @@
                 </div>
                 <div class="modal-body p-4">
                     <input type="hidden" id="qc_point_data_id">
-                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment
-                        <span id="qc_assessment_display" class="fw-semibold"></span></p>
+                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment <span id="qc_assessment_display" class="fw-semibold"></span></p>
                     <div class="mb-3">
                         <label class="bld-form-label">QC Usage</label>
                         <select class="form-select bld-input" id="qcusage">
@@ -1577,8 +879,7 @@
                 </div>
                 <div class="modal-footer bld-modal-footer">
                     <button type="button" class="btn bld-btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save
-                        QC</button>
+                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save QC</button>
                 </div>
             </div>
         </div>
@@ -2785,8 +2086,7 @@
             }
 
             // ─── CESIUM 3D VIEW ───
-            const CESIUM_ION_TOKEN =
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
+            const CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
 
             async function initCesiumViewer() {
                 if (cesiumViewer) return cesiumViewer;
@@ -2860,10 +2160,8 @@
                 }
 
                 try {
-                    const westSouth = ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857',
-                        'EPSG:4326');
-                    const eastNorth = ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857',
-                        'EPSG:4326');
+                    const westSouth = ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857', 'EPSG:4326');
+                    const eastNorth = ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857', 'EPSG:4326');
 
                     const provider = new Cesium.SingleTileImageryProvider({
                         url: droneImageURL,
@@ -2924,8 +2222,7 @@
                             if (Array.isArray(ring) && ring.length > 0) {
                                 ring.forEach(pt => {
                                     if (Array.isArray(pt) && pt.length >= 2) {
-                                        const lonLat = ol.proj.transform(pt, 'EPSG:3857',
-                                            'EPSG:4326');
+                                        const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
                                         flatCoords.push(lonLat[0], lonLat[1]);
                                     }
                                 });
@@ -3082,6 +2379,7 @@
 
                 const mappedCount = pointDatas.filter(pd => pd.point_gisid == item.gisid).length;
                 $('#bv_mapped').text(mappedCount);
+
                 const variation = buildingVariations[item.gisid];
                 if (variation) {
                     const areaBadgeClass = variation.area_status === 'MATCH' ? 'complete' : 'empty';
@@ -3129,12 +2427,10 @@
                 amenities.forEach(([label, val]) => {
                     if (val === 'Yes' || val === true || val === 1) {
                         hasAmenities = true;
-                        amenHtml +=
-                            `<span class="bld-status-tag complete"><i class="bi bi-check-circle"></i> ${label}</span>`;
+                        amenHtml += `<span class="bld-status-tag complete"><i class="bi bi-check-circle"></i> ${label}</span>`;
                     }
                 });
-                $('#bv_amenities').html(hasAmenities ? amenHtml :
-                    '<span class="text-muted small">No amenities recorded</span>');
+                $('#bv_amenities').html(hasAmenities ? amenHtml : '<span class="text-muted small">No amenities recorded</span>');
 
                 $('#bv_remarks').text(item.remarks || '—');
                 $('#bv_corp_remarks').text(item.corporationremarks || '—');
@@ -3147,8 +2443,7 @@
                     const $error = $('#' + errorId);
 
                     if (imagePath) {
-                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath
-                            .replace(/^\/+/, '');
+                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath.replace(/^\/+/, '');
                         $img.attr('src', fullPath).show();
                         $empty.hide();
                         $error.hide();
@@ -3183,7 +2478,7 @@
                 modal.show();
             }
 
-            // ─── OPEN POINT DETAILS (UPDATED WITH QR SUPPORT) ───
+            // ─── POINT DETAILS ───
             function openPointDetails(gisid) {
                 currentPointGisid = gisid;
                 $('#pointDetailsSearch').val('');
@@ -3197,103 +2492,11 @@
                     const building = polygonDatas.find(p => p.gisid == gisid);
                     const billCount = building ? (building.number_bill || 0) : 0;
                     $('#pdBillSummary').text(`${data.length} of ${billCount} bills mapped`);
-
-                    // ✅ Store the point ID for QR export
-                    if (data.length > 0) {
-                        // Store the first point ID for QR export
-                        const firstPointId = data[0]?.point?.id;
-                        if (firstPointId) {
-                            $('#pdPointId').val(firstPointId);
-                        }
-                    } else {
-                        $('#pdPointId').val('');
-                    }
                 });
 
                 const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
                 modal.show();
             }
-
-            // ─── QR CODE EXPORT FUNCTION (EXACT SAME AS REVENUE DASHBOARD) ───
-            $('#qrCodeAssessmentBtn').on('click', function(e) {
-                e.preventDefault();
-
-                const pointId = $('#pdPointId').val();
-                if (!pointId) {
-                    Swal.fire('Error', 'Point ID not found', 'error');
-                    return;
-                }
-
-                const $btn = $(this);
-                const originalHtml = $btn.html();
-                $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Generating...').prop('disabled',
-                    true);
-
-                // Use the same endpoint as revenue dashboard
-                fetch("{{ route('qrCodeAssessment') }}", {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': "{{ csrf_token() }}",
-                            'Accept': 'application/json'
-                        },
-                        body: new URLSearchParams({
-                            point_id: pointId
-                        })
-                    })
-                    .then(async (response) => {
-                        if (!response.ok) {
-                            let msg = 'Failed to generate QR code';
-                            try {
-                                const err = await response.json();
-                                if (err.message) msg = err.message;
-                            } catch (_) {}
-                            throw new Error(msg);
-                        }
-
-                        let filename = 'QR_Code.png';
-                        const disposition = response.headers.get('Content-Disposition');
-                        if (disposition) {
-                            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
-                                disposition);
-                            if (matches && matches[1]) filename = matches[1].replace(/['"]/g, '');
-                        }
-
-                        const blob = await response.blob();
-                        return {
-                            blob,
-                            filename
-                        };
-                    })
-                    .then(({
-                        blob,
-                        filename
-                    }) => {
-                        if (!blob || blob.size === 0) throw new Error('Received an empty QR code file');
-
-                        const url = window.URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = filename;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'QR Code downloaded successfully',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                    })
-                    .catch((err) => {
-                        Swal.fire('Error', err.message || 'Failed to generate QR code', 'error');
-                    })
-                    .finally(() => {
-                        $btn.html(originalHtml).prop('disabled', false);
-                    });
-            });
 
             function renderPointDetails(records) {
                 if (!records || !records.length) {
@@ -3326,8 +2529,7 @@
                     const qcFilled = [pd.qcusage, pd.qcsqfeet, pd.qc_remarks]
                         .filter(val => val !== null && val !== '' && val !== undefined).length;
                     const qcClass = qcFilled === 3 ? 'complete' : qcFilled === 0 ? 'empty' : 'partial';
-                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' :
-                        'QC Partial';
+                    const qcLabel = qcFilled === 3 ? 'QC Complete' : qcFilled === 0 ? 'QC Pending' : 'QC Partial';
 
                     html += `
                         <div class="point-data-card" data-id="${pd.id}">
@@ -3426,11 +2628,11 @@
                             </div>
 
                             ${ptList.length ? `
-                                <div class="row mt-2 g-2">
-                                    <div class="col-12">
-                                        <div class="tax-card">
-                                            <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                            ${ptList.map(pt => `
+                            <div class="row mt-2 g-2">
+                                <div class="col-12">
+                                    <div class="tax-card">
+                                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                        ${ptList.map(pt => `
                                         <div style="border-bottom:1px dashed #d7e8df; padding:6px 0; margin-bottom:4px;">
                                             <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
                                             <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
@@ -3445,10 +2647,10 @@
                                             <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
                                         </div>
                                         `).join('')}
-                                        </div>
                                     </div>
                                 </div>
-                                ` : ''}
+                            </div>
+                            ` : ''}
                         </div>`;
                 });
 
@@ -3597,8 +2799,7 @@
 
             $('#saveQcBtn').on('click', function() {
                 const id = $('#qc_point_data_id').val();
-                const $btn = $(this).prop('disabled', true).html(
-                    '<span class="spinner-border spinner-border-sm"></span> Saving...');
+                const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Saving...');
 
                 $.ajax({
                     url: `/point-data/${id}/qc`,
@@ -3628,8 +2829,7 @@
                         showToast(xhr.responseJSON?.message || 'Failed to save QC data.', 4000);
                     },
                     complete: function() {
-                        $btn.prop('disabled', false).html(
-                            '<i class="bi bi-save me-1"></i>Save QC');
+                        $btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Save QC');
                     }
                 });
             });
@@ -3853,10 +3053,7 @@
                             const lat = pos.coords.latitude;
                             const projected = ol.proj.fromLonLat([lon, lat]);
                             currentPosition = projected;
-                            currentLocation = {
-                                lon,
-                                lat
-                            };
+                            currentLocation = { lon, lat };
 
                             if (!positionFeature) {
                                 positionFeature = new ol.Feature({
@@ -3873,9 +3070,7 @@
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        const p = ol.proj.fromLonLat([newPos.coords.longitude,
-                                            newPos.coords.latitude
-                                        ]);
+                                        const p = ol.proj.fromLonLat([newPos.coords.longitude, newPos.coords.latitude]);
                                         currentPosition = p;
                                         currentLocation = {
                                             lon: newPos.coords.longitude,
@@ -3942,10 +3137,7 @@
                             const lat = pos.coords.latitude;
                             const projected = ol.proj.fromLonLat([lon, lat]);
                             currentPosition = projected;
-                            currentLocation = {
-                                lon,
-                                lat
-                            };
+                            currentLocation = { lon, lat };
 
                             if (!positionFeature) {
                                 positionFeature = new ol.Feature({
@@ -3972,9 +3164,7 @@
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
-                                        const p = ol.proj.fromLonLat([newPos.coords.longitude,
-                                            newPos.coords.latitude
-                                        ]);
+                                        const p = ol.proj.fromLonLat([newPos.coords.longitude, newPos.coords.latitude]);
                                         currentPosition = p;
                                         currentLocation = {
                                             lon: newPos.coords.longitude,
@@ -4221,8 +3411,7 @@
                 const total = polygonSource.getFeatures().length;
                 $('#visibleCount').text(total);
                 $('#totalCount').text(polygons.length);
-                $('#filterStats').html(
-                    `Showing: <strong>${total}</strong> of <strong>${polygons.length}</strong> features`);
+                $('#filterStats').html(`Showing: <strong>${total}</strong> of <strong>${polygons.length}</strong> features`);
                 updateFeatureCount();
                 updateQuickStats();
             }
@@ -4328,8 +3517,7 @@
                     } else if (areaVariation === 'low_variation') {
                         areaVariationGisids = new Set(
                             Object.values(buildingVariations)
-                            .filter(v => parseFloat(v.variation_percentage) < 5 && parseFloat(v
-                                .variation_percentage) > 0)
+                            .filter(v => parseFloat(v.variation_percentage) < 5 && parseFloat(v.variation_percentage) > 0)
                             .map(v => v.gisid)
                         );
                     }
@@ -4401,8 +3589,7 @@
                         surveyStatusGisids = new Set(
                             polygonDatas
                             .filter(d => {
-                                const pointCount = pointDatas.filter(pd => pd.point_gisid === d.gisid)
-                                    .length;
+                                const pointCount = pointDatas.filter(pd => pd.point_gisid === d.gisid).length;
                                 return pointCount > 0 && pointCount < (d.number_bill || 0);
                             })
                             .map(d => d.gisid)
@@ -4545,15 +3732,13 @@
 
                 $('#visibleCount').text(visibleCount);
                 $('#totalCount').text(total);
-                $('#filterStats').html(
-                    `Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
+                $('#filterStats').html(`Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
                 $('#featureCountBadge').text(`Buildings: ${visibleCount}`);
 
                 $('#statTotal').text(total);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(total - polygonDatas.length);
-                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status ===
-                    'VARIATION').length);
+                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION').length);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -4607,16 +3792,13 @@
                 const allFeatures = polygonSource.getFeatures();
                 $('#visibleCount').text(allFeatures.length);
                 $('#totalCount').text(allFeatures.length);
-                $('#filterStats').html(
-                    `Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`
-                    );
+                $('#filterStats').html(`Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`);
                 $('#featureCountBadge').text(`Buildings: ${allFeatures.length}`);
 
                 $('#statTotal').text(polygons.length);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(polygons.length - polygonDatas.length);
-                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status ===
-                    'VARIATION').length);
+                $('#statVariation').text(Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION').length);
 
                 polygonLayer.changed();
                 polygonSource.changed();
@@ -4665,8 +3847,7 @@
                         match = match && itemAssessment.includes(assessment);
                     }
                     if (oldAssessment) {
-                        const itemOldAssessment = (item.old_assessment || '').toString()
-                            .toLowerCase();
+                        const itemOldAssessment = (item.old_assessment || '').toString().toLowerCase();
                         match = match && itemOldAssessment.includes(oldAssessment);
                     }
                     if (ownerName) {
@@ -4733,12 +3914,11 @@
                 showToast('✅ Found ' + matches.length + ' results', 2000);
             });
 
-            $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress',
-                function(e) {
-                    if (e.which === 13) {
-                        $('#applyFilterBtn').click();
-                    }
-                });
+            $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress', function(e) {
+                if (e.which === 13) {
+                    $('#applyFilterBtn').click();
+                }
+            });
 
             $('#gisSearchInput').on('keypress', function(e) {
                 if (e.which === 13) {
@@ -4834,7 +4014,6 @@
             setTimeout(() => {
                 showToast('👆 Click on any building to view details', 4000);
             }, 1000);
-
         });
     </script>
 @endpush

@@ -1749,10 +1749,10 @@
             let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
             let ward = @json($ward ?? [], JSON_HEX_TAG);
             const misData = @json($misData ?? []);
-            
+
             // ─── BOUNDARY DATA ───
             let boundaryData = @json($boundary ?? null);
-            
+
             // pt Dynamic add
             let ptIndex = 0;
             let searchIndex = [];
@@ -2062,18 +2062,18 @@
 
                     try {
                         // Parse different GeoJSON formats
-                        if (Array.isArray(boundaryCoords[0]) && 
-                            Array.isArray(boundaryCoords[0][0]) && 
-                            Array.isArray(boundaryCoords[0][0][0]) && 
+                        if (Array.isArray(boundaryCoords[0]) &&
+                            Array.isArray(boundaryCoords[0][0]) &&
+                            Array.isArray(boundaryCoords[0][0][0]) &&
                             typeof boundaryCoords[0][0][0][0] === 'number') {
                             geometry = new ol.geom.MultiPolygon(boundaryCoords);
                             console.log('Boundary parsed as MultiPolygon');
-                        } else if (Array.isArray(boundaryCoords[0]) && 
-                                   Array.isArray(boundaryCoords[0][0]) && 
+                        } else if (Array.isArray(boundaryCoords[0]) &&
+                                   Array.isArray(boundaryCoords[0][0]) &&
                                    typeof boundaryCoords[0][0][0] === 'number') {
                             geometry = new ol.geom.Polygon(boundaryCoords[0]);
                             console.log('Boundary parsed as Polygon');
-                        } else if (Array.isArray(boundaryCoords[0]) && 
+                        } else if (Array.isArray(boundaryCoords[0]) &&
                                    typeof boundaryCoords[0][0] === 'number') {
                             geometry = new ol.geom.Polygon([boundaryCoords]);
                             console.log('Boundary parsed as LinearRing');
