@@ -1,7 +1,7 @@
 @extends('layouts.office')
 
-@section('title', 'Map View — Revenue Department')
-@section('page_title', 'Map View')
+@section('title', 'Dashboard — Revenue Department')
+@section('page_title', 'Dashboard')
 
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
@@ -1078,7 +1078,8 @@
                 {{ explode(' ', auth()->user()->name ?? 'Officer')[0] }} 👋
             </h1>
             <p class="ol-page-sub">
-                Ward {{ $ward->ward_no ?? 'N/A' }} — {{ $ward->name ?? '' }}
+                Here's what's happening in the revenue department today —
+                {{ now()->format('l, d F Y') }}
             </p>
         </div>
         <div class="d-flex gap-2 align-items-center">
@@ -1093,7 +1094,7 @@
         <div class="map-header">
             <h5 class="map-title">
                 <i class="bi bi-geo-alt-fill text-primary me-2"></i>
-                Ward {{ $ward->ward_no ?? 'N/A' }} Map View
+                Revenue GIS Dashboard
             </h5>
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
         </div>
@@ -1104,7 +1105,8 @@
     <div class="modal fade" id="deleteFeatureModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius:16px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.15);">
-                <div class="modal-header" style="background:#fff3f3; border-bottom:1px solid #fecdd3; border-radius:16px 16px 0 0; padding:16px 24px;">
+                <div class="modal-header"
+                    style="background:#fff3f3; border-bottom:1px solid #fecdd3; border-radius:16px 16px 0 0; padding:16px 24px;">
                     <h5 class="modal-title" id="deleteModalLabel" style="color:#dc2626; font-weight:700; margin:0;">
                         <i class="bi bi-trash3-fill me-2"></i>Delete Feature
                     </h5>
@@ -1115,7 +1117,8 @@
                         Choose the feature type and enter its GIS ID to permanently remove it from the map.
                     </p>
                     <div class="mb-4">
-                        <label class="form-label fw-semibold mb-2" style="font-size:0.85rem; color:#374151;">Feature Type</label>
+                        <label class="form-label fw-semibold mb-2" style="font-size:0.85rem; color:#374151;">Feature
+                            Type</label>
                         <div class="d-flex gap-2">
                             <div class="delete-type-btn active" data-type="polygon">
                                 <i class="bi bi-pentagon me-1"></i>Polygon
@@ -1130,45 +1133,50 @@
                         <input type="hidden" id="deleteFeatureType" value="polygon">
                     </div>
                     <div class="mb-3">
-                        <label for="deleteGisId" class="form-label fw-semibold mb-2" style="font-size:0.85rem; color:#374151;">GIS ID</label>
+                        <label for="deleteGisId" class="form-label fw-semibold mb-2"
+                            style="font-size:0.85rem; color:#374151;">GIS ID</label>
                         <input type="text" id="deleteGisId" class="form-control" placeholder="Enter GIS ID…"
                             style="border-radius:10px; border:1.5px solid #e5e7eb; padding:10px 14px; font-size:0.9rem;"
                             autocomplete="off">
                         <div id="deleteGisError" class="text-danger mt-1" style="font-size:0.8rem; display:none;"></div>
                     </div>
-                    <div id="deleteConfirmBox" style="display:none; background:#fff3f3; border:1px solid #fecdd3; border-radius:10px; padding:12px 14px;">
+                    <div id="deleteConfirmBox"
+                        style="display:none; background:#fff3f3; border:1px solid #fecdd3; border-radius:10px; padding:12px 14px;">
                         <p class="mb-0" style="font-size:0.82rem; color:#dc2626;">
                             <i class="bi bi-exclamation-triangle-fill me-1"></i>
                             This will <strong>permanently delete</strong> this feature and cannot be undone.
                         </p>
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:10px; font-weight:600; padding:8px 20px;">
+                <div class="modal-footer"
+                    style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                        style="border-radius:10px; font-weight:600; padding:8px 20px;">
                         Cancel
                     </button>
-                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger" style="border-radius:10px; font-weight:600; padding:8px 24px; min-width:120px;">
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-danger"
+                        style="border-radius:10px; font-weight:600; padding:8px 24px; min-width:120px;">
                         <i class="bi bi-trash3 me-1"></i>Delete
                     </button>
                 </div>
             </div>
         </div>
     </div>
-
-    {{-- Building Data Modal --}}
     <div class="modal fade" id="buildingDataModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-sm modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border-bottom: none;">
-                    <h5 class="modal-title"><i class="fas fa-building me-2"></i>Building Details</h5>
+                <div class="modal-header"
+                    style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border-bottom: none;">
+                    <h5 class="modal-title"><i class="fas fa-building me-2"></i>Building </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="buildingForm" enctype="multipart/form-data">
                     @csrf
+
                     <div class="modal-body" style="max-height: 70vh; overflow-y: auto; background: #f8fafc;">
-                        <!-- Images Section -->
                         <div class="card mb-4">
-                            <div class="card-header" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
+                            <div class="card-header"
+                                style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
                                 <h6 class="mb-0"><i class="fas fa-image me-2"></i>Building Images</h6>
                             </div>
                             <div class="card-body">
@@ -1185,13 +1193,12 @@
                                                 <p>No image selected</p>
                                             </div>
                                         </div>
-                                        <div class="mt-2">
-                                            <label class="btn btn-outline-primary btn-sm w-100">
-                                                <i class="fas fa-upload me-1"></i> Choose Image
-                                                <input type="file" name="image" id="building_image" accept="image/*" style="display: none;">
-                                            </label>
+                                        <div class="mt-2"><label class="btn btn-outline-primary btn-sm w-100"><i
+                                                    class="fas fa-upload me-1"></i> Choose Image<input type="file"
+                                                    name="image" id="building_image" accept="image/*"
+                                                    style="display: none;"></label></div>
+                                        <div id="building_image_error" class="error-message text-danger small mt-1">
                                         </div>
-                                        <div id="building_image_error" class="error-message text-danger small mt-1"></div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 2</label>
@@ -1205,33 +1212,40 @@
                                                 <p>No image selected</p>
                                             </div>
                                         </div>
-                                        <div class="mt-2">
-                                            <label class="btn btn-outline-primary btn-sm w-100">
-                                                <i class="fas fa-upload me-1"></i> Choose Image
-                                                <input type="file" name="image2" id="building_image2" accept="image/*" style="display: none;">
-                                            </label>
+                                        <div class="mt-2"><label class="btn btn-outline-primary btn-sm w-100"><i
+                                                    class="fas fa-upload me-1"></i> Choose Image<input type="file"
+                                                    name="image2" id="building_image2" accept="image/*"
+                                                    style="display: none;"></label></div>
+                                        <div id="building_image2_error" class="error-message text-danger small mt-1">
                                         </div>
-                                        <div id="building_image2_error" class="error-message text-danger small mt-1"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Basic Information -->
                         <div class="card mb-4">
-                            <div class="card-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                            <div class="card-header"
+                                style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
                                 <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">GIS ID</label>
-                                        <input type="text" class="form-control" name="building_gisid" id="building_gisid" readonly>
+                                    <div class="col-md-3 mb-3"><label class="form-label">GIS ID</label><input
+                                            type="text" class="form-control" name="building_gisid"
+                                            id="building_gisid" value="" readonly>
                                         <div id="building_gisid_error" class="error-message text-danger small"></div>
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Zonenation</label>
-                                        <select class="form-select" name="building_zone" id="building_zone">
+    <label class="form-label">GIS ID</label>
+    <div class="input-group">
+        <input type="text" class="form-control" name="building_gisid" id="building_gisid" value="" readonly>
+        <button class="btn btn-success" type="button" id="openGmapBtn" title="Open in Google Maps">
+            <i class="fas fa-map-marked-alt"></i>
+        </button>
+    </div>
+    <div id="building_gisid_error" class="error-message text-danger small"></div>
+</div>
+                                    <div class="col-md-3 mb-3"><label class="form-label">Zonenation</label><select
+                                            class="form-select" name="building_zone" id="building_zone">
                                             <option value="">Select Zone</option>
                                             <option value="ZONE-A">ZONE-A</option>
                                             <option value="ZONE-B">ZONE-B</option>
@@ -1241,24 +1255,23 @@
                                         </select>
                                         <div id="building_zone_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Number of Assessments</label>
-                                        <input type="number" class="form-control" name="number_bill" id="number_bill" min="0">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Number of
+                                            Assessments</label><input type="number" class="form-control"
+                                            name="number_bill" id="number_bill" min="0">
                                         <div id="number_bill_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Number of Shops</label>
-                                        <input type="number" class="form-control" name="number_shop" id="number_shop" min="0">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Number of Shops</label><input
+                                            type="number" class="form-control" name="number_shop" id="number_shop"
+                                            min="0">
                                         <div id="number_shop_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Number of Floors</label>
-                                        <input type="number" class="form-control" name="number_floor" id="number_floor" min="0">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Number of
+                                            Floors</label><input type="number" class="form-control" name="number_floor"
+                                            id="number_floor" min="0">
                                         <div id="number_floor_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Percentage</label>
-                                        <select class="form-select" name="percentage" id="percentage">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Percentage</label><select
+                                            class="form-select" name="percentage" id="percentage">
                                             <option value="">Select Percentage</option>
                                             <option value="10">10%</option>
                                             <option value="20">20%</option>
@@ -1274,45 +1287,48 @@
                                         </select>
                                         <div id="percentage_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Basement</label>
-                                        <input type="number" class="form-control" name="basement" id="basement" min="0" placeholder="Number of basements">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Basement</label><input
+                                            type="number" class="form-control" name="basement" id="basement"
+                                            min="0" placeholder="Number of basements">
                                         <div id="basement_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Building Name</label>
-                                        <input type="text" class="form-control" name="building_name" id="building_name" placeholder="Enter building name">
+                                    <div class="col-md-6 mb-3"><label class="form-label">Building Name</label><input
+                                            type="text" class="form-control" name="building_name" id="building_name"
+                                            placeholder="Enter building name">
                                         <div id="building_name_error" class="error-message text-danger small"></div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Road Name</label>
                                         <select class="form-select" id="road_name" name="road_name">
                                             <option value="">Select Road Name</option>
+
                                             @foreach ($uniqueRoadNames as $road)
-                                                <option value="{{ $road }}">{{ $road }}</option>
+                                                <option value="{{ $road }}">
+                                                    {{ $road }}
+                                                </option>
                                             @endforeach
+
                                         </select>
+
                                         <div id="road_name_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Phone Number</label>
-                                        <input type="tel" class="form-control" name="phone" id="phone_building" placeholder="10-digit mobile number" maxlength="10">
+                                    <div class="col-md-6 mb-3"><label class="form-label">Phone Number</label><input
+                                            type="tel" class="form-control" name="phone" id="phone_building"
+                                            placeholder="10-digit mobile number" maxlength="10">
                                         <div id="phone_building_error" class="error-message text-danger small"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Building Details -->
                         <div class="card mb-4">
-                            <div class="card-header" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
+                            <div class="card-header"
+                                style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
                                 <h6 class="mb-0"><i class="fas fa-building me-2"></i>Building Details</h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Building Usage</label>
-                                        <select class="form-select" name="building_usage" id="building_usage">
+                                    <div class="col-md-4 mb-3"><label class="form-label">Building Usage</label><select
+                                            class="form-select" name="building_usage" id="building_usage">
                                             <option value="">Select Usage</option>
                                             <option value="RESIDENTIAL">Residential</option>
                                             <option value="COMMERCIAL">Commercial</option>
@@ -1324,9 +1340,9 @@
                                         </select>
                                         <div id="building_usage_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Construction Type</label>
-                                        <select class="form-select" name="construction_type" id="construction_type">
+                                    <div class="col-md-4 mb-3"><label class="form-label">Construction
+                                            Type</label><select class="form-select" name="construction_type"
+                                            id="construction_type">
                                             <option value="">Select Type</option>
                                             <option value="PERMANENT">Permanent</option>
                                             <option value="SEMI_PERMANENT">Semi Permanent</option>
@@ -1335,20 +1351,23 @@
                                             <option value="CAR_SHED">Car Shed</option>
                                             <option value="TEMPORARY">Temporary</option>
                                         </select>
-                                        <div id="construction_type_error" class="error-message text-danger small"></div>
+                                        <div id="construction_type_error" class="error-message text-danger small">
+                                        </div>
                                     </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Building Type</label>
-                                        <select class="form-select" name="building_type" id="building_type">
+                                    <div class="col-md-4 mb-3"><label class="form-label">Building Type</label><select
+                                            class="form-select" name="building_type" id="building_type">
                                             <option value="">Select Type</option>
                                             <option value="Independent">Independent</option>
                                             <option value="Flat">Flat</option>
                                             <option value="Kalyana_Mandapam">Kalyana Mandapam</option>
                                             <option value="Hotel">Hotel</option>
                                             <option value="Cinema_Theatre">Cinema Theatre</option>
-                                            <option value="Central_Government_Building">Central Government Building</option>
-                                            <option value="State_Government_Building">State Government Building</option>
-                                            <option value="Municipality_Corporation">Municipality / Corporation</option>
+                                            <option value="Central_Government_Building">Central Government Building
+                                            </option>
+                                            <option value="State_Government_Building">State Government Building
+                                            </option>
+                                            <option value="Municipality_Corporation">Municipality / Corporation
+                                            </option>
                                             <option value="Educational_Institution">Educational Institution</option>
                                             <option value="Hospital">Hospital</option>
                                             <option value="Commercial_Complex">Commercial Complex</option>
@@ -1365,144 +1384,140 @@
                                         </select>
                                         <div id="building_type_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">UGD Status</label>
-                                        <select class="form-select" name="ugd" id="ugd">
+                                    <div class="col-md-4 mb-3"><label class="form-label">UGD Status</label><select
+                                            class="form-select" name="ugd" id="ugd">
                                             <option value="">Select Status</option>
                                             <option value="No_Connection">No Connection</option>
-                                            <option value="Manhole_Available_but_Connection_Not_Given_to_House">Manhole Available but Connection Not Given</option>
+                                            <option value="Manhole_Available_but_Connection_Not_Given_to_House">Manhole
+                                                Available but Connection Not Given</option>
                                             <option value="Stage_1_Completed">Stage 1 Completed</option>
                                             <option value="Stage_1_2_Completed">Stage 1 & 2 Completed</option>
-                                            <option value="Stage_1_2_Completed_but_Not_Connected">Stage 1 & 2 Completed but Not Connected</option>
+                                            <option value="Stage_1_2_Completed_but_Not_Connected">Stage 1 & 2 Completed
+                                                but Not Connected</option>
                                             <option value="Stage_1_2_3_Completed">Stage 1, 2 & 3 Completed</option>
                                             <option value="Direct_Connection_Given">Direct Connection Given</option>
-                                            <option value="1_UGD_Connection_-_3_Stage_Completed">1 UGD Connection - 3 Stage Completed</option>
-                                            <option value="2_UGD_Connection_-_3_Stage_Completed">2 UGD Connection - 3 Stage Completed</option>
+                                            <option value="1_UGD_Connection_-_3_Stage_Completed">1 UGD Connection - 3
+                                                Stage Completed</option>
+                                            <option value="2_UGD_Connection_-_3_Stage_Completed">2 UGD Connection - 3
+                                                Stage Completed</option>
                                         </select>
                                         <div id="ugd_error" class="error-message text-danger small"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Amenities -->
                         <div class="card mb-4">
-                            <div class="card-header" style="background: linear-gradient(135deg, #ffc107, #ff9800); color: #333;">
+                            <div class="card-header"
+                                style="background: linear-gradient(135deg, #ffc107, #ff9800); color: #333;">
                                 <h6 class="mb-0"><i class="fas fa-umbrella me-2"></i>Amenities</h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Lift Room</label>
-                                        <select class="form-select" name="liftroom" id="liftroom">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Lift Room</label><select
+                                            class="form-select" name="liftroom" id="liftroom">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
                                         <div id="liftroom_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Head Room</label>
-                                        <select class="form-select" name="headroom" id="headroom">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Head Room</label><select
+                                            class="form-select" name="headroom" id="headroom">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
                                         <div id="headroom_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Overhead Tank</label>
-                                        <select class="form-select" name="overhead_tank" id="overhead_tank">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Overhead Tank</label><select
+                                            class="form-select" name="overhead_tank" id="overhead_tank">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
                                         <div id="overhead_tank_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Rainwater Harvesting</label>
-                                        <select class="form-select" name="rainwater_harvesting" id="rainwater_harvesting">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Rainwater
+                                            Harvesting</label><select class="form-select" name="rainwater_harvesting"
+                                            id="rainwater_harvesting">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
-                                        <div id="rainwater_harvesting_error" class="error-message text-danger small"></div>
+                                        <div id="rainwater_harvesting_error" class="error-message text-danger small">
+                                        </div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Parking</label>
-                                        <select class="form-select" name="parking" id="parking">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Parking</label><select
+                                            class="form-select" name="parking" id="parking">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
                                         <div id="parking_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Ramp</label>
-                                        <select class="form-select" name="ramp" id="ramp">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Ramp</label><select
+                                            class="form-select" name="ramp" id="ramp">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
                                         <div id="ramp_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Hoarding</label>
-                                        <select class="form-select" name="hoarding" id="hoarding">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Hoarding</label><select
+                                            class="form-select" name="hoarding" id="hoarding">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
                                         <div id="hoarding_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">CCTV</label>
-                                        <select class="form-select" name="cctv" id="cctv">
+                                    <div class="col-md-3 mb-3"><label class="form-label">CCTV</label><select
+                                            class="form-select" name="cctv" id="cctv">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
                                         <div id="cctv_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Cell Tower</label>
-                                        <select class="form-select" name="cell_tower" id="cell_tower">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Cell Tower</label><select
+                                            class="form-select" name="cell_tower" id="cell_tower">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
                                         <div id="cell_tower_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Solar Panel</label>
-                                        <select class="form-select" name="solar_panel" id="solar_panel">
+                                    <div class="col-md-3 mb-3"><label class="form-label">Solar Panel</label><select
+                                            class="form-select" name="solar_panel" id="solar_panel">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
                                         <div id="solar_panel_error" class="error-message text-danger small"></div>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Water Connection</label>
-                                        <select class="form-select" name="water_connection" id="water_connection">
+
+                                    <div class="col-md-3 mb-3"><label class="form-label">Water
+                                            Connection</label><select class="form-select" name="water_connection"
+                                            id="water_connection">
                                             <option value="No">No</option>
                                             <option value="Yes">Yes</option>
                                         </select>
-                                        <div id="water_connection_error" class="error-message text-danger small"></div>
+                                        <div id="water_connection_error" class="error-message text-danger small">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Remarks -->
                         <div class="card mb-4">
-                            <div class="card-header" style="background: linear-gradient(135deg, #6c757d, #5a6268); color: white;">
+                            <div class="card-header"
+                                style="background: linear-gradient(135deg, #6c757d, #5a6268); color: white;">
                                 <h6 class="mb-0"><i class="fas fa-comment me-2"></i>Remarks</h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">General Remarks</label>
-                                        <textarea class="form-control" name="remarks" id="remarks_building" rows="3" placeholder="Enter general remarks..."></textarea>
-                                        <div id="remarks_building_error" class="error-message text-danger small"></div>
+                                    <div class="col-md-6 mb-3"><label class="form-label">General Remarks</label>
+                                        <textarea class="form-control" name="remarks" id="remarks_building" rows="3"
+                                            placeholder="Enter general remarks..."></textarea>
+                                        <div id="remarks_building_error" class="error-message text-danger small">
+                                        </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Corporation Remarks</label>
-                                        <textarea class="form-control" name="corporationremarks" id="corporationremarks" rows="3" placeholder="Enter corporation remarks..."></textarea>
-                                        <div id="corporationremarks_error" class="error-message text-danger small"></div>
+                                    <div class="col-md-6 mb-3"><label class="form-label">Corporation Remarks</label>
+                                        <textarea class="form-control" name="corporationremarks" id="corporationremarks" rows="3"
+                                            placeholder="Enter corporation remarks..."></textarea>
+                                        <div id="corporationremarks_error" class="error-message text-danger small">
+                                        </div>
                                     </div>
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label">QC Remarks</label>
+                                    <div class="col-md-12 mb-3"><label class="form-label">QC Remarks</label>
                                         <textarea class="form-control" name="qc_remarks" id="qc_remarks" rows="2" placeholder="Enter QC remarks..."></textarea>
                                         <div id="qc_remarks_error" class="error-message text-danger small"></div>
                                     </div>
@@ -1510,16 +1525,20 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0;">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Close</button>
-                        <button type="submit" class="btn btn-primary" id="buildingsubmitBtn"><i class="fas fa-save me-2"></i>Save Building Data</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i
+                                class="fas fa-times me-2"></i>Close</button>
+                        <button type="submit" class="btn btn-primary" id="buildingsubmitBtn"><i
+                                class="fas fa-save me-2"></i>Save Building Data</button>
+
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    {{-- Point Details Modal --}}
+    {{-- ── Edit Point Data Modal ── --}}
     <div class="modal fade" id="pointDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content bld-modal-content">
@@ -1527,136 +1546,222 @@
                     <div class="bld-header-inner">
                         <div class="bld-header-icon"><i class="bi bi-pencil-square"></i></div>
                         <div>
-                            <h5 class="modal-title bld-modal-title">Point Data</h5>
+                            <h5 class="modal-title bld-modal-title">Edit Point Data</h5>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
+
                     <form id="pointDetailsForm" class="needs-validation" novalidate>
                         @csrf
+
+
+                        <!-- Tabs -->
                         <ul class="nav nav-tabs mb-3" id="pointDetailsTabs" role="tablist">
+
                             <li class="nav-item">
-                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#basic-tab" type="button">
+                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#basic-tab"
+                                    type="button">
                                     Basic Info
                                 </button>
                             </li>
+
                             <li class="nav-item">
-                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#water-tab" type="button">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#water-tab"
+                                    type="button">
                                     Water Tax
                                 </button>
                             </li>
+
                             <li class="nav-item">
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ugd-tab" type="button">
                                     UGD Tax
                                 </button>
                             </li>
+
                             <li class="nav-item">
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pt-tab" type="button">
                                     Professional Tax
                                 </button>
                             </li>
+
                         </ul>
 
                         <div class="tab-content">
+
                             <!-- BASIC INFO -->
                             <div class="tab-pane fade show active" id="basic-tab">
                                 <input type="text" class="form-control" id="point_gisid" name="point_gisid" hidden>
                                 <div class="row g-3">
+                                     <input type="text" class="form-control" id="id" name="id" hidden>
+                                    <button type="button" class="btn btn-primary" id="qrCodeAssessmentBtn"
+                                        data-point-id="">
+                                        <i class="bi bi-qr-code me-1"></i> Generate QR Code
+                                    </button>
                                     <div class="col-md-4">
-                                        <label for="assessment_type" class="form-label">Assessment Type <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="assessment_type" name="assessment_type" required>
+                                        <label for="assessment_type" class="form-label">
+                                            Assessment Type <span class="text-danger">*</span>
+                                        </label>
+
+                                        <select class="form-control" id="assessment_type" name="assessment_type"
+                                            required>
                                             <option value="">-- Select Assessment Type --</option>
                                             <option value="OLD">OLD</option>
                                             <option value="NEW">NEW</option>
                                             <option value="VACANT">VACANT</option>
                                             <option value="OTHER_WARD">OTHER WARD</option>
                                         </select>
+
+                                        <div class="invalid-feedback">
+                                            Please select assessment type.
+                                        </div>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="assessment" class="form-label">Assessment <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="assessment" name="assessment" required>
+                                        <label for="assessment" class="form-label">Assessment <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="assessment" name="assessment"
+                                            required>
+                                        <div class="invalid-feedback">Please enter assessment number.</div>
                                     </div>
+
                                     <div class="col-md-4">
                                         <label for="old_assessment" class="form-label">Old Assessment</label>
-                                        <input type="text" class="form-control" id="old_assessment" name="old_assessment">
+                                        <input type="text" class="form-control" id="old_assessment"
+                                            name="old_assessment">
+                                        <div class="invalid-feedback">Please enter old assessment number.</div>
                                     </div>
+
                                     <div class="col-md-4">
-                                        <label for="zone" class="form-label">Zone <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="zone" name="zone" required>
+                                        <label for="zone" class="form-label">Zone <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="zone" name="zone"
+                                            required>
+                                        <div class="invalid-feedback">Please enter zone.</div>
                                     </div>
+
                                     <div class="col-md-6">
-                                        <label for="owner_name" class="form-label">Owner Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="owner_name" name="owner_name" required>
+                                        <label for="owner_name" class="form-label">Owner Name <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="owner_name" name="owner_name"
+                                            required>
+                                        <div class="invalid-feedback">Please enter owner name.</div>
                                     </div>
+
                                     <div class="col-md-6">
                                         <label for="present_owner_name" class="form-label">Present Owner Name</label>
-                                        <input type="text" class="form-control" id="present_owner_name" name="present_owner_name">
+                                        <input type="text" class="form-control" id="present_owner_name"
+                                            name="present_owner_name">
+                                        <div class="invalid-feedback">Please enter present owner name.</div>
                                     </div>
+
                                     <div class="col-md-4">
-                                        <label for="phone_number" class="form-label">Phone Number <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="phone_number" name="phone_number" pattern="[0-9]{10}" required>
+                                        <label for="phone_number" class="form-label">Phone Number <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="phone_number" name="phone_number"
+                                            pattern="[0-9]{10}" required>
+                                        <div class="invalid-feedback">Please enter a valid 10-digit phone number.</div>
                                     </div>
+
                                     <div class="col-md-4">
                                         <label for="old_door_no" class="form-label">Old Door No</label>
                                         <input type="text" class="form-control" id="old_door_no" name="old_door_no">
+                                        <div class="invalid-feedback">Please enter old door number.</div>
                                     </div>
+
                                     <div class="col-md-4">
-                                        <label for="new_door_no" class="form-label">New Door No <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="new_door_no" name="new_door_no" required>
+                                        <label for="new_door_no" class="form-label">New Door No <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="new_door_no" name="new_door_no"
+                                            required>
+                                        <div class="invalid-feedback">Please enter new door number.</div>
                                     </div>
+
                                     <div class="col-md-4">
                                         <label for="aadhar_no" class="form-label">Aadhar No</label>
-                                        <input type="text" class="form-control" id="aadhar_no" name="aadhar_no" pattern="[0-9]{12}">
+                                        <input type="text" class="form-control" id="aadhar_no" name="aadhar_no"
+                                            pattern="[0-9]{12}">
+                                        <div class="invalid-feedback">Please enter a valid 12-digit Aadhar number.
+                                        </div>
                                     </div>
+
                                     <div class="col-md-4">
                                         <label for="ration_no" class="form-label">Ration No</label>
                                         <input type="text" class="form-control" id="ration_no" name="ration_no">
+                                        <div class="invalid-feedback">Please enter ration number.</div>
                                     </div>
+
                                     <div class="col-md-4">
-                                        <label for="floor" class="form-label">Floor <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="floor" name="floor" required>
+                                        <label for="floor" class="form-label">Floor <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="floor" name="floor"
+                                            required>
+                                        <div class="invalid-feedback">Please enter floor number.</div>
                                     </div>
+
                                     <div class="col-md-4">
                                         <label for="number_persons" class="form-label">Number Persons</label>
-                                        <input type="number" class="form-control" id="number_persons" name="number_persons" min="1">
+                                        <input type="number" class="form-control" id="number_persons"
+                                            name="number_persons" min="1">
+                                        <div class="invalid-feedback">Please enter a valid number (minimum 1).</div>
                                     </div>
+
                                     <div class="col-md-4">
-                                        <label for="bill_usage" class="form-label">Bill Usage <span class="text-danger">*</span></label>
+                                        <label for="bill_usage" class="form-label">Bill Usage <span
+                                                class="text-danger">*</span></label>
                                         <select class="form-select" id="bill_usage" name="bill_usage" required>
                                             <option value="">Select</option>
                                             <option value="RESIDENTIAL">Residential</option>
                                             <option value="COMMERCIAL">Commercial</option>
                                         </select>
+                                        <div class="invalid-feedback">Please select bill usage type.</div>
                                     </div>
+
                                     <div class="col-md-4">
                                         <label for="eb" class="form-label">EB</label>
                                         <input type="text" class="form-control" id="eb" name="eb">
+                                        <div class="invalid-feedback">Please enter EB number.</div>
                                     </div>
+
                                     <div class="col-md-6">
                                         <label for="worker_name" class="form-label">Worker Name</label>
                                         <input type="text" class="form-control" id="worker_name" name="worker_name">
+                                        <div class="invalid-feedback">Please enter worker name.</div>
                                     </div>
+
                                     <div class="col-md-12">
                                         <label for="remarks" class="form-label">Remarks</label>
                                         <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
+                                        <div class="invalid-feedback">Please enter remarks.</div>
                                     </div>
+
                                 </div>
+
                             </div>
 
                             <!-- WATER TAX -->
                             <div class="tab-pane fade" id="water-tab">
+
                                 <div class="row g-3">
+
                                     <div class="col-md-4">
-                                        <label for="watertax_no" class="form-label">Water Tax No <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="watertax_no" name="watertax_no" required>
+                                        <label for="watertax_no" class="form-label">Water Tax No <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="watertax_no" name="watertax_no"
+                                            required>
+                                        <div class="invalid-feedback">Please enter water tax number.</div>
                                     </div>
+
                                     <div class="col-md-4">
                                         <label for="old_watertax_no" class="form-label">Old Water Tax No</label>
-                                        <input type="text" class="form-control" id="old_watertax_no" name="old_watertax_no">
+                                        <input type="text" class="form-control" id="old_watertax_no"
+                                            name="old_watertax_no">
+                                        <div class="invalid-feedback">Please enter old water tax number.</div>
                                     </div>
+
                                     <div class="col-md-4">
-                                        <label for="water_usage" class="form-label">Water Usage <span class="text-danger">*</span></label>
+                                        <label for="water_usage" class="form-label">Water Usage <span
+                                                class="text-danger">*</span></label>
                                         <select class="form-select" id="water_usage" name="water_usage" required>
                                             <option value="">Select</option>
                                             <option value="Resdentrial">Residential</option>
@@ -1664,60 +1769,129 @@
                                             <option value="Industrial">Industrial</option>
                                             <option value="Institutional">Institutional</option>
                                         </select>
+                                        <div class="invalid-feedback">Please select water usage type.</div>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="water_DBC_type" class="form-label">Water DBC Type</label>
-                                        <input type="text" class="form-control" id="water_DBC_type" name="water_DBC_type">
+                                        <input type="text" class="form-control" id="water_DBC_type"
+                                            name="water_DBC_type">
+                                        <div class="invalid-feedback">Please enter DBC type.</div>
                                     </div>
+
                                     <div class="col-md-12">
-                                        <label for="water_slab_description" class="form-label">Water Slab Description</label>
+                                        <label for="water_slab_description" class="form-label">Water Slab
+                                            Description</label>
                                         <textarea class="form-control" id="water_slab_description" name="water_slab_description" rows="2"></textarea>
+                                        <div class="invalid-feedback">Please enter slab description.</div>
                                     </div>
+
                                 </div>
+
                             </div>
 
                             <!-- UGD TAX -->
                             <div class="tab-pane fade" id="ugd-tab">
+
                                 <div class="row g-3">
+
                                     <div class="col-md-4">
-                                        <label for="ugd_no" class="form-label">UGD No <span class="text-danger">*</span></label>
+                                        <label for="ugd_no" class="form-label">UGD No <span
+                                                class="text-danger">*</span></label>
                                         <input class="form-control" id="ugd_no" name="ugd_no" required>
+                                        <div class="invalid-feedback">Please enter UGD number.</div>
                                     </div>
+
                                     <div class="col-md-4">
                                         <label for="old_ugd_no" class="form-label">Old UGD No</label>
                                         <input class="form-control" id="old_ugd_no" name="old_ugd_no">
+                                        <div class="invalid-feedback">Please enter old UGD number.</div>
                                     </div>
+
                                     <div class="col-md-4">
-                                        <label for="ugd_usage" class="form-label">UGD Usage <span class="text-danger">*</span></label>
+                                        <label for="ugd_usage" class="form-label">UGD Usage <span
+                                                class="text-danger">*</span></label>
                                         <input class="form-control" id="ugd_usage" name="ugd_usage" required>
+                                        <div class="invalid-feedback">Please enter UGD usage.</div>
                                     </div>
+
                                     <div class="col-md-4">
                                         <label for="ugd_DBC_type" class="form-label">UGD DBC Type</label>
                                         <input class="form-control" id="ugd_DBC_type" name="ugd_DBC_type">
+                                        <div class="invalid-feedback">Please enter DBC type.</div>
                                     </div>
+
                                     <div class="col-md-8">
-                                        <label for="ugd_slab_description" class="form-label">UGD Slab Description</label>
+                                        <label for="ugd_slab_description" class="form-label">UGD Slab
+                                            Description</label>
                                         <textarea class="form-control" id="ugd_slab_description" name="ugd_slab_description" rows="2"></textarea>
+                                        <div class="invalid-feedback">Please enter slab description.</div>
                                     </div>
+
                                 </div>
+
                             </div>
 
                             <!-- PROFESSIONAL TAX -->
                             <div class="tab-pane fade" id="pt-tab">
+
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="mb-0">Professional Tax</h5>
+
                                     <button type="button" class="btn btn-primary btn-sm" id="addProfessionalBtn">
-                                        <i class="bi bi-plus-circle"></i> Add Professional Tax
+                                        <i class="bi bi-plus-circle"></i>
+                                        Add Professional Tax
                                     </button>
                                 </div>
+
                                 <div id="professionalContainer"></div>
+
                             </div>
+
                         </div>
+
+                        <!-- Hidden fields for form validation tracking -->
+                        <input type="hidden" id="validationTrigger" name="validationTrigger" value="false">
+
                     </form>
                 </div>
                 <div class="modal-footer bld-modal-footer">
                     <button type="button" class="btn bld-btn-save" id="savePointDetails">
-                        <i class="bi bi-save me-1"></i>Save Point Data
+                        <i class="bi bi-save me-1"></i>Update Point Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="lineDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Line/Road Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="lineDetailsForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="line_gisid" class="form-label">GIS ID <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="line_gisid" name="gisid" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="line_road_name" class="form-label">Road Name <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="line_road_name" name="road_name"
+                                    required>
+                            </div>
+                        </div>
+
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveLineDetails">
+                        <i class="fas fa-save"></i> Save Changes
                     </button>
                 </div>
             </div>
@@ -1748,11 +1922,7 @@
             let pointDatas = @json($pointDatas ?? [], JSON_HEX_TAG);
             let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
             let ward = @json($ward ?? [], JSON_HEX_TAG);
-            const misData = @json($misData ?? []);
-
-            // ─── BOUNDARY DATA ───
-            let boundaryData = @json($boundary ?? null);
-
+            const misData = @json($misData);
             // pt Dynamic add
             let ptIndex = 0;
             let searchIndex = [];
@@ -1803,27 +1973,6 @@
                     attributions: 'Tiles &copy; Esri',
                     maxZoom: 19,
                     crossOrigin: 'anonymous'
-                })
-            });
-
-            // ─── BOUNDARY LAYER ───
-            const boundarySource = new ol.source.Vector();
-            const boundaryLayer = new ol.layer.Vector({
-                source: boundarySource,
-                visible: true,
-                title: 'Ward Boundary',
-                zIndex: 50,
-                style: new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: '#FFD93D',
-                        width: 5,
-                        lineDash: [12, 8],
-                        lineCap: 'round',
-                        lineJoin: 'round'
-                    }),
-                    fill: new ol.style.Fill({
-                        color: 'rgba(255, 217, 61, 0.08)'
-                    })
                 })
             });
 
@@ -1906,18 +2055,24 @@
 
             function createPointStyle(feature) {
                 const gisid = feature.get('gisid');
+
+                // Find building data for this GIS ID
                 const buildingData = polygonDatas.find(d => d.gisid == gisid);
+
+                // Count points that have this GIS ID as point_gisid
                 const pointCount = pointDatas.filter(d => d.point_gisid == gisid).length;
-                let color = 'blue';
+
+                let color = 'blue'; // Default color
 
                 if (buildingData) {
                     const expectedBills = parseInt(buildingData.number_bill) || 0;
+
                     if (pointCount === 0) {
-                        color = 'blue';
+                        color = 'blue'; // No points mapped
                     } else if (pointCount >= expectedBills) {
-                        color = 'green';
+                        color = 'green'; // All bills are mapped (or more)
                     } else {
-                        color = 'red';
+                        color = 'red'; // Some bills missing
                     }
                 }
 
@@ -2027,118 +2182,18 @@
                 });
             }
 
-            // ─── LOAD BOUNDARY ───
-            function loadBoundary() {
-                boundarySource.clear();
-
-                if (!boundaryData) {
-                    console.log('No boundary data available');
-                    return;
-                }
-
-                try {
-                    let boundaryCoords = null;
-                    let wardNo = null;
-
-                    if (boundaryData.boundary && boundaryData.boundary.coordinates) {
-                        boundaryCoords = boundaryData.boundary.coordinates;
-                        wardNo = boundaryData.ward_no || 'N/A';
-                    } else if (boundaryData.coordinates) {
-                        boundaryCoords = boundaryData.coordinates;
-                        wardNo = boundaryData.ward_no || 'N/A';
-                    } else if (Array.isArray(boundaryData)) {
-                        boundaryCoords = boundaryData;
-                    } else {
-                        console.log('Unknown boundary structure:', boundaryData);
-                        return;
-                    }
-
-                    if (!boundaryCoords || !Array.isArray(boundaryCoords) || boundaryCoords.length === 0) {
-                        console.error('Invalid boundary coordinates');
-                        return;
-                    }
-
-                    let geometry = null;
-
-                    try {
-                        // Parse different GeoJSON formats
-                        if (Array.isArray(boundaryCoords[0]) &&
-                            Array.isArray(boundaryCoords[0][0]) &&
-                            Array.isArray(boundaryCoords[0][0][0]) &&
-                            typeof boundaryCoords[0][0][0][0] === 'number') {
-                            geometry = new ol.geom.MultiPolygon(boundaryCoords);
-                            console.log('Boundary parsed as MultiPolygon');
-                        } else if (Array.isArray(boundaryCoords[0]) &&
-                                   Array.isArray(boundaryCoords[0][0]) &&
-                                   typeof boundaryCoords[0][0][0] === 'number') {
-                            geometry = new ol.geom.Polygon(boundaryCoords[0]);
-                            console.log('Boundary parsed as Polygon');
-                        } else if (Array.isArray(boundaryCoords[0]) &&
-                                   typeof boundaryCoords[0][0] === 'number') {
-                            geometry = new ol.geom.Polygon([boundaryCoords]);
-                            console.log('Boundary parsed as LinearRing');
-                        } else if (boundaryCoords.type === 'MultiPolygon' || boundaryCoords.type === 'Polygon') {
-                            const format = new ol.format.GeoJSON();
-                            const feature = format.readFeature(boundaryCoords);
-                            geometry = feature.getGeometry();
-                            console.log('Boundary parsed as GeoJSON');
-                        } else {
-                            // Fallback: try to flatten
-                            const flatCoords = boundaryCoords[0][0] || boundaryCoords[0] || boundaryCoords;
-                            if (Array.isArray(flatCoords) && flatCoords.length > 0) {
-                                geometry = new ol.geom.Polygon([flatCoords]);
-                                console.log('Boundary parsed using fallback flattening');
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Error parsing boundary:', e);
-                        return;
-                    }
-
-                    if (!geometry) {
-                        console.error('Failed to create geometry from boundary data');
-                        return;
-                    }
-
-                    const boundaryFeature = new ol.Feature({
-                        geometry: geometry,
-                        type: 'boundary',
-                        ward_no: wardNo,
-                        name: `Ward ${wardNo}`
-                    });
-
-                    boundarySource.addFeature(boundaryFeature);
-                    console.log('✅ Boundary loaded successfully!');
-
-                    // Fit map to boundary extent
-                    const extent = geometry.getExtent();
-                    if (extent && extent[0] !== extent[2]) {
-                        map.getView().fit(extent, {
-                            padding: [50, 50, 50, 50],
-                            duration: 1000,
-                            maxZoom: 20
-                        });
-                    }
-
-                } catch (e) {
-                    console.error('Error loading boundary:', e);
-                }
-            }
-
             function reloadAllSources() {
                 loadPolygonsToSource();
                 loadLinesToSource();
                 loadPointsToSource();
-                loadBoundary();
                 buildSearchIndex();
             }
 
             loadPolygonsToSource();
             loadLinesToSource();
             loadPointsToSource();
-            loadBoundary();
+            
 
-            // ─── LAYER DEFINITIONS ───
             const polygonLayer = new ol.layer.Vector({
                 source: polygonSource,
                 style: createPolygonStyle,
@@ -2335,8 +2390,8 @@
             // ─── MAP ───
             const map = new ol.Map({
                 target: 'map',
-                layers: [osmLayer, satelliteLayer, droneLayer, boundaryLayer, polygonLayer, pointLayer, lineLayer,
-                    liveLocationLayer
+                layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer, pointLayer,
+                    lineLayer, liveLocationLayer
                 ],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
@@ -2437,16 +2492,17 @@
                     case 'Point':
                         pointClick(feature);
                         break;
+
                     case 'Polygon':
                         polygonClick(feature);
                         break;
+
                     case 'LineString':
                         lineClick(feature);
                         break;
                 }
             }
 
-            // ─── Line Click Handler ───
             function lineClick(feature) {
                 console.log('Line clicked:', feature.getProperties());
                 const gisid = feature.get('gisid');
@@ -2457,13 +2513,335 @@
             }
 
             function populateLineForm(gisid, roadName) {
+                // Set basic form fields
                 $('#line_gisid').val(gisid || '');
                 $('#line_road_name').val(roadName || '');
+                // Clear any existing validation errors
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').remove();
             }
 
-            // ─── Polygon Click Handler ───
+            // Save Line Data
+            $('#saveLineDetails').on('click', function() {
+                const formData = new FormData(document.getElementById('lineDetailsForm'));
+
+                // Show saving indicator
+                $(this).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+                $(this).prop('disabled', true);
+                formData.append('_token', $('input[name="_token"]').val());
+
+                // Validate required fields
+                const gisid = $('#line_gisid').val();
+                const roadName = $('#line_road_name').val();
+
+                if (!gisid || !roadName) {
+                    showFlashMessage('GISID and Road Name are required fields', 'error');
+                    $(this).html('<i class="fas fa-save"></i> Save Changes');
+                    $(this).prop('disabled', false);
+                    return;
+                }
+
+                $.ajax({
+                    url: '/line-data',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        showFlashMessage('Line data saved successfully!', 'success');
+                        console.log(response.lines);
+                        lines = response.lines;
+                        $('#lineDetailsModal').modal('hide');
+                        // Refresh map features if needed
+                        reloadAllSources();
+                    },
+                    error: function(xhr) {
+                        console.error('Error saving line data:', xhr);
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            // Display validation errors
+                            const errors = xhr.responseJSON.errors;
+                            Object.keys(errors).forEach(key => {
+                                const field = $(`#line_${key}`);
+                                if (field.length) {
+                                    field.addClass('is-invalid');
+                                    field.after(
+                                        `<div class="invalid-feedback">${errors[key][0]}</div>`
+                                    );
+                                }
+                            });
+                        } else {
+                            showFlashMessage('Failed to save line data. Please try again.',
+                                'error');
+                        }
+                    },
+                    complete: function() {
+                        $('#saveLineDetails').html('<i class="fas fa-save"></i> Save Changes');
+                        $('#saveLineDetails').prop('disabled', false);
+                    }
+                });
+            });
+
+            function pointClick(feature) {
+                console.log('Point clicked:', feature.getProperties());
+
+                const gisid = feature.get('gisid');
+
+                // Find building data by gisid
+                let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
+
+                if (building) {
+                    let buildingBillCount = building['number_bill'] || 0;
+
+                    let point = pointDatas.filter(pointdata => pointdata.point_gisid == gisid);
+
+                    let pointDataCount = point.length;
+
+                    if (buildingBillCount > pointDataCount) {
+                        // Show modal
+                        const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
+                        modal.show();
+                        $('#pointDetailsTabs button:first').tab('show');
+
+                        populatePointForm(gisid);
+
+                    } else {
+                        // Use custom flash message instead of toastr
+                        showFlashMessage('All bills are already mapped for this point (Bills: ' +
+                            buildingBillCount +
+                            ', Mapped: ' + pointDataCount + ')', 'info');
+                        console.log('No new bills to map for gisid:', gisid);
+                    }
+
+                } else {
+                    console.warn('No building found for gisid:', gisid);
+                    // Use custom flash message instead of toastr
+                    showFlashMessage('No building data found for this point', 'error');
+                }
+            }
+
+            function populatePointForm(gisid) {
+                ptIndex = 0
+                console.log(gisid)
+                $('#point_gisid').val(gisid || '');
+                $('#building_data_id').val('');
+                $('#assessment').val('');
+                $('#old_assessment').val('');
+                $('#zone').val('');
+                $('#owner_name').val('');
+                $('#present_owner_name').val('');
+                $('#phone_number').val('');
+                $('#old_door_no').val('');
+                $('#new_door_no').val('');
+                $('#aadhar_no').val('');
+                $('#ration_no').val('');
+                $('#floor').val('');
+                $('#number_persons').val('');
+                $('#bill_usage').val('');
+                $('#eb').val('');
+                $('#worker_name').val('');
+                $('#remarks').val('');
+
+                // Water Tax Tab - Clear all fields
+                $('#watertax_no').val('');
+                $('#old_watertax_no').val('');
+                $('#water_usage').val(''); // For select dropdown, this will select the first empty option
+                $('#water_slab_rate').val('');
+                $('#water_balance').val('');
+                $('#water_slab_description').val('');
+                $('#water_DBC_type').val(''); // For select dropdown, this will select the first empty option
+
+                // UGD Tax Tab - Clear all fields
+                $('#ugd_no').val('');
+                $('#old_ugd_no').val('');
+                $('#ugd_usage').val('');
+                $('#ugd_slab_description').val('');
+                $('#ugd_DBC_type').val('');
+
+                // Professional Tax Tab - Clear all fields
+                $('#pt_number').val('');
+                $('#old_pt_number').val('');
+                $('#establishment_name').val('');
+                $('#profession_type').val('');
+                $('#employee_count').val('');
+                $('#half_year_tax').val('');
+                $('#pt_remarks').val('');
+
+                // Reset to first tab
+                $('#pointDetailsTabs button:first').tab('show');
+                $('#professionalContainer').empty();
+
+            }
+            $('#pointDetailsModal').on('hidden.bs.modal', function() {
+                // Clear edit mode
+                $('#pointDetailsForm').removeAttr('data-edit-id');
+
+                // Reset button text
+                $('#savePointDetails').html('<i class="bi bi-save me-1"></i>Update Point Data');
+
+                // Clear validation states
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+                $('.error-message').html('');
+
+                // Clear professional tax container
+                $('#professionalContainer').empty();
+                ptIndex = 0;
+            });
+            // Save Point Data
+            $('#savePointDetails').on('click', function() {
+                const $form = $('#pointDetailsForm');
+                const editId = $form.attr('data-edit-id');
+                const formData = new FormData(document.getElementById('pointDetailsForm'));
+                formData.append('_token', $('input[name="_token"]').val());
+
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+
+                // ✅ CLEAR PREVIOUS ERRORS BEFORE SUBMITTING
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+                $('.error-message').html('');
+
+                // Disable button and show loading state
+                $btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+
+                // Function to reset button
+                function resetButton() {
+                    $btn.html(originalHtml).prop('disabled', false);
+                }
+
+                // Safety timeout
+                const timeoutId = setTimeout(function() {
+                    resetButton();
+                    showFlashMessage('Request timed out. Please try again.', 'warning');
+                }, 30000);
+
+                if (editId) {
+                    // ─── UPDATE MODE ───
+                    formData.append('_method', 'PUT');
+
+                    $.ajax({
+                        url: `/point-data/${editId}`,
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            clearTimeout(timeoutId);
+                            console.log('Update response:', response);
+
+                            if (response.success) {
+                                showFlashMessage('Point data updated successfully!', 'success');
+                                $('#pointDetailsModal').modal('hide');
+                                $form.removeAttr('data-edit-id');
+                                $('#savePointDetails').html(originalHtml);
+                                reloadAllSources();
+                                resetButton();
+                            } else {
+                                showFlashMessage(response.message || 'Update failed', 'error');
+                                resetButton();
+                            }
+                        },
+                        error: function(xhr) {
+                            clearTimeout(timeoutId);
+                            console.error('Update error:', xhr);
+
+                            let errorMessage = 'Update failed.';
+
+                            if (xhr.status === 422) {
+                                // Validation errors
+                                const errors = xhr.responseJSON?.errors;
+                                if (errors) {
+                                    $.each(errors, function(field, messages) {
+                                        const fieldElement = $(`#${field}`);
+                                        if (fieldElement.length) {
+                                            fieldElement.addClass('is-invalid');
+                                            const errorDiv = $(`#${field}_error`);
+                                            if (errorDiv.length) {
+                                                errorDiv.html(messages[0]);
+                                            } else {
+                                                fieldElement.after(
+                                                    `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
+                                                );
+                                            }
+                                        }
+                                    });
+                                    errorMessage = 'Please fix the validation errors.';
+                                }
+                            } else if (xhr.responseJSON?.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            } else if (xhr.status === 404) {
+                                errorMessage = 'Record not found. It may have been deleted.';
+                            } else if (xhr.status === 0) {
+                                errorMessage = 'Network error. Please check your connection.';
+                            } else if (xhr.status === 500) {
+                                errorMessage = 'Server error. Please try again later.';
+                            }
+
+                            showFlashMessage(errorMessage, 'error');
+                            resetButton();
+                        }
+                    });
+                } else {
+                    // ─── CREATE MODE ───
+                    $.ajax({
+                        url: '/point-data',
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            clearTimeout(timeoutId);
+                            console.log('Create response:', response);
+
+                            if (response.success) {
+                                showFlashMessage('Point data saved successfully!', 'success');
+                                $('#pointDetailsModal').modal('hide');
+                                reloadAllSources();
+                                resetButton();
+                            } else {
+                                showFlashMessage(response.message || 'Save failed', 'error');
+                                resetButton();
+                            }
+                        },
+                        error: function(xhr) {
+                            clearTimeout(timeoutId);
+                            console.error('Create error:', xhr);
+
+                            let errorMessage = 'Failed to save point data.';
+
+                            if (xhr.status === 422) {
+                                const errors = xhr.responseJSON?.errors;
+                                if (errors) {
+                                    $.each(errors, function(field, messages) {
+                                        const fieldElement = $(`#${field}`);
+                                        if (fieldElement.length) {
+                                            fieldElement.addClass('is-invalid');
+                                            const errorDiv = $(`#${field}_error`);
+                                            if (errorDiv.length) {
+                                                errorDiv.html(messages[0]);
+                                            } else {
+                                                fieldElement.after(
+                                                    `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
+                                                );
+                                            }
+                                        }
+                                    });
+                                    errorMessage = 'Please fix the validation errors.';
+                                }
+                            } else if (xhr.responseJSON?.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            }
+
+                            showFlashMessage(errorMessage, 'error');
+                            resetButton();
+                        }
+                    });
+                }
+            });
+
+
+            // ─── Polygon Click ───
             function polygonClick(feature) {
                 const gisid = feature.get('gisid');
                 let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
@@ -2480,6 +2858,7 @@
             }
 
             function populateBuildingForm(item) {
+                // Fix: Use item.gisid instead of gsiid
                 $("#building_gisid").val(item.gisid || "");
                 $("#number_bill").val(item.number_bill || "");
                 $("#number_shop").val(item.number_shop || "");
@@ -2509,6 +2888,7 @@
                 $("#corporationremarks").val(item.corporationremarks || "");
                 $("#qc_remarks").val(item.qc_remarks || "");
 
+                // Image handling
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
 
                 if (item.image && item.image !== "") {
@@ -2531,6 +2911,7 @@
             }
 
             function resetBuildingForm(gisid) {
+                // Clear all fields
                 $("#building_gisid").val(gisid || "");
                 $("#number_bill").val("");
                 $("#number_shop").val("");
@@ -2559,6 +2940,7 @@
                 $("#corporationremarks").val("");
                 $("#qc_remarks").val("");
 
+                // Reset images
                 $("#buildingImagePreview").hide().attr("src", "");
                 $("#buildingImagePreview2").hide().attr("src", "");
                 $("#noImagePlaceholder").show();
@@ -2566,201 +2948,200 @@
                 $("#building_image").val("");
                 $("#building_image2").val("");
 
+                // Clear errors
                 $(".error-message").html("");
                 $(".is-invalid").removeClass("is-invalid");
-                $("#buildingsubmitBtn").prop('disabled', false).html('<i class="fas fa-save me-2"></i>Save Building Data');
-            }
 
-            // ─── Point Click Handler ───
-            function pointClick(feature) {
-                console.log('Point clicked:', feature.getProperties());
-
-                const gisid = feature.get('gisid');
-                let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
-
-                if (building) {
-                    let buildingBillCount = building['number_bill'] || 0;
-                    let point = pointDatas.filter(pointdata => pointdata.point_gisid == gisid);
-                    let pointDataCount = point.length;
-
-                    if (buildingBillCount > pointDataCount) {
-                        const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
-                        modal.show();
-                        $('#pointDetailsTabs button:first').tab('show');
-                        populatePointForm(gisid);
-                    } else {
-                        showFlashMessage('All bills are already mapped for this point (Bills: ' + buildingBillCount +
-                            ', Mapped: ' + pointDataCount + ')', 'info');
-                    }
-                } else {
-                    console.warn('No building found for gisid:', gisid);
-                    showFlashMessage('No building data found for this point', 'error');
-                }
-            }
-
-            function populatePointForm(gisid) {
-                ptIndex = 0;
-                $('#point_gisid').val(gisid || '');
-                $('#assessment').val('');
-                $('#old_assessment').val('');
-                $('#zone').val('');
-                $('#owner_name').val('');
-                $('#present_owner_name').val('');
-                $('#phone_number').val('');
-                $('#old_door_no').val('');
-                $('#new_door_no').val('');
-                $('#aadhar_no').val('');
-                $('#ration_no').val('');
-                $('#floor').val('');
-                $('#number_persons').val('');
-                $('#bill_usage').val('');
-                $('#eb').val('');
-                $('#worker_name').val('');
-                $('#remarks').val('');
-                $('#watertax_no').val('');
-                $('#old_watertax_no').val('');
-                $('#water_usage').val('');
-                $('#water_slab_description').val('');
-                $('#water_DBC_type').val('');
-                $('#ugd_no').val('');
-                $('#old_ugd_no').val('');
-                $('#ugd_usage').val('');
-                $('#ugd_slab_description').val('');
-                $('#ugd_DBC_type').val('');
-                $('#professionalContainer').empty();
+                // Reset submit button
+                $("#buildingsubmitBtn").prop('disabled', false).html(
+                    '<i class="fas fa-save me-2"></i>Save Building Data');
             }
 
             // ─── Image Preview ───
-            $("#building_image").on('change', function(e) {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        $("#buildingImagePreview").attr('src', e.target.result).show();
-                        $("#noImagePlaceholder").hide();
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    $("#buildingImagePreview").hide();
-                    $("#noImagePlaceholder").show();
-                }
+            $(document).ready(function() {
+                // Image 1 preview
+                $("#building_image").on('change', function(e) {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            $("#buildingImagePreview").attr('src', e.target.result).show();
+                            $("#noImagePlaceholder").hide();
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        $("#buildingImagePreview").hide();
+                        $("#noImagePlaceholder").show();
+                    }
+                });
+
+                // Image 2 preview
+                $("#building_image2").on('change', function(e) {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            $("#buildingImagePreview2").attr('src', e.target.result).show();
+                            $("#noImagePlaceholder2").hide();
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        $("#buildingImagePreview2").hide();
+                        $("#noImagePlaceholder2").show();
+                    }
+                });
             });
 
-            $("#building_image2").on('change', function(e) {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        $("#buildingImagePreview2").attr('src', e.target.result).show();
-                        $("#noImagePlaceholder2").hide();
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    $("#buildingImagePreview2").hide();
-                    $("#noImagePlaceholder2").show();
-                }
-            });
+            $(document).ready(function() {
+                let isSubmitting = false; // Prevent double submission
 
-            // ─── Building Form Submit ───
-            let isSubmitting = false;
+                $('#buildingForm').on('submit', function(e) {
+                    e.preventDefault();
 
-            $('#buildingForm').on('submit', function(e) {
-                e.preventDefault();
+                    // Prevent double submission
+                    if (isSubmitting) return;
+                    isSubmitting = true;
 
-                if (isSubmitting) return;
-                isSubmitting = true;
+                    // Clear previous errors
+                    $(".error-message").html("");
+                    $(".is-invalid").removeClass("is-invalid");
+                    $(".invalid-feedback").remove(); // Remove any existing invalid feedback
 
-                $(".error-message").html("");
-                $(".is-invalid").removeClass("is-invalid");
-                $(".invalid-feedback").remove();
+                    // Show loading state
+                    const submitBtn = $("#buildingsubmitBtn");
+                    const originalHtml = submitBtn.html();
+                    submitBtn.prop('disabled', true).html(
+                        '<i class="fas fa-spinner fa-spin me-2"></i>Saving...');
 
-                const submitBtn = $("#buildingsubmitBtn");
-                const originalHtml = submitBtn.html();
-                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Saving...');
+                    // Prepare form data
+                    const formData = new FormData(this);
+                    const gisid = $("#building_gisid").val();
+                    formData.append('action', gisid ? 'update' : 'create');
+                    formData.append('_token', $('input[name="_token"]').val());
 
-                const formData = new FormData(this);
-                const gisid = $("#building_gisid").val();
-                formData.append('action', gisid ? 'update' : 'create');
-                formData.append('_token', $('input[name="_token"]').val());
+                    // Function to reset button
+                    function resetButton() {
+                        submitBtn.prop('disabled', false).html(originalHtml ||
+                            '<i class="fas fa-save me-2"></i>Save Building Data');
+                        isSubmitting = false;
+                    }
 
-                function resetButton() {
-                    submitBtn.prop('disabled', false).html(originalHtml || '<i class="fas fa-save me-2"></i>Save Building Data');
-                    isSubmitting = false;
-                }
+                    // Safety timeout - reset button after 30 seconds
+                    const timeoutId = setTimeout(function() {
+                        resetButton();
+                        showFlashMessage('Request timed out. Please try again.', 'warning');
+                    }, 30000);
 
-                const timeoutId = setTimeout(function() {
-                    resetButton();
-                    showFlashMessage('Request timed out. Please try again.', 'warning');
-                }, 30000);
-
-                $.ajax({
-                    url: '/buildings/save',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        clearTimeout(timeoutId);
-                        if (response.success) {
-                            showFlashMessage('Building data saved successfully!', 'success');
-                            if (response) {
-                                polygonDatas = response.polygonDatas ?? polygonDatas;
-                                reloadAllSources();
-                            }
-                            setTimeout(() => {
-                                const modal = bootstrap.Modal.getInstance(
-                                    document.getElementById('buildingDataModal'));
-                                if (modal) modal.hide();
+                    // Send AJAX request
+                    $.ajax({
+                        url: '/buildings/save',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            clearTimeout(timeoutId);
+                            if (response.success) {
+                                // Show success message
+                                showFlashMessage('Building data saved successfully!',
+                                    'success');
+                                if (response) {
+                                    polygonDatas = response.polygonDatas ??
+                                        polygonDatas;
+                                    reloadAllSources();
+                                }
+                                setTimeout(() => {
+                                    const modal = bootstrap.Modal.getInstance(
+                                        document.getElementById(
+                                            'buildingDataModal'));
+                                    if (modal) modal.hide();
+                                    resetButton();
+                                }, 1500);
+                            } else {
+                                showFlashMessage(response.message ||
+                                    'Error saving data', 'error');
                                 resetButton();
-                            }, 1500);
-                        } else {
-                            showFlashMessage(response.message || 'Error saving data', 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            clearTimeout(timeoutId);
+                            let errorMessage = 'An error occurred while saving.';
+
+                            if (xhr.status === 422) {
+                                // Validation errors
+                                const errors = xhr.responseJSON?.errors;
+                                if (errors) {
+                                    // Display validation errors
+                                    $.each(errors, function(field, messages) {
+                                        // Find the field element
+                                        let fieldElement = $(`#${field}`);
+
+                                        // If field not found, try with different ID patterns
+                                        if (!fieldElement.length) {
+                                            // Try with building_ prefix
+                                            fieldElement = $(
+                                                `#building_${field}`);
+                                        }
+                                        if (!fieldElement.length) {
+                                            // Try with _building suffix
+                                            fieldElement = $(
+                                                `#${field}_building`);
+                                        }
+
+                                        if (fieldElement.length) {
+                                            fieldElement.addClass('is-invalid');
+
+                                            // Add error message
+                                            const errorContainer = $(
+                                                `#${field}_error`);
+                                            if (errorContainer.length) {
+                                                errorContainer.html(messages[
+                                                    0]);
+                                            } else {
+                                                // Create error container if it doesn't exist
+                                                const errorDiv = $(
+                                                    `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
+                                                );
+                                                fieldElement.after(errorDiv);
+                                            }
+                                        } else {
+                                            // If field not found, show in a general error container
+                                            console.warn(
+                                                'Field not found for error:',
+                                                field, messages[0]);
+                                        }
+                                    });
+
+                                    // Show first error at top of form
+                                    const firstError = $('.is-invalid').first();
+                                    if (firstError.length) {
+                                        // Scroll to first error
+                                        $('html, body').animate({
+                                            scrollTop: firstError.offset().top -
+                                                100
+                                        }, 300);
+                                    }
+
+                                    errorMessage = 'Please fix the validation errors.';
+                                }
+                            } else if (xhr.responseJSON?.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            } else if (xhr.status === 0) {
+                                errorMessage =
+                                    'Network error. Please check your connection.';
+                            } else if (xhr.status === 500) {
+                                errorMessage = 'Server error. Please try again later.';
+                            }
+
+                            showFlashMessage(errorMessage, 'error');
+                            resetButton();
+                        },
+                        complete: function() {
+                            // Backup reset - ensures button is always reset
+                            clearTimeout(timeoutId);
                             resetButton();
                         }
-                    },
-                    error: function(xhr) {
-                        clearTimeout(timeoutId);
-                        let errorMessage = 'An error occurred while saving.';
-
-                        if (xhr.status === 422) {
-                            const errors = xhr.responseJSON?.errors;
-                            if (errors) {
-                                $.each(errors, function(field, messages) {
-                                    let fieldElement = $(`#${field}`);
-                                    if (!fieldElement.length) {
-                                        fieldElement = $(`#building_${field}`);
-                                    }
-                                    if (!fieldElement.length) {
-                                        fieldElement = $(`#${field}_building`);
-                                    }
-                                    if (fieldElement.length) {
-                                        fieldElement.addClass('is-invalid');
-                                        const errorContainer = $(`#${field}_error`);
-                                        if (errorContainer.length) {
-                                            errorContainer.html(messages[0]);
-                                        } else {
-                                            const errorDiv = $(`<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`);
-                                            fieldElement.after(errorDiv);
-                                        }
-                                    }
-                                });
-                                errorMessage = 'Please fix the validation errors.';
-                            }
-                        } else if (xhr.responseJSON?.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        } else if (xhr.status === 0) {
-                            errorMessage = 'Network error. Please check your connection.';
-                        } else if (xhr.status === 500) {
-                            errorMessage = 'Server error. Please try again later.';
-                        }
-
-                        showFlashMessage(errorMessage, 'error');
-                        resetButton();
-                    },
-                    complete: function() {
-                        clearTimeout(timeoutId);
-                        resetButton();
-                    }
+                    });
                 });
             });
 
@@ -3440,8 +3821,10 @@
             }
 
             function searchGIS(value) {
+
                 const v = value.toString().toLowerCase().trim();
                 if (!v) return [];
+                console.log(v);
                 return searchIndex.filter(item =>
                     (item.id && item.id.toString().toLowerCase().includes(v)) ||
                     (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
@@ -3464,6 +3847,7 @@
                     const feature = lineSource.getFeatureById(gisid);
                     if (feature) coords = ol.extent.getCenter(feature.getGeometry().getExtent());
                 } else {
+                    // point, pointdata (id here is either a point gisid or a point_gisid)
                     coords = getCoordsByGisId(gisid);
                 }
 
@@ -3485,7 +3869,7 @@
                     const coords = typeof point.coordinates === 'string' ?
                         JSON.parse(point.coordinates) :
                         point.coordinates;
-                    return coords;
+                    return coords; // already in map projection (EPSG:3857)
                 } catch (e) {
                     console.error('Coord parse error for gisid:', gisid, e);
                     return null;
@@ -3614,15 +3998,18 @@
                 });
             }
 
+            // ─── FIX: calculateDirection — always use point coords by gisid ───
             function calculateDirection(loc, feature) {
                 if (!loc) return;
 
+                // Always resolve via matching point in the points array
                 const coords = getCoordsByGisId(feature.id);
                 if (!coords) {
                     Swal.fire('Error', `No point coordinates found for GIS ID: ${feature.id}`, 'error');
                     return;
                 }
 
+                // coords are in EPSG:3857 — convert to WGS84 lon/lat for OSRM
                 const lonLat = ol.proj.toLonLat(coords);
                 const destLon = lonLat[0];
                 const destLat = lonLat[1];
@@ -3658,17 +4045,11 @@
             function updateLayerUI() {
                 const activeTitle = getActiveBaseLayerTitle();
                 const droneVisible = droneLayer.getVisible();
-                const boundaryVisible = boundaryLayer.getVisible();
-                let title = activeTitle;
-                if (droneVisible) title += ' + Drone';
-                if (boundaryVisible) title += ' + Boundary';
-                $activeLayerBadge.text(title);
+                $activeLayerBadge.text(droneVisible ? activeTitle + ' + Drone' : activeTitle);
                 $('.layer-dropdown-item[data-layer-type="base"]').removeClass('active');
                 $(`.layer-dropdown-item[data-layer="${activeTitle}"]`).addClass('active');
                 const droneItem = $('.layer-dropdown-item[data-layer="Drone View"]');
                 droneVisible ? droneItem.addClass('active') : droneItem.removeClass('active');
-                const boundaryItem = $('.layer-dropdown-item[data-layer="Boundary"]');
-                boundaryVisible ? boundaryItem.addClass('active') : boundaryItem.removeClass('active');
             }
 
             function switchBaseLayer(selectedLayer) {
@@ -3685,7 +4066,6 @@
                 const visible = !layer.getVisible();
                 layer.setVisible(visible);
                 $item.toggleClass('active', visible);
-                updateLayerUI();
             }
 
             // ─── UI INJECTION ───
@@ -3724,13 +4104,6 @@
                         <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Points">
                             <div class="layer-icon"><i class="bi bi-geo-alt"></i></div>
                             <div class="layer-name">Points</div>
-                            <div class="layer-check"><i class="bi bi-check-lg"></i></div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <div class="dropdown-header">Boundary</div>
-                        <div class="layer-dropdown-item active" data-layer-type="overlay" data-layer="Boundary">
-                            <div class="layer-icon"><i class="bi bi-border-outer"></i></div>
-                            <div class="layer-name">Ward Boundary</div>
                             <div class="layer-check"><i class="bi bi-check-lg"></i></div>
                         </div>
                     </div>
@@ -3941,8 +4314,6 @@
                     $('.layer-dropdown').removeClass('show');
                 } else if (layerTitle === 'Drone View') {
                     toggleDroneLayer();
-                } else if (layerTitle === 'Boundary') {
-                    toggleOverlayLayer(boundaryLayer, $(this));
                 } else if (layerTitle === 'Polygons') {
                     toggleOverlayLayer(polygonLayer, $(this));
                 } else if (layerTitle === 'Lines') {
@@ -4134,13 +4505,7 @@
                     $('#deleteConfirmBox').hide();
                 }
             });
-            // Add this after line: const misData = @json($misData ?? []);
-            console.log('🔍 MIS Data Check:');
-            console.log('Total records:', misData.length);
-            console.log('First record:', misData[0]);
-            if (misData.length === 0) {
-                console.warn('⚠️ No MIS data found! Check controller.');
-            }
+
             $(document).on('click', '#confirmDeleteBtn', function() {
                 const type = $('#deleteFeatureType').val();
                 const gisid = $('#deleteGisId').val().trim();
@@ -4170,6 +4535,7 @@
                         $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
                             false);
 
+                        // ✅ FIXED: Properly update from response data
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
                         lines = response.data.lines ?? lines;
@@ -4206,8 +4572,525 @@
                 droneLayer.setVisible(false);
             }
 
-            console.log('✅ Map View ready — including Boundary support!');
+            console.log('✅ GIS Dashboard ready — Simplified and fixed!');
 
+            function fillFields(record) {
+                $('#old_assessment').val(record.old_assessment || '');
+                $('#zone').val(record.zone || '');
+                $('#owner_name').val(record.owner_name || '');
+                $('#phone_number').val(record.phone_number || '');
+                $('#old_door_no').val(record.old_door_no || '');
+                $('#new_door_no').val(record.new_door_no || '');
+                $('#half_year_tax').val(record.half_year_tax || '');
+
+                $('#watertax_no').val(record.watertax_no || '');
+                $('#old_watertax_no').val(record.old_watertax_no || '');
+
+                $('#ugd_no').val(record.ugd_no || '');
+                $('#old_ugd_no').val(record.old_ugd_no || '');
+
+                $('#pt_number').val(record.pt_number || '');
+                $('#old_pt_number').val(record.old_pt_number || '');
+            }
+
+            function clearFields() {
+                $('#old_assessment,#zone,#owner_name,#phone_number,#old_door_no,#new_door_no,#half_year_tax,#watertax_no,#old_watertax_no,#ugd_no,#old_ugd_no,#pt_number,#old_pt_number')
+                    .val('');
+            }
+
+            // Assessment Search
+            $('#assessment').on('input', function() {
+                const value = $(this).val().trim();
+
+                if (value.length < 3) {
+                    clearFields();
+                    return;
+                }
+
+                const record = misData.find(item =>
+                    item.assessment?.startsWith(value)
+                );
+
+                if (record) {
+                    fillFields(record);
+                } else {
+                    clearFields();
+                }
+            });
+
+            // Old Assessment Search
+            $('#old_assessment').on('input', function() {
+                const value = $(this).val().trim();
+
+                if (value.length < 3) {
+                    clearFields();
+                    return;
+                }
+
+                const record = misData.find(item =>
+                    item.old_assessment?.startsWith(value)
+                );
+
+                if (record) {
+                    fillFields(record);
+
+                    // Replace assessment with matching assessment number
+                    $('#assessment').val(record.assessment || '');
+                } else {
+                    clearFields();
+                }
+            });
+
+            $('#addProfessionalBtn').click(function() {
+
+                let html = `
+                        <div class="card mb-3 professional-card">
+                            <div class="card-header d-flex justify-content-between">
+
+                                <strong>Professional Tax #${ptIndex + 1}</strong>
+
+                                <button type="button"
+                                    class="btn btn-danger btn-sm removeProfessional">
+                                    Remove
+                                </button>
+
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row g-3">
+
+                                    <div class="col-md-4">
+                                        <label>PT Number</label>
+                                        <input class="form-control"
+                                            name="professional[${ptIndex}][pt_number]">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label>Old PT Number</label>
+                                        <input class="form-control"
+                                            name="professional[${ptIndex}][old_pt_number]">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label>Establishment Name</label>
+                                        <input class="form-control"
+                                            name="professional[${ptIndex}][establishment_name]">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label>Profession Type</label>
+                                        <input class="form-control"
+                                            name="professional[${ptIndex}][profession_type]">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label>Employee Count</label>
+                                        <input type="number"
+                                            class="form-control"
+                                            name="professional[${ptIndex}][employee_count]">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label>Half Year Tax</label>
+                                        <input type="number"
+                                            class="form-control"
+                                            name="professional[${ptIndex}][half_year_tax]">
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label>Remarks</label>
+                                        <textarea class="form-control"
+                                            name="professional[${ptIndex}][pt_remarks]"></textarea>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+                        `;
+
+                $('#professionalContainer').append(html);
+
+                ptIndex++;
+            });
+
+            $(document).on('click', '.removeProfessional', function() {
+                $(this).closest('.professional-card').remove();
+            });
+
+            $(document).on('click', '.edit-btn', function(e) {
+                e.stopPropagation();
+                const id = $(this).data('id');
+                const dataid = $(this).data('dataid');
+                loadPointDataForEdit(id, dataid);
+                $('#searchDropdown').removeClass('show');
+                $('#searchToggleBtn').removeClass('active-search');
+            });
+
+            $('#qrCodeAssessmentBtn').on('click', function(e) {
+                e.preventDefault();
+
+                const pointId = $('#id').val();
+                if (!pointId) {
+                    Swal.fire('Error', 'Point ID not found', 'error');
+                    return;
+                }
+
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+                $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Generating...').prop('disabled',
+                    true);
+
+                fetch("{{ route('qrCodeAssessment') }}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                            'Accept': 'application/json'
+                        },
+                        body: new URLSearchParams({
+                            point_id: pointId
+                        })
+                    })
+                    .then(async (response) => {
+                        if (!response.ok) {
+                            let msg = 'Failed to generate QR code';
+                            try {
+                                const err = await response.json();
+                                if (err.message) msg = err.message;
+                            } catch (_) {}
+                            throw new Error(msg);
+                        }
+
+                        let filename = 'QR_Code.png';
+                        const disposition = response.headers.get('Content-Disposition');
+                        if (disposition) {
+                            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
+                                disposition);
+                            if (matches && matches[1]) filename = matches[1].replace(/['"]/g, '');
+                        }
+
+                        const blob = await response.blob();
+                        return {
+                            blob,
+                            filename
+                        };
+                    })
+                    .then(({
+                        blob,
+                        filename
+                    }) => {
+                        if (!blob || blob.size === 0) throw new Error('Received an empty QR code file');
+
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'QR Code downloaded successfully',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    })
+                    .catch((err) => {
+                        Swal.fire('Error', err.message || 'Failed to generate QR code', 'error');
+                    })
+                    .finally(() => {
+                        $btn.html(originalHtml).prop('disabled', false);
+                    });
+            });
+            // ✅ FIX: Add 'function' keyword
+            function loadPointDataForEdit(id, dataid) {
+                // Show loading indicator
+                showFlashMessage('Loading data...', 'info');
+
+                console.log('Loading point data for edit, ID:', id);
+
+                $.ajax({
+                    url: `/point-data/${dataid}`,
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        console.log('Edit response:', res);
+
+                        if (!res.success) {
+                            showFlashMessage(res.message || 'Failed to load data', 'error');
+                            return;
+                        }
+
+                        const pd = res.point_data;
+                        const wt = res.water_tax;
+                        const ugd = res.ugd_tax;
+                        const pts = res.professional || [];
+
+                        // Check if we have the data
+                        if (!pd) {
+                            showFlashMessage('No data found for this record', 'error');
+                            return;
+                        }
+
+                        const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
+                        modal.show();
+                        $('#pointDetailsTabs button:first').tab('show');
+
+                        // ✅ MARK EDIT MODE - Store the ID
+                        $('#pointDetailsForm').attr('data-edit-id', pd.id);
+
+                        // ✅ Change button text for edit mode
+                        $('#savePointDetails').html(
+                            '<i class="bi bi-pencil-square me-1"></i>Update Point Data');
+
+                        // ─── BASIC INFO ───
+                        $('#point_gisid').val(pd.point_gisid || '');
+                         $('#id').val(pd.id || '');
+                        $('#assessment_type').val(pd.assessment_type || '');
+                        $('#assessment').val(pd.assessment || '');
+                        $('#old_assessment').val(pd.old_assessment || '');
+                        $('#zone').val(pd.zone || '');
+                        $('#owner_name').val(pd.owner_name || '');
+                        $('#present_owner_name').val(pd.present_owner_name || '');
+                        $('#phone_number').val(pd.phone_number || '');
+                        $('#old_door_no').val(pd.old_door_no || '');
+                        $('#new_door_no').val(pd.new_door_no || '');
+                        $('#aadhar_no').val(pd.aadhar_no || '');
+                        $('#ration_no').val(pd.ration_no || '');
+                        $('#floor').val(pd.floor || '');
+                        $('#number_persons').val(pd.no_of_persons || '');
+                        $('#bill_usage').val(pd.bill_usage || '');
+                        $('#eb').val(pd.eb || '');
+                        $('#worker_name').val(pd.worker_name || '');
+                        $('#remarks').val(pd.remarks || '');
+                        $('#qrCodeAssessmentBtn').data('point-id', pd.id);
+                        // ─── WATER TAX ───
+                        if (wt) {
+                            $('#watertax_no').val(wt.watertax_no || '');
+                            $('#old_watertax_no').val(wt.old_watertax_no || '');
+                            $('#water_usage').val(wt.usage || '');
+                            $('#water_DBC_type').val(wt.DBC_type || '');
+                            $('#water_slab_description').val(wt.slab_description || '');
+                        } else {
+                            $('#watertax_no').val('');
+                            $('#old_watertax_no').val('');
+                            $('#water_usage').val('');
+                            $('#water_DBC_type').val('');
+                            $('#water_slab_description').val('');
+                        }
+
+                        // ─── UGD TAX ───
+                        if (ugd) {
+                            $('#ugd_no').val(ugd.ugd_no || '');
+                            $('#old_ugd_no').val(ugd.old_ugd_no || '');
+                            $('#ugd_usage').val(ugd.usage || '');
+                            $('#ugd_DBC_type').val(ugd.DBC_type || '');
+                            $('#ugd_slab_description').val(ugd.slab_description || '');
+                        } else {
+                            $('#ugd_no').val('');
+                            $('#old_ugd_no').val('');
+                            $('#ugd_usage').val('');
+                            $('#ugd_DBC_type').val('');
+                            $('#ugd_slab_description').val('');
+                        }
+
+                        // ─── PROFESSIONAL TAX ───
+                        $('#professionalContainer').empty();
+                        ptIndex = 0;
+
+                        if (pts && pts.length > 0) {
+                            pts.forEach(function(pt) {
+                                addProfessionalCard(pt);
+                            });
+                        }
+
+                        // Clear any previous validation errors
+                        $('.is-invalid').removeClass('is-invalid');
+                        $('.invalid-feedback').remove();
+                        $('.error-message').html('');
+
+                        showFlashMessage('Data loaded for editing', 'success');
+                    },
+                    error: function(xhr) {
+                        console.error('Edit load error:', xhr);
+
+                        let errorMsg = 'Failed to load record for editing.';
+
+                        if (xhr.status === 404) {
+                            errorMsg = 'Record not found. It may have been deleted.';
+                        } else if (xhr.status === 500) {
+                            errorMsg = 'Server error. Please try again.';
+                        } else if (xhr.responseJSON?.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+
+                        showFlashMessage(errorMsg, 'error');
+                    }
+                });
+            }
+
+
+
+            function addProfessionalCard(data = {}) {
+                const idx = ptIndex;
+                const html = `
+                    <div class="card mb-3 professional-card" data-index="${idx}">
+                        <div class="card-header d-flex justify-content-between">
+                            <strong>Professional Tax #${idx + 1}</strong>
+                            <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
+                        </div>
+                        <div class="card-body">
+                            <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
+                            <div class="row g-3">
+                                <div class="col-md-4"><label>PT Number</label>
+                                    <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}"></div>
+                                <div class="col-md-4"><label>Old PT Number</label>
+                                    <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}"></div>
+                                <div class="col-md-4"><label>Establishment Name</label>
+                                    <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}"></div>
+                                <div class="col-md-4"><label>Profession Type</label>
+                                    <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}"></div>
+                                <div class="col-md-4"><label>Employee Count</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}"></div>
+                                <div class="col-md-4"><label>Half Year Tax</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}"></div>
+                                <div class="col-md-12"><label>Remarks</label>
+                                    <textarea class="form-control" name="professional[${idx}][pt_remarks]">${data.remarks || ''}</textarea></div>
+                            </div>
+                        </div>
+                    </div>`;
+                $('#professionalContainer').append(html);
+                ptIndex++;
+            }
+
+            $('#addProfessionalBtn').off('click').on('click', function() {
+                addProfessionalCard();
+            });
+
+            $(document).on('click', '.removeProfessional', function() {
+                const $card = $(this).closest('.professional-card');
+                const existingId = $card.find('input[name$="[id]"]').val();
+                if (existingId) {
+                    if (!$('#removedProfessionalWrap').length) {
+                        $('#pointDetailsForm').append('<div id="removedProfessionalWrap"></div>');
+                    }
+                    $('#removedProfessionalWrap').append(
+                        `<input type="hidden" name="removed_professional_ids[]" value="${existingId}">`
+                    );
+                }
+                $card.remove();
+            });
+
+            $('#applyFilterBtn').on('click', function() {
+                $.get('/point-data/filter', {
+                    assessment: $('#filterAssessment').val(),
+                    old_assessment: $('#filterOldAssessment').val(),
+                    owner_name: $('#filterOwnerName').val()
+                }, function(res) {
+                    let html = '';
+                    (res.data || []).forEach(pd => {
+                        html += `
+                <div class="search-result-item">
+                    <div class="search-result-title">${pd.owner_name} — ${pd.assessment}</div>
+                    <div class="search-result-subtitle">GIS ID: ${pd.point_gisid}${pd.old_assessment ? ' | Old Assessment: ' + pd.old_assessment : ''}</div>
+                    <div class="mt-2 d-flex gap-2">
+                        <button class="btn btn-sm btn-success zoom-btn" data-id="${pd.point_gisid}" data-type="pointdata">Zoom</button>
+                        <button class="btn btn-sm btn-warning edit-btn" data-id="${pd.id}">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                    </div>
+                </div>`;
+                    });
+                    $('#filterResults').html(html ||
+                        '<div class="p-2 text-muted">No matches</div>');
+                });
+            });
+
+            $(document).on('click', '.search-tab-btn', function() {
+                $('.search-tab-btn').removeClass('active');
+                $(this).addClass('active');
+                const tab = $(this).data('tab');
+                $('#quickSearchTab').toggle(tab === 'quick');
+                $('#filterTab').toggle(tab === 'filter');
+            });
+// ─── GOOGLE MAPS FROM BUILDING MODAL ───
+$(document).on('click', '#openGmapBtn', function() {
+    const gisid = $('#building_gisid').val();
+
+    if (!gisid) {
+        showFlashMessage('GIS ID not found', 'error');
+        return;
+    }
+
+    openGoogleMapsByGisId(gisid);
+});
+
+// ─── GOOGLE MAPS FROM POINT DETAILS MODAL ───
+$(document).on('click', '#pointGmapBtn', function() {
+    const gisid = $('#point_gisid').val();
+
+    if (!gisid) {
+        showFlashMessage('GIS ID not found', 'error');
+        return;
+    }
+
+    openGoogleMapsByGisId(gisid);
+});
+
+// ─── GOOGLE MAPS FROM SEARCH RESULTS ───
+$(document).on('click', '.gmap-btn', function(e) {
+    e.stopPropagation();
+    const gisid = $(this).data('gisid');
+    openGoogleMapsByGisId(gisid);
+});
+
+// ─── HELPER: Open Google Maps by GIS ID ───
+function openGoogleMapsByGisId(gisid) {
+    if (!gisid) {
+        showFlashMessage('GIS ID not found', 'error');
+        return false;
+    }
+
+    // Find the point with matching GIS ID
+    const point = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
+
+    if (!point) {
+        showFlashMessage('No point coordinates found for GIS ID: ' + gisid, 'error');
+        return false;
+    }
+
+    try {
+        // Parse coordinates (they should be in EPSG:3857)
+        let coords = typeof point.coordinates === 'string'
+            ? JSON.parse(point.coordinates)
+            : point.coordinates;
+
+        // Convert from EPSG:3857 to WGS84 (latitude/longitude)
+        const lonLat = ol.proj.toLonLat(coords);
+        const lat = lonLat[1];
+        const lng = lonLat[0];
+
+        // Build Google Maps URL
+        const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+        // Open in new tab
+        window.open(googleMapsUrl, '_blank');
+
+        showFlashMessage('Opening Google Maps for GIS ID: ' + gisid, 'success');
+        return true;
+
+    } catch (e) {
+        console.error('Error opening Google Maps:', e);
+        showFlashMessage('Error opening Google Maps: ' + e.message, 'error');
+        return false;
+    }
+}
         });
     </script>
 @endpush
