@@ -19,12 +19,11 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+
 class CommissionerController extends Controller
 {
     /**
      * Central config for the 4 tax-type tables.
-     * Every tax-type-specific method that used to be duplicated 4x
-     * (water_tax / ugd / professional_tax / mis) now reads from here.
      */
     private array $taxTypes = [
         'mis' => [
@@ -70,14 +69,9 @@ class CommissionerController extends Controller
     ];
 
     // ════════════════════════════════════════════════════════════════
-    // ACCESS CONTROL (was: getAccessibleWardIds + getAccessibleWardNos,
-    // near-duplicate role-branching logic)
+    // ACCESS CONTROL
     // ════════════════════════════════════════════════════════════════
 
-    /**
-     * Single source of truth for "which wards can this user see".
-     * Returns Ward models (id + ward_no) so callers can pluck whichever they need.
-     */
     private function getAccessibleWardsQuery($corporationId = null)
     {
         $user = Auth::user();
@@ -115,12 +109,6 @@ class CommissionerController extends Controller
         return $this->getAccessibleWardsQuery($corporationId)->pluck('ward_no')->toArray();
     }
 
-    /**
-     * Was copy-pasted in ~8 API methods as:
-     *   $accessibleWardIds = $this->getAccessibleWardIds();
-     *   if (!in_array($wardId, $accessibleWardIds)) return response()->json(['error'=>'Unauthorized'],403);
-     * Now: if ($resp = $this->denyIfNoWardAccess($wardId)) return $resp;
-     */
     private function denyIfNoWardAccess($wardId): ?JsonResponse
     {
         if ($wardId === null) {
@@ -134,7 +122,6 @@ class CommissionerController extends Controller
 
     // ════════════════════════════════════════════════════════════════
     // GENERIC SCHEMA-SAFE DB HELPERS
-    // (replace get{Mis,WaterTax,Ugd,ProfessionalTax}{Count,Balance,HalfYearTax,ByWards})
     // ════════════════════════════════════════════════════════════════
 
     private function taxTable(string $type, $corporationId): string
@@ -157,6 +144,9 @@ class CommissionerController extends Controller
     private function countByWardNos(string $table, array $wardNos): int
     {
         if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no')) {
+            return 0;
+        }
+        if (empty($wardNos)) {
             return 0;
         }
         try {
@@ -183,6 +173,9 @@ class CommissionerController extends Controller
         if (!$column || !Schema::hasTable($table) || !Schema::hasColumn($table, 'ward_no') || !Schema::hasColumn($table, $column)) {
             return 0;
         }
+        if (empty($wardNos)) {
+            return 0;
+        }
         try {
             return DB::table($table)->whereIn('ward_no', $wardNos)->sum($column);
         } catch (\Exception $e) {
@@ -190,9 +183,11 @@ class CommissionerController extends Controller
         }
     }
 
-    /** Building count for a set of ward ids (was getTotalBuildings + getBuildingsByWards). */
     private function getBuildingsByWards(array $wardIds): int
     {
+        if (empty($wardIds)) {
+            return 0;
+        }
         $total = 0;
         foreach ($wardIds as $wardId) {
             $total += $this->countTable("polygons_{$wardId}");
@@ -200,9 +195,11 @@ class CommissionerController extends Controller
         return $total;
     }
 
-    /** Surveyed points for a set of ward ids (was getSurveyedAssessments + getSurveyedByWards). */
     private function getSurveyedByWards(array $wardIds): int
     {
+        if (empty($wardIds)) {
+            return 0;
+        }
         $total = 0;
         foreach ($wardIds as $wardId) {
             $total += $this->countTable("point_data_{$wardId}");
@@ -210,10 +207,11 @@ class CommissionerController extends Controller
         return $total;
     }
 
-    /** Connected (points whose gisid appears in mis) for a set of wards
-     *  (was getConnectedAssessments + getConnectedByWards). */
     private function getConnectedByWards($corporationId, array $wardIds): int
     {
+        if (empty($wardIds)) {
+            return 0;
+        }
         $misTable = $this->taxTable('mis', $corporationId);
         if (!Schema::hasTable($misTable) || !Schema::hasColumn($misTable, 'gisid')) {
             return 0;
@@ -243,8 +241,6 @@ class CommissionerController extends Controller
         return $total;
     }
 
-    // ── Tax-type generic accessors (replace 4x duplicated methods each) ──
-
     private function getTaxCount(string $type, $corporationId): int
     {
         return $this->countTable($this->taxTable($type, $corporationId));
@@ -252,6 +248,9 @@ class CommissionerController extends Controller
 
     private function getTaxCountByWards(string $type, $corporationId, array $wardNos): int
     {
+        if (empty($wardNos)) {
+            return 0;
+        }
         return $this->countByWardNos($this->taxTable($type, $corporationId), $wardNos);
     }
 
@@ -263,6 +262,9 @@ class CommissionerController extends Controller
 
     private function getTaxHalfYearTotalByWards(string $type, $corporationId, array $wardNos)
     {
+        if (empty($wardNos)) {
+            return 0;
+        }
         $cfg = $this->taxTypes[$type];
         return $this->sumColumnByWardNos($this->taxTable($type, $corporationId), $wardNos, $cfg['tax_column']);
     }
@@ -275,11 +277,13 @@ class CommissionerController extends Controller
 
     private function getTaxBalanceByWards(string $type, $corporationId, array $wardNos)
     {
+        if (empty($wardNos)) {
+            return 0;
+        }
         $cfg = $this->taxTypes[$type];
         return $this->sumColumnByWardNos($this->taxTable($type, $corporationId), $wardNos, $cfg['balance_column']);
     }
 
-    /** Sum of half-year-tax across all 4 tax tables (was getHalfYearTaxTotal). */
     private function getAllTaxHalfYearTotal($corporationId)
     {
         $total = 0;
@@ -289,7 +293,6 @@ class CommissionerController extends Controller
         return $total;
     }
 
-    /** Recent rows for a tax table, generic (was get{WaterTax,Ugd,ProfessionalTax}Data). */
     private function getTaxData(string $type, $corporationId, int $limit = 5): array
     {
         $cfg = $this->taxTypes[$type];
@@ -323,13 +326,15 @@ class CommissionerController extends Controller
     }
 
     // ════════════════════════════════════════════════════════════════
-    // DASHBOARD
+    // DASHBOARD - FIXED
     // ════════════════════════════════════════════════════════════════
 
     public function dashboard()
     {
         $user = auth()->user();
         $accessibleWardIds = $this->getAccessibleWardIds();
+        
+        // Get corporation - with null check
         $corporation = Corporation::with(['zones.wards'])->find($user->corporation_id);
 
         if (!$corporation || empty($accessibleWardIds)) {
@@ -380,6 +385,29 @@ class CommissionerController extends Controller
         }
 
         $allWardIds = $zones->flatMap(fn($zone) => $zone->wards->pluck('id'))->toArray();
+        
+        // If no wards accessible, return error
+        if (empty($allWardIds)) {
+            return view('main.Commissioner.dashboard', [
+                'error' => 'No wards found for your assigned zones.',
+                'stats' => $this->getEmptyStats(),
+                'zoneData' => collect(),
+                'wardData' => collect(),
+                'buildingData' => collect(),
+                'assessmentData' => collect(),
+                'performanceZones' => collect(),
+                'activities' => collect(),
+                'hierarchyStats' => $this->getEmptyHierarchyStats(),
+                'corporation' => $corporation,
+                'user' => $user,
+                'taxBreakdown' => $this->getEmptyTaxBreakdown(),
+                'getAllwardBoundary' => [],
+                'waterTaxData' => [],
+                'ugdData' => [],
+                'professionalTaxData' => [],
+                'wardVariationStats' => collect(),
+            ]);
+        }
 
         // ─── Hierarchy Statistics ───
         $totalZones = $zones->count();
@@ -498,7 +526,7 @@ class CommissionerController extends Controller
 
             return [
                 'id' => $zone->id,
-                'name' => $zone->zone_name,
+                'name' => $zone->zone_name ?? 'Zone ' . $zone->id,
                 'wards' => $wards->count(),
                 'buildings' => $buildingsCount,
                 'assessments' => $assessmentsCount,
@@ -518,10 +546,10 @@ class CommissionerController extends Controller
 
             $totalHalfYearTax = $this->getTaxHalfYearTotalByWards('mis', $corporation->id, $wardNos);
             $balance = $this->getTaxBalanceByWards('mis', $corporation->id, $wardNos);
-            $paid = $totalHalfYearTax - $balance;
+            $paid = max(0, $totalHalfYearTax - $balance);
 
             return [
-                'name' => $zone->zone_name,
+                'name' => $zone->zone_name ?? 'Zone ' . $zone->id,
                 'total_tax' => $this->formatCurrency($totalHalfYearTax),
                 'balance' => $this->formatCurrency($balance),
                 'paid' => $this->formatCurrency($paid),
@@ -600,78 +628,8 @@ class CommissionerController extends Controller
         ));
     }
 
-    /**
-     * Get all ward boundaries with role-based access
-     */
-    private function getAllwardBoundary($corporationId, $accessibleWardIds = null)
-    {
-        $boundaries = [];
-        try {
-            $wardQuery = Ward::where('zone_id', '!=', null);
-
-            if ($accessibleWardIds !== null) {
-                $wardQuery->whereIn('id', $accessibleWardIds);
-            } else {
-                $zoneIds = Zone::where('corp_id', $corporationId)->pluck('id')->toArray();
-                $wardQuery->whereIn('zone_id', $zoneIds);
-            }
-
-            $wards = $wardQuery->get();
-
-            foreach ($wards as $ward) {
-                if (empty($ward->boundary)) {
-                    continue;
-                }
-                if (is_array($ward->boundary)) {
-                    $boundary = $ward->boundary;
-                } elseif (is_string($ward->boundary)) {
-                    $boundary = json_decode($ward->boundary, true);
-                } else {
-                    $boundary = [];
-                }
-                $boundaries[] = [
-                    'ward_id'  => $ward->id,
-                    'ward_no'  => $ward->ward_no,
-                    'boundary' => $boundary,
-                ];
-            }
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return [];
-        }
-        return $boundaries;
-    }
-    private function getWardBoundary($corporationId, $wardId)
-    {
-        try {
-            $zoneIds = Zone::where('corp_id', $corporationId)
-                ->pluck('id')
-                ->toArray();
-
-            $ward = Ward::where('id', $wardId)
-                ->whereIn('zone_id', $zoneIds)
-                ->first();
-
-            if (!$ward || empty($ward->boundary)) {
-                return null;
-            }
-
-            $boundary = is_array($ward->boundary)
-                ? $ward->boundary
-                : json_decode($ward->boundary, true);
-
-            return [
-                'ward_id'  => $ward->id,
-                'ward_no'  => $ward->ward_no,
-                'boundary' => $boundary,
-            ];
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return null;
-        }
-    }
     // ════════════════════════════════════════════════════════════════
-    // MAP VIEW METHODS
+    // MAP VIEW METHODS - FIXED
     // ════════════════════════════════════════════════════════════════
 
     public function map()
@@ -709,44 +667,59 @@ class CommissionerController extends Controller
         $ugdtable = $this->taxTable('ugd', $corp);
         $prefessionaltax = $this->taxTable('professional_tax', $corp);
 
-        $polygons = DB::table($polygonsTableName)->get();
-        $lines = DB::table($linesTableName)->get();
-        $points = DB::table($pointsTableName)->get();
-        $polygonDatas = DB::table($polygonDataTableName)->get();
-        $pointDatas = DB::table($pointDataTableName)->get();
+        // Get data with null checks
+        $polygons = Schema::hasTable($polygonsTableName) ? DB::table($polygonsTableName)->get() : collect();
+        $lines = Schema::hasTable($linesTableName) ? DB::table($linesTableName)->get() : collect();
+        $points = Schema::hasTable($pointsTableName) ? DB::table($pointsTableName)->get() : collect();
+        $polygonDatas = Schema::hasTable($polygonDataTableName) ? DB::table($polygonDataTableName)->get() : collect();
+        $pointDatas = Schema::hasTable($pointDataTableName) ? DB::table($pointDataTableName)->get() : collect();
 
-        $misData = DB::table($misTableName . ' as mis')
-            ->leftJoin($waterTaxTableName . ' as wt', 'mis.assessment', '=', 'wt.assessment')
-            ->leftJoin($ugdtable . ' as ugd', 'mis.assessment', '=', 'ugd.assessment')
-            ->leftJoin($prefessionaltax . ' as pt', 'mis.assessment', '=', 'pt.assessment')
-            ->where('mis.ward_no', $wardNo)
-            ->select(
-                'mis.*',
-                'wt.watertax_no',
-                'wt.old_watertax_no',
-                'ugd.ugd_no',
-                'ugd.old_ugd_no',
-                'pt.pt_number',
-                'pt.old_pt_number'
-            )
-            ->get();
+        $misData = collect();
+        if (Schema::hasTable($misTableName)) {
+            try {
+                $misData = DB::table($misTableName . ' as mis')
+                    ->leftJoin($waterTaxTableName . ' as wt', 'mis.assessment', '=', 'wt.assessment')
+                    ->leftJoin($ugdtable . ' as ugd', 'mis.assessment', '=', 'ugd.assessment')
+                    ->leftJoin($prefessionaltax . ' as pt', 'mis.assessment', '=', 'pt.assessment')
+                    ->where('mis.ward_no', $wardNo)
+                    ->select(
+                        'mis.*',
+                        'wt.watertax_no',
+                        'wt.old_watertax_no',
+                        'ugd.ugd_no',
+                        'ugd.old_ugd_no',
+                        'pt.pt_number',
+                        'pt.old_pt_number'
+                    )
+                    ->get();
+            } catch (\Exception $e) {
+                $misData = collect();
+            }
+        }
 
-        $uniqueRoadNames = DB::table($misTableName)
-            ->select('road_name')
-            ->whereNotNull('road_name')
-            ->where('road_name', '!=', '')
-            ->distinct()
-            ->orderBy('road_name')
-            ->pluck('road_name');
+        $uniqueRoadNames = collect();
+        if (Schema::hasTable($misTableName) && Schema::hasColumn($misTableName, 'road_name')) {
+            try {
+                $uniqueRoadNames = DB::table($misTableName)
+                    ->select('road_name')
+                    ->whereNotNull('road_name')
+                    ->where('road_name', '!=', '')
+                    ->distinct()
+                    ->orderBy('road_name')
+                    ->pluck('road_name');
+            } catch (\Exception $e) {
+                $uniqueRoadNames = collect();
+            }
+        }
 
         // ─── Analytics ───
-        $boundary = $this->getwardBoundary($corp, $wardId);
+        $boundary = $this->getWardBoundary($corp, $wardId);
         $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
         $buildingVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData);
         $buildingData = $this->getBuildingsWithUsageColors($wardId);
-        $availableUsages = array_keys($buildingData['usage_counts']);
+        $availableUsages = array_keys($buildingData['usage_counts'] ?? []);
         sort($availableUsages);
-        $areaStats = $this->getAreaVariationStats($wardId, $buildingData['buildings']);
+        $areaStats = $this->getAreaVariationStats($wardId, $buildingData['buildings'] ?? []);
 
         // Navigation among accessible wards
         $accessibleWardIds = $this->getAccessibleWardIds();
@@ -756,6 +729,7 @@ class CommissionerController extends Controller
             ? $accessibleWardIds[$currentIndex + 1]
             : null;
 
+        // Calculate total sqfeet for polygons
         foreach ($polygons as $polygon) {
             $groundSqfeet = (float) ($polygon->sqfeet ?? 0);
             $polyData = $polygonDatas->firstWhere('gisid', $polygon->gisid);
@@ -769,6 +743,7 @@ class CommissionerController extends Controller
                 $polygon->sqfeet = $totalSqfeet;
             }
         }
+
         return view('excecutive.mapview', compact(
             'ward',
             'polygons',
@@ -790,7 +765,9 @@ class CommissionerController extends Controller
         ));
     }
 
-    // ─── API METHODS ───
+    // ════════════════════════════════════════════════════════════════
+    // API METHODS - FIXED
+    // ════════════════════════════════════════════════════════════════
 
     public function getWardData($wardId)
     {
@@ -802,11 +779,11 @@ class CommissionerController extends Controller
 
         return response()->json([
             'ward' => $ward,
-            'polygons' => DB::table("polygons_{$wardId}")->get(),
-            'lines' => DB::table("lines_{$wardId}")->get(),
-            'points' => DB::table("points_{$wardId}")->get(),
-            'polygonDatas' => DB::table("polygon_data_{$wardId}")->get(),
-            'pointDatas' => DB::table("point_data_{$wardId}")->get(),
+            'polygons' => Schema::hasTable("polygons_{$wardId}") ? DB::table("polygons_{$wardId}")->get() : [],
+            'lines' => Schema::hasTable("lines_{$wardId}") ? DB::table("lines_{$wardId}")->get() : [],
+            'points' => Schema::hasTable("points_{$wardId}") ? DB::table("points_{$wardId}")->get() : [],
+            'polygonDatas' => Schema::hasTable("polygon_data_{$wardId}") ? DB::table("polygon_data_{$wardId}")->get() : [],
+            'pointDatas' => Schema::hasTable("point_data_{$wardId}") ? DB::table("point_data_{$wardId}")->get() : [],
         ]);
     }
 
@@ -816,7 +793,6 @@ class CommissionerController extends Controller
             return $resp;
         }
 
-        // Return infrastructure data - you'll need to implement this based on your data source
         return response()->json([
             'success' => true,
             'data' => [
@@ -845,7 +821,6 @@ class CommissionerController extends Controller
             $wardId = $request->ward_id;
 
             if (!$wardId) {
-                // Find the ward by searching through polygon tables
                 foreach ($this->getAccessibleWardIds() as $wid) {
                     $table = "polygons_{$wid}";
                     if (Schema::hasTable($table) && DB::table($table)->where('gisid', $gisid)->exists()) {
@@ -860,6 +835,10 @@ class CommissionerController extends Controller
             }
 
             $table = "polygons_{$wardId}";
+            if (!Schema::hasTable($table)) {
+                return response()->json(['error' => 'Table not found'], 404);
+            }
+
             DB::table($table)
                 ->where('gisid', $gisid)
                 ->update([
@@ -886,7 +865,6 @@ class CommissionerController extends Controller
             return $resp;
         }
 
-        // This is a placeholder - implement polygon splitting logic
         return response()->json([
             'success' => true,
             'message' => 'Polygon split functionality - implement your logic here'
@@ -899,7 +877,6 @@ class CommissionerController extends Controller
             return $resp;
         }
 
-        // This is a placeholder - implement feature saving logic
         return response()->json([
             'success' => true,
             'message' => 'Feature saved - implement your logic here'
@@ -912,7 +889,6 @@ class CommissionerController extends Controller
             return $resp;
         }
 
-        // This is a placeholder - implement feature deletion logic
         return response()->json([
             'success' => true,
             'message' => 'Feature deleted - implement your logic here'
@@ -964,25 +940,41 @@ class CommissionerController extends Controller
         foreach ($points as $point) {
             $mis = null;
             if (Schema::hasTable($misTable) && !empty($point->assessment)) {
-                $mis = DB::table($misTable)->where('assessment', $point->assessment)->first();
+                try {
+                    $mis = DB::table($misTable)->where('assessment', $point->assessment)->first();
+                } catch (\Exception $e) {
+                    $mis = null;
+                }
             }
 
             $waterTax = null;
             if (Schema::hasTable($waterTaxTable) && !empty($point->assessment)) {
-                $waterTax = DB::table($waterTaxTable)->where('assessment', $point->assessment)->first();
+                try {
+                    $waterTax = DB::table($waterTaxTable)->where('assessment', $point->assessment)->first();
+                } catch (\Exception $e) {
+                    $waterTax = null;
+                }
             }
 
             $ugdTax = null;
             if (Schema::hasTable($ugdTaxTable)) {
-                $ugdTax = DB::table($ugdTaxTable)->where('gisid', $point->point_gisid)->first();
+                try {
+                    $ugdTax = DB::table($ugdTaxTable)->where('gisid', $point->point_gisid)->first();
+                } catch (\Exception $e) {
+                    $ugdTax = null;
+                }
             }
 
             $professionalTax = collect();
             if (Schema::hasTable($professionalTaxTable) && !empty($point->assessment)) {
-                $professionalTax = DB::table($professionalTaxTable)
-                    ->where('gisid', $point->point_gisid)
-                    ->where('assessment', $point->assessment)
-                    ->get();
+                try {
+                    $professionalTax = DB::table($professionalTaxTable)
+                        ->where('gisid', $point->point_gisid)
+                        ->where('assessment', $point->assessment)
+                        ->get();
+                } catch (\Exception $e) {
+                    $professionalTax = collect();
+                }
             }
 
             $results[] = [
@@ -1019,6 +1011,10 @@ class CommissionerController extends Controller
         }
 
         $pointTable = "point_data_{$wardId}";
+        if (!Schema::hasTable($pointTable)) {
+            return response()->json(['message' => 'Point data table not found.'], 404);
+        }
+
         $point = DB::table($pointTable)->where('id', $id)->first();
 
         if (!$point) {
@@ -1046,7 +1042,9 @@ class CommissionerController extends Controller
         ]);
     }
 
-    // ─── WARD ANALYTICS HELPERS ───
+    // ════════════════════════════════════════════════════════════════
+    // WARD ANALYTICS HELPERS - FIXED
+    // ════════════════════════════════════════════════════════════════
 
     private function getWardVariationStats($corporationId, $zones)
     {
@@ -1075,7 +1073,11 @@ class CommissionerController extends Controller
 
                     $misData = collect();
                     if (Schema::hasTable($misTable)) {
-                        $misData = DB::table($misTable)->where('ward_no', $wardNo)->get();
+                        try {
+                            $misData = DB::table($misTable)->where('ward_no', $wardNo)->get();
+                        } catch (\Exception $e) {
+                            $misData = collect();
+                        }
                     }
 
                     $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
@@ -1083,7 +1085,7 @@ class CommissionerController extends Controller
                     $wardStats[] = [
                         'ward_id' => $wardId,
                         'ward_no' => $wardNo,
-                        'zone_name' => $zone->zone_name,
+                        'zone_name' => $zone->zone_name ?? 'Zone ' . $zone->id,
                         'total_buildings' => $analytics['total_buildings'],
                         'surveyed_buildings' => $analytics['surveyed_buildings'],
                         'survey_percentage' => $analytics['survey_percentage'],
@@ -1107,10 +1109,6 @@ class CommissionerController extends Controller
         return $wardStats;
     }
 
-    /**
-     * Shared "building area vs assessment area / usage mismatch" computation.
-     * Used by both buildWardAnalytics (aggregate) and buildBuildingVariations (per-building).
-     */
     private function computeBuildingComparison($polygon, $polygonDataByGisid, $pointDataByGisid, $misByAssessment): array
     {
         $gisid = $polygon->gisid;
@@ -1137,7 +1135,7 @@ class CommissionerController extends Controller
         if (isset($pointDataByGisid[$gisid])) {
             foreach ($pointDataByGisid[$gisid] as $pd) {
                 $assessmentCount++;
-                $mis = $misByAssessment->get($pd->assessment);
+                $mis = $misByAssessment->get($pd->assessment ?? '');
 
                 $pointArea = 0;
                 if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
@@ -1416,7 +1414,7 @@ class CommissionerController extends Controller
     }
 
     // ════════════════════════════════════════════════════════════════
-    // REMAINING STAT HELPERS (not tax-type duplicated)
+    // REMAINING STAT HELPERS
     // ════════════════════════════════════════════════════════════════
 
     private function getPaidAssessments($corporationId)
@@ -1447,6 +1445,9 @@ class CommissionerController extends Controller
 
     private function getNotInMis($corporationId, $wardIds)
     {
+        if (empty($wardIds)) {
+            return 0;
+        }
         $misTable = $this->taxTable('mis', $corporationId);
         if (!Schema::hasTable($misTable)) {
             return 0;
@@ -1465,7 +1466,7 @@ class CommissionerController extends Controller
         $total = 0;
         foreach ($wardIds as $wardId) {
             $table = 'point_data_' . $wardId;
-            if (Schema::hasTable($table)) {
+            if (Schema::hasTable($table) && Schema::hasColumn($table, 'assessment')) {
                 try {
                     $total += DB::table($table)->whereNotIn('assessment', $assessments)->count();
                 } catch (\Exception $e) {
@@ -1577,6 +1578,89 @@ class CommissionerController extends Controller
         return $buildings;
     }
 
+    // ════════════════════════════════════════════════════════════════
+    // BOUNDARY HELPERS
+    // ════════════════════════════════════════════════════════════════
+
+    private function getAllwardBoundary($corporationId, $accessibleWardIds = null)
+    {
+        $boundaries = [];
+        try {
+            $wardQuery = Ward::where('zone_id', '!=', null);
+
+            if ($accessibleWardIds !== null && !empty($accessibleWardIds)) {
+                $wardQuery->whereIn('id', $accessibleWardIds);
+            } else {
+                $zoneIds = Zone::where('corp_id', $corporationId)->pluck('id')->toArray();
+                if (!empty($zoneIds)) {
+                    $wardQuery->whereIn('zone_id', $zoneIds);
+                }
+            }
+
+            $wards = $wardQuery->get();
+
+            foreach ($wards as $ward) {
+                if (empty($ward->boundary)) {
+                    continue;
+                }
+                if (is_array($ward->boundary)) {
+                    $boundary = $ward->boundary;
+                } elseif (is_string($ward->boundary)) {
+                    $boundary = json_decode($ward->boundary, true);
+                } else {
+                    $boundary = [];
+                }
+                $boundaries[] = [
+                    'ward_id'  => $ward->id,
+                    'ward_no'  => $ward->ward_no,
+                    'boundary' => $boundary,
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('getAllwardBoundary error: ' . $e->getMessage());
+            return [];
+        }
+        return $boundaries;
+    }
+
+    private function getWardBoundary($corporationId, $wardId)
+    {
+        try {
+            $zoneIds = Zone::where('corp_id', $corporationId)
+                ->pluck('id')
+                ->toArray();
+
+            if (empty($zoneIds)) {
+                return null;
+            }
+
+            $ward = Ward::where('id', $wardId)
+                ->whereIn('zone_id', $zoneIds)
+                ->first();
+
+            if (!$ward || empty($ward->boundary)) {
+                return null;
+            }
+
+            $boundary = is_array($ward->boundary)
+                ? $ward->boundary
+                : json_decode($ward->boundary, true);
+
+            return [
+                'ward_id'  => $ward->id,
+                'ward_no'  => $ward->ward_no,
+                'boundary' => $boundary,
+            ];
+        } catch (\Exception $e) {
+            Log::error('getWardBoundary error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // UTILITY HELPERS
+    // ════════════════════════════════════════════════════════════════
+
     private function formatCurrency($amount)
     {
         if (!$amount) return '₹0';
@@ -1648,5 +1732,4 @@ class CommissionerController extends Controller
             'professional_tax' => $empty,
         ];
     }
-
 }
