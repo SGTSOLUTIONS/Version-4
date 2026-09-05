@@ -4900,78 +4900,77 @@ loadBoundary();  // <-- Make sure this line exists
     });
 
     $('#addProfessionalBtn').click(function() {
-
-        let html = `
-            <div class="card mb-3 professional-card">
-                <div class="card-header d-flex justify-content-between">
-
-                    <strong>Professional Tax #${ptIndex + 1}</strong>
-
-                    <button type="button"
-                        class="btn btn-danger btn-sm removeProfessional">
-                        Remove
-                    </button>
-
-                </div>
-
-                <div class="card-body">
-
-                    <div class="row g-3">
-
-                        <div class="col-md-4">
-                            <label>PT Number</label>
-                            <input class="form-control"
-                                name="professional[${ptIndex}][pt_number]">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label>Old PT Number</label>
-                            <input class="form-control"
-                                name="professional[${ptIndex}][old_pt_number]">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label>Establishment Name</label>
-                            <input class="form-control"
-                                name="professional[${ptIndex}][establishment_name]">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label>Profession Type</label>
-                            <input class="form-control"
-                                name="professional[${ptIndex}][profession_type]">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label>Employee Count</label>
-                            <input type="number"
-                                class="form-control"
-                                name="professional[${ptIndex}][employee_count]">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label>Half Year Tax</label>
-                            <input type="number"
-                                class="form-control"
-                                name="professional[${ptIndex}][half_year_tax]">
-                        </div>
-
-                        <div class="col-md-12">
-                            <label>Remarks</label>
-                            <textarea class="form-control"
-                                name="professional[${ptIndex}][pt_remarks]"></textarea>
-                        </div>
-
-                    </div>
-
-                </div>
+    let html = `
+        <div class="card mb-3 professional-card">
+            <div class="card-header d-flex justify-content-between">
+                <strong>Professional Tax #${ptIndex + 1}</strong>
+                <button type="button" class="btn btn-danger btn-sm removeProfessional">
+                    Remove
+                </button>
             </div>
-        `;
-
-        $('#professionalContainer').append(html);
-
-        ptIndex++;
-    });
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label>PT Number</label>
+                        <input class="form-control" name="professional[${ptIndex}][pt_number]">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Old PT Number</label>
+                        <input class="form-control" name="professional[${ptIndex}][old_pt_number]">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Establishment Name</label>
+                        <input class="form-control" name="professional[${ptIndex}][establishment_name]">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Profession Type</label>
+                        <input class="form-control" name="professional[${ptIndex}][profession_type]">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Trade License</label>
+                        <input class="form-control" name="professional[${ptIndex}][trade_license]" placeholder="Enter trade license number">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Employee Count</label>
+                        <input type="number" class="form-control" name="professional[${ptIndex}][employee_count]">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Half Year Tax</label>
+                        <input type="number" class="form-control" name="professional[${ptIndex}][half_year_tax]">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Arrears</label>
+                        <input type="number" class="form-control" name="professional[${ptIndex}][arrears]">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Penalty</label>
+                        <input type="number" class="form-control" name="professional[${ptIndex}][penalty]">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Balance</label>
+                        <input type="number" class="form-control" name="professional[${ptIndex}][balance]">
+                            </div>
+                            <div class="col-md-4">
+                                <label>Payment Status</label>
+                                <select class="form-control" name="professional[${ptIndex}][payment_status]">
+                                    <option value="">Select Status</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Partially Paid">Partially Paid</option>
+                                    <option value="Overdue">Overdue</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label>Remarks</label>
+                                <textarea class="form-control" name="professional[${ptIndex}][pt_remarks]"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#professionalContainer').append(html);
+            ptIndex++;
+        });
 
     $(document).on('click', '.removeProfessional', function() {
         $(this).closest('.professional-card').remove();
@@ -5194,37 +5193,78 @@ loadBoundary();  // <-- Make sure this line exists
         });
     }
 
-    function addProfessionalCard(data = {}) {
-        const idx = ptIndex;
-        const html = `
-            <div class="card mb-3 professional-card" data-index="${idx}">
-                <div class="card-header d-flex justify-content-between">
-                    <strong>Professional Tax #${idx + 1}</strong>
-                    <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
-                </div>
-                <div class="card-body">
-                    <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
-                    <div class="row g-3">
-                        <div class="col-md-4"><label>PT Number</label>
-                            <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}"></div>
-                        <div class="col-md-4"><label>Old PT Number</label>
-                            <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}"></div>
-                        <div class="col-md-4"><label>Establishment Name</label>
-                            <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}"></div>
-                        <div class="col-md-4"><label>Profession Type</label>
-                            <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}"></div>
-                        <div class="col-md-4"><label>Employee Count</label>
-                            <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}"></div>
-                        <div class="col-md-4"><label>Half Year Tax</label>
-                            <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}"></div>
-                        <div class="col-md-12"><label>Remarks</label>
-                            <textarea class="form-control" name="professional[${idx}][pt_remarks]">${data.remarks || ''}</textarea></div>
+    // Updated addProfessionalCard function
+function addProfessionalCard(data = {}) {
+    const idx = ptIndex;
+    const html = `
+        <div class="card mb-3 professional-card" data-index="${idx}">
+            <div class="card-header d-flex justify-content-between">
+                <strong>Professional Tax #${idx + 1}</strong>
+                <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
+            </div>
+            <div class="card-body">
+                <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label>PT Number</label>
+                        <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Old PT Number</label>
+                        <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Establishment Name</label>
+                        <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Profession Type</label>
+                        <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Trade License</label>
+                        <input class="form-control" name="professional[${idx}][trade_license]" value="${data.trade_license || ''}" placeholder="Enter trade license number">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Employee Count</label>
+                        <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Half Year Tax</label>
+                        <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Arrears</label>
+                        <input type="number" class="form-control" name="professional[${idx}][arrears]" value="${data.arrears || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Penalty</label>
+                        <input type="number" class="form-control" name="professional[${idx}][penalty]" value="${data.penalty || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Balance</label>
+                        <input type="number" class="form-control" name="professional[${idx}][balance]" value="${data.balance || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Payment Status</label>
+                        <select class="form-control" name="professional[${idx}][payment_status]">
+                            <option value="">Select Status</option>
+                            <option value="Paid" ${data.payment_status === 'Paid' ? 'selected' : ''}>Paid</option>
+                            <option value="Pending" ${data.payment_status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Partially Paid" ${data.payment_status === 'Partially Paid' ? 'selected' : ''}>Partially Paid</option>
+                            <option value="Overdue" ${data.payment_status === 'Overdue' ? 'selected' : ''}>Overdue</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <label>Remarks</label>
+                        <textarea class="form-control" name="professional[${idx}][pt_remarks]">${data.remarks || ''}</textarea>
                     </div>
                 </div>
-            </div>`;
-        $('#professionalContainer').append(html);
-        ptIndex++;
-    }
+            </div>
+        </div>`;
+    $('#professionalContainer').append(html);
+    ptIndex++;
+}
 
     $('#addProfessionalBtn').off('click').on('click', function() {
         addProfessionalCard();

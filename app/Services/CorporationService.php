@@ -222,7 +222,7 @@ class CorporationService
                 $table->string('phone_number', 20)->nullable()->index();
                 $table->string('profession_type')->nullable();
                 $table->integer('employee_count')->nullable();
-
+                $table->string('trade_license')->nullable();
                 $table->decimal('half_year_tax', 12, 2)->nullable();
                 $table->decimal('arrears', 12, 2)->default(0);
                 $table->decimal('penalty', 12, 2)->default(0);
