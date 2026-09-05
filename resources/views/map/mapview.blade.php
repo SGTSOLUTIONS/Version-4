@@ -1915,36 +1915,133 @@
         keyboard: true
     });
 
-    // ─── DATA ───
-    let polygons = @json($polygons ?? [], JSON_HEX_TAG);
-    let lines = @json($lines ?? [], JSON_HEX_TAG);
-    let points = @json($points ?? [], JSON_HEX_TAG);
-    let pointDatas = @json($pointDatas ?? [], JSON_HEX_TAG);
-    let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
-    let ward = @json($ward ?? [], JSON_HEX_TAG);
-    const misData = @json($misData);
-    
-    // ─── BOUNDARY DATA ───
-    const boundaryData = @json($boundaryData ?? null, JSON_HEX_TAG);
-    const boundarySource = new ol.source.Vector();
+// ─── DATA ───
+let polygons = @json($polygons ?? [], JSON_HEX_TAG);
+let lines = @json($lines ?? [], JSON_HEX_TAG);
+let points = @json($points ?? [], JSON_HEX_TAG);
+let pointDatas = @json($pointDatas ?? [], JSON_HEX_TAG);
+let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
+let ward = @json($ward ?? [], JSON_HEX_TAG);
+const misData = @json($misData);
 
-    const boundaryLayer = new ol.layer.Vector({
-        source: boundarySource,
-        style: new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: '#ff0000',
-                width: 4,
-                lineDash: [8, 4]
-            }),
-            fill: new ol.style.Fill({
-                color: 'rgba(255,0,0,0.05)'
-            })
+// ─── BOUNDARY DATA ───
+const boundaryData = @json($boundary ?? null, JSON_HEX_TAG);
+const boundarySource = new ol.source.Vector();
+
+const boundaryLayer = new ol.layer.Vector({
+    source: boundarySource,
+    style: new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#ff0000',
+            width: 4,
+            lineDash: [8, 4]
         }),
-        visible: true,
-        title: 'Ward Boundary',
-        zIndex: 10
-    });
+        fill: new ol.style.Fill({
+            color: 'rgba(255,0,0,0.05)'
+        })
+    }),
+    visible: true,
+    title: 'Ward Boundary',
+    zIndex: 10
+});
 
+// ─── LOAD BOUNDARY ───
+function loadBoundary() {
+    boundarySource.clear();
+
+    if (!boundaryData) {
+        console.log('No boundary data available');
+        return;
+    }
+
+    try {
+        let boundaryCoords = null;
+        let wardNo = null;
+
+        if (boundaryData.boundary && boundaryData.boundary.coordinates) {
+            boundaryCoords = boundaryData.boundary.coordinates;
+            wardNo = boundaryData.ward_no || 'N/A';
+        } else if (boundaryData.coordinates) {
+            boundaryCoords = boundaryData.coordinates;
+            wardNo = boundaryData.ward_no || 'N/A';
+        } else if (Array.isArray(boundaryData)) {
+            boundaryCoords = boundaryData;
+        } else {
+            console.log('Unknown boundary structure:', boundaryData);
+            return;
+        }
+
+        if (!boundaryCoords || !Array.isArray(boundaryCoords) || boundaryCoords.length === 0) {
+            console.error('Invalid boundary coordinates');
+            return;
+        }
+
+        let geometry = null;
+
+        try {
+            // Parse different GeoJSON formats
+            if (Array.isArray(boundaryCoords[0]) && 
+                Array.isArray(boundaryCoords[0][0]) && 
+                Array.isArray(boundaryCoords[0][0][0]) && 
+                typeof boundaryCoords[0][0][0][0] === 'number') {
+                geometry = new ol.geom.MultiPolygon(boundaryCoords);
+                console.log('Boundary parsed as MultiPolygon');
+            } else if (Array.isArray(boundaryCoords[0]) && 
+                       Array.isArray(boundaryCoords[0][0]) && 
+                       typeof boundaryCoords[0][0][0] === 'number') {
+                geometry = new ol.geom.Polygon(boundaryCoords[0]);
+                console.log('Boundary parsed as Polygon');
+            } else if (Array.isArray(boundaryCoords[0]) && 
+                       typeof boundaryCoords[0][0] === 'number') {
+                geometry = new ol.geom.Polygon([boundaryCoords]);
+                console.log('Boundary parsed as LinearRing');
+            } else if (boundaryCoords.type === 'MultiPolygon' || boundaryCoords.type === 'Polygon') {
+                const format = new ol.format.GeoJSON();
+                const feature = format.readFeature(boundaryCoords);
+                geometry = feature.getGeometry();
+                console.log('Boundary parsed as GeoJSON');
+            } else {
+                // Fallback: try to flatten
+                const flatCoords = boundaryCoords[0][0] || boundaryCoords[0] || boundaryCoords;
+                if (Array.isArray(flatCoords) && flatCoords.length > 0) {
+                    geometry = new ol.geom.Polygon([flatCoords]);
+                    console.log('Boundary parsed using fallback flattening');
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing boundary:', e);
+            return;
+        }
+
+        if (!geometry) {
+            console.error('Failed to create geometry from boundary data');
+            return;
+        }
+
+        const boundaryFeature = new ol.Feature({
+            geometry: geometry,
+            type: 'boundary',
+            ward_no: wardNo,
+            name: `Ward ${wardNo}`
+        });
+
+        boundarySource.addFeature(boundaryFeature);
+        console.log('✅ Boundary loaded successfully!');
+
+        // Fit map to boundary extent
+        const extent = geometry.getExtent();
+        if (extent && extent[0] !== extent[2]) {
+            map.getView().fit(extent, {
+                padding: [50, 50, 50, 50],
+                duration: 1000,
+                maxZoom: 20
+            });
+        }
+
+    } catch (e) {
+        console.error('Error loading boundary:', e);
+    }
+}
     // pt Dynamic add
     let ptIndex = 0;
     let searchIndex = [];
@@ -2506,18 +2603,16 @@
             anyActive);
     }
 
-    // ─── MAP ───
     const map = new ol.Map({
-        target: 'map',
-        layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer, pointLayer,
-            lineLayer, boundaryLayer, liveLocationLayer
-        ],
-        view: new ol.View({
-            center: ol.extent.getCenter(imageExtent),
-            zoom: 18
-        })
-    });
-
+    target: 'map',
+    layers: [osmLayer, satelliteLayer, droneLayer, polygonLayer, pointLayer,
+        lineLayer, boundaryLayer, liveLocationLayer
+    ],
+    view: new ol.View({
+        center: ol.extent.getCenter(imageExtent),
+        zoom: 18
+    })
+});
     // ─── INTERACTIONS & MODE STATE ───
     let drawInteraction = null,
         selectInteraction = null,
@@ -4689,11 +4784,11 @@
     });
 
     // ─── INIT ───
-    buildSearchIndex();
-    updateLayerUI();
-    setNoneMode();
-    syncLocationUI();
-    loadBoundary();
+buildSearchIndex();
+updateLayerUI();
+setNoneMode();
+syncLocationUI();
+loadBoundary();  // <-- Make sure this line exists
 
     if (!droneImageURL || droneImageURL === "{{ asset('') }}") {
         droneLayer.setVisible(false);
