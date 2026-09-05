@@ -1871,22 +1871,21 @@
                 </div>
                 <div class="modal-body">
                     <form id="lineDetailsForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="line_gisid" class="form-label">GIS ID <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="line_gisid" name="gisid" readonly>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="line_road_name" class="form-label">Road Name <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="line_road_name" name="road_name"
-                                    required>
-                            </div>
-                        </div>
-
-
-                    </form>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="line_gisid" class="form-label">GIS ID <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="line_gisid" name="gisid" readonly>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="line_road_name" class="form-label">Road Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="line_road_name" name="road_name" required>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="line_pincode" class="form-label">Pincode</label>
+            <input type="text" class="form-control" id="line_pincode" name="pincode" placeholder="Enter pincode" maxlength="6" pattern="[0-9]{6}">
+        </div>
+    </div>
+</form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -2247,41 +2246,38 @@ function loadBoundary() {
     }
 
     function loadLinesToSource() {
-        lineSource.clear();
-        lines.forEach(l => {
-            try {
-                let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l
-                    .coordinates;
-                while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][
-                        0
-                    ])) {
-                    coords = coords[0];
-                }
-                const isValid = coords.length >= 2 && coords.every(c =>
-                    Array.isArray(c) && c.length >= 2 &&
-                    typeof c[0] === 'number' && typeof c[1] === 'number' &&
-                    isFinite(c[0]) && isFinite(c[1])
-                );
-                if (!isValid) {
-                    console.warn('Skipping invalid line coords for gisid:', l.gisid);
-                    return;
-                }
-
-                const feature = new ol.Feature({
-                    geometry: new ol.geom.LineString(coords),
-                    gisid: l.gisid,
-                    type: 'LineString',
-                    road_name: l.road_name || null,
-                    originalData: l
-                });
-                feature.setId(l.gisid);
-                lineSource.addFeature(feature);
-            } catch (e) {
-                console.error('Line parse error for gisid:', l.gisid, e);
+    lineSource.clear();
+    lines.forEach(l => {
+        try {
+            let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l.coordinates;
+            while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
+                coords = coords[0];
             }
-        });
-    }
+            const isValid = coords.length >= 2 && coords.every(c =>
+                Array.isArray(c) && c.length >= 2 &&
+                typeof c[0] === 'number' && typeof c[1] === 'number' &&
+                isFinite(c[0]) && isFinite(c[1])
+            );
+            if (!isValid) {
+                console.warn('Skipping invalid line coords for gisid:', l.gisid);
+                return;
+            }
 
+            const feature = new ol.Feature({
+                geometry: new ol.geom.LineString(coords),
+                gisid: l.gisid,
+                type: 'LineString',
+                road_name: l.road_name || null,
+                pincode: l.pincode || null,
+                originalData: l
+            });
+            feature.setId(l.gisid);
+            lineSource.addFeature(feature);
+        } catch (e) {
+            console.error('Line parse error for gisid:', l.gisid, e);
+        }
+    });
+}
     function loadPointsToSource() {
         pointSource.clear();
         points.forEach(p => {
@@ -2718,82 +2714,84 @@ function loadBoundary() {
     }
 
     function lineClick(feature) {
-        console.log('Line clicked:', feature.getProperties());
-        const gisid = feature.get('gisid');
-        const roadName = feature.get('road_name') || feature.get('name') || '';
-        const modal = new bootstrap.Modal(document.getElementById('lineDetailsModal'));
-        modal.show();
-        populateLineForm(gisid, roadName);
-    }
+    console.log('Line clicked:', feature.getProperties());
+    const gisid = feature.get('gisid');
+    const roadName = feature.get('road_name') || feature.get('name') || '';
+    const pincode = feature.get('pincode') || '';
+    const modal = new bootstrap.Modal(document.getElementById('lineDetailsModal'));
+    modal.show();
+    populateLineForm(gisid, roadName, pincode);
+}
 
-    function populateLineForm(gisid, roadName) {
-        // Set basic form fields
-        $('#line_gisid').val(gisid || '');
-        $('#line_road_name').val(roadName || '');
-        // Clear any existing validation errors
-        $('.is-invalid').removeClass('is-invalid');
-        $('.invalid-feedback').remove();
-    }
+    function populateLineForm(gisid, roadName, pincode) {
+    // Set basic form fields
+    $('#line_gisid').val(gisid || '');
+    $('#line_road_name').val(roadName || '');
+    $('#line_pincode').val(pincode || '');
+    // Clear any existing validation errors
+    $('.is-invalid').removeClass('is-invalid');
+    $('.invalid-feedback').remove();
+}
 
     // Save Line Data
-    $('#saveLineDetails').on('click', function() {
-        const formData = new FormData(document.getElementById('lineDetailsForm'));
+   // Save Line Data
+$('#saveLineDetails').on('click', function() {
+    const formData = new FormData(document.getElementById('lineDetailsForm'));
 
-        // Show saving indicator
-        $(this).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-        $(this).prop('disabled', true);
-        formData.append('_token', $('input[name="_token"]').val());
+    // Show saving indicator
+    $(this).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+    $(this).prop('disabled', true);
+    formData.append('_token', $('input[name="_token"]').val());
 
-        // Validate required fields
-        const gisid = $('#line_gisid').val();
-        const roadName = $('#line_road_name').val();
+    // Validate required fields
+    const gisid = $('#line_gisid').val();
+    const roadName = $('#line_road_name').val();
 
-        if (!gisid || !roadName) {
-            showFlashMessage('GISID and Road Name are required fields', 'error');
-            $(this).html('<i class="fas fa-save"></i> Save Changes');
-            $(this).prop('disabled', false);
-            return;
-        }
+    if (!gisid || !roadName) {
+        showFlashMessage('GISID and Road Name are required fields', 'error');
+        $(this).html('<i class="fas fa-save"></i> Save Changes');
+        $(this).prop('disabled', false);
+        return;
+    }
 
-        $.ajax({
-            url: '/line-data',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                showFlashMessage('Line data saved successfully!', 'success');
-                console.log(response.lines);
-                lines = response.lines;
-                $('#lineDetailsModal').modal('hide');
-                // Refresh map features if needed
-                reloadAllSources();
-            },
-            error: function(xhr) {
-                console.error('Error saving line data:', xhr);
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    // Display validation errors
-                    const errors = xhr.responseJSON.errors;
-                    Object.keys(errors).forEach(key => {
-                        const field = $(`#line_${key}`);
-                        if (field.length) {
-                            field.addClass('is-invalid');
-                            field.after(
-                                `<div class="invalid-feedback">${errors[key][0]}</div>`
-                            );
-                        }
-                    });
-                } else {
-                    showFlashMessage('Failed to save line data. Please try again.',
-                        'error');
-                }
-            },
-            complete: function() {
-                $('#saveLineDetails').html('<i class="fas fa-save"></i> Save Changes');
-                $('#saveLineDetails').prop('disabled', false);
+    $.ajax({
+        url: '/line-data',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            showFlashMessage('Line data saved successfully!', 'success');
+            console.log(response.lines);
+            lines = response.lines;
+            $('#lineDetailsModal').modal('hide');
+            // Refresh map features if needed
+            reloadAllSources();
+        },
+        error: function(xhr) {
+            console.error('Error saving line data:', xhr);
+            if (xhr.responseJSON && xhr.responseJSON.errors) {
+                // Display validation errors
+                const errors = xhr.responseJSON.errors;
+                Object.keys(errors).forEach(key => {
+                    const field = $(`#line_${key}`);
+                    if (field.length) {
+                        field.addClass('is-invalid');
+                        field.after(
+                            `<div class="invalid-feedback">${errors[key][0]}</div>`
+                        );
+                    }
+                });
+            } else {
+                showFlashMessage('Failed to save line data. Please try again.', 'error');
             }
-        });
+        },
+        complete: function() {
+            $('#saveLineDetails').html('<i class="fas fa-save"></i> Save Changes');
+            $('#saveLineDetails').prop('disabled', false);
+        }
     });
+});
 
     function pointClick(feature) {
         console.log('Point clicked:', feature.getProperties());

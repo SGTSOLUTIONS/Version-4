@@ -749,66 +749,70 @@ class PointdataController extends Controller
             ], 500);
         }
     }
-    public function lineDataStore(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'gisid'     => 'required|string|max:50',
-            'road_name' => 'required|string|max:255',
-        ]);
+   public function lineDataStore(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'gisid'     => 'required|string|max:50',
+        'road_name' => 'required|string|max:255',
+        'pincode'   => 'nullable|string|max:10',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation errors',
-                'errors'  => $validator->errors()
-            ], 422);
-        }
-
-        $user = Auth::user();
-
-        if (!$user || !$user->ward_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ward not assigned to user.'
-            ], 400);
-        }
-
-        $lineTableName = "lines_{$user->ward_id}";
-
-        // Check table exists
-        if (!Schema::hasTable($lineTableName)) {
-            return response()->json([
-                'success' => false,
-                'message' => "Table {$lineTableName} not found."
-            ], 404);
-        }
-
-        // Find line first
-        $line = DB::table($lineTableName)
-            ->where('gisid', $request->gisid)
-            ->first();
-
-        if (!$line) {
-            return response()->json([
-                'success' => false,
-                'message' => 'GIS ID not found.'
-            ], 404);
-        }
-
-        // Update
-        DB::table($lineTableName)
-            ->where('gisid', $request->gisid)
-            ->update([
-                'road_name' => $request->road_name,
-                'updated_at' => now()
-            ]);
-        $lines = DB::table($lineTableName)->get();
+    if ($validator->fails()) {
         return response()->json([
-            'success' => true,
-            'message' => 'Road name updated successfully.',
-            'lines' => $lines
-        ]);
+            'success' => false,
+            'message' => 'Validation errors',
+            'errors'  => $validator->errors()
+        ], 422);
     }
+
+    $user = Auth::user();
+
+    if (!$user || !$user->ward_id) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Ward not assigned to user.'
+        ], 400);
+    }
+
+    $lineTableName = "lines_{$user->ward_id}";
+
+    // Check table exists
+    if (!Schema::hasTable($lineTableName)) {
+        return response()->json([
+            'success' => false,
+            'message' => "Table {$lineTableName} not found."
+        ], 404);
+    }
+
+    // Find line first
+    $line = DB::table($lineTableName)
+        ->where('gisid', $request->gisid)
+        ->first();
+
+    if (!$line) {
+        return response()->json([
+            'success' => false,
+            'message' => 'GIS ID not found.'
+        ], 404);
+    }
+
+    // Update with pincode
+    DB::table($lineTableName)
+        ->where('gisid', $request->gisid)
+        ->update([
+            'road_name' => $request->road_name,
+            'pincode'   => $request->pincode,
+            'updated_at' => now()
+        ]);
+
+    $lines = DB::table($lineTableName)->get();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Road name updated successfully.',
+        'lines' => $lines
+    ]);
+}
 
 
 
