@@ -4134,7 +4134,13 @@
                     $('#deleteConfirmBox').hide();
                 }
             });
-
+// Add this after line: const misData = @json($misData ?? []);
+console.log('🔍 MIS Data Check:');
+console.log('Total records:', misData.length);
+console.log('First record:', misData[0]);
+if (misData.length === 0) {
+    console.warn('⚠️ No MIS data found! Check controller.');
+}
             $(document).on('click', '#confirmDeleteBtn', function() {
                 const type = $('#deleteFeatureType').val();
                 const gisid = $('#deleteGisId').val().trim();
