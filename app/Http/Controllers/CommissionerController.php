@@ -884,7 +884,6 @@ class CommissionerController extends Controller
 
                 $groundSqfeet = (float) ($polygon->sqfeet ?? 0);
 
-                // Find matching polygon data
                 $polyData = $polygonDatas->firstWhere('gisid', $polygon->gisid);
 
                 if ($polyData) {
@@ -893,25 +892,24 @@ class CommissionerController extends Controller
                     $basement    = (float) ($polyData->basement ?? 0);
                     $percentage  = (float) ($polyData->percentage ?? 100);
 
-                    // Minimum 1 floor
                     $floors = $numberFloor > 0 ? $numberFloor : 1;
 
-                    // Calculate area based on percentage
+                    // Percentage-based floor area
                     $floorArea = $groundSqfeet * ($percentage / 100);
 
                     // Total floor area
                     $totalSqfeet = $floorArea * $floors;
 
-                    // Add basement
+                    // Basement
                     if ($basement > 0) {
                         $totalSqfeet += $floorArea * $basement;
                     }
 
-                    $polygon->sqfeet = $totalSqfeet;
+                    // 2 decimal places
+                    $polygon->sqfeet = round($totalSqfeet, 2);
                 } else {
 
-                    // No polygon data
-                    $polygon->sqfeet = $groundSqfeet;
+                    $polygon->sqfeet = round($groundSqfeet, 2);
                 }
             }
 
