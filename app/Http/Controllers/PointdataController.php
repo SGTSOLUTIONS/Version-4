@@ -40,7 +40,7 @@ class PointdataController extends Controller
             'ramp' => 'nullable|in:Yes,No',
             'hoarding' => 'nullable|in:Yes,No',
             'cctv' => 'nullable|in:Yes,No',
-            'zone' => 'nullable',
+            'building_zone' => 'nullable',
             'cell_tower' => 'nullable|in:Yes,No',
             'solar_panel' => 'nullable|in:Yes,No',
             'basement' => 'required|integer|min:0|max:5',
@@ -152,7 +152,7 @@ class PointdataController extends Controller
                 'ramp' => $data['ramp'] ?? 'No',
                 'hoarding' => $data['hoarding'] ?? 'No',
                 'cctv' => $data['cctv'] ?? 'No',
-                'zone' => $data['zone'] ?? 'No',
+                'zone' => $data['building_zone'] ?? 'No',
                 'cell_tower' => $data['cell_tower'] ?? 'No',
                 'solar_panel' => $data['solar_panel'] ?? 'No',
                 'basement' => $data['basement'],
@@ -1171,16 +1171,16 @@ class PointdataController extends Controller
     if (!$wardId) {
         // Check if user has a role that can access all wards
         $hasAccessToAllWards = in_array($user->role, ['commissioner', 'admin', 'super_admin']);
-        
+
         if ($hasAccessToAllWards) {
             return response()->json([
                 'success' => false,
                 'message' => 'Please provide ward_id parameter for QR code generation'
             ], 400);
         }
-        
+
         return response()->json([
-            'success' => false, 
+            'success' => false,
             'message' => 'No ward associated with your account'
         ], 400);
     }
@@ -1204,7 +1204,7 @@ class PointdataController extends Controller
 
     // Get the point data from the correct table
     $pointDataTable = "point_data_{$wardId}";
-    
+
     if (!Schema::hasTable($pointDataTable)) {
         return response()->json([
             'success' => false,
