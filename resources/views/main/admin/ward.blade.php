@@ -1280,7 +1280,7 @@
                 e.preventDefault();
                 e.stopPropagation();
                 let id = $(this).data('id');
-                window.location.href = "/wards/" + id + "/export-all-roadw";
+                window.location.href = "/wards/" + id + "/export-all-road";
             });
 
             // Missing Building (GeoJSON)
