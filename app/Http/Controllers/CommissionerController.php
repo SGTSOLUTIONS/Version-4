@@ -891,19 +891,26 @@ class CommissionerController extends Controller
 
                     $numberFloor = (float) ($polyData->number_floor ?? 0);
                     $basement    = (float) ($polyData->basement ?? 0);
+                    $percentage  = (float) ($polyData->percentage ?? 100);
 
                     // Minimum 1 floor
                     $floors = $numberFloor > 0 ? $numberFloor : 1;
 
-                    // Floor area
-                    $totalSqfeet = $groundSqfeet * $floors;
+                    // Calculate area based on percentage
+                    $floorArea = $groundSqfeet * ($percentage / 100);
+
+                    // Total floor area
+                    $totalSqfeet = $floorArea * $floors;
+
+                    // Add basement
                     if ($basement > 0) {
-                        $totalSqfeet += $groundSqfeet * $basement;
+                        $totalSqfeet += $floorArea * $basement;
                     }
+
                     $polygon->sqfeet = $totalSqfeet;
                 } else {
 
-                    // No polygon_data record → keep ground polygon area
+                    // No polygon data
                     $polygon->sqfeet = $groundSqfeet;
                 }
             }
