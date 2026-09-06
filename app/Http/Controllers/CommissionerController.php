@@ -647,7 +647,6 @@ class CommissionerController extends Controller
                 'getAllwardBoundary',
                 'wardVariationStats'
             ));
-
         } catch (\Exception $e) {
             Log::error('Dashboard error: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
@@ -882,16 +881,30 @@ class CommissionerController extends Controller
                 : null;
 
             foreach ($polygons as $polygon) {
+
                 $groundSqfeet = (float) ($polygon->sqfeet ?? 0);
+
+                // Find matching polygon data
                 $polyData = $polygonDatas->firstWhere('gisid', $polygon->gisid);
+
                 if ($polyData) {
-                    $numberFloor = floatval($polyData->number_floor ?? 0);
-                    $basement = floatval($polyData->basement ?? 0);
-                    $totalSqfeet = ($numberFloor > 0 ? $numberFloor : 1) * $groundSqfeet;
+
+                    $numberFloor = (float) ($polyData->number_floor ?? 0);
+                    $basement    = (float) ($polyData->basement ?? 0);
+
+                    // Minimum 1 floor
+                    $floors = $numberFloor > 0 ? $numberFloor : 1;
+
+                    // Floor area
+                    $totalSqfeet = $groundSqfeet * $floors;
                     if ($basement > 0) {
-                        $totalSqfeet += ($groundSqfeet * $basement);
+                        $totalSqfeet += $groundSqfeet * $basement;
                     }
                     $polygon->sqfeet = $totalSqfeet;
+                } else {
+
+                    // No polygon_data record → keep ground polygon area
+                    $polygon->sqfeet = $groundSqfeet;
                 }
             }
 
