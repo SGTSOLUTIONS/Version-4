@@ -1271,6 +1271,12 @@
                 let id = $(this).data('id');
                 window.location.href = "/wards/" + id + "/export-all-polygons";
             });
+ $(document).on('click', '.road-btn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                let id = $(this).data('id');
+                window.location.href = "/wards/" + id + "/export-all-road";
+            });
 
             // Missing Building (GeoJSON)
             $(document).on('click', '.missing-building-btn', function(e) {

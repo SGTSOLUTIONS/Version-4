@@ -389,7 +389,98 @@ class WardService
 
         return $table;
     }
+public function exportAllRoads($ward_id)
+{
+    try {
+        $lineTable = "lines_" . $ward_id;
 
+        // Check if table exists
+        if (!Schema::hasTable($lineTable)) {
+            return response()->json([
+                "success" => false,
+                "message" => "Line table not found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $allLines = DB::table($lineTable)->get();
+
+        if ($allLines->isEmpty()) {
+            return response()->json([
+                "success" => false,
+                "message" => "No lines found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $features = [];
+
+        foreach ($allLines as $line) {
+            $coordinates = json_decode($line->coordinates, true);
+
+            if (!$coordinates) {
+                continue;
+            }
+
+            // Convert to valid GeoJSON LineString format if needed
+            if ($line->type == 'LineString') {
+                // If coordinates are stored as [[x,y],[x,y],...] (already correct format)
+                // No conversion needed for LineString, but we ensure it's a valid array
+                if (!isset($coordinates[0][0]) || !is_numeric($coordinates[0][0])) {
+                    // If stored in a different format, attempt to fix
+                    if (isset($coordinates[0]) && is_array($coordinates[0]) && isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
+                        // Already correct
+                    } else {
+                        // Try to convert if it's a flat array
+                        continue;
+                    }
+                }
+            }
+
+            $properties = [
+                "gisid" => $line->gisid,
+                "type" => $line->type ?? 'LineString',
+            ];
+
+            // Add optional fields if they exist
+            if (isset($line->road_name) && !is_null($line->road_name)) {
+                $properties["road_name"] = $line->road_name;
+            }
+
+            if (isset($line->pincode) && !is_null($line->pincode)) {
+                $properties["pincode"] = $line->pincode;
+            }
+
+            $features[] = [
+                "type" => "Feature",
+                "properties" => $properties,
+                "geometry" => [
+                    "type" => $line->type ?? 'LineString',
+                    "coordinates" => $coordinates
+                ]
+            ];
+        }
+
+        $geojson = [
+            "type" => "FeatureCollection",
+            "features" => $features
+        ];
+
+        $fileName = "all_lines_ward_{$ward_id}.geojson";
+
+        return response()->streamDownload(function () use ($geojson) {
+            echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        }, $fileName, [
+            'Content-Type' => 'application/geo+json',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            "success" => false,
+            "message" => $e->getMessage(),
+            "line"    => $e->getLine(),
+            "file"    => $e->getFile(),
+        ], 500);
+    }
+}
     private function createPointTable($wardId): string
     {
         $table = 'points_' . $wardId;

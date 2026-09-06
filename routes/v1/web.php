@@ -24,12 +24,10 @@ Route::prefix('infrastructure')->group(function () {
     Route::get('/summary/{wardId}', [InfrastructureController::class, 'getInfrastructureSummary']);
     Route::get('/type/{wardId}/{type}', [InfrastructureController::class, 'getFeatureByType']);
 });
-Route::get('/', function () {
-    return view('welcome');
-});
+  Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/qr-code-assessment', [PointdataController::class, 'qrCodeAssessment'])
     ->name('qrCodeAssessment');
-    Route::get('/view-assessment/{wardNo}/{pointId}', [PointdataController::class, 'showQr'])
+Route::get('/view-assessment/{wardNo}/{pointId}', [PointdataController::class, 'showQr'])
     ->name('view.assessment');
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -87,6 +85,9 @@ Route::middleware(['auth'])->group(function () {
         ->name('wards.missing-bill-pdf');
     Route::get('/wards/{ward_id}/export-all-polygons', [WardController::class, 'exportAllPolygons'])
         ->name('wards.export-all-polygons');
+
+        Route::get('/wards/{ward_id}/export-all-road', [WardController::class, 'exportAllRoads'])
+        ->name('wards.export-all-road');
     // MIS Bill Excel
     Route::get('/wards/{ward_id}/mis-bill-excel', [WardController::class, 'misBillExcel'])
         ->name('wards.mis-bill-excel');
