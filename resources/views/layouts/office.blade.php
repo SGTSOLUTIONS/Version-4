@@ -240,22 +240,7 @@
 
         <div class="ol-header-actions">
 
-            {{-- Search --}}
-            <button class="ol-header-btn" title="Search" data-bs-toggle="modal" data-bs-target="#searchModal">
-                <i class="bi bi-search"></i>
-            </button>
 
-            {{-- Notifications --}}
-            <button class="ol-header-btn" title="Notifications" data-bs-toggle="offcanvas"
-                data-bs-target="#notifOffcanvas">
-                <i class="bi bi-bell"></i>
-                <span class="badge-dot"></span>
-            </button>
-
-            {{-- Help --}}
-            <button class="ol-header-btn" title="Help">
-                <i class="bi bi-question-circle"></i>
-            </button>
 
             {{-- User avatar dropdown --}}
             <div class="dropdown">
