@@ -817,23 +817,14 @@ class WardController extends Controller
                 }
             }
 
-            $properties = [
-                "gisid" => $line->gisid,
-                "type" => $line->type ?? 'LineString',
-            ];
-
-            // Add optional fields if they exist
-            if (isset($line->road_name) && !is_null($line->road_name)) {
-                $properties["road_name"] = $line->road_name;
-            }
-
-            if (isset($line->pincode) && !is_null($line->pincode)) {
-                $properties["pincode"] = $line->pincode;
-            }
-
             $features[] = [
                 "type" => "Feature",
-                "properties" => $properties,
+                "properties" => [
+                    "gisid" => $line->gisid,
+                    "type" => $line->type ?? 'LineString',
+                    "road_name" => $line->road_name ?? null,
+                    "pincode" => $line->pincode ?? null,
+                ],
                 "geometry" => [
                     "type" => $line->type ?? 'LineString',
                     "coordinates" => $coordinates
