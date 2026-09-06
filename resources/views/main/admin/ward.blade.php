@@ -721,6 +721,11 @@
                                                 </a>
                                             </li>
                                             <li>
+                                                <a class="dropdown-item road-btn" data-id="${ward.id}" href="#">
+                                                    <i class="bi bi-download me-2"></i> All Road (GeoJSON)
+                                                </a>
+                                            </li>
+                                            <li>
                                                 <a class="dropdown-item missing-building-btn" data-id="${ward.id}" href="#">
                                                     <i class="bi bi-geo-alt me-2"></i> Missing Building (GeoJSON)
                                                 </a>
@@ -1275,7 +1280,7 @@
                 e.preventDefault();
                 e.stopPropagation();
                 let id = $(this).data('id');
-                window.location.href = "/wards/" + id + "/export-all-road";
+                window.location.href = "/wards/" + id + "/export-all-roadw";
             });
 
             // Missing Building (GeoJSON)
