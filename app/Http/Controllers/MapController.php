@@ -35,7 +35,7 @@ class MapController extends Controller
         $zone = Zone::findOrFail($zoneId);
         $corp = $zone->corp_id;
         $wardNo = $ward->ward_no;
-        
+
         $polygonsTableName = "polygons_{$wardId}";
         $linesTableName = "lines_{$wardId}";
         $pointsTableName = "points_{$wardId}";
@@ -88,6 +88,13 @@ class MapController extends Controller
             ->distinct()
             ->orderBy('road_name')
             ->pluck('road_name');
+       $uniqueZones = DB::table($misTableName)
+    ->select('zone')
+    ->whereNotNull('zone')
+    ->where('zone', '!=', '')
+    ->distinct()
+    ->orderBy('zone')
+    ->pluck('zone');
 
         return view('map.mapview', compact(
             'ward',
@@ -98,6 +105,7 @@ class MapController extends Controller
             'pointDatas',
             'misData',
             'uniqueRoadNames',
+             'uniqueZones',
             'boundary'  // ✅ PASS BOUNDARY TO VIEW
         ));
     }

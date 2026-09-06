@@ -1182,69 +1182,72 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                   <!-- Image 1 -->
-<div class="col-md-6 mb-3">
-    <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 1</label>
-    <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
-        <img id="buildingImagePreview" src="" alt="Building Image Preview"
-            class="img-fluid"
-            style="display: none; max-height: 200px; width: 100%; object-fit: contain; border-radius: 8px;">
-        <div id="noImagePlaceholder" class="text-center text-muted"
-            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px;">
-            <i class="fas fa-cloud-upload-alt fa-3x mb-2" style="color: #cbd5e1;"></i>
-            <p>No image selected</p>
-        </div>
-    </div>
-    <div class="mt-2 d-flex gap-2">
-        <!-- Camera Button - Opens camera directly on mobile -->
-        <label class="btn btn-success btn-sm flex-fill" style="cursor: pointer;">
-            <i class="fas fa-camera me-1"></i> Camera
-            <input type="file" name="image" accept="image/*" capture="environment"
-                   style="display: none;"
-                   onchange="this.form.submit()">
-        </label>
-        <!-- File/Gallery Button - Opens file picker -->
-        <label class="btn btn-outline-primary btn-sm flex-fill" style="cursor: pointer;">
-            <i class="fas fa-folder-open me-1"></i> Choose File
-            <input type="file" name="image" id="building_image" accept="image/*"
-                   style="display: none;"
-                   onchange="this.form.submit()">
-        </label>
-    </div>
-    <div id="building_image_error" class="error-message text-danger small mt-1"></div>
-</div>
+                                    <!-- Image 1 -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 1</label>
+                                        <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
+                                            <img id="buildingImagePreview" src="" alt="Building Image Preview"
+                                                class="img-fluid"
+                                                style="display: none; max-height: 200px; width: 100%; object-fit: contain; border-radius: 8px;">
+                                            <div id="noImagePlaceholder" class="text-center text-muted"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px;">
+                                                <i class="fas fa-cloud-upload-alt fa-3x mb-2" style="color: #cbd5e1;"></i>
+                                                <p>No image selected</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 d-flex gap-2">
+                                            <!-- Camera Button - Opens camera directly on mobile -->
+                                            <label class="btn btn-success btn-sm flex-fill" style="cursor: pointer;">
+                                                <i class="fas fa-camera me-1"></i> Camera
+                                                <input type="file" name="image" accept="image/*"
+                                                    capture="environment" style="display: none;"
+                                                    onchange="this.form.submit()">
+                                            </label>
+                                            <!-- File/Gallery Button - Opens file picker -->
+                                            <label class="btn btn-outline-primary btn-sm flex-fill"
+                                                style="cursor: pointer;">
+                                                <i class="fas fa-folder-open me-1"></i> Choose File
+                                                <input type="file" name="image" id="building_image"
+                                                    accept="image/*" style="display: none;"
+                                                    onchange="this.form.submit()">
+                                            </label>
+                                        </div>
+                                        <div id="building_image_error" class="error-message text-danger small mt-1"></div>
+                                    </div>
 
-<!-- Image 2 -->
-<div class="col-md-6 mb-3">
-    <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 2</label>
-    <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
-        <img id="buildingImagePreview2" src="" alt="Building Image Preview 2"
-            class="img-fluid"
-            style="display: none; max-height: 200px; width: 100%; object-fit: contain; border-radius: 8px;">
-        <div id="noImagePlaceholder2" class="text-center text-muted"
-            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px;">
-            <i class="fas fa-cloud-upload-alt fa-3x mb-2" style="color: #cbd5e1;"></i>
-            <p>No image selected</p>
-        </div>
-    </div>
-    <div class="mt-2 d-flex gap-2">
-        <!-- Camera Button - Opens camera directly on mobile -->
-        <label class="btn btn-success btn-sm flex-fill" style="cursor: pointer;">
-            <i class="fas fa-camera me-1"></i> Camera
-            <input type="file" name="image2" accept="image/*" capture="environment"
-                   style="display: none;"
-                   onchange="this.form.submit()">
-        </label>
-        <!-- File/Gallery Button - Opens file picker -->
-        <label class="btn btn-outline-primary btn-sm flex-fill" style="cursor: pointer;">
-            <i class="fas fa-folder-open me-1"></i> Choose File
-            <input type="file" name="image2" id="building_image2" accept="image/*"
-                   style="display: none;"
-                   onchange="this.form.submit()">
-        </label>
-    </div>
-    <div id="building_image2_error" class="error-message text-danger small mt-1"></div>
-</div>
+                                    <!-- Image 2 -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 2</label>
+                                        <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
+                                            <img id="buildingImagePreview2" src="" alt="Building Image Preview 2"
+                                                class="img-fluid"
+                                                style="display: none; max-height: 200px; width: 100%; object-fit: contain; border-radius: 8px;">
+                                            <div id="noImagePlaceholder2" class="text-center text-muted"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px;">
+                                                <i class="fas fa-cloud-upload-alt fa-3x mb-2" style="color: #cbd5e1;"></i>
+                                                <p>No image selected</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 d-flex gap-2">
+                                            <!-- Camera Button - Opens camera directly on mobile -->
+                                            <label class="btn btn-success btn-sm flex-fill" style="cursor: pointer;">
+                                                <i class="fas fa-camera me-1"></i> Camera
+                                                <input type="file" name="image2" accept="image/*"
+                                                    capture="environment" style="display: none;"
+                                                    onchange="this.form.submit()">
+                                            </label>
+                                            <!-- File/Gallery Button - Opens file picker -->
+                                            <label class="btn btn-outline-primary btn-sm flex-fill"
+                                                style="cursor: pointer;">
+                                                <i class="fas fa-folder-open me-1"></i> Choose File
+                                                <input type="file" name="image2" id="building_image2"
+                                                    accept="image/*" style="display: none;"
+                                                    onchange="this.form.submit()">
+                                            </label>
+                                        </div>
+                                        <div id="building_image2_error" class="error-message text-danger small mt-1">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1274,17 +1277,19 @@
                                     <!-- Zone -->
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Zonation</label>
+
                                         <select class="form-select" name="building_zone" id="building_zone">
                                             <option value="">Select Zone</option>
-                                            <option value="ZONE-A">ZONE-A</option>
-                                            <option value="ZONE-B">ZONE-B</option>
-                                            <option value="ZONE-C">ZONE-C</option>
-                                            <option value="ZONE-D">ZONE-D</option>
-                                            <option value="ZONE-E">ZONE-E</option>
+
+                                            @foreach ($uniqueZones as $zone)
+                                                <option value="{{ $zone }}">
+                                                    {{ $zone }}
+                                                </option>
+                                            @endforeach
                                         </select>
+
                                         <div id="building_zone_error" class="error-message text-danger small"></div>
                                     </div>
-
                                     <!-- Number of Assessments -->
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Number of Assessments</label>
@@ -1715,7 +1720,7 @@
                                     </div>
 
                                     <div class="col-md-4">
-                                        <label for="zone" class="form-label">Zone <span
+                                        <label for="zone" class="form-label">Zonation <span
                                                 class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="zone" name="zone"
                                             required>
@@ -2336,7 +2341,8 @@
                         let coords = typeof l.coordinates === 'string' ? JSON.parse(l.coordinates) : l
                             .coordinates;
                         while (coords.length === 1 && Array.isArray(coords[0]) && Array.isArray(coords[0][
-                                0])) {
+                                0
+                            ])) {
                             coords = coords[0];
                         }
                         const isValid = coords.length >= 2 && coords.every(c =>
