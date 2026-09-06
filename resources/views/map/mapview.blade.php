@@ -1615,9 +1615,9 @@
                     </div>
 
                     <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0;">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {{-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i class="fas fa-times me-2"></i>Close
-                        </button>
+                        </button> --}}
                         <button type="submit" class="btn btn-primary" id="buildingsubmitBtn">
                             <i class="fas fa-save me-2"></i>Save Building Data
                         </button>
