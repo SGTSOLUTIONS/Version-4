@@ -23,21 +23,22 @@
             z-index: 10;
         }
 .location-toast {
-    position: absolute;
-    bottom: 74px;
+    position: fixed;  /* ← Changed from absolute to fixed */
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%) translateY(10px);
     background: rgba(15, 23, 42, 0.88);
     color: white;
-    padding: 8px 16px;
+    padding: 10px 24px;
     border-radius: 10px;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 500;
     white-space: nowrap;
-    z-index: 1001;
+    z-index: 99999;
     opacity: 0;
     transition: all 0.3s ease;
     pointer-events: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
         .dropdown-divider {
             height: 1px;
