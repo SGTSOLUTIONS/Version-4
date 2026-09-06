@@ -3164,7 +3164,7 @@
             }
 
             function populateBuildingForm(item) {
-                // Fix: Use item.gisid instead of gsiid
+
                 $("#building_gisid").val(item.gisid || "");
                 $("#number_bill").val(item.number_bill || "");
                 $("#number_shop").val(item.number_shop || "");
@@ -3172,7 +3172,25 @@
                 $("#building_name").val(item.building_name || "");
                 $("#road_name").val(item.road_name || "");
                 $("#phone_building").val(item.phone || "");
-                $("#building_zone").val(item.zone || item.building_zone || "");
+
+                // Get zone from item
+                const zoneValue = item.zone || item.building_zone || "";
+
+                // Select existing zone
+                $("#building_zone").val(zoneValue);
+
+                // If value is not found in dropdown, add it
+                if (
+                    zoneValue &&
+                    $("#building_zone option[value='" + zoneValue + "']").length === 0
+                ) {
+                    $("#building_zone").append(
+                        new Option(zoneValue, zoneValue)
+                    );
+
+                    $("#building_zone").val(zoneValue);
+                }
+
                 $("#percentage").val(item.percentage || "");
                 $("#building_usage").val(item.building_usage || "");
                 $("#construction_type").val(item.construction_type || "");
@@ -3194,11 +3212,14 @@
                 $("#corporationremarks").val(item.corporationremarks || "");
                 $("#qc_remarks").val(item.qc_remarks || "");
 
-                // Image handling
+                // Images
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
 
                 if (item.image && item.image !== "") {
-                    const imageUrl = item.image.startsWith('http') ? item.image : assetUrl + item.image;
+                    const imageUrl = item.image.startsWith('http') ?
+                        item.image :
+                        assetUrl + item.image;
+
                     $("#buildingImagePreview").attr("src", imageUrl).show();
                     $("#noImagePlaceholder").hide();
                 } else {
@@ -3207,7 +3228,10 @@
                 }
 
                 if (item.image2 && item.image2 !== "") {
-                    const imageUrl2 = item.image2.startsWith('http') ? item.image2 : assetUrl + item.image2;
+                    const imageUrl2 = item.image2.startsWith('http') ?
+                        item.image2 :
+                        assetUrl + item.image2;
+
                     $("#buildingImagePreview2").attr("src", imageUrl2).show();
                     $("#noImagePlaceholder2").hide();
                 } else {
