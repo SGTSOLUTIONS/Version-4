@@ -880,34 +880,29 @@ class CommissionerController extends Controller
                 ? $accessibleWardIds[$currentIndex + 1]
                 : null;
 
-            foreach ($polygons as $polygon) {
-                $groundSqfeet = (float) ($polygon->sqfeet ?? 0);
-                $polyData = $polygonDatas->firstWhere('gisid', $polygon->gisid);
+           foreach ($polygons as $polygon) {
+    // Get ground square feet from polygon table
+    $groundSqfeet = (float) ($polygon->sqfeet ?? 0);
+    $polyData = $polygonDatas->firstWhere('gisid', $polygon->gisid);
 
-                if ($polyData) {
-                    $numberFloor = (float) ($polyData->number_floor ?? 0);
-                    $basement    = (float) ($polyData->basement ?? 0);
-                    $percentage  = (float) ($polyData->percentage ?? 100);
+    if ($polyData) {
+        $numberFloor = (float) ($polyData->number_floor ?? 0);
+        $basement    = (float) ($polyData->basement ?? 0);
+        $percentage  = (float) ($polyData->percentage ?? 100);
 
-                    $floors = $numberFloor > 0 ? $numberFloor : 1;
+        // If groundSqfeet is 0, check if polygon_data has sqfeet field
+        if ($groundSqfeet == 0 && isset($polyData->sqfeet) && $polyData->sqfeet > 0) {
+            $groundSqfeet = (float) $polyData->sqfeet;
+        }
 
-                    // Use groundSqfeet from polygon, or if 0, use sqfeet from polygon_data
-                    if ($groundSqfeet == 0 && isset($polyData->sqfeet) && $polyData->sqfeet > 0) {
-                        $groundSqfeet = (float) $polyData->sqfeet;
-                    }
+        // NEW FORMULA: (number of floors + basement + (percentage/100)) * ground sq feet
+        $totalSqfeet = ($numberFloor + $basement + ($percentage / 100)) * $groundSqfeet;
 
-                    $floorArea = $groundSqfeet * ($percentage / 100);
-                    $totalSqfeet = $floorArea * $floors;
-
-                    if ($basement > 0) {
-                        $totalSqfeet += $floorArea * $basement;
-                    }
-
-                    $polygon->sqfeet = round($totalSqfeet, 2);
-                } else {
-                    $polygon->sqfeet = round($groundSqfeet, 2);
-                }
-            }
+        $polygon->sqfeet = round($totalSqfeet, 2);
+    } else {
+        $polygon->sqfeet = round($groundSqfeet, 2);
+    }
+}
 
             return view('excecutive.mapview', compact(
                 'ward',
