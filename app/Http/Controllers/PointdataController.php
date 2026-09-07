@@ -715,7 +715,7 @@ class PointdataController extends Controller
                 ]);
 
                 DB::commit();
-
+                $pointDatasFresh = DB::table($pointDataTableName)->get();
                 return response()->json([
                     'success' => true,
                     'message' => 'Point data stored successfully.',
@@ -727,7 +727,8 @@ class PointdataController extends Controller
                         'ugd_processed' => $request->filled('ugd_no') ? true : false,
                         'professional_tax_processed' => $request->has('professional') ? count($request->professional) : 0,
                         'mis_updated' => $misExists ? 'updated' : 'inserted',
-                    ]
+                    ],
+                    'pointDatas' => $pointDatasFresh
                 ], 200);
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -1109,10 +1110,13 @@ class PointdataController extends Controller
                 // Return updated data for frontend
                 $updatedData = DB::table($pointDataTable)->where('id', $id)->first();
 
+                $pointDatasFresh = DB::table($pointDataTable)->get();
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Point data updated successfully.',
-                    'data' => $updatedData
+                    'data' => $updatedData,
+                    'pointDatas' => $pointDatasFresh   // ⬅️ ADDED
                 ]);
             } catch (\Exception $e) {
                 DB::rollBack();

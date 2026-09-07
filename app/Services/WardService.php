@@ -1146,74 +1146,144 @@ public function exportAllRoads($ward_id)
         }
     }
 
-    public function deletePolygon($data, $useTransaction = true)
-    {
-        try {
-            // Only start transaction if requested and not already in one
-            if ($useTransaction && DB::transactionLevel() === 0) {
-                DB::beginTransaction();
-                $startedTransaction = true;
-            } else {
-                $startedTransaction = false;
-            }
+  public function deletePolygon($data, $useTransaction = true)
+{
+    try {
 
-            $tableName = 'polygons_' . $data['ward_id'];
-            $pointTableName = 'points_' . $data['ward_id'];
+        if ($useTransaction && DB::transactionLevel() === 0) {
+            DB::beginTransaction();
+            $startedTransaction = true;
+        } else {
+            $startedTransaction = false;
+        }
 
-            $gisid = $data['gisid'];
+        $tableName = 'polygons_' . $data['ward_id'];
+        $pointTableName = 'points_' . $data['ward_id'];
 
-            // Check polygon exists
-            $polygonExists = DB::table($tableName)
-                ->where('gisid', $gisid)
-                ->exists();
+        $gisid = $data['gisid'];
 
-            if (!$polygonExists) {
-                return [
-                    'status' => false,
-                    'message' => 'Polygon not found'
-                ];
-            }
+        // Check polygon exists
+        $polygonExists = DB::table($tableName)
+            ->where('gisid', $gisid)
+            ->exists();
 
-            // Delete polygon
-            DB::table($tableName)
-                ->where('gisid', $gisid)
-                ->delete();
+        if (!$polygonExists) {
 
-            // Delete corresponding point
-            DB::table($pointTableName)
-                ->where('gisid', $gisid)
-                ->delete();
-
-            // Only commit if we started the transaction
             if ($startedTransaction) {
-                DB::commit();
-            }
-
-            // Get remaining data
-            $polygons = DB::table($tableName)->get();
-            $points = DB::table($pointTableName)->get();
-
-            return [
-                'status' => true,
-                'gisid' => $gisid,
-                'message' => 'Polygon deleted successfully',
-                'polygons' => $polygons,
-                'points' => $points
-            ];
-        } catch (\Exception $e) {
-            // Only rollback if we started the transaction
-            if (isset($startedTransaction) && $startedTransaction) {
                 DB::rollBack();
             }
-            Log::error('deletePolygon error: ' . $e->getMessage());
 
             return [
                 'status' => false,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'message' => 'Polygon not found'
             ];
         }
+
+        // Delete polygon
+        DB::table($tableName)
+            ->where('gisid', $gisid)
+            ->delete();
+
+        // Delete corresponding point
+        DB::table($pointTableName)
+            ->where('gisid', $gisid)
+            ->delete();
+
+        if ($startedTransaction) {
+            DB::commit();
+        }
+
+        // Get remaining data
+        $polygons = DB::table($tableName)->get();
+        $points = DB::table($pointTableName)->get();
+
+        return [
+            'status' => true,
+            'gisid' => $gisid,
+            'message' => 'Polygon deleted successfully',
+            'polygons' => $polygons,
+            'points' => $points
+        ];
+
+    } catch (\Exception $e) {
+
+        if (isset($startedTransaction) && $startedTransaction) {
+            DB::rollBack();
+        }
+
+        Log::error('deletePolygon error: ' . $e->getMessage());
+
+        return [
+            'status' => false,
+            'message' => $e->getMessage()
+        ];
     }
+}
+public function deleteLine($data, $useTransaction = true)
+{
+    try {
+
+        if ($useTransaction && DB::transactionLevel() === 0) {
+            DB::beginTransaction();
+            $startedTransaction = true;
+        } else {
+            $startedTransaction = false;
+        }
+
+        $tableName = 'lines_' . $data['ward_id'];
+
+        $gisid = $data['gisid'];
+
+        // Check line exists
+        $lineExists = DB::table($tableName)
+            ->where('gisid', $gisid)
+            ->exists();
+
+        if (!$lineExists) {
+
+            if ($startedTransaction) {
+                DB::rollBack();
+            }
+
+            return [
+                'status' => false,
+                'message' => 'Line not found'
+            ];
+        }
+
+        // Delete line
+        DB::table($tableName)
+            ->where('gisid', $gisid)
+            ->delete();
+
+        if ($startedTransaction) {
+            DB::commit();
+        }
+
+        // Get remaining lines
+        $lines = DB::table($tableName)->get();
+
+        return [
+            'status' => true,
+            'gisid' => $gisid,
+            'message' => 'Line deleted successfully',
+            'lines' => $lines
+        ];
+
+    } catch (\Exception $e) {
+
+        if (isset($startedTransaction) && $startedTransaction) {
+            DB::rollBack();
+        }
+
+        Log::error('deleteLine error: ' . $e->getMessage());
+
+        return [
+            'status' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+}
 
     // ─────────────────────────────────────────────────────────────
     //  PRIVATE: Geometry helpers (unchanged)

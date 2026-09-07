@@ -257,43 +257,53 @@ class FeatureController extends Controller
             'data'    => $result
         ]);
     }
-    public function polygonDelete(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'gisid' => 'required|string',
-            'type' => 'required',
-        ]);
+   public function polygonDelete(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'gisid' => 'required|string',
+        'type'  => 'required|in:polygon,line',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $user = auth()->user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated'
-            ], 401);
-        }
-
-        $wardId = $user->ward_id;
-
-        if (!$wardId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User has no ward assigned'
-            ], 400);
-        }
-
-        $result = $this->wardService->deletePolygon([
-            'ward_id' => $wardId,
-            'gisid'   => $request->gisid,
-        ]);
-
-        return response()->json($result);
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors'  => $validator->errors()
+        ], 422);
     }
+
+    $user = auth()->user();
+
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthenticated'
+        ], 401);
+    }
+
+    $wardId = $user->ward_id;
+
+    if (!$wardId) {
+        return response()->json([
+            'success' => false,
+            'message' => 'User has no ward assigned'
+        ], 400);
+    }
+
+    $data = [
+        'ward_id' => $wardId,
+        'gisid'   => $request->gisid,
+    ];
+
+    // Delete based on type
+    if ($request->type === 'polygon') {
+
+        $result = $this->wardService->deletePolygon($data);
+
+    } elseif ($request->type === 'line') {
+
+        $result = $this->wardService->deleteLine($data);
+    }
+
+    return response()->json($result);
+}
 }

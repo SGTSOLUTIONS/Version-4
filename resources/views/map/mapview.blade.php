@@ -3098,6 +3098,7 @@
 
                             if (response.success) {
                                 showFlashMessage('Point data updated successfully!', 'success');
+                                 pointDatas = response.pointDatas ?? pointDatas;
                                 $('#pointDetailsModal').modal('hide');
                                 $form.removeAttr('data-edit-id');
                                 $('#savePointDetails').html(originalHtml);
@@ -3928,129 +3929,135 @@
                     }
                 });
             }
-           // ─── MERGE MODE STATE ───
-let mergeModeActive = false;
-let selectedFeaturesForMerge = [];
-let mergeSelectInteraction = null;
-let mergeHoverInteraction = null;
+            // ─── MERGE MODE STATE ───
+            let mergeModeActive = false;
+            let selectedFeaturesForMerge = [];
+            let mergeSelectInteraction = null;
+            let mergeHoverInteraction = null;
 
-// ─── SET MERGE MODE ───
-function setMergeMode() {
-    currentMode = 'merge';
-    mergeModeActive = true;
-    selectedFeaturesForMerge = [];
-    disableAllInteractions();
-    hideMergeButton();
+            // ─── SET MERGE MODE ───
+            function setMergeMode() {
+                currentMode = 'merge';
+                mergeModeActive = true;
+                selectedFeaturesForMerge = [];
+                disableAllInteractions();
+                hideMergeButton();
 
-    map.getTargetElement().classList.add('merge-mode');
+                map.getTargetElement().classList.add('merge-mode');
 
-    // Style for selected features
-    const selectedStyle = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: '#8b5cf6',
-            width: 5
-        }),
-        fill: new ol.style.Fill({
-            color: 'rgba(139,92,246,0.25)'
-        })
-    });
+                // Style for selected features
+                const selectedStyle = new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#8b5cf6',
+                        width: 5
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(139,92,246,0.25)'
+                    })
+                });
 
-    // Hover style
-    const hoverStyle = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: '#f59e0b',
-            width: 3,
-            lineDash: [4, 4]
-        }),
-        fill: new ol.style.Fill({
-            color: 'rgba(245,158,11,0.15)'
-        })
-    });
+                // Hover style
+                const hoverStyle = new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#f59e0b',
+                        width: 3,
+                        lineDash: [4, 4]
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(245,158,11,0.15)'
+                    })
+                });
 
-    // Select interaction for merging
-    mergeSelectInteraction = new ol.interaction.Select({
-        layers: [polygonLayer],
-        style: function(feature) {
-            const isSelected = selectedFeaturesForMerge.some(f => f.getId() === feature.getId());
-            return isSelected ? selectedStyle : undefined;
-        },
-        condition: function(evt) {
-            return ol.events.condition.singleClick(evt);
-        }
-    });
+                // Select interaction for merging
+                mergeSelectInteraction = new ol.interaction.Select({
+                    layers: [polygonLayer],
+                    style: function(feature) {
+                        const isSelected = selectedFeaturesForMerge.some(f => f.getId() === feature
+                            .getId());
+                        return isSelected ? selectedStyle : undefined;
+                    },
+                    condition: function(evt) {
+                        return ol.events.condition.singleClick(evt);
+                    }
+                });
 
-    mergeSelectInteraction.on('select', function(e) {
-        e.deselected.forEach(function(feature) {
-            const index = selectedFeaturesForMerge.findIndex(f => f.getId() === feature.getId());
-            if (index !== -1) {
-                selectedFeaturesForMerge.splice(index, 1);
-                feature.setStyle(null);
+                mergeSelectInteraction.on('select', function(e) {
+                    e.deselected.forEach(function(feature) {
+                        const index = selectedFeaturesForMerge.findIndex(f => f.getId() === feature
+                            .getId());
+                        if (index !== -1) {
+                            selectedFeaturesForMerge.splice(index, 1);
+                            feature.setStyle(null);
+                        }
+                    });
+
+                    e.selected.forEach(function(feature) {
+                        if (feature.get('type') !== 'Polygon') {
+                            showToast('⚠️ Please select only Polygons', 2000);
+                            mergeSelectInteraction.getFeatures().remove(feature);
+                            return;
+                        }
+
+                        const alreadySelected = selectedFeaturesForMerge.some(f => f.getId() ===
+                            feature.getId());
+                        if (!alreadySelected) {
+                            selectedFeaturesForMerge.push(feature);
+                            feature.setStyle(selectedStyle);
+                            showToast(
+                                `✅ Polygon selected (${selectedFeaturesForMerge.length} selected)`,
+                                1500);
+                        }
+                    });
+
+                    updateMergeButton();
+                });
+
+                map.addInteraction(mergeSelectInteraction);
+
+                // Hover interaction for preview
+                mergeHoverInteraction = new ol.interaction.Select({
+                    layers: [polygonLayer],
+                    style: hoverStyle,
+                    condition: function(evt) {
+                        return ol.events.condition.pointerMove(evt);
+                    }
+                });
+
+                mergeHoverInteraction.on('select', function(e) {
+                    e.deselected.forEach(function(feature) {
+                        if (!selectedFeaturesForMerge.some(f => f.getId() === feature.getId())) {
+                            feature.setStyle(null);
+                        }
+                    });
+
+                    e.selected.forEach(function(feature) {
+                        const isSelected = selectedFeaturesForMerge.some(f => f.getId() === feature
+                            .getId());
+                        if (!isSelected && feature.get('type') === 'Polygon') {
+                            feature.setStyle(hoverStyle);
+                        }
+                    });
+                });
+
+                map.addInteraction(mergeHoverInteraction);
+
+                showToast('🔗 Merge Mode: Click polygons to select them', 2500);
             }
-        });
 
-        e.selected.forEach(function(feature) {
-            if (feature.get('type') !== 'Polygon') {
-                showToast('⚠️ Please select only Polygons', 2000);
-                mergeSelectInteraction.getFeatures().remove(feature);
-                return;
+            // ─── UPDATE MERGE BUTTON ───
+            function updateMergeButton() {
+                const count = selectedFeaturesForMerge.length;
+                if (count >= 2) {
+                    showMergeButton(count);
+                } else {
+                    hideMergeButton();
+                }
             }
 
-            const alreadySelected = selectedFeaturesForMerge.some(f => f.getId() === feature.getId());
-            if (!alreadySelected) {
-                selectedFeaturesForMerge.push(feature);
-                feature.setStyle(selectedStyle);
-                showToast(`✅ Polygon selected (${selectedFeaturesForMerge.length} selected)`, 1500);
-            }
-        });
-
-        updateMergeButton();
-    });
-
-    map.addInteraction(mergeSelectInteraction);
-
-    // Hover interaction for preview
-    mergeHoverInteraction = new ol.interaction.Select({
-        layers: [polygonLayer],
-        style: hoverStyle,
-        condition: function(evt) {
-            return ol.events.condition.pointerMove(evt);
-        }
-    });
-
-    mergeHoverInteraction.on('select', function(e) {
-        e.deselected.forEach(function(feature) {
-            if (!selectedFeaturesForMerge.some(f => f.getId() === feature.getId())) {
-                feature.setStyle(null);
-            }
-        });
-
-        e.selected.forEach(function(feature) {
-            const isSelected = selectedFeaturesForMerge.some(f => f.getId() === feature.getId());
-            if (!isSelected && feature.get('type') === 'Polygon') {
-                feature.setStyle(hoverStyle);
-            }
-        });
-    });
-
-    map.addInteraction(mergeHoverInteraction);
-
-    showToast('🔗 Merge Mode: Click polygons to select them', 2500);
-}
-
-// ─── UPDATE MERGE BUTTON ───
-function updateMergeButton() {
-    const count = selectedFeaturesForMerge.length;
-    if (count >= 2) {
-        showMergeButton(count);
-    } else {
-        hideMergeButton();
-    }
-}
-
-// ─── SHOW MERGE BUTTON ───
-function showMergeButton(count) {
-    hideMergeButton();
-    const $btn = $(`
+            // ─── SHOW MERGE BUTTON ───
+            function showMergeButton(count) {
+                hideMergeButton();
+                const $btn = $(`
         <div class="merge-action-btn show" id="mergeActionBtn">
             <i class="bi bi-union"></i>
             Merge ${count} Polygons
@@ -4058,127 +4065,127 @@ function showMergeButton(count) {
             <span class="close-btn">✕</span>
         </div>
     `);
-    $('#map').append($btn);
+                $('#map').append($btn);
 
-    $btn.on('click', function(e) {
-        if (!$(e.target).hasClass('close-btn')) {
-            performMerge();
-        }
-    });
+                $btn.on('click', function(e) {
+                    if (!$(e.target).hasClass('close-btn')) {
+                        performMerge();
+                    }
+                });
 
-    $btn.find('.close-btn').on('click', function(e) {
-        e.stopPropagation();
-        cancelMerge();
-    });
-}
-
-// ─── HIDE MERGE BUTTON ───
-function hideMergeButton() {
-    $('#mergeActionBtn').remove();
-}
-
-// ─── CANCEL MERGE ───
-function cancelMerge() {
-    selectedFeaturesForMerge.forEach(function(feature) {
-        feature.setStyle(null);
-    });
-    selectedFeaturesForMerge = [];
-    hideMergeButton();
-    showToast('❌ Merge cancelled', 2000);
-
-    if (mergeSelectInteraction) {
-        mergeSelectInteraction.getFeatures().clear();
-    }
-    setNoneMode();
-}
-
-// ─── PERFORM MERGE ───
-function performMerge() {
-    if (selectedFeaturesForMerge.length < 2) {
-        showToast('⚠️ Please select at least 2 polygons', 2000);
-        return;
-    }
-
-    const allPolygons = selectedFeaturesForMerge.every(f => f.get('type') === 'Polygon');
-    if (!allPolygons) {
-        Swal.fire('Error', 'All selected features must be polygons', 'error');
-        return;
-    }
-
-    const featuresData = selectedFeaturesForMerge.map(f => ({
-        gisid: f.get('gisid'),
-        geometry: f.getGeometry().clone()
-    }));
-
-    const gisids = featuresData.map(f => f.gisid);
-    const geometries = featuresData.map(f => f.geometry);
-
-    const $btn = $('#mergeActionBtn');
-    const originalHtml = $btn.html();
-    $btn.html('<i class="fas fa-spinner fa-spin"></i> Merging...').prop('disabled', true);
-
-    $.ajax({
-        url: '/polygon-merge',
-        type: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        data: {
-            gisids: gisids,
-            geometries: geometries.map(g => JSON.stringify(g.getCoordinates())),
-            _token: $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            Swal.fire('Success!', 'Polygons merged successfully', 'success');
-
-            polygons = response.data.polygons ?? polygons;
-            points = response.data.points ?? points;
-            lines = response.data.lines ?? lines;
-
-            selectedFeaturesForMerge.forEach(function(f) {
-                f.setStyle(null);
-            });
-            selectedFeaturesForMerge = [];
-            hideMergeButton();
-
-            reloadAllSources();
-
-            disableAllInteractions();
-            clearDrawInteraction();
-
-            mergeModeActive = false;
-            if (mergeSelectInteraction) {
-                map.removeInteraction(mergeSelectInteraction);
-                mergeSelectInteraction = null;
+                $btn.find('.close-btn').on('click', function(e) {
+                    e.stopPropagation();
+                    cancelMerge();
+                });
             }
-            if (mergeHoverInteraction) {
-                map.removeInteraction(mergeHoverInteraction);
-                mergeHoverInteraction = null;
+
+            // ─── HIDE MERGE BUTTON ───
+            function hideMergeButton() {
+                $('#mergeActionBtn').remove();
             }
-            map.getTargetElement().classList.remove('merge-mode');
 
-            showToast('✅ Merge complete!', 2000);
-            setNoneMode();
-        },
-        error: function(xhr) {
-            console.error('Merge error:', xhr);
-            let errorMsg = 'Failed to merge polygons.';
-            if (xhr.responseJSON?.message) {
-                errorMsg = xhr.responseJSON.message;
+            // ─── CANCEL MERGE ───
+            function cancelMerge() {
+                selectedFeaturesForMerge.forEach(function(feature) {
+                    feature.setStyle(null);
+                });
+                selectedFeaturesForMerge = [];
+                hideMergeButton();
+                showToast('❌ Merge cancelled', 2000);
+
+                if (mergeSelectInteraction) {
+                    mergeSelectInteraction.getFeatures().clear();
+                }
+                setNoneMode();
             }
-            Swal.fire('Error', errorMsg, 'error');
 
-            $btn.html(originalHtml).prop('disabled', false);
+            // ─── PERFORM MERGE ───
+            function performMerge() {
+                if (selectedFeaturesForMerge.length < 2) {
+                    showToast('⚠️ Please select at least 2 polygons', 2000);
+                    return;
+                }
 
-            selectedFeaturesForMerge.forEach(function(f) {
-                f.setStyle(null);
-            });
-            selectedFeaturesForMerge = [];
-            hideMergeButton();
-            setNoneMode();
-        }
-    });
-}
+                const allPolygons = selectedFeaturesForMerge.every(f => f.get('type') === 'Polygon');
+                if (!allPolygons) {
+                    Swal.fire('Error', 'All selected features must be polygons', 'error');
+                    return;
+                }
+
+                const featuresData = selectedFeaturesForMerge.map(f => ({
+                    gisid: f.get('gisid'),
+                    geometry: f.getGeometry().clone()
+                }));
+
+                const gisids = featuresData.map(f => f.gisid);
+                const geometries = featuresData.map(f => f.geometry);
+
+                const $btn = $('#mergeActionBtn');
+                const originalHtml = $btn.html();
+                $btn.html('<i class="fas fa-spinner fa-spin"></i> Merging...').prop('disabled', true);
+
+                $.ajax({
+                    url: '/polygon-merge',
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: {
+                        gisids: gisids,
+                        geometries: geometries.map(g => JSON.stringify(g.getCoordinates())),
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        Swal.fire('Success!', 'Polygons merged successfully', 'success');
+
+                        polygons = response.data.polygons ?? polygons;
+                        points = response.data.points ?? points;
+                        lines = response.data.lines ?? lines;
+
+                        selectedFeaturesForMerge.forEach(function(f) {
+                            f.setStyle(null);
+                        });
+                        selectedFeaturesForMerge = [];
+                        hideMergeButton();
+
+                        reloadAllSources();
+
+                        disableAllInteractions();
+                        clearDrawInteraction();
+
+                        mergeModeActive = false;
+                        if (mergeSelectInteraction) {
+                            map.removeInteraction(mergeSelectInteraction);
+                            mergeSelectInteraction = null;
+                        }
+                        if (mergeHoverInteraction) {
+                            map.removeInteraction(mergeHoverInteraction);
+                            mergeHoverInteraction = null;
+                        }
+                        map.getTargetElement().classList.remove('merge-mode');
+
+                        showToast('✅ Merge complete!', 2000);
+                        setNoneMode();
+                    },
+                    error: function(xhr) {
+                        console.error('Merge error:', xhr);
+                        let errorMsg = 'Failed to merge polygons.';
+                        if (xhr.responseJSON?.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        Swal.fire('Error', errorMsg, 'error');
+
+                        $btn.html(originalHtml).prop('disabled', false);
+
+                        selectedFeaturesForMerge.forEach(function(f) {
+                            f.setStyle(null);
+                        });
+                        selectedFeaturesForMerge = [];
+                        hideMergeButton();
+                        setNoneMode();
+                    }
+                });
+            }
             // ─── CLEANUP MERGE ───
             function cleanupMerge() {
                 if (mergeSelectInteraction) {
@@ -5637,54 +5644,54 @@ function performMerge() {
             function addProfessionalCard(data = {}) {
                 const idx = ptIndex;
                 const html = `
-        <div class="card mb-3 professional-card" data-index="${idx}">
-            <div class="card-header d-flex justify-content-between">
-                <strong>Professional Tax #${idx + 1}</strong>
-                <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
-            </div>
-            <div class="card-body">
-                <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label>PT Number</label>
-                        <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}">
+                            <div class="card mb-3 professional-card" data-index="${idx}">
+                                <div class="card-header d-flex justify-content-between">
+                                    <strong>Professional Tax #${idx + 1}</strong>
+                                    <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
+                                </div>
+                                <div class="card-body">
+                                    <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label>PT Number</label>
+                                            <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Old PT Number</label>
+                                            <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Establishment Name</label>
+                                            <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Profession Type</label>
+                                            <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Trade License</label>
+                                            <input class="form-control" name="professional[${idx}][trade_license]" value="${data.trade_license || ''}" placeholder="Enter trade license number">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Employee Count</label>
+                                            <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Half Year Tax</label>
+                                            <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Arrears</label>
+                                            <input type="number" class="form-control" name="professional[${idx}][arrears]" value="${data.arrears || ''}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Penalty</label>
+                                            <input type="number" class="form-control" name="professional[${idx}][penalty]" value="${data.penalty || ''}">
+                                        </div>
+                                        <div class="col-md-4">
+                        <label>Shop Owner Name</label>
+                        <input type="text" class="form-control" name="professional[${idx}][shop_owner]" value="${data.shop_owner || ''}">
                     </div>
-                    <div class="col-md-4">
-                        <label>Old PT Number</label>
-                        <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Establishment Name</label>
-                        <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Profession Type</label>
-                        <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Trade License</label>
-                        <input class="form-control" name="professional[${idx}][trade_license]" value="${data.trade_license || ''}" placeholder="Enter trade license number">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Employee Count</label>
-                        <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Half Year Tax</label>
-                        <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Arrears</label>
-                        <input type="number" class="form-control" name="professional[${idx}][arrears]" value="${data.arrears || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Penalty</label>
-                        <input type="number" class="form-control" name="professional[${idx}][penalty]" value="${data.penalty || ''}">
-                    </div>
-                    <div class="col-md-4">
-    <label>Shop Owner Name</label>
-    <input type="text" class="form-control" name="professional[${idx}][shop_owner]" value="${data.shop_owner || ''}">
-</div>
                     <div class="col-md-4">
                         <label>Balance</label>
                         <input type="number" class="form-control" name="professional[${idx}][balance]" value="${data.balance || ''}">
