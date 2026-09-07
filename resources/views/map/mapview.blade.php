@@ -23,6 +23,65 @@
             z-index: 10;
         }
 
+        .merge-mode {
+            cursor: pointer !important;
+        }
+
+        .merge-selected {
+            stroke: #8b5cf6 !important;
+            stroke-width: 5 !important;
+            fill: rgba(139, 92, 246, 0.2) !important;
+        }
+
+        .merge-highlight {
+            stroke: #f59e0b !important;
+            stroke-width: 3 !important;
+            fill: rgba(245, 158, 11, 0.15) !important;
+        }
+
+        .merge-action-btn {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            background: #8b5cf6;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            border: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        .merge-action-btn.show {
+            display: flex;
+        }
+
+        .merge-action-btn .close-btn {
+            font-size: 1.2rem;
+            opacity: 0.7;
+            cursor: pointer;
+            padding: 0 5px;
+            transition: opacity 0.2s;
+        }
+
+        .merge-action-btn .close-btn:hover {
+            opacity: 1;
+        }
+
+        .merge-action-btn .merge-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
         .dropdown-divider {
             height: 1px;
             margin: 0;
@@ -2754,6 +2813,24 @@
                     map.removeInteraction(translateInteraction);
                     translateInteraction = null;
                 }
+
+                // ─── ADD MERGE CLEANUP ───
+                if (mergeSelectInteraction) {
+                    map.removeInteraction(mergeSelectInteraction);
+                    mergeSelectInteraction = null;
+                }
+                if (mergeHoverInteraction) {
+                    map.removeInteraction(mergeHoverInteraction);
+                    mergeHoverInteraction = null;
+                }
+                selectedFeaturesForMerge.forEach(function(f) {
+                    f.setStyle(null);
+                });
+                selectedFeaturesForMerge = [];
+                hideMergeButton();
+                map.getTargetElement().classList.remove('merge-mode');
+                mergeModeActive = false;
+
                 tempDrawSource.clear();
                 map.getTargetElement().classList.remove('draw-mode', 'split-mode', 'edit-mode');
                 hideSplitButton();
@@ -3465,6 +3542,7 @@
             // ─── NONE MODE ───
             function setNoneMode() {
                 currentMode = 'none';
+                mergeModeActive = false;
                 disableAllInteractions();
                 hideSplitButton();
                 hideEditControls();
@@ -3850,7 +3928,275 @@
                     }
                 });
             }
+           // ─── MERGE MODE STATE ───
+let mergeModeActive = false;
+let selectedFeaturesForMerge = [];
+let mergeSelectInteraction = null;
+let mergeHoverInteraction = null;
 
+// ─── SET MERGE MODE ───
+function setMergeMode() {
+    currentMode = 'merge';
+    mergeModeActive = true;
+    selectedFeaturesForMerge = [];
+    disableAllInteractions();
+    hideMergeButton();
+
+    map.getTargetElement().classList.add('merge-mode');
+
+    // Style for selected features
+    const selectedStyle = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#8b5cf6',
+            width: 5
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(139,92,246,0.25)'
+        })
+    });
+
+    // Hover style
+    const hoverStyle = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#f59e0b',
+            width: 3,
+            lineDash: [4, 4]
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(245,158,11,0.15)'
+        })
+    });
+
+    // Select interaction for merging
+    mergeSelectInteraction = new ol.interaction.Select({
+        layers: [polygonLayer],
+        style: function(feature) {
+            const isSelected = selectedFeaturesForMerge.some(f => f.getId() === feature.getId());
+            return isSelected ? selectedStyle : undefined;
+        },
+        condition: function(evt) {
+            return ol.events.condition.singleClick(evt);
+        }
+    });
+
+    mergeSelectInteraction.on('select', function(e) {
+        e.deselected.forEach(function(feature) {
+            const index = selectedFeaturesForMerge.findIndex(f => f.getId() === feature.getId());
+            if (index !== -1) {
+                selectedFeaturesForMerge.splice(index, 1);
+                feature.setStyle(null);
+            }
+        });
+
+        e.selected.forEach(function(feature) {
+            if (feature.get('type') !== 'Polygon') {
+                showToast('⚠️ Please select only Polygons', 2000);
+                mergeSelectInteraction.getFeatures().remove(feature);
+                return;
+            }
+
+            const alreadySelected = selectedFeaturesForMerge.some(f => f.getId() === feature.getId());
+            if (!alreadySelected) {
+                selectedFeaturesForMerge.push(feature);
+                feature.setStyle(selectedStyle);
+                showToast(`✅ Polygon selected (${selectedFeaturesForMerge.length} selected)`, 1500);
+            }
+        });
+
+        updateMergeButton();
+    });
+
+    map.addInteraction(mergeSelectInteraction);
+
+    // Hover interaction for preview
+    mergeHoverInteraction = new ol.interaction.Select({
+        layers: [polygonLayer],
+        style: hoverStyle,
+        condition: function(evt) {
+            return ol.events.condition.pointerMove(evt);
+        }
+    });
+
+    mergeHoverInteraction.on('select', function(e) {
+        e.deselected.forEach(function(feature) {
+            if (!selectedFeaturesForMerge.some(f => f.getId() === feature.getId())) {
+                feature.setStyle(null);
+            }
+        });
+
+        e.selected.forEach(function(feature) {
+            const isSelected = selectedFeaturesForMerge.some(f => f.getId() === feature.getId());
+            if (!isSelected && feature.get('type') === 'Polygon') {
+                feature.setStyle(hoverStyle);
+            }
+        });
+    });
+
+    map.addInteraction(mergeHoverInteraction);
+
+    showToast('🔗 Merge Mode: Click polygons to select them', 2500);
+}
+
+// ─── UPDATE MERGE BUTTON ───
+function updateMergeButton() {
+    const count = selectedFeaturesForMerge.length;
+    if (count >= 2) {
+        showMergeButton(count);
+    } else {
+        hideMergeButton();
+    }
+}
+
+// ─── SHOW MERGE BUTTON ───
+function showMergeButton(count) {
+    hideMergeButton();
+    const $btn = $(`
+        <div class="merge-action-btn show" id="mergeActionBtn">
+            <i class="bi bi-union"></i>
+            Merge ${count} Polygons
+            <span class="merge-count">${count}</span>
+            <span class="close-btn">✕</span>
+        </div>
+    `);
+    $('#map').append($btn);
+
+    $btn.on('click', function(e) {
+        if (!$(e.target).hasClass('close-btn')) {
+            performMerge();
+        }
+    });
+
+    $btn.find('.close-btn').on('click', function(e) {
+        e.stopPropagation();
+        cancelMerge();
+    });
+}
+
+// ─── HIDE MERGE BUTTON ───
+function hideMergeButton() {
+    $('#mergeActionBtn').remove();
+}
+
+// ─── CANCEL MERGE ───
+function cancelMerge() {
+    selectedFeaturesForMerge.forEach(function(feature) {
+        feature.setStyle(null);
+    });
+    selectedFeaturesForMerge = [];
+    hideMergeButton();
+    showToast('❌ Merge cancelled', 2000);
+
+    if (mergeSelectInteraction) {
+        mergeSelectInteraction.getFeatures().clear();
+    }
+    setNoneMode();
+}
+
+// ─── PERFORM MERGE ───
+function performMerge() {
+    if (selectedFeaturesForMerge.length < 2) {
+        showToast('⚠️ Please select at least 2 polygons', 2000);
+        return;
+    }
+
+    const allPolygons = selectedFeaturesForMerge.every(f => f.get('type') === 'Polygon');
+    if (!allPolygons) {
+        Swal.fire('Error', 'All selected features must be polygons', 'error');
+        return;
+    }
+
+    const featuresData = selectedFeaturesForMerge.map(f => ({
+        gisid: f.get('gisid'),
+        geometry: f.getGeometry().clone()
+    }));
+
+    const gisids = featuresData.map(f => f.gisid);
+    const geometries = featuresData.map(f => f.geometry);
+
+    const $btn = $('#mergeActionBtn');
+    const originalHtml = $btn.html();
+    $btn.html('<i class="fas fa-spinner fa-spin"></i> Merging...').prop('disabled', true);
+
+    $.ajax({
+        url: '/polygon-merge',
+        type: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        data: {
+            gisids: gisids,
+            geometries: geometries.map(g => JSON.stringify(g.getCoordinates())),
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            Swal.fire('Success!', 'Polygons merged successfully', 'success');
+
+            polygons = response.data.polygons ?? polygons;
+            points = response.data.points ?? points;
+            lines = response.data.lines ?? lines;
+
+            selectedFeaturesForMerge.forEach(function(f) {
+                f.setStyle(null);
+            });
+            selectedFeaturesForMerge = [];
+            hideMergeButton();
+
+            reloadAllSources();
+
+            disableAllInteractions();
+            clearDrawInteraction();
+
+            mergeModeActive = false;
+            if (mergeSelectInteraction) {
+                map.removeInteraction(mergeSelectInteraction);
+                mergeSelectInteraction = null;
+            }
+            if (mergeHoverInteraction) {
+                map.removeInteraction(mergeHoverInteraction);
+                mergeHoverInteraction = null;
+            }
+            map.getTargetElement().classList.remove('merge-mode');
+
+            showToast('✅ Merge complete!', 2000);
+            setNoneMode();
+        },
+        error: function(xhr) {
+            console.error('Merge error:', xhr);
+            let errorMsg = 'Failed to merge polygons.';
+            if (xhr.responseJSON?.message) {
+                errorMsg = xhr.responseJSON.message;
+            }
+            Swal.fire('Error', errorMsg, 'error');
+
+            $btn.html(originalHtml).prop('disabled', false);
+
+            selectedFeaturesForMerge.forEach(function(f) {
+                f.setStyle(null);
+            });
+            selectedFeaturesForMerge = [];
+            hideMergeButton();
+            setNoneMode();
+        }
+    });
+}
+            // ─── CLEANUP MERGE ───
+            function cleanupMerge() {
+                if (mergeSelectInteraction) {
+                    map.removeInteraction(mergeSelectInteraction);
+                    mergeSelectInteraction = null;
+                }
+                if (mergeHoverInteraction) {
+                    map.removeInteraction(mergeHoverInteraction);
+                    mergeHoverInteraction = null;
+                }
+                selectedFeaturesForMerge.forEach(function(f) {
+                    f.setStyle(null);
+                });
+                selectedFeaturesForMerge = [];
+                hideMergeButton();
+                map.getTargetElement().classList.remove('merge-mode');
+                mergeModeActive = false;
+            }
             // ─── SPLIT MODE ───
             function setSplitMode() {
                 currentMode = 'split';
@@ -4527,6 +4873,11 @@
                     <div class="edit-name">Draw Polygon</div>
                     <div class="edit-check"><i class="bi bi-check-lg"></i></div>
                 </div>
+                <div class="edit-dropdown-item" data-tool="merge">
+    <div class="edit-icon"><i class="bi bi-union"></i></div>
+    <div class="edit-name">Merge Polygons</div>
+    <div class="edit-check"><i class="bi bi-check-lg"></i></div>
+</div>
                 <div class="edit-dropdown-item" data-tool="drawLine">
                     <div class="edit-icon"><i class="bi bi-vector-pen"></i></div>
                     <div class="edit-name">Draw Line</div>
@@ -4607,6 +4958,9 @@
                         break;
                     case 'drawPoint':
                         startDrawing('Point');
+                        break;
+                    case 'merge':
+                        setMergeMode();
                         break;
                 }
 
@@ -5244,7 +5598,7 @@
                                     employee_count: pt.employee_count || '',
                                     half_year_tax: pt.half_year_tax || '',
                                     shop_owner: pt.owner_name ||
-                                    '', // ✅ This maps owner_name to shop_owner
+                                        '', // ✅ This maps owner_name to shop_owner
                                     arrears: pt.arrears || '',
                                     penalty: pt.penalty || '',
                                     balance: pt.balance || '',

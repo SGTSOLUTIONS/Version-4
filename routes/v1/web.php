@@ -24,7 +24,7 @@ Route::prefix('infrastructure')->group(function () {
     Route::get('/summary/{wardId}', [InfrastructureController::class, 'getInfrastructureSummary']);
     Route::get('/type/{wardId}/{type}', [InfrastructureController::class, 'getFeatureByType']);
 });
-  Route::get('/', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/qr-code-assessment', [PointdataController::class, 'qrCodeAssessment'])
     ->name('qrCodeAssessment');
 Route::get('/view-assessment/{wardNo}/{pointId}', [PointdataController::class, 'showQr'])
@@ -51,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/save-feature', [FeatureController::class, 'addFeature']);
     Route::post('/polygon-split', [FeatureController::class, 'polygonSplit']);
     Route::post('/update-polygon', [FeatureController::class, 'polygonUpdate']);
+    Route::post('/polygon-merge', [FeatureController::class, 'merge'])->name('polygon.merge');
     Route::post('/delete-feature', [FeatureController::class, 'polygonDelete']);
     Route::post('/point-data/{id}/qc', [CommissionerController::class, 'qcUpdate'])->name('qcUpdate');
 
@@ -86,7 +87,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/wards/{ward_id}/export-all-polygons', [WardController::class, 'exportAllPolygons'])
         ->name('wards.export-all-polygons');
 
-        Route::get('/wards/{ward_id}/export-all-road', [WardController::class, 'exportAllRoads'])
+    Route::get('/wards/{ward_id}/export-all-road', [WardController::class, 'exportAllRoads'])
         ->name('wards.export-all-road');
     // MIS Bill Excel
     Route::get('/wards/{ward_id}/mis-bill-excel', [WardController::class, 'misBillExcel'])
@@ -254,6 +255,6 @@ Route::middleware(['auth', 'role:surveyor,teamleader'])->group(function () {
     Route::get('/point-data/filter', [PointdataController::class, 'pointDataFilter'])->name('pointdata.filter');
     Route::get('/point-data/{id}', [PointdataController::class, 'editData'])->name('pointdata.edit');
     Route::put('/point-data/{id}', [PointdataController::class, 'pointDataUpdate'])->name('pointdata.update');
-});
+ });
 
 Route::get('/survey/map', [MapController::class, 'map'])->name('teamleader.map');
