@@ -645,31 +645,31 @@ class PointdataController extends Controller
                 $misData = [
                     'corporation_id' => $corpId,
                     'gisid' => $request->point_gisid,
-                    'ward_no' => $wardNo,
-                    'assessment' => $request->assessment,
-                    'old_assessment' => $request->old_assessment ?? null,
-                    'road_name' => $request->road_name ?? null,
-                    'owner_name' => $request->owner_name,
-                    'old_door_no' => $request->old_door_no,
-                    'new_door_no' => $request->new_door_no,
-                    'phone_number' => $request->phone_number,
-                    'usage' => $request->bill_usage ?? null,
-                    'type' => $request->type ?? null,
+                    // 'ward_no' => $wardNo,
+                    // 'assessment' => $request->assessment,
+                    // 'old_assessment' => $request->old_assessment ?? null,
+                    // 'road_name' => $request->road_name ?? null,
+                    // 'owner_name' => $request->owner_name,
+                    // 'old_door_no' => $request->old_door_no,
+                    // 'new_door_no' => $request->new_door_no,
+                    // 'phone_number' => $request->phone_number,
+                    // 'usage' => $request->bill_usage ?? null,
+                    // 'type' => $request->type ?? null,
                     'updated_at' => now(),
                 ];
 
-                // $misExists = DB::table($misTableName)
-                //     ->where('assessment', $request->assessment)
-                //     ->exists();
+                $misExists = DB::table($misTableName)
+                    ->where('assessment', $request->assessment)
+                    ->exists();
 
-                // if ($misExists) {
-                //     DB::table($misTableName)
-                //         ->where('assessment', $request->assessment)
-                //         ->update($misData);
-                // } else {
-                //     $misData['created_at'] = now();
-                //     DB::table($misTableName)->insert($misData);
-                // }
+                if ($misExists) {
+                    DB::table($misTableName)
+                        ->where('assessment', $request->assessment)
+                        ->update($misData);
+                } else {
+                    $misData['created_at'] = now();
+                    DB::table($misTableName)->insert($misData);
+                }
 
                 // ============================================================
                 // 5. If any validation errors exist, rollback
@@ -983,31 +983,31 @@ class PointdataController extends Controller
  $misData = [
                 'corporation_id' => $corpId,
                 'gisid' => $request->point_gisid,
-                'ward_no' => $ward->ward_no,
-                'assessment' => $request->assessment,
-                'old_assessment' => $request->old_assessment ?? null,
-                'road_name' => $request->road_name ?? null,
-                'owner_name' => $request->owner_name,
-                'old_door_no' => $request->old_door_no,
-                'new_door_no' => $request->new_door_no,
-                'phone_number' => $request->phone_number,
-                'usage' => $request->bill_usage ?? null,
-                'type' => $request->type ?? null,
+                // 'ward_no' => $ward->ward_no,
+                // 'assessment' => $request->assessment,
+                // 'old_assessment' => $request->old_assessment ?? null,
+                // 'road_name' => $request->road_name ?? null,
+                // 'owner_name' => $request->owner_name,
+                // 'old_door_no' => $request->old_door_no,
+                // 'new_door_no' => $request->new_door_no,
+                // 'phone_number' => $request->phone_number,
+                // 'usage' => $request->bill_usage ?? null,
+                // 'type' => $request->type ?? null,
                 'updated_at' => now(),
             ];
 
-            // $misExists = DB::table($misTableName)
-            //     ->where('assessment', $request->assessment)
-            //     ->exists();
+            $misExists = DB::table($misTableName)
+                ->where('assessment', $request->assessment)
+                ->exists();
 
-            // if ($misExists) {
-            //     DB::table($misTableName)
-            //         ->where('assessment', $request->assessment)
-            //         ->update($misData);
-            // } else {
-            //     $misData['created_at'] = now();
-            //     DB::table($misTableName)->insert($misData);
-            // }
+            if ($misExists) {
+                DB::table($misTableName)
+                    ->where('assessment', $request->assessment)
+                    ->update($misData);
+            } else {
+                $misData['created_at'] = now();
+                DB::table($misTableName)->insert($misData);
+            }
 
                 // 2. Water tax - Update or Insert
                 if ($request->filled('watertax_no')) {
