@@ -1111,10 +1111,10 @@
         <div class="map-header">
             <h5 class="map-title">
                 <i class="bi bi-geo-alt-fill text-primary me-2"></i>
-                Revenue GIS Dashboard
+                Revenue GIS Dashboard | <span id="surveycount">{{ $surveycount}}</span>
             </h5>
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
-            <span id="surveycount">{{ $surveycount}}</span>
+
         </div>
         <div id="map"></div>
     </div>
