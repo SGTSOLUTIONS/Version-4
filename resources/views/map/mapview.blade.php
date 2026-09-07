@@ -1177,6 +1177,7 @@
                     <div class="modal-body" style="max-height: 70vh; overflow-y: auto; background: #f8fafc;">
                         <!-- Building Images -->
                         <!-- For Image 1 -->
+<!-- For Image 1 -->
 <div class="col-md-6 mb-3">
     <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 1</label>
     <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
@@ -1190,16 +1191,59 @@
         </div>
     </div>
     <div class="mt-2 d-flex gap-2">
-        <label class="btn btn-success btn-sm flex-fill" style="cursor: pointer;">
+        <!-- SINGLE input that works for both Camera and Gallery -->
+        <input type="file" name="image" id="building_image"
+               accept="image/*"
+               capture="environment"
+               style="display: none;"
+               class="building-image-input"
+               data-preview="buildingImagePreview"
+               data-placeholder="noImagePlaceholder">
+
+        <!-- Camera Button -->
+        <label class="btn btn-success btn-sm flex-fill" for="building_image" style="cursor: pointer;">
             <i class="fas fa-camera me-1"></i> Camera
-            <input type="file" name="image" accept="image/*" capture="environment" style="display: none;" class="building-image-input" data-preview="buildingImagePreview" data-placeholder="noImagePlaceholder">
         </label>
-        <label class="btn btn-outline-primary btn-sm flex-fill" style="cursor: pointer;">
+
+        <!-- Gallery Button -->
+        <label class="btn btn-outline-primary btn-sm flex-fill" for="building_image" style="cursor: pointer;">
             <i class="fas fa-folder-open me-1"></i> Choose File
-            <input type="file" name="image" id="building_image" accept="image/*" style="display: none;" class="building-image-input" data-preview="buildingImagePreview" data-placeholder="noImagePlaceholder">
         </label>
     </div>
     <div id="building_image_error" class="error-message text-danger small mt-1"></div>
+</div>
+
+<!-- For Image 2 -->
+<div class="col-md-6 mb-3">
+    <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 2</label>
+    <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
+        <img id="buildingImagePreview2" src="" alt="Building Image Preview 2"
+            class="img-fluid"
+            style="display: none; max-height: 200px; width: 100%; object-fit: contain; border-radius: 8px;">
+        <div id="noImagePlaceholder2" class="text-center text-muted"
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px;">
+            <i class="fas fa-cloud-upload-alt fa-3x mb-2" style="color: #cbd5e1;"></i>
+            <p>No image selected</p>
+        </div>
+    </div>
+    <div class="mt-2 d-flex gap-2">
+        <!-- SINGLE input -->
+        <input type="file" name="image2" id="building_image2"
+               accept="image/*"
+               capture="environment"
+               style="display: none;"
+               class="building-image-input"
+               data-preview="buildingImagePreview2"
+               data-placeholder="noImagePlaceholder2">
+
+        <label class="btn btn-success btn-sm flex-fill" for="building_image2" style="cursor: pointer;">
+            <i class="fas fa-camera me-1"></i> Camera
+        </label>
+        <label class="btn btn-outline-primary btn-sm flex-fill" for="building_image2" style="cursor: pointer;">
+            <i class="fas fa-folder-open me-1"></i> Choose File
+        </label>
+    </div>
+    <div id="building_image2_error" class="error-message text-danger small mt-1"></div>
 </div>
 
 <!-- For Image 2 -->
