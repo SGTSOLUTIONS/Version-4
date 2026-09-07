@@ -1114,6 +1114,7 @@
                 Revenue GIS Dashboard
             </h5>
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
+            <span id="surveycount">{{ surveycount}}</span>
         </div>
         <div id="map"></div>
     </div>

@@ -1275,70 +1275,70 @@ class CommissionerController extends Controller
             return [];
         }
     }
-private function computeBuildingComparison($polygon, $polygonDataByGisid, $pointDataByGisid, $misByAssessment): array
-{
-    try {
-        $gisid = $polygon->gisid;
-        $groundSqfeet = floatval($polygon->sqfeet ?? 0);
+    private function computeBuildingComparison($polygon, $polygonDataByGisid, $pointDataByGisid, $misByAssessment): array
+    {
+        try {
+            $gisid = $polygon->gisid;
+            $groundSqfeet = floatval($polygon->sqfeet ?? 0);
 
-        $polyData = $polygonDataByGisid->get($gisid);
-        if ($polyData) {
-            $numberFloor = floatval($polyData->number_floor ?? 0);
-            $basement = floatval($polyData->basement ?? 0);
-            $percentage = floatval($polyData->percentage ?? 100);
+            $polyData = $polygonDataByGisid->get($gisid);
+            if ($polyData) {
+                $numberFloor = floatval($polyData->number_floor ?? 0);
+                $basement = floatval($polyData->basement ?? 0);
+                $percentage = floatval($polyData->percentage ?? 100);
 
-            // NEW FORMULA: (number of floors + basement + (percentage/100)) * ground sq feet
-            $buildingArea = ($numberFloor + $basement + ($percentage / 100)) * $groundSqfeet;
-            $buildingUsage = $polyData->building_usage ?? null;
-        } else {
-            $buildingArea = $groundSqfeet;
-            $buildingUsage = null;
-        }
+                // NEW FORMULA: (number of floors + basement + (percentage/100)) * ground sq feet
+                $buildingArea = ($numberFloor + $basement + ($percentage / 100)) * $groundSqfeet;
+                $buildingUsage = $polyData->building_usage ?? null;
+            } else {
+                $buildingArea = $groundSqfeet;
+                $buildingUsage = null;
+            }
 
-        $assessmentArea = 0;
-        $assessmentCount = 0;
-        $hasUsageMismatch = false;
+            $assessmentArea = 0;
+            $assessmentCount = 0;
+            $hasUsageMismatch = false;
 
-        if (isset($pointDataByGisid[$gisid])) {
-            foreach ($pointDataByGisid[$gisid] as $pd) {
-                $assessmentCount++;
-                $mis = $misByAssessment->get($pd->assessment);
+            if (isset($pointDataByGisid[$gisid])) {
+                foreach ($pointDataByGisid[$gisid] as $pd) {
+                    $assessmentCount++;
+                    $mis = $misByAssessment->get($pd->assessment);
 
-                $pointArea = 0;
-                if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
-                    $pointArea = floatval($pd->qcsqfeet);
-                } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
-                    $pointArea = floatval($mis->plot_area);
-                }
-                $assessmentArea += $pointArea;
+                    $pointArea = 0;
+                    if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
+                        $pointArea = floatval($pd->qcsqfeet);
+                    } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
+                        $pointArea = floatval($mis->plot_area);
+                    }
+                    $assessmentArea += $pointArea;
 
-                $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
-                if (
-                    $buildingUsage && $pointUsage
-                    && strtoupper(trim($buildingUsage)) != strtoupper(trim($pointUsage))
-                ) {
-                    $hasUsageMismatch = true;
+                    $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
+                    if (
+                        $buildingUsage && $pointUsage
+                        && strtoupper(trim($buildingUsage)) != strtoupper(trim($pointUsage))
+                    ) {
+                        $hasUsageMismatch = true;
+                    }
                 }
             }
-        }
 
-        return [
-            'gisid' => $gisid,
-            'building_area' => $buildingArea,
-            'assessment_area' => $assessmentArea,
-            'assessment_count' => $assessmentCount,
-            'usage_mismatch' => $hasUsageMismatch,
-        ];
-    } catch (\Exception $e) {
-        return [
-            'gisid' => $polygon->gisid ?? null,
-            'building_area' => 0,
-            'assessment_area' => 0,
-            'assessment_count' => 0,
-            'usage_mismatch' => false,
-        ];
+            return [
+                'gisid' => $gisid,
+                'building_area' => $buildingArea,
+                'assessment_area' => $assessmentArea,
+                'assessment_count' => $assessmentCount,
+                'usage_mismatch' => $hasUsageMismatch,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'gisid' => $polygon->gisid ?? null,
+                'building_area' => 0,
+                'assessment_area' => 0,
+                'assessment_count' => 0,
+                'usage_mismatch' => false,
+            ];
+        }
     }
-}
     private function buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData)
     {
         try {

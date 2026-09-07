@@ -88,13 +88,14 @@ class MapController extends Controller
             ->distinct()
             ->orderBy('road_name')
             ->pluck('road_name');
-       $uniqueZones = DB::table($misTableName)
-    ->select('zone')
-    ->whereNotNull('zone')
-    ->where('zone', '!=', '')
-    ->distinct()
-    ->orderBy('zone')
-    ->pluck('zone');
+        $uniqueZones = DB::table($misTableName)
+            ->select('zone')
+            ->whereNotNull('zone')
+            ->where('zone', '!=', '')
+            ->distinct()
+            ->orderBy('zone')
+            ->pluck('zone');
+        $surveycount = $pointDatas = DB::table($pointDataTableName)->where('worker_name',$user->id)->get();
 
         return view('map.mapview', compact(
             'ward',
@@ -105,7 +106,8 @@ class MapController extends Controller
             'pointDatas',
             'misData',
             'uniqueRoadNames',
-             'uniqueZones',
+            'surveycount',
+            'uniqueZones',
             'boundary'  // ✅ PASS BOUNDARY TO VIEW
         ));
     }
