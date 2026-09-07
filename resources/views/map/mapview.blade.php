@@ -3272,41 +3272,41 @@
 
             // ─── Image Preview ───
             $(document).ready(function() {
-               // Image 1 - Camera and Gallery
-    $('#image1_input').on('change', function(e) {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                $('#buildingImagePreview')
-                    .attr('src', e.target.result)
-                    .show();
-                $('#noImagePlaceholder').hide();
-            };
-            reader.readAsDataURL(file);
-        } else {
-            $('#buildingImagePreview').hide();
-            $('#noImagePlaceholder').show();
-        }
-    });
+                // Image 1 - Camera and Gallery
+                $('#image1_input').on('change', function(e) {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            $('#buildingImagePreview')
+                                .attr('src', e.target.result)
+                                .show();
+                            $('#noImagePlaceholder').hide();
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        $('#buildingImagePreview').hide();
+                        $('#noImagePlaceholder').show();
+                    }
+                });
 
-    // Image 2 - Camera and Gallery
-    $('#image2_input').on('change', function(e) {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                $('#buildingImagePreview2')
-                    .attr('src', e.target.result)
-                    .show();
-                $('#noImagePlaceholder2').hide();
-            };
-            reader.readAsDataURL(file);
-        } else {
-            $('#buildingImagePreview2').hide();
-            $('#noImagePlaceholder2').show();
-        }
-    });
+                // Image 2 - Camera and Gallery
+                $('#image2_input').on('change', function(e) {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            $('#buildingImagePreview2')
+                                .attr('src', e.target.result)
+                                .show();
+                            $('#noImagePlaceholder2').hide();
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        $('#buildingImagePreview2').hide();
+                        $('#noImagePlaceholder2').show();
+                    }
+                });
             });
 
             $(document).ready(function() {
@@ -5002,6 +5002,10 @@
                         <input type="number" class="form-control" name="professional[${ptIndex}][employee_count]">
                     </div>
                     <div class="col-md-4">
+                        <label>shop owner name</label>
+                        <input type="text" class="form-control" name="professional[${ptIndex}][shop_owner]">
+                    </div>
+                    <div class="col-md-4">
                         <label>Half Year Tax</label>
                         <input type="number" class="form-control" name="professional[${ptIndex}][half_year_tax]">
                     </div>
@@ -5308,6 +5312,10 @@
                         <label>Penalty</label>
                         <input type="number" class="form-control" name="professional[${idx}][penalty]" value="${data.penalty || ''}">
                     </div>
+                    <div class="col-md-4">
+    <label>shop owner name</label>
+    <input type="text" class="form-control" name="professional[${idx}][shop_owner]" value="${data.shop_owner || ''}">
+</div>
                     <div class="col-md-4">
                         <label>Balance</label>
                         <input type="number" class="form-control" name="professional[${idx}][balance]" value="${data.balance || ''}">

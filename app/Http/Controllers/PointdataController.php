@@ -243,7 +243,7 @@ class PointdataController extends Controller
             ], 500);
         }
     }
-   public function pointDataStore(Request $request)
+    public function pointDataStore(Request $request)
     {
         // Base validation rules - ADDED trade_license
         $validator = Validator::make($request->all(), [
@@ -602,6 +602,7 @@ class PointdataController extends Controller
                                         'ward_no' => $wardNo,
                                         'gisid' => $request->point_gisid,
                                         'assessment' => $request->assessment,
+                                        'owner_name' => $request->show_owner,
                                         'old_pt_number' => $professional['old_pt_number'] ?? $existing->old_pt_number,
                                         'establishment_name' => $professional['establishment_name'] ?? $existing->establishment_name,
                                         'profession_type' => $professional['profession_type'] ?? $existing->profession_type,
@@ -619,7 +620,7 @@ class PointdataController extends Controller
                                 'ward_no' => $wardNo,
                                 'gisid' => $request->point_gisid,
                                 'assessment'         => $request->assessment,
-                                'owner_name'         => $request->owner_name,
+                                'owner_name' => $request->show_owner,
                                 'phone_number'       => $request->phone_number ?? null,
                                 'pt_number' => $professional['pt_number'],
                                 'old_pt_number' => $professional['old_pt_number'] ?? null,
@@ -742,70 +743,70 @@ class PointdataController extends Controller
             ], 500);
         }
     }
-   public function lineDataStore(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'gisid'     => 'required|string|max:50',
-        'road_name' => 'required|string|max:255',
-        'pincode'   => 'nullable|string|max:10',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation errors',
-            'errors'  => $validator->errors()
-        ], 422);
-    }
-
-    $user = Auth::user();
-
-    if (!$user || !$user->ward_id) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Ward not assigned to user.'
-        ], 400);
-    }
-
-    $lineTableName = "lines_{$user->ward_id}";
-
-    // Check table exists
-    if (!Schema::hasTable($lineTableName)) {
-        return response()->json([
-            'success' => false,
-            'message' => "Table {$lineTableName} not found."
-        ], 404);
-    }
-
-    // Find line first
-    $line = DB::table($lineTableName)
-        ->where('gisid', $request->gisid)
-        ->first();
-
-    if (!$line) {
-        return response()->json([
-            'success' => false,
-            'message' => 'GIS ID not found.'
-        ], 404);
-    }
-
-    // Update with pincode
-    DB::table($lineTableName)
-        ->where('gisid', $request->gisid)
-        ->update([
-            'road_name' => $request->road_name,
-            'pincode'   => $request->pincode,
-            'updated_at' => now()
+    public function lineDataStore(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'gisid'     => 'required|string|max:50',
+            'road_name' => 'required|string|max:255',
+            'pincode'   => 'nullable|string|max:10',
         ]);
 
-    $lines = DB::table($lineTableName)->get();
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation errors',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Road name updated successfully.',
-        'lines' => $lines
-    ]);
-}
+        $user = Auth::user();
+
+        if (!$user || !$user->ward_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ward not assigned to user.'
+            ], 400);
+        }
+
+        $lineTableName = "lines_{$user->ward_id}";
+
+        // Check table exists
+        if (!Schema::hasTable($lineTableName)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Table {$lineTableName} not found."
+            ], 404);
+        }
+
+        // Find line first
+        $line = DB::table($lineTableName)
+            ->where('gisid', $request->gisid)
+            ->first();
+
+        if (!$line) {
+            return response()->json([
+                'success' => false,
+                'message' => 'GIS ID not found.'
+            ], 404);
+        }
+
+        // Update with pincode
+        DB::table($lineTableName)
+            ->where('gisid', $request->gisid)
+            ->update([
+                'road_name' => $request->road_name,
+                'pincode'   => $request->pincode,
+                'updated_at' => now()
+            ]);
+
+        $lines = DB::table($lineTableName)->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Road name updated successfully.',
+            'lines' => $lines
+        ]);
+    }
 
 
 
@@ -863,201 +864,221 @@ class PointdataController extends Controller
 
 
 
-   public function pointDataUpdate(Request $request, $id)
-{
-    $validator = Validator::make($request->all(), [
-        // Point Data fields
-        'point_gisid'          => 'required|string|max:100',
-        'assessment_type'      => 'required|in:OLD,NEW,VACANT,OTHER_WARD',
-        'assessment'           => 'required|string|max:100',
-        'old_assessment'       => 'nullable|string|max:100',
-        'zone'                 => 'required|string|max:50',
-        'owner_name'           => 'required|string|max:255',
-        'present_owner_name'   => 'nullable|string|max:255',
-        'phone_number'         => 'required|digits:10',
-        'old_door_no'          => 'nullable|string|max:100',
-        'new_door_no'          => 'required|string|max:100',
-        'aadhar_no'            => 'nullable|digits:12',
-        'ration_no'            => 'nullable|string|max:50',
-        'floor'                => 'required|integer|min:0',
-        'number_persons'       => 'nullable|integer|min:0',
-        'bill_usage'           => 'required|in:RESIDENTIAL,COMMERCIAL',
-        'eb'                   => 'nullable|string|max:50',
-        'worker_name'          => 'nullable|string|max:255',
-        'remarks'              => 'nullable|string',
+    public function pointDataUpdate(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            // Point Data fields
+            'point_gisid'          => 'required|string|max:100',
+            'assessment_type'      => 'required|in:OLD,NEW,VACANT,OTHER_WARD',
+            'assessment'           => 'required|string|max:100',
+            'old_assessment'       => 'nullable|string|max:100',
+            'zone'                 => 'required|string|max:50',
+            'owner_name'           => 'required|string|max:255',
+            'present_owner_name'   => 'nullable|string|max:255',
+            'phone_number'         => 'required|digits:10',
+            'old_door_no'          => 'nullable|string|max:100',
+            'new_door_no'          => 'required|string|max:100',
+            'aadhar_no'            => 'nullable|digits:12',
+            'ration_no'            => 'nullable|string|max:50',
+            'floor'                => 'required|integer|min:0',
+            'number_persons'       => 'nullable|integer|min:0',
+            'bill_usage'           => 'required|in:RESIDENTIAL,COMMERCIAL',
+            'eb'                   => 'nullable|string|max:50',
+            'worker_name'          => 'nullable|string|max:255',
+            'remarks'              => 'nullable|string',
 
-        // Water Tax fields
-        'watertax_no'          => 'nullable|string|max:100',
-        'old_watertax_no'      => 'nullable|string|max:100',
-        'water_usage'          => 'nullable|string|max:100',
-        'water_DBC_type'       => 'nullable|string|max:100',
-        'water_slab_description' => 'nullable|string',
+            // Water Tax fields
+            'watertax_no'          => 'nullable|string|max:100',
+            'old_watertax_no'      => 'nullable|string|max:100',
+            'water_usage'          => 'nullable|string|max:100',
+            'water_DBC_type'       => 'nullable|string|max:100',
+            'water_slab_description' => 'nullable|string',
 
-        // UGD Tax fields
-        'ugd_no'               => 'nullable|string|max:100',
-        'old_ugd_no'           => 'nullable|string|max:100',
-        'ugd_usage'            => 'nullable|string|max:100',
-        'ugd_DBC_type'         => 'nullable|string|max:100',
-        'ugd_slab_description' => 'nullable|string',
+            // UGD Tax fields
+            'ugd_no'               => 'nullable|string|max:100',
+            'old_ugd_no'           => 'nullable|string|max:100',
+            'ugd_usage'            => 'nullable|string|max:100',
+            'ugd_DBC_type'         => 'nullable|string|max:100',
+            'ugd_slab_description' => 'nullable|string',
 
-        // Professional Tax fields (WITH TRADE LICENSE)
-        'professional'         => 'nullable|array',
-        'professional.*.id'    => 'nullable|integer',
-        'professional.*.pt_number' => 'nullable|string|max:100',
-        'professional.*.old_pt_number' => 'nullable|string|max:100',
-        'professional.*.establishment_name' => 'nullable|string|max:255',
-        'professional.*.profession_type' => 'nullable|string|max:100',
-        'professional.*.trade_license' => 'nullable|string|max:255', // <-- ADDED
-        'professional.*.employee_count' => 'nullable|integer|min:0',
-        'professional.*.half_year_tax' => 'nullable|numeric|min:0',
-        'professional.*.pt_remarks' => 'nullable|string',
+            // Professional Tax fields (WITH TRADE LICENSE)
+            'professional'         => 'nullable|array',
+            'professional.*.id'    => 'nullable|integer',
+            'professional.*.pt_number' => 'nullable|string|max:100',
+            'professional.*.old_pt_number' => 'nullable|string|max:100',
+            'professional.*.establishment_name' => 'nullable|string|max:255',
+            'professional.*.profession_type' => 'nullable|string|max:100',
+            'professional.*.trade_license' => 'nullable|string|max:255', // <-- ADDED
+            'professional.*.employee_count' => 'nullable|integer|min:0',
+            'professional.*.half_year_tax' => 'nullable|numeric|min:0',
+            'professional.*.pt_remarks' => 'nullable|string',
 
-        'removed_professional_ids' => 'nullable|array',
-        'removed_professional_ids.*' => 'integer',
-    ]);
+            'removed_professional_ids' => 'nullable|array',
+            'removed_professional_ids.*' => 'integer',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
-    }
-
-    try {
-        $user = User::find(Auth::id());
-        if (!$user) {
-            return response()->json(['success' => false, 'message' => 'User not found'], 404);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $ward = Ward::find($user->ward_id);
-        if (!$ward) {
-            return response()->json(['success' => false, 'message' => 'Ward not found'], 404);
-        }
-
-        $zone = Zone::find($ward->zone_id);
-        if (!$zone) {
-            return response()->json(['success' => false, 'message' => 'Zone not found'], 404);
-        }
-
-        $corporation = Corporation::find($zone->corp_id);
-        if (!$corporation) {
-            return response()->json(['success' => false, 'message' => 'Corporation not found'], 404);
-        }
-
-        $wardId = $ward->id;
-        $corpId = $corporation->id;
-
-        $pointDataTable       = "point_data_{$wardId}";
-        $waterTaxTable        = "water_tax_{$corpId}";
-        $ugdTaxTable          = "ugd_tax_{$corpId}";
-        $professionalTaxTable = "professional_tax_{$corpId}";
-
-        // Check if point data exists
-        $existing = DB::table($pointDataTable)->where('id', $id)->first();
-        if (!$existing) {
-            return response()->json(['success' => false, 'message' => 'Point data not found'], 404);
-        }
-
-        DB::beginTransaction();
         try {
-            // 1. Update point_data
-            DB::table($pointDataTable)->where('id', $id)->update([
-                'point_gisid'          => $request->point_gisid,
-                'assessment_type'      => $request->assessment_type,
-                'assessment'           => $request->assessment,
-                'old_assessment'       => $request->old_assessment,
-                'zone'                 => $request->zone,
-                'owner_name'           => $request->owner_name,
-                'present_owner_name'   => $request->present_owner_name,
-                'phone_number'         => $request->phone_number,
-                'old_door_no'          => $request->old_door_no,
-                'new_door_no'          => $request->new_door_no,
-                'aadhar_no'            => $request->aadhar_no,
-                'ration_no'            => $request->ration_no,
-                'floor'                => $request->floor,
-                'no_of_persons'        => $request->number_persons,
-                'bill_usage'           => $request->bill_usage,
-                'eb'                   => $request->eb,
-                'worker_name'          => $request->worker_name,
-                'remarks'              => $request->remarks,
-                'updated_at'           => now(),
-            ]);
+            $user = User::find(Auth::id());
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'User not found'], 404);
+            }
 
-            // 2. Water tax - Update or Insert
-            if ($request->filled('watertax_no')) {
-                $waterTaxExists = DB::table($waterTaxTable)
-                    ->where('watertax_no', $request->watertax_no)
-                    ->exists();
+            $ward = Ward::find($user->ward_id);
+            if (!$ward) {
+                return response()->json(['success' => false, 'message' => 'Ward not found'], 404);
+            }
 
-                if ($waterTaxExists) {
-                    DB::table($waterTaxTable)
+            $zone = Zone::find($ward->zone_id);
+            if (!$zone) {
+                return response()->json(['success' => false, 'message' => 'Zone not found'], 404);
+            }
+
+            $corporation = Corporation::find($zone->corp_id);
+            if (!$corporation) {
+                return response()->json(['success' => false, 'message' => 'Corporation not found'], 404);
+            }
+
+            $wardId = $ward->id;
+            $corpId = $corporation->id;
+
+            $pointDataTable       = "point_data_{$wardId}";
+            $waterTaxTable        = "water_tax_{$corpId}";
+            $ugdTaxTable          = "ugd_tax_{$corpId}";
+            $professionalTaxTable = "professional_tax_{$corpId}";
+
+            // Check if point data exists
+            $existing = DB::table($pointDataTable)->where('id', $id)->first();
+            if (!$existing) {
+                return response()->json(['success' => false, 'message' => 'Point data not found'], 404);
+            }
+
+            DB::beginTransaction();
+            try {
+                // 1. Update point_data
+                DB::table($pointDataTable)->where('id', $id)->update([
+                    'point_gisid'          => $request->point_gisid,
+                    'assessment_type'      => $request->assessment_type,
+                    'assessment'           => $request->assessment,
+                    'old_assessment'       => $request->old_assessment,
+                    'zone'                 => $request->zone,
+                    'owner_name'           => $request->owner_name,
+                    'present_owner_name'   => $request->present_owner_name,
+                    'phone_number'         => $request->phone_number,
+                    'old_door_no'          => $request->old_door_no,
+                    'new_door_no'          => $request->new_door_no,
+                    'aadhar_no'            => $request->aadhar_no,
+                    'ration_no'            => $request->ration_no,
+                    'floor'                => $request->floor,
+                    'no_of_persons'        => $request->number_persons,
+                    'bill_usage'           => $request->bill_usage,
+                    'eb'                   => $request->eb,
+                    'worker_name'          => $request->worker_name,
+                    'remarks'              => $request->remarks,
+                    'updated_at'           => now(),
+                ]);
+
+                // 2. Water tax - Update or Insert
+                if ($request->filled('watertax_no')) {
+                    $waterTaxExists = DB::table($waterTaxTable)
                         ->where('watertax_no', $request->watertax_no)
-                        ->update([
+                        ->exists();
+
+                    if ($waterTaxExists) {
+                        DB::table($waterTaxTable)
+                            ->where('watertax_no', $request->watertax_no)
+                            ->update([
+                                'gisid'              => $request->point_gisid,
+                                'old_watertax_no'    => $request->old_watertax_no,
+                                'usage'              => $request->water_usage,
+                                'DBC_type'           => $request->water_DBC_type,
+                                'slab_description'   => $request->water_slab_description,
+                                'updated_at'         => now(),
+                            ]);
+                    } else {
+                        DB::table($waterTaxTable)->insert([
+                            'corporation_id'     => $corpId,
                             'gisid'              => $request->point_gisid,
+                            'watertax_no'        => $request->watertax_no,
                             'old_watertax_no'    => $request->old_watertax_no,
                             'usage'              => $request->water_usage,
                             'DBC_type'           => $request->water_DBC_type,
                             'slab_description'   => $request->water_slab_description,
+                            'created_at'         => now(),
                             'updated_at'         => now(),
                         ]);
-                } else {
-                    DB::table($waterTaxTable)->insert([
-                        'corporation_id'     => $corpId,
-                        'gisid'              => $request->point_gisid,
-                        'watertax_no'        => $request->watertax_no,
-                        'old_watertax_no'    => $request->old_watertax_no,
-                        'usage'              => $request->water_usage,
-                        'DBC_type'           => $request->water_DBC_type,
-                        'slab_description'   => $request->water_slab_description,
-                        'created_at'         => now(),
-                        'updated_at'         => now(),
-                    ]);
+                    }
                 }
-            }
 
-            // 3. UGD tax - Update or Insert
-            if ($request->filled('ugd_no')) {
-                $ugdExists = DB::table($ugdTaxTable)
-                    ->where('ugd_no', $request->ugd_no)
-                    ->exists();
-
-                if ($ugdExists) {
-                    DB::table($ugdTaxTable)
+                // 3. UGD tax - Update or Insert
+                if ($request->filled('ugd_no')) {
+                    $ugdExists = DB::table($ugdTaxTable)
                         ->where('ugd_no', $request->ugd_no)
-                        ->update([
+                        ->exists();
+
+                    if ($ugdExists) {
+                        DB::table($ugdTaxTable)
+                            ->where('ugd_no', $request->ugd_no)
+                            ->update([
+                                'gisid'              => $request->point_gisid,
+                                'old_ugd_no'         => $request->old_ugd_no,
+                                'usage'              => $request->ugd_usage,
+                                'DBC_type'           => $request->ugd_DBC_type,
+                                'slab_description'   => $request->ugd_slab_description,
+                                'updated_at'         => now(),
+                            ]);
+                    } else {
+                        DB::table($ugdTaxTable)->insert([
+                            'corporation_id'     => $corpId,
                             'gisid'              => $request->point_gisid,
+                            'ugd_no'             => $request->ugd_no,
                             'old_ugd_no'         => $request->old_ugd_no,
                             'usage'              => $request->ugd_usage,
                             'DBC_type'           => $request->ugd_DBC_type,
                             'slab_description'   => $request->ugd_slab_description,
+                            'created_at'         => now(),
                             'updated_at'         => now(),
                         ]);
-                } else {
-                    DB::table($ugdTaxTable)->insert([
-                        'corporation_id'     => $corpId,
-                        'gisid'              => $request->point_gisid,
-                        'ugd_no'             => $request->ugd_no,
-                        'old_ugd_no'         => $request->old_ugd_no,
-                        'usage'              => $request->ugd_usage,
-                        'DBC_type'           => $request->ugd_DBC_type,
-                        'slab_description'   => $request->ugd_slab_description,
-                        'created_at'         => now(),
-                        'updated_at'         => now(),
-                    ]);
-                }
-            }
-
-            // 4. Professional tax: update existing / insert new (WITH TRADE LICENSE)
-            if ($request->has('professional') && is_array($request->professional)) {
-                foreach ($request->professional as $prof) {
-                    // Skip if pt_number is empty
-                    if (empty($prof['pt_number'])) {
-                        continue;
                     }
+                }
 
-                    if (!empty($prof['id'])) {
-                        // Update existing (WITH TRADE LICENSE)
-                        DB::table($professionalTaxTable)
-                            ->where('id', $prof['id'])
-                            ->where('corporation_id', $corpId)
-                            ->update([
+                // 4. Professional tax: update existing / insert new (WITH TRADE LICENSE)
+                if ($request->has('professional') && is_array($request->professional)) {
+                    foreach ($request->professional as $prof) {
+                        // Skip if pt_number is empty
+                        if (empty($prof['pt_number'])) {
+                            continue;
+                        }
+
+                        if (!empty($prof['id'])) {
+                            // Update existing (WITH OWNER NAME)
+                            DB::table($professionalTaxTable)
+                                ->where('id', $prof['id'])
+                                ->where('corporation_id', $corpId)
+                                ->update([
+                                    'owner_name'         => $request->show_owner ?? null, // <-- ADD THIS
+                                    'pt_number'          => $prof['pt_number'],
+                                    'old_pt_number'      => $prof['old_pt_number'] ?? null,
+                                    'establishment_name' => $prof['establishment_name'] ?? null,
+                                    'profession_type'    => $prof['profession_type'] ?? null,
+                                    'trade_license'      => $prof['trade_license'] ?? null,
+                                    'employee_count'     => $prof['employee_count'] ?? null,
+                                    'half_year_tax'      => $prof['half_year_tax'] ?? null,
+                                    'remarks'            => $prof['pt_remarks'] ?? null,
+                                    'updated_at'         => now(),
+                                ]);
+                        } else {
+                            // Insert new (WITH TRADE LICENSE)
+                            DB::table($professionalTaxTable)->insert([
+                                'corporation_id'     => $corpId,
+                                'gisid'              => $request->point_gisid,
+                                'ward_no'            => $ward->ward_no,
+                                'assessment'         => $request->assessment,
+                                'owner_name'         => $request->show_owner,
+                                'phone_number'       => $request->phone_number ?? null,
                                 'pt_number'          => $prof['pt_number'],
                                 'old_pt_number'      => $prof['old_pt_number'] ?? null,
                                 'establishment_name' => $prof['establishment_name'] ?? null,
@@ -1066,70 +1087,51 @@ class PointdataController extends Controller
                                 'employee_count'     => $prof['employee_count'] ?? null,
                                 'half_year_tax'      => $prof['half_year_tax'] ?? null,
                                 'remarks'            => $prof['pt_remarks'] ?? null,
+                                'created_at'         => now(),
                                 'updated_at'         => now(),
                             ]);
-                    } else {
-                        // Insert new (WITH TRADE LICENSE)
-                        DB::table($professionalTaxTable)->insert([
-                            'corporation_id'     => $corpId,
-                            'gisid'              => $request->point_gisid,
-                            'ward_no'            => $ward->ward_no,
-                            'assessment'         => $request->assessment,
-                            'owner_name'         => $request->owner_name,
-                            'phone_number'       => $request->phone_number ?? null,
-                            'pt_number'          => $prof['pt_number'],
-                            'old_pt_number'      => $prof['old_pt_number'] ?? null,
-                            'establishment_name' => $prof['establishment_name'] ?? null,
-                            'profession_type'    => $prof['profession_type'] ?? null,
-                            'trade_license'      => $prof['trade_license'] ?? null, // <-- ADDED
-                            'employee_count'     => $prof['employee_count'] ?? null,
-                            'half_year_tax'      => $prof['half_year_tax'] ?? null,
-                            'remarks'            => $prof['pt_remarks'] ?? null,
-                            'created_at'         => now(),
-                            'updated_at'         => now(),
-                        ]);
+                        }
                     }
                 }
+
+                // 5. Delete professional tax rows the user removed
+                if ($request->filled('removed_professional_ids')) {
+                    DB::table($professionalTaxTable)
+                        ->whereIn('id', $request->removed_professional_ids)
+                        ->where('corporation_id', $corpId)
+                        ->delete();
+                }
+
+                DB::commit();
+
+                // Return updated data for frontend
+                $updatedData = DB::table($pointDataTable)->where('id', $id)->first();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Point data updated successfully.',
+                    'data' => $updatedData
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                \Log::error('Point data update error: ' . $e->getMessage(), [
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Database error: ' . $e->getMessage()
+                ], 500);
             }
-
-            // 5. Delete professional tax rows the user removed
-            if ($request->filled('removed_professional_ids')) {
-                DB::table($professionalTaxTable)
-                    ->whereIn('id', $request->removed_professional_ids)
-                    ->where('corporation_id', $corpId)
-                    ->delete();
-            }
-
-            DB::commit();
-
-            // Return updated data for frontend
-            $updatedData = DB::table($pointDataTable)->where('id', $id)->first();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Point data updated successfully.',
-                'data' => $updatedData
-            ]);
         } catch (\Exception $e) {
-            DB::rollBack();
             \Log::error('Point data update error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Database error: ' . $e->getMessage()
+                'message' => 'Server error: ' . $e->getMessage()
             ], 500);
         }
-    } catch (\Exception $e) {
-        \Log::error('Point data update error: ' . $e->getMessage(), [
-            'trace' => $e->getTraceAsString()
-        ]);
-        return response()->json([
-            'success' => false,
-            'message' => 'Server error: ' . $e->getMessage()
-        ], 500);
     }
-}
     public function pointDataFilter(Request $request)
     {
         $user = User::find(Auth::id());
@@ -1152,98 +1154,98 @@ class PointdataController extends Controller
 
         return response()->json(['success' => true, 'data' => $results]);
     }
-  public function qrCodeAssessment(Request $request)
-{
-    $request->validate([
-        'point_id' => 'required|integer',
-        'ward_id' => 'sometimes|integer|nullable',
-    ]);
+    public function qrCodeAssessment(Request $request)
+    {
+        $request->validate([
+            'point_id' => 'required|integer',
+            'ward_id' => 'sometimes|integer|nullable',
+        ]);
 
-    $user = User::find(Auth::id());
-    if (!$user) {
-        return response()->json(['success' => false, 'message' => 'User not found'], 404);
-    }
+        $user = User::find(Auth::id());
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User not found'], 404);
+        }
 
-    // Get ward_id from request or from user
-    $wardId = $request->ward_id ?? $user->ward_id;
+        // Get ward_id from request or from user
+        $wardId = $request->ward_id ?? $user->ward_id;
 
-    // If user has no ward_id but is an admin/commissioner, they must provide ward_id
-    if (!$wardId) {
-        // Check if user has a role that can access all wards
-        $hasAccessToAllWards = in_array($user->role, ['commissioner', 'admin', 'super_admin']);
+        // If user has no ward_id but is an admin/commissioner, they must provide ward_id
+        if (!$wardId) {
+            // Check if user has a role that can access all wards
+            $hasAccessToAllWards = in_array($user->role, ['commissioner', 'admin', 'super_admin']);
 
-        if ($hasAccessToAllWards) {
+            if ($hasAccessToAllWards) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please provide ward_id parameter for QR code generation'
+                ], 400);
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => 'Please provide ward_id parameter for QR code generation'
+                'message' => 'No ward associated with your account'
             ], 400);
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'No ward associated with your account'
-        ], 400);
+        // Find the ward
+        $ward = Ward::find($wardId);
+        if (!$ward) {
+            return response()->json(['success' => false, 'message' => "Ward not found for ID: {$wardId}"], 404);
+        }
+
+        // Get zone and corporation (optional - for additional info)
+        $zone = Zone::find($ward->zone_id);
+        if (!$zone) {
+            return response()->json(['success' => false, 'message' => 'Zone not found'], 404);
+        }
+
+        $corporation = Corporation::find($zone->corp_id);
+        if (!$corporation) {
+            return response()->json(['success' => false, 'message' => 'Corporation not found'], 404);
+        }
+
+        // Get the point data from the correct table
+        $pointDataTable = "point_data_{$wardId}";
+
+        if (!Schema::hasTable($pointDataTable)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Table {$pointDataTable} not found"
+            ], 404);
+        }
+
+        $pointData = DB::table($pointDataTable)->where('id', $request->point_id)->first();
+
+        if (!$pointData) {
+            return response()->json([
+                'success' => false,
+                'message' => "Point data not found for ID: {$request->point_id} in table {$pointDataTable}"
+            ], 404);
+        }
+
+        // Also verify the point_gisid matches the ward if needed
+        // $pointGisid = $pointData->point_gisid ?? null;
+
+        $wardNumber = $ward->ward_no ?? $ward->ward_number ?? $ward->id;
+        $assessmentNumber = $pointData->assessment ?? 'N/A';
+
+        // Build the URL for the assessment details page
+        $baseUrl = "https://ccmc.sgtsolutions.in";
+        $qrUrl = $baseUrl . "/view-assessment/" . $wardNumber . "/" . $pointData->id;
+
+        // Generate QR code
+        $qrCode = QrCode::format('png')
+            ->size(500)
+            ->margin(2)
+            ->errorCorrection('H')
+            ->generate($qrUrl);
+
+        $fileName = 'QR_Ward_' . $wardNumber . '_Assessment_' . $assessmentNumber . '.png';
+
+        return response($qrCode)
+            ->header('Content-Type', 'image/png')
+            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
     }
-
-    // Find the ward
-    $ward = Ward::find($wardId);
-    if (!$ward) {
-        return response()->json(['success' => false, 'message' => "Ward not found for ID: {$wardId}"], 404);
-    }
-
-    // Get zone and corporation (optional - for additional info)
-    $zone = Zone::find($ward->zone_id);
-    if (!$zone) {
-        return response()->json(['success' => false, 'message' => 'Zone not found'], 404);
-    }
-
-    $corporation = Corporation::find($zone->corp_id);
-    if (!$corporation) {
-        return response()->json(['success' => false, 'message' => 'Corporation not found'], 404);
-    }
-
-    // Get the point data from the correct table
-    $pointDataTable = "point_data_{$wardId}";
-
-    if (!Schema::hasTable($pointDataTable)) {
-        return response()->json([
-            'success' => false,
-            'message' => "Table {$pointDataTable} not found"
-        ], 404);
-    }
-
-    $pointData = DB::table($pointDataTable)->where('id', $request->point_id)->first();
-
-    if (!$pointData) {
-        return response()->json([
-            'success' => false,
-            'message' => "Point data not found for ID: {$request->point_id} in table {$pointDataTable}"
-        ], 404);
-    }
-
-    // Also verify the point_gisid matches the ward if needed
-    // $pointGisid = $pointData->point_gisid ?? null;
-
-    $wardNumber = $ward->ward_no ?? $ward->ward_number ?? $ward->id;
-    $assessmentNumber = $pointData->assessment ?? 'N/A';
-
-    // Build the URL for the assessment details page
-    $baseUrl = "https://ccmc.sgtsolutions.in";
-    $qrUrl = $baseUrl . "/view-assessment/" . $wardNumber . "/" . $pointData->id;
-
-    // Generate QR code
-    $qrCode = QrCode::format('png')
-        ->size(500)
-        ->margin(2)
-        ->errorCorrection('H')
-        ->generate($qrUrl);
-
-    $fileName = 'QR_Ward_' . $wardNumber . '_Assessment_' . $assessmentNumber . '.png';
-
-    return response($qrCode)
-        ->header('Content-Type', 'image/png')
-        ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
-}
     public function showQr($wardNo, $pointId)
     {
         try {
@@ -1324,7 +1326,6 @@ class PointdataController extends Controller
             ];
 
             return view('assessment-details', $data);
-
         } catch (\Exception $e) {
             abort(500, 'Error loading assessment details: ' . $e->getMessage());
         }
