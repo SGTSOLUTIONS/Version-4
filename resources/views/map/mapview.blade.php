@@ -1197,18 +1197,11 @@
                                             </div>
                                         </div>
                                         <div class="mt-2 d-flex gap-2">
-                                            <!-- Camera Button -->
+                                            <!-- SINGLE INPUT - Both Camera and Gallery -->
                                             <label class="btn btn-success btn-sm flex-fill" style="cursor: pointer;">
-                                                <i class="fas fa-camera me-1"></i> Camera
+                                                <i class="fas fa-camera me-1"></i> Camera / Gallery
                                                 <input type="file" name="image" accept="image/*"
-                                                    capture="environment" style="display: none;" class="image-input">
-                                            </label>
-                                            <!-- File/Gallery Button -->
-                                            <label class="btn btn-outline-primary btn-sm flex-fill"
-                                                style="cursor: pointer;">
-                                                <i class="fas fa-folder-open me-1"></i> Choose File
-                                                <input type="file" name="image" id="building_image"
-                                                    accept="image/*" style="display: none;" class="image-input">
+                                                    capture="environment" style="display: none;" id="image1_input">
                                             </label>
                                         </div>
                                         <div id="building_image_error" class="error-message text-danger small mt-1"></div>
@@ -1228,18 +1221,11 @@
                                             </div>
                                         </div>
                                         <div class="mt-2 d-flex gap-2">
-                                            <!-- Camera Button -->
+                                            <!-- SINGLE INPUT - Both Camera and Gallery -->
                                             <label class="btn btn-success btn-sm flex-fill" style="cursor: pointer;">
-                                                <i class="fas fa-camera me-1"></i> Camera
+                                                <i class="fas fa-camera me-1"></i> Camera / Gallery
                                                 <input type="file" name="image2" accept="image/*"
-                                                    capture="environment" style="display: none;" class="image-input">
-                                            </label>
-                                            <!-- File/Gallery Button -->
-                                            <label class="btn btn-outline-primary btn-sm flex-fill"
-                                                style="cursor: pointer;">
-                                                <i class="fas fa-folder-open me-1"></i> Choose File
-                                                <input type="file" name="image2" id="building_image2"
-                                                    accept="image/*" style="display: none;" class="image-input">
+                                                    capture="environment" style="display: none;" id="image2_input">
                                             </label>
                                         </div>
                                         <div id="building_image2_error" class="error-message text-danger small mt-1">
@@ -3286,37 +3272,41 @@
 
             // ─── Image Preview ───
             $(document).ready(function() {
-                // Image 1 preview
-                $("#building_image").on('change', function(e) {
-                    const file = this.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            $("#buildingImagePreview").attr('src', e.target.result).show();
-                            $("#noImagePlaceholder").hide();
-                        };
-                        reader.readAsDataURL(file);
-                    } else {
-                        $("#buildingImagePreview").hide();
-                        $("#noImagePlaceholder").show();
-                    }
-                });
+               // Image 1 - Camera and Gallery
+    $('#image1_input').on('change', function(e) {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#buildingImagePreview')
+                    .attr('src', e.target.result)
+                    .show();
+                $('#noImagePlaceholder').hide();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            $('#buildingImagePreview').hide();
+            $('#noImagePlaceholder').show();
+        }
+    });
 
-                // Image 2 preview
-                $("#building_image2").on('change', function(e) {
-                    const file = this.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            $("#buildingImagePreview2").attr('src', e.target.result).show();
-                            $("#noImagePlaceholder2").hide();
-                        };
-                        reader.readAsDataURL(file);
-                    } else {
-                        $("#buildingImagePreview2").hide();
-                        $("#noImagePlaceholder2").show();
-                    }
-                });
+    // Image 2 - Camera and Gallery
+    $('#image2_input').on('change', function(e) {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#buildingImagePreview2')
+                    .attr('src', e.target.result)
+                    .show();
+                $('#noImagePlaceholder2').hide();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            $('#buildingImagePreview2').hide();
+            $('#noImagePlaceholder2').show();
+        }
+    });
             });
 
             $(document).ready(function() {
