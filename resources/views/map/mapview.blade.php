@@ -339,29 +339,29 @@
             }
         }
 
-       .location-toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    background: rgba(15, 23, 42, 0.92);
-    color: white;
-    padding: 10px 24px;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    white-space: nowrap;
-    z-index: 999999 !important;
-    opacity: 0;
-    transition: all 0.3s ease;
-    pointer-events: none;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
+        .location-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(15, 23, 42, 0.92);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            z-index: 999999 !important;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
 
-.location-toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
+        .location-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
 
         .search-result-item {
             padding: 10px 16px;
@@ -1101,7 +1101,7 @@
         </div>
         <div id="map"></div>
     </div>
-<div class="location-toast" id="locationToast"></div>
+    <div class="location-toast" id="locationToast"></div>
     {{-- Delete Feature Modal --}}
     <div class="modal fade" id="deleteFeatureModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -1176,101 +1176,78 @@
 
                     <div class="modal-body" style="max-height: 70vh; overflow-y: auto; background: #f8fafc;">
                         <!-- Building Images -->
-                        <!-- For Image 1 -->
-<!-- For Image 1 -->
-<div class="col-md-6 mb-3">
-    <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 1</label>
-    <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
-        <img id="buildingImagePreview" src="" alt="Building Image Preview"
-            class="img-fluid"
-            style="display: none; max-height: 200px; width: 100%; object-fit: contain; border-radius: 8px;">
-        <div id="noImagePlaceholder" class="text-center text-muted"
-            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px;">
-            <i class="fas fa-cloud-upload-alt fa-3x mb-2" style="color: #cbd5e1;"></i>
-            <p>No image selected</p>
-        </div>
-    </div>
-    <div class="mt-2 d-flex gap-2">
-        <!-- SINGLE input that works for both Camera and Gallery -->
-        <input type="file" name="image" id="building_image"
-               accept="image/*"
-               capture="environment"
-               style="display: none;"
-               class="building-image-input"
-               data-preview="buildingImagePreview"
-               data-placeholder="noImagePlaceholder">
+                        <div class="card mb-4">
+                            <div class="card-header"
+                                style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
+                                <h6 class="mb-0"><i class="fas fa-image me-2"></i>Building Images</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <!-- Image 1 -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 1</label>
+                                        <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
+                                            <img id="buildingImagePreview" src="" alt="Building Image Preview"
+                                                class="img-fluid"
+                                                style="display: none; max-height: 200px; width: 100%; object-fit: contain; border-radius: 8px;">
+                                            <div id="noImagePlaceholder" class="text-center text-muted"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px;">
+                                                <i class="fas fa-cloud-upload-alt fa-3x mb-2" style="color: #cbd5e1;"></i>
+                                                <p>No image selected</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 d-flex gap-2">
+                                            <!-- Camera Button -->
+                                            <label class="btn btn-success btn-sm flex-fill" style="cursor: pointer;">
+                                                <i class="fas fa-camera me-1"></i> Camera
+                                                <input type="file" name="image" accept="image/*"
+                                                    capture="environment" style="display: none;" class="image-input">
+                                            </label>
+                                            <!-- File/Gallery Button -->
+                                            <label class="btn btn-outline-primary btn-sm flex-fill"
+                                                style="cursor: pointer;">
+                                                <i class="fas fa-folder-open me-1"></i> Choose File
+                                                <input type="file" name="image" id="building_image"
+                                                    accept="image/*" style="display: none;" class="image-input">
+                                            </label>
+                                        </div>
+                                        <div id="building_image_error" class="error-message text-danger small mt-1"></div>
+                                    </div>
 
-        <!-- Camera Button -->
-        <label class="btn btn-success btn-sm flex-fill" for="building_image" style="cursor: pointer;">
-            <i class="fas fa-camera me-1"></i> Camera
-        </label>
-
-        <!-- Gallery Button -->
-        <label class="btn btn-outline-primary btn-sm flex-fill" for="building_image" style="cursor: pointer;">
-            <i class="fas fa-folder-open me-1"></i> Choose File
-        </label>
-    </div>
-    <div id="building_image_error" class="error-message text-danger small mt-1"></div>
-</div>
-
-<!-- For Image 2 -->
-<div class="col-md-6 mb-3">
-    <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 2</label>
-    <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
-        <img id="buildingImagePreview2" src="" alt="Building Image Preview 2"
-            class="img-fluid"
-            style="display: none; max-height: 200px; width: 100%; object-fit: contain; border-radius: 8px;">
-        <div id="noImagePlaceholder2" class="text-center text-muted"
-            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px;">
-            <i class="fas fa-cloud-upload-alt fa-3x mb-2" style="color: #cbd5e1;"></i>
-            <p>No image selected</p>
-        </div>
-    </div>
-    <div class="mt-2 d-flex gap-2">
-        <!-- SINGLE input -->
-        <input type="file" name="image2" id="building_image2"
-               accept="image/*"
-               capture="environment"
-               style="display: none;"
-               class="building-image-input"
-               data-preview="buildingImagePreview2"
-               data-placeholder="noImagePlaceholder2">
-
-        <label class="btn btn-success btn-sm flex-fill" for="building_image2" style="cursor: pointer;">
-            <i class="fas fa-camera me-1"></i> Camera
-        </label>
-        <label class="btn btn-outline-primary btn-sm flex-fill" for="building_image2" style="cursor: pointer;">
-            <i class="fas fa-folder-open me-1"></i> Choose File
-        </label>
-    </div>
-    <div id="building_image2_error" class="error-message text-danger small mt-1"></div>
-</div>
-
-<!-- For Image 2 -->
-<div class="col-md-6 mb-3">
-    <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 2</label>
-    <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
-        <img id="buildingImagePreview2" src="" alt="Building Image Preview 2"
-            class="img-fluid"
-            style="display: none; max-height: 200px; width: 100%; object-fit: contain; border-radius: 8px;">
-        <div id="noImagePlaceholder2" class="text-center text-muted"
-            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px;">
-            <i class="fas fa-cloud-upload-alt fa-3x mb-2" style="color: #cbd5e1;"></i>
-            <p>No image selected</p>
-        </div>
-    </div>
-    <div class="mt-2 d-flex gap-2">
-        <label class="btn btn-success btn-sm flex-fill" style="cursor: pointer;">
-            <i class="fas fa-camera me-1"></i> Camera
-            <input type="file" name="image2" accept="image/*" capture="environment" style="display: none;" class="building-image-input" data-preview="buildingImagePreview2" data-placeholder="noImagePlaceholder2">
-        </label>
-        <label class="btn btn-outline-primary btn-sm flex-fill" style="cursor: pointer;">
-            <i class="fas fa-folder-open me-1"></i> Choose File
-            <input type="file" name="image2" id="building_image2" accept="image/*" style="display: none;" class="building-image-input" data-preview="buildingImagePreview2" data-placeholder="noImagePlaceholder2">
-        </label>
-    </div>
-    <div id="building_image2_error" class="error-message text-danger small mt-1"></div>
-</div>
+                                    <!-- Image 2 -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="fw-bold mb-2"><i class="fas fa-camera me-1"></i>Image 2</label>
+                                        <div class="border rounded p-3" style="background: #ffffff; min-height: 220px;">
+                                            <img id="buildingImagePreview2" src="" alt="Building Image Preview 2"
+                                                class="img-fluid"
+                                                style="display: none; max-height: 200px; width: 100%; object-fit: contain; border-radius: 8px;">
+                                            <div id="noImagePlaceholder2" class="text-center text-muted"
+                                                style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px;">
+                                                <i class="fas fa-cloud-upload-alt fa-3x mb-2" style="color: #cbd5e1;"></i>
+                                                <p>No image selected</p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 d-flex gap-2">
+                                            <!-- Camera Button -->
+                                            <label class="btn btn-success btn-sm flex-fill" style="cursor: pointer;">
+                                                <i class="fas fa-camera me-1"></i> Camera
+                                                <input type="file" name="image2" accept="image/*"
+                                                    capture="environment" style="display: none;" class="image-input">
+                                            </label>
+                                            <!-- File/Gallery Button -->
+                                            <label class="btn btn-outline-primary btn-sm flex-fill"
+                                                style="cursor: pointer;">
+                                                <i class="fas fa-folder-open me-1"></i> Choose File
+                                                <input type="file" name="image2" id="building_image2"
+                                                    accept="image/*" style="display: none;" class="image-input">
+                                            </label>
+                                        </div>
+                                        <div id="building_image2_error" class="error-message text-danger small mt-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Basic Information -->
                         <div class="card mb-4">
@@ -3307,32 +3284,41 @@
                     '<i class="fas fa-save me-2"></i>Save Building Data');
             }
 
-           $(document).ready(function() {
-    // Image preview without auto-submit
-    $(document).on('change', '.building-image-input', function(e) {
-        const file = this.files[0];
-        const previewId = $(this).data('preview');
-        const placeholderId = $(this).data('placeholder');
+            // ─── Image Preview ───
+            $(document).ready(function() {
+                // Image 1 preview
+                $("#building_image").on('change', function(e) {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            $("#buildingImagePreview").attr('src', e.target.result).show();
+                            $("#noImagePlaceholder").hide();
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        $("#buildingImagePreview").hide();
+                        $("#noImagePlaceholder").show();
+                    }
+                });
 
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                $('#' + previewId).attr('src', e.target.result).show();
-                $('#' + placeholderId).hide();
-            };
-            reader.readAsDataURL(file);
-        } else {
-            $('#' + previewId).hide();
-            $('#' + placeholderId).show();
-        }
-    });
+                // Image 2 preview
+                $("#building_image2").on('change', function(e) {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            $("#buildingImagePreview2").attr('src', e.target.result).show();
+                            $("#noImagePlaceholder2").hide();
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        $("#buildingImagePreview2").hide();
+                        $("#noImagePlaceholder2").show();
+                    }
+                });
+            });
 
-    // Remove the old duplicate handlers if they exist
-    // The old code had:
-    // $("#building_image").on('change', function(e) { ... })
-    // $("#building_image2").on('change', function(e) { ... })
-    // You should remove those or they will conflict
-});
             $(document).ready(function() {
                 let isSubmitting = false; // Prevent double submission
 
