@@ -39,49 +39,6 @@
             fill: rgba(245, 158, 11, 0.15) !important;
         }
 
-        .merge-action-btn {
-            position: absolute;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1001;
-            background: #8b5cf6;
-            color: white;
-            padding: 10px 24px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
-            display: none;
-            align-items: center;
-            gap: 12px;
-            border: none;
-            animation: slideUp 0.3s ease;
-        }
-
-        .merge-action-btn.show {
-            display: flex;
-        }
-
-        .merge-action-btn .close-btn {
-            font-size: 1.2rem;
-            opacity: 0.7;
-            cursor: pointer;
-            padding: 0 5px;
-            transition: opacity 0.2s;
-        }
-
-        .merge-action-btn .close-btn:hover {
-            opacity: 1;
-        }
-
-        .merge-action-btn .merge-count {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-
         .dropdown-divider {
             height: 1px;
             margin: 0;
@@ -1655,9 +1612,6 @@
                     </div>
 
                     <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0;">
-                        {{-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-2"></i>Close
-                        </button> --}}
                         <button type="submit" class="btn btn-primary" id="buildingsubmitBtn">
                             <i class="fas fa-save me-2"></i>Save Building Data
                         </button>
@@ -1684,7 +1638,6 @@
 
                     <form id="pointDetailsForm" class="needs-validation" novalidate>
                         @csrf
-
 
                         <!-- Tabs -->
                         <ul class="nav nav-tabs mb-3" id="pointDetailsTabs" role="tablist">
@@ -2029,6 +1982,56 @@
             </div>
         </div>
     </div>
+
+    {{-- ── Merge Polygon Modal ── --}}
+    <div class="modal fade" id="mergePolygonModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:16px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+                <div class="modal-header"
+                    style="background:#f5f3ff; border-bottom:1px solid #ddd6fe; border-radius:16px 16px 0 0; padding:16px 24px;">
+                    <h5 class="modal-title" style="color:#7c3aed; font-weight:700; margin:0;">
+                        <i class="bi bi-union me-2"></i>Merge Polygons
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-3" style="font-size:0.85rem; line-height:1.5;">
+                        Map la oru polygon click pannunga — adhu <strong>Primary GIS ID</strong> ah automatic ah varum.
+                        Appuram merge pannanum nu nenacha polygon oda <strong>Secondary GIS ID</strong> ah type pannunga.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:0.85rem; color:#374151;">Primary GIS
+                            ID</label>
+                        <input type="text" id="mergePrimaryGisId" class="form-control"
+                            placeholder="Click a polygon on the map…" readonly
+                            style="border-radius:10px; border:1.5px solid #e5e7eb; padding:10px 14px; background:#f8fafc;">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold" style="font-size:0.85rem; color:#374151;">Secondary GIS
+                            ID</label>
+                        <input type="text" id="mergeSecondaryGisId" class="form-control"
+                            placeholder="Enter secondary GIS ID…"
+                            style="border-radius:10px; border:1.5px solid #e5e7eb; padding:10px 14px;"
+                            autocomplete="off">
+                        <div id="mergeGisError" class="text-danger mt-1" style="font-size:0.8rem; display:none;"></div>
+                    </div>
+                </div>
+                <div class="modal-footer"
+                    style="border-top:1px solid #f1f5f9; border-radius:0 0 16px 16px; padding:14px 24px;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                        style="border-radius:10px; font-weight:600; padding:8px 20px;">
+                        Cancel
+                    </button>
+                    <button type="button" id="confirmMergeBtn" class="btn"
+                        style="background:#8b5cf6; color:#fff; border-radius:10px; font-weight:600; padding:8px 24px; min-width:140px;">
+                        <i class="bi bi-union me-1"></i>Merge &amp; Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -2075,103 +2078,6 @@
                 zIndex: 10
             });
 
-            // ─── LOAD BOUNDARY ───
-            function loadBoundary() {
-                boundarySource.clear();
-
-                if (!boundaryData) {
-                    console.log('No boundary data available');
-                    return;
-                }
-
-                try {
-                    let boundaryCoords = null;
-                    let wardNo = null;
-
-                    if (boundaryData.boundary && boundaryData.boundary.coordinates) {
-                        boundaryCoords = boundaryData.boundary.coordinates;
-                        wardNo = boundaryData.ward_no || 'N/A';
-                    } else if (boundaryData.coordinates) {
-                        boundaryCoords = boundaryData.coordinates;
-                        wardNo = boundaryData.ward_no || 'N/A';
-                    } else if (Array.isArray(boundaryData)) {
-                        boundaryCoords = boundaryData;
-                    } else {
-                        console.log('Unknown boundary structure:', boundaryData);
-                        return;
-                    }
-
-                    if (!boundaryCoords || !Array.isArray(boundaryCoords) || boundaryCoords.length === 0) {
-                        console.error('Invalid boundary coordinates');
-                        return;
-                    }
-
-                    let geometry = null;
-
-                    try {
-                        // Parse different GeoJSON formats
-                        if (Array.isArray(boundaryCoords[0]) &&
-                            Array.isArray(boundaryCoords[0][0]) &&
-                            Array.isArray(boundaryCoords[0][0][0]) &&
-                            typeof boundaryCoords[0][0][0][0] === 'number') {
-                            geometry = new ol.geom.MultiPolygon(boundaryCoords);
-                            console.log('Boundary parsed as MultiPolygon');
-                        } else if (Array.isArray(boundaryCoords[0]) &&
-                            Array.isArray(boundaryCoords[0][0]) &&
-                            typeof boundaryCoords[0][0][0] === 'number') {
-                            geometry = new ol.geom.Polygon(boundaryCoords[0]);
-                            console.log('Boundary parsed as Polygon');
-                        } else if (Array.isArray(boundaryCoords[0]) &&
-                            typeof boundaryCoords[0][0] === 'number') {
-                            geometry = new ol.geom.Polygon([boundaryCoords]);
-                            console.log('Boundary parsed as LinearRing');
-                        } else if (boundaryCoords.type === 'MultiPolygon' || boundaryCoords.type === 'Polygon') {
-                            const format = new ol.format.GeoJSON();
-                            const feature = format.readFeature(boundaryCoords);
-                            geometry = feature.getGeometry();
-                            console.log('Boundary parsed as GeoJSON');
-                        } else {
-                            // Fallback: try to flatten
-                            const flatCoords = boundaryCoords[0][0] || boundaryCoords[0] || boundaryCoords;
-                            if (Array.isArray(flatCoords) && flatCoords.length > 0) {
-                                geometry = new ol.geom.Polygon([flatCoords]);
-                                console.log('Boundary parsed using fallback flattening');
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Error parsing boundary:', e);
-                        return;
-                    }
-
-                    if (!geometry) {
-                        console.error('Failed to create geometry from boundary data');
-                        return;
-                    }
-
-                    const boundaryFeature = new ol.Feature({
-                        geometry: geometry,
-                        type: 'boundary',
-                        ward_no: wardNo,
-                        name: `Ward ${wardNo}`
-                    });
-
-                    boundarySource.addFeature(boundaryFeature);
-                    console.log('✅ Boundary loaded successfully!');
-
-                    // Fit map to boundary extent
-                    const extent = geometry.getExtent();
-                    if (extent && extent[0] !== extent[2]) {
-                        map.getView().fit(extent, {
-                            padding: [50, 50, 50, 50],
-                            duration: 1000,
-                            maxZoom: 20
-                        });
-                    }
-
-                } catch (e) {
-                    console.error('Error loading boundary:', e);
-                }
-            }
             // pt Dynamic add
             let ptIndex = 0;
             let searchIndex = [];
@@ -2477,33 +2383,26 @@
                     let geometry = null;
 
                     try {
-                        // Parse different GeoJSON formats
                         if (Array.isArray(boundaryCoords[0]) &&
                             Array.isArray(boundaryCoords[0][0]) &&
                             Array.isArray(boundaryCoords[0][0][0]) &&
                             typeof boundaryCoords[0][0][0][0] === 'number') {
                             geometry = new ol.geom.MultiPolygon(boundaryCoords);
-                            console.log('Boundary parsed as MultiPolygon');
                         } else if (Array.isArray(boundaryCoords[0]) &&
                             Array.isArray(boundaryCoords[0][0]) &&
                             typeof boundaryCoords[0][0][0] === 'number') {
                             geometry = new ol.geom.Polygon(boundaryCoords[0]);
-                            console.log('Boundary parsed as Polygon');
                         } else if (Array.isArray(boundaryCoords[0]) &&
                             typeof boundaryCoords[0][0] === 'number') {
                             geometry = new ol.geom.Polygon([boundaryCoords]);
-                            console.log('Boundary parsed as LinearRing');
                         } else if (boundaryCoords.type === 'MultiPolygon' || boundaryCoords.type === 'Polygon') {
                             const format = new ol.format.GeoJSON();
                             const feature = format.readFeature(boundaryCoords);
                             geometry = feature.getGeometry();
-                            console.log('Boundary parsed as GeoJSON');
                         } else {
-                            // Fallback: try to flatten
                             const flatCoords = boundaryCoords[0][0] || boundaryCoords[0] || boundaryCoords;
                             if (Array.isArray(flatCoords) && flatCoords.length > 0) {
                                 geometry = new ol.geom.Polygon([flatCoords]);
-                                console.log('Boundary parsed using fallback flattening');
                             }
                         }
                     } catch (e) {
@@ -2524,9 +2423,7 @@
                     });
 
                     boundarySource.addFeature(boundaryFeature);
-                    console.log('✅ Boundary loaded successfully!');
 
-                    // Fit map to boundary extent
                     const extent = geometry.getExtent();
                     if (extent && extent[0] !== extent[2]) {
                         map.getView().fit(extent, {
@@ -2814,22 +2711,8 @@
                     translateInteraction = null;
                 }
 
-                // ─── ADD MERGE CLEANUP ───
-                if (mergeSelectInteraction) {
-                    map.removeInteraction(mergeSelectInteraction);
-                    mergeSelectInteraction = null;
-                }
-                if (mergeHoverInteraction) {
-                    map.removeInteraction(mergeHoverInteraction);
-                    mergeHoverInteraction = null;
-                }
-                selectedFeaturesForMerge.forEach(function(f) {
-                    f.setStyle(null);
-                });
-                selectedFeaturesForMerge = [];
-                hideMergeButton();
-                map.getTargetElement().classList.remove('merge-mode');
-                mergeModeActive = false;
+                // ─── MERGE MODAL CLEANUP ───
+                cleanupMergeModal();
 
                 tempDrawSource.clear();
                 map.getTargetElement().classList.remove('draw-mode', 'split-mode', 'edit-mode');
@@ -2867,7 +2750,6 @@
             }
 
             function lineClick(feature) {
-                console.log('Line clicked:', feature.getProperties());
                 const gisid = feature.get('gisid');
                 const roadName = feature.get('road_name') || feature.get('name') || '';
                 const pincode = feature.get('pincode') || '';
@@ -2877,26 +2759,21 @@
             }
 
             function populateLineForm(gisid, roadName, pincode) {
-                // Set basic form fields
                 $('#line_gisid').val(gisid || '');
                 $('#line_road_name').val(roadName || '');
                 $('#line_pincode').val(pincode || '');
-                // Clear any existing validation errors
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').remove();
             }
 
             // Save Line Data
-            // Save Line Data
             $('#saveLineDetails').on('click', function() {
                 const formData = new FormData(document.getElementById('lineDetailsForm'));
 
-                // Show saving indicator
                 $(this).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
                 $(this).prop('disabled', true);
                 formData.append('_token', $('input[name="_token"]').val());
 
-                // Validate required fields
                 const gisid = $('#line_gisid').val();
                 const roadName = $('#line_road_name').val();
 
@@ -2915,16 +2792,12 @@
                     contentType: false,
                     success: function(response) {
                         showFlashMessage('Line data saved successfully!', 'success');
-                        console.log(response.lines);
                         lines = response.lines;
                         $('#lineDetailsModal').modal('hide');
-                        // Refresh map features if needed
                         reloadAllSources();
                     },
                     error: function(xhr) {
-                        console.error('Error saving line data:', xhr);
                         if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            // Display validation errors
                             const errors = xhr.responseJSON.errors;
                             Object.keys(errors).forEach(key => {
                                 const field = $(`#line_${key}`);
@@ -2948,46 +2821,31 @@
             });
 
             function pointClick(feature) {
-                console.log('Point clicked:', feature.getProperties());
-
                 const gisid = feature.get('gisid');
-
-                // Find building data by gisid
                 let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
 
                 if (building) {
                     let buildingBillCount = building['number_bill'] || 0;
-
                     let point = pointDatas.filter(pointdata => pointdata.point_gisid == gisid);
-
                     let pointDataCount = point.length;
 
                     if (buildingBillCount > pointDataCount) {
-                        // Show modal
                         const modal = new bootstrap.Modal(document.getElementById('pointDetailsModal'));
                         modal.show();
                         $('#pointDetailsTabs button:first').tab('show');
-
                         populatePointForm(gisid);
-
                     } else {
-                        // Use custom flash message instead of toastr
                         showFlashMessage('All bills are already mapped for this point (Bills: ' +
                             buildingBillCount +
                             ', Mapped: ' + pointDataCount + ')', 'info');
-                        console.log('No new bills to map for gisid:', gisid);
                     }
-
                 } else {
-                    console.warn('No building found for gisid:', gisid);
-                    // Use custom flash message instead of toastr
                     showFlashMessage('No building data found for this point', 'error');
                 }
             }
 
             function populatePointForm(gisid) {
                 ptIndex = 0
-                console.log(gisid)
                 $('#point_gisid').val(gisid || '');
                 $('#building_data_id').val('');
                 $('#assessment').val('');
@@ -3007,23 +2865,20 @@
                 $('#worker_name').val('');
                 $('#remarks').val('');
 
-                // Water Tax Tab - Clear all fields
                 $('#watertax_no').val('');
                 $('#old_watertax_no').val('');
-                $('#water_usage').val(''); // For select dropdown, this will select the first empty option
+                $('#water_usage').val('');
                 $('#water_slab_rate').val('');
                 $('#water_balance').val('');
                 $('#water_slab_description').val('');
-                $('#water_DBC_type').val(''); // For select dropdown, this will select the first empty option
+                $('#water_DBC_type').val('');
 
-                // UGD Tax Tab - Clear all fields
                 $('#ugd_no').val('');
                 $('#old_ugd_no').val('');
                 $('#ugd_usage').val('');
                 $('#ugd_slab_description').val('');
                 $('#ugd_DBC_type').val('');
 
-                // Professional Tax Tab - Clear all fields
                 $('#pt_number').val('');
                 $('#old_pt_number').val('');
                 $('#establishment_name').val('');
@@ -3032,27 +2887,20 @@
                 $('#half_year_tax').val('');
                 $('#pt_remarks').val('');
 
-                // Reset to first tab
                 $('#pointDetailsTabs button:first').tab('show');
                 $('#professionalContainer').empty();
-
             }
+
             $('#pointDetailsModal').on('hidden.bs.modal', function() {
-                // Clear edit mode
                 $('#pointDetailsForm').removeAttr('data-edit-id');
-
-                // Reset button text
                 $('#savePointDetails').html('<i class="bi bi-save me-1"></i>Update Point Data');
-
-                // Clear validation states
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').remove();
                 $('.error-message').html('');
-
-                // Clear professional tax container
                 $('#professionalContainer').empty();
                 ptIndex = 0;
             });
+
             // Save Point Data
             $('#savePointDetails').on('click', function() {
                 const $form = $('#pointDetailsForm');
@@ -3063,27 +2911,22 @@
                 const $btn = $(this);
                 const originalHtml = $btn.html();
 
-                // ✅ CLEAR PREVIOUS ERRORS BEFORE SUBMITTING
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').remove();
                 $('.error-message').html('');
 
-                // Disable button and show loading state
                 $btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
 
-                // Function to reset button
                 function resetButton() {
                     $btn.html(originalHtml).prop('disabled', false);
                 }
 
-                // Safety timeout
                 const timeoutId = setTimeout(function() {
                     resetButton();
                     showFlashMessage('Request timed out. Please try again.', 'warning');
                 }, 30000);
 
                 if (editId) {
-                    // ─── UPDATE MODE ───
                     formData.append('_method', 'PUT');
 
                     $.ajax({
@@ -3094,11 +2937,9 @@
                         contentType: false,
                         success: function(response) {
                             clearTimeout(timeoutId);
-                            console.log('Update response:', response);
-
                             if (response.success) {
                                 showFlashMessage('Point data updated successfully!', 'success');
-                                 pointDatas = response.pointDatas ?? pointDatas;
+                                pointDatas = response.pointDatas ?? pointDatas;
                                 $('#pointDetailsModal').modal('hide');
                                 $form.removeAttr('data-edit-id');
                                 $('#savePointDetails').html(originalHtml);
@@ -3111,12 +2952,9 @@
                         },
                         error: function(xhr) {
                             clearTimeout(timeoutId);
-                            console.error('Update error:', xhr);
-
                             let errorMessage = 'Update failed.';
 
                             if (xhr.status === 422) {
-                                // Validation errors
                                 const errors = xhr.responseJSON?.errors;
                                 if (errors) {
                                     $.each(errors, function(field, messages) {
@@ -3150,7 +2988,6 @@
                         }
                     });
                 } else {
-                    // ─── CREATE MODE ───
                     $.ajax({
                         url: '/point-data',
                         method: 'POST',
@@ -3159,10 +2996,9 @@
                         contentType: false,
                         success: function(response) {
                             clearTimeout(timeoutId);
-                            console.log('Create response:', response);
-
                             if (response.success) {
                                 showFlashMessage('Point data saved successfully!', 'success');
+                                pointDatas = response.pointDatas ?? pointDatas;
                                 $('#pointDetailsModal').modal('hide');
                                 reloadAllSources();
                                 resetButton();
@@ -3173,8 +3009,6 @@
                         },
                         error: function(xhr) {
                             clearTimeout(timeoutId);
-                            console.error('Create error:', xhr);
-
                             let errorMessage = 'Failed to save point data.';
 
                             if (xhr.status === 422) {
@@ -3207,12 +3041,10 @@
                 }
             });
 
-
             // ─── Polygon Click ───
             function polygonClick(feature) {
                 const gisid = feature.get('gisid');
                 let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
-                console.log('Selected building:', building);
 
                 if (building) {
                     populateBuildingForm(building);
@@ -3225,7 +3057,6 @@
             }
 
             function populateBuildingForm(item) {
-
                 $("#building_gisid").val(item.gisid || "");
                 $("#number_bill").val(item.number_bill || "");
                 $("#number_shop").val(item.number_shop || "");
@@ -3234,13 +3065,9 @@
                 $("#road_name").val(item.road_name || "");
                 $("#phone_building").val(item.phone || "");
 
-                // Get zone from item
                 const zoneValue = item.zone || item.building_zone || "";
-
-                // Select existing zone
                 $("#building_zone").val(zoneValue);
 
-                // If value is not found in dropdown, add it
                 if (
                     zoneValue &&
                     $("#building_zone option[value='" + zoneValue + "']").length === 0
@@ -3248,7 +3075,6 @@
                     $("#building_zone").append(
                         new Option(zoneValue, zoneValue)
                     );
-
                     $("#building_zone").val(zoneValue);
                 }
 
@@ -3273,7 +3099,6 @@
                 $("#corporationremarks").val(item.corporationremarks || "");
                 $("#qc_remarks").val(item.qc_remarks || "");
 
-                // Images
                 const assetUrl = window.assetUrl || "{{ asset('') }}";
 
                 if (item.image && item.image !== "") {
@@ -3302,7 +3127,6 @@
             }
 
             function resetBuildingForm(gisid) {
-                // Clear all fields
                 $("#building_gisid").val(gisid || "");
                 $("#number_bill").val("");
                 $("#number_shop").val("");
@@ -3331,7 +3155,6 @@
                 $("#corporationremarks").val("");
                 $("#qc_remarks").val("");
 
-                // Reset images
                 $("#buildingImagePreview").hide().attr("src", "");
                 $("#buildingImagePreview2").hide().attr("src", "");
                 $("#noImagePlaceholder").show();
@@ -3339,211 +3162,178 @@
                 $("#building_image").val("");
                 $("#building_image2").val("");
 
-                // Clear errors
                 $(".error-message").html("");
                 $(".is-invalid").removeClass("is-invalid");
 
-                // Reset submit button
                 $("#buildingsubmitBtn").prop('disabled', false).html(
                     '<i class="fas fa-save me-2"></i>Save Building Data');
             }
 
             // ─── Image Preview ───
-            $(document).ready(function() {
-                // Image 1 - Camera and Gallery
-                $('#image1_input').on('change', function(e) {
-                    const file = this.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            $('#buildingImagePreview')
-                                .attr('src', e.target.result)
-                                .show();
-                            $('#noImagePlaceholder').hide();
-                        };
-                        reader.readAsDataURL(file);
-                    } else {
-                        $('#buildingImagePreview').hide();
-                        $('#noImagePlaceholder').show();
-                    }
-                });
-
-                // Image 2 - Camera and Gallery
-                $('#image2_input').on('change', function(e) {
-                    const file = this.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            $('#buildingImagePreview2')
-                                .attr('src', e.target.result)
-                                .show();
-                            $('#noImagePlaceholder2').hide();
-                        };
-                        reader.readAsDataURL(file);
-                    } else {
-                        $('#buildingImagePreview2').hide();
-                        $('#noImagePlaceholder2').show();
-                    }
-                });
+            $('#image1_input').on('change', function(e) {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#buildingImagePreview')
+                            .attr('src', e.target.result)
+                            .show();
+                        $('#noImagePlaceholder').hide();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#buildingImagePreview').hide();
+                    $('#noImagePlaceholder').show();
+                }
             });
 
-            $(document).ready(function() {
-                let isSubmitting = false; // Prevent double submission
+            $('#image2_input').on('change', function(e) {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#buildingImagePreview2')
+                            .attr('src', e.target.result)
+                            .show();
+                        $('#noImagePlaceholder2').hide();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#buildingImagePreview2').hide();
+                    $('#noImagePlaceholder2').show();
+                }
+            });
 
-                $('#buildingForm').on('submit', function(e) {
-                    e.preventDefault();
+            let isSubmitting = false;
 
-                    // Prevent double submission
-                    if (isSubmitting) return;
-                    isSubmitting = true;
+            $('#buildingForm').on('submit', function(e) {
+                e.preventDefault();
 
-                    // Clear previous errors
-                    $(".error-message").html("");
-                    $(".is-invalid").removeClass("is-invalid");
-                    $(".invalid-feedback").remove(); // Remove any existing invalid feedback
+                if (isSubmitting) return;
+                isSubmitting = true;
 
-                    // Show loading state
-                    const submitBtn = $("#buildingsubmitBtn");
-                    const originalHtml = submitBtn.html();
-                    submitBtn.prop('disabled', true).html(
-                        '<i class="fas fa-spinner fa-spin me-2"></i>Saving...');
+                $(".error-message").html("");
+                $(".is-invalid").removeClass("is-invalid");
+                $(".invalid-feedback").remove();
 
-                    // Prepare form data
-                    const formData = new FormData(this);
-                    const gisid = $("#building_gisid").val();
-                    formData.append('action', gisid ? 'update' : 'create');
-                    formData.append('_token', $('input[name="_token"]').val());
+                const submitBtn = $("#buildingsubmitBtn");
+                const originalHtml = submitBtn.html();
+                submitBtn.prop('disabled', true).html(
+                    '<i class="fas fa-spinner fa-spin me-2"></i>Saving...');
 
-                    // Function to reset button
-                    function resetButton() {
-                        submitBtn.prop('disabled', false).html(originalHtml ||
-                            '<i class="fas fa-save me-2"></i>Save Building Data');
-                        isSubmitting = false;
-                    }
+                const formData = new FormData(this);
+                const gisid = $("#building_gisid").val();
+                formData.append('action', gisid ? 'update' : 'create');
+                formData.append('_token', $('input[name="_token"]').val());
 
-                    // Safety timeout - reset button after 30 seconds
-                    const timeoutId = setTimeout(function() {
-                        resetButton();
-                        showFlashMessage('Request timed out. Please try again.', 'warning');
-                    }, 30000);
+                function resetButton() {
+                    submitBtn.prop('disabled', false).html(originalHtml ||
+                        '<i class="fas fa-save me-2"></i>Save Building Data');
+                    isSubmitting = false;
+                }
 
-                    // Send AJAX request
-                    $.ajax({
-                        url: '/buildings/save',
-                        type: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            clearTimeout(timeoutId);
-                            if (response.success) {
-                                // Show success message
-                                showFlashMessage('Building data saved successfully!',
-                                    'success');
-                                if (response) {
-                                    polygonDatas = response.polygonDatas ??
-                                        polygonDatas;
-                                    reloadAllSources();
-                                }
-                                setTimeout(() => {
-                                    const modal = bootstrap.Modal.getInstance(
-                                        document.getElementById(
-                                            'buildingDataModal'));
-                                    if (modal) modal.hide();
-                                    resetButton();
-                                }, 1500);
-                            } else {
-                                showFlashMessage(response.message ||
-                                    'Error saving data', 'error');
+                const timeoutId = setTimeout(function() {
+                    resetButton();
+                    showFlashMessage('Request timed out. Please try again.', 'warning');
+                }, 30000);
+
+                $.ajax({
+                    url: '/buildings/save',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        clearTimeout(timeoutId);
+                        if (response.success) {
+                            showFlashMessage('Building data saved successfully!',
+                                'success');
+                            if (response) {
+                                polygonDatas = response.polygonDatas ??
+                                    polygonDatas;
+                                reloadAllSources();
+                            }
+                            setTimeout(() => {
+                                const modal = bootstrap.Modal.getInstance(
+                                    document.getElementById(
+                                        'buildingDataModal'));
+                                if (modal) modal.hide();
                                 resetButton();
-                            }
-                        },
-                        error: function(xhr) {
-                            clearTimeout(timeoutId);
-                            let errorMessage = 'An error occurred while saving.';
-
-                            if (xhr.status === 422) {
-                                // Validation errors
-                                const errors = xhr.responseJSON?.errors;
-                                if (errors) {
-                                    // Display validation errors
-                                    $.each(errors, function(field, messages) {
-                                        // Find the field element
-                                        let fieldElement = $(`#${field}`);
-
-                                        // If field not found, try with different ID patterns
-                                        if (!fieldElement.length) {
-                                            // Try with building_ prefix
-                                            fieldElement = $(
-                                                `#building_${field}`);
-                                        }
-                                        if (!fieldElement.length) {
-                                            // Try with _building suffix
-                                            fieldElement = $(
-                                                `#${field}_building`);
-                                        }
-
-                                        if (fieldElement.length) {
-                                            fieldElement.addClass('is-invalid');
-
-                                            // Add error message
-                                            const errorContainer = $(
-                                                `#${field}_error`);
-                                            if (errorContainer.length) {
-                                                errorContainer.html(messages[
-                                                    0]);
-                                            } else {
-                                                // Create error container if it doesn't exist
-                                                const errorDiv = $(
-                                                    `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
-                                                );
-                                                fieldElement.after(errorDiv);
-                                            }
-                                        } else {
-                                            // If field not found, show in a general error container
-                                            console.warn(
-                                                'Field not found for error:',
-                                                field, messages[0]);
-                                        }
-                                    });
-
-                                    // Show first error at top of form
-                                    const firstError = $('.is-invalid').first();
-                                    if (firstError.length) {
-                                        // Scroll to first error
-                                        $('html, body').animate({
-                                            scrollTop: firstError.offset().top -
-                                                100
-                                        }, 300);
-                                    }
-
-                                    errorMessage = 'Please fix the validation errors.';
-                                }
-                            } else if (xhr.responseJSON?.message) {
-                                errorMessage = xhr.responseJSON.message;
-                            } else if (xhr.status === 0) {
-                                errorMessage =
-                                    'Network error. Please check your connection.';
-                            } else if (xhr.status === 500) {
-                                errorMessage = 'Server error. Please try again later.';
-                            }
-
-                            showFlashMessage(errorMessage, 'error');
-                            resetButton();
-                        },
-                        complete: function() {
-                            // Backup reset - ensures button is always reset
-                            clearTimeout(timeoutId);
+                            }, 1500);
+                        } else {
+                            showFlashMessage(response.message ||
+                                'Error saving data', 'error');
                             resetButton();
                         }
-                    });
+                    },
+                    error: function(xhr) {
+                        clearTimeout(timeoutId);
+                        let errorMessage = 'An error occurred while saving.';
+
+                        if (xhr.status === 422) {
+                            const errors = xhr.responseJSON?.errors;
+                            if (errors) {
+                                $.each(errors, function(field, messages) {
+                                    let fieldElement = $(`#${field}`);
+
+                                    if (!fieldElement.length) {
+                                        fieldElement = $(
+                                            `#building_${field}`);
+                                    }
+                                    if (!fieldElement.length) {
+                                        fieldElement = $(
+                                            `#${field}_building`);
+                                    }
+
+                                    if (fieldElement.length) {
+                                        fieldElement.addClass('is-invalid');
+
+                                        const errorContainer = $(
+                                            `#${field}_error`);
+                                        if (errorContainer.length) {
+                                            errorContainer.html(messages[
+                                                0]);
+                                        } else {
+                                            const errorDiv = $(
+                                                `<div id="${field}_error" class="invalid-feedback">${messages[0]}</div>`
+                                            );
+                                            fieldElement.after(errorDiv);
+                                        }
+                                    }
+                                });
+
+                                const firstError = $('.is-invalid').first();
+                                if (firstError.length) {
+                                    $('html, body').animate({
+                                        scrollTop: firstError.offset().top -
+                                            100
+                                    }, 300);
+                                }
+
+                                errorMessage = 'Please fix the validation errors.';
+                            }
+                        } else if (xhr.responseJSON?.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.status === 0) {
+                            errorMessage =
+                                'Network error. Please check your connection.';
+                        } else if (xhr.status === 500) {
+                            errorMessage = 'Server error. Please try again later.';
+                        }
+
+                        showFlashMessage(errorMessage, 'error');
+                        resetButton();
+                    },
+                    complete: function() {
+                        clearTimeout(timeoutId);
+                        resetButton();
+                    }
                 });
             });
 
             // ─── NONE MODE ───
             function setNoneMode() {
                 currentMode = 'none';
-                mergeModeActive = false;
                 disableAllInteractions();
                 hideSplitButton();
                 hideEditControls();
@@ -3749,7 +3539,6 @@
                         setNoneMode();
                     },
                     error: function(xhr) {
-                        console.error('Update error:', xhr);
                         Swal.fire('Error', 'Failed to update polygon', 'error');
                         cancelEdit();
                     }
@@ -3923,30 +3712,34 @@
                         setNoneMode();
                     },
                     error: function(xhr) {
-                        console.error('Move error:', xhr);
                         Swal.fire('Error', 'Failed to move polygon', 'error');
                         cancelMove();
                     }
                 });
             }
-            // ─── MERGE MODE STATE ───
-            let mergeModeActive = false;
-            let selectedFeaturesForMerge = [];
-            let mergeSelectInteraction = null;
-            let mergeHoverInteraction = null;
 
-            // ─── SET MERGE MODE ───
+            // ═══════════════════════════════════════════════════════
+            // ─── MERGE MODE (Modal-based: Primary via map click, Secondary via typed GIS ID) ───
+            // ═══════════════════════════════════════════════════════
+            let mergeModalSelectInteraction = null;
+
+            const mergePolygonModalEl = document.getElementById('mergePolygonModal');
+            const mergePolygonModal = new bootstrap.Modal(mergePolygonModalEl, {
+                backdrop: true,
+                keyboard: true
+            });
+
             function setMergeMode() {
                 currentMode = 'merge';
-                mergeModeActive = true;
-                selectedFeaturesForMerge = [];
                 disableAllInteractions();
-                hideMergeButton();
 
                 map.getTargetElement().classList.add('merge-mode');
 
-                // Style for selected features
-                const selectedStyle = new ol.style.Style({
+                $('#mergePrimaryGisId').val('');
+                $('#mergeSecondaryGisId').val('');
+                $('#mergeGisError').hide().text('');
+
+                const highlightStyle = new ol.style.Style({
                     stroke: new ol.style.Stroke({
                         color: '#8b5cf6',
                         width: 5
@@ -3956,171 +3749,123 @@
                     })
                 });
 
-                // Hover style
-                const hoverStyle = new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: '#f59e0b',
-                        width: 3,
-                        lineDash: [4, 4]
-                    }),
-                    fill: new ol.style.Fill({
-                        color: 'rgba(245,158,11,0.15)'
-                    })
-                });
-
-                // Select interaction for merging
-                mergeSelectInteraction = new ol.interaction.Select({
+                mergeModalSelectInteraction = new ol.interaction.Select({
                     layers: [polygonLayer],
-                    style: function(feature) {
-                        const isSelected = selectedFeaturesForMerge.some(f => f.getId() === feature
-                            .getId());
-                        return isSelected ? selectedStyle : undefined;
-                    },
-                    condition: function(evt) {
-                        return ol.events.condition.singleClick(evt);
-                    }
+                    style: highlightStyle
                 });
 
-                mergeSelectInteraction.on('select', function(e) {
-                    e.deselected.forEach(function(feature) {
-                        const index = selectedFeaturesForMerge.findIndex(f => f.getId() === feature
-                            .getId());
-                        if (index !== -1) {
-                            selectedFeaturesForMerge.splice(index, 1);
-                            feature.setStyle(null);
-                        }
-                    });
+                mergeModalSelectInteraction.on('select', function(e) {
+                    if (e.selected.length > 0) {
+                        const feature = e.selected[0];
 
-                    e.selected.forEach(function(feature) {
                         if (feature.get('type') !== 'Polygon') {
-                            showToast('⚠️ Please select only Polygons', 2000);
-                            mergeSelectInteraction.getFeatures().remove(feature);
+                            showToast('⚠️ Please select a Polygon', 2000);
+                            mergeModalSelectInteraction.getFeatures().clear();
                             return;
                         }
 
-                        const alreadySelected = selectedFeaturesForMerge.some(f => f.getId() ===
-                            feature.getId());
-                        if (!alreadySelected) {
-                            selectedFeaturesForMerge.push(feature);
-                            feature.setStyle(selectedStyle);
-                            showToast(
-                                `✅ Polygon selected (${selectedFeaturesForMerge.length} selected)`,
-                                1500);
-                        }
-                    });
-
-                    updateMergeButton();
-                });
-
-                map.addInteraction(mergeSelectInteraction);
-
-                // Hover interaction for preview
-                mergeHoverInteraction = new ol.interaction.Select({
-                    layers: [polygonLayer],
-                    style: hoverStyle,
-                    condition: function(evt) {
-                        return ol.events.condition.pointerMove(evt);
+                        const gisid = feature.get('gisid');
+                        $('#mergePrimaryGisId').val(gisid);
+                        mergePolygonModal.show();
+                        showToast(`✅ Primary Polygon selected: ${gisid}`, 2000);
                     }
                 });
 
-                mergeHoverInteraction.on('select', function(e) {
-                    e.deselected.forEach(function(feature) {
-                        if (!selectedFeaturesForMerge.some(f => f.getId() === feature.getId())) {
-                            feature.setStyle(null);
-                        }
-                    });
-
-                    e.selected.forEach(function(feature) {
-                        const isSelected = selectedFeaturesForMerge.some(f => f.getId() === feature
-                            .getId());
-                        if (!isSelected && feature.get('type') === 'Polygon') {
-                            feature.setStyle(hoverStyle);
-                        }
-                    });
-                });
-
-                map.addInteraction(mergeHoverInteraction);
-
-                showToast('🔗 Merge Mode: Click polygons to select them', 2500);
+                map.addInteraction(mergeModalSelectInteraction);
+                selectInteraction = mergeModalSelectInteraction;
+                showToast('🔗 Merge Mode: Click a polygon to set it as Primary', 2500);
             }
 
-            // ─── UPDATE MERGE BUTTON ───
-            function updateMergeButton() {
-                const count = selectedFeaturesForMerge.length;
-                if (count >= 2) {
-                    showMergeButton(count);
+            function cleanupMergeModal() {
+                if (mergeModalSelectInteraction) {
+                    map.removeInteraction(mergeModalSelectInteraction);
+                    mergeModalSelectInteraction = null;
+                }
+                map.getTargetElement().classList.remove('merge-mode');
+            }
+
+            $('#mergePolygonModal').on('hidden.bs.modal', function() {
+                $('#mergePrimaryGisId').val('');
+                $('#mergeSecondaryGisId').val('');
+                $('#mergeGisError').hide().text('');
+                if (mergeModalSelectInteraction) {
+                    mergeModalSelectInteraction.getFeatures().clear();
+                }
+            });
+
+            $('#confirmMergeBtn').on('click', function() {
+                const primaryGisId = $('#mergePrimaryGisId').val().trim();
+                const secondaryGisId = $('#mergeSecondaryGisId').val().trim();
+
+                $('#mergeGisError').hide().text('');
+
+                if (!primaryGisId) {
+                    $('#mergeGisError').text(
+                        'Map la oru polygon click panni Primary GIS ID select pannunga.').show();
+                    return;
+                }
+                if (!secondaryGisId) {
+                    $('#mergeGisError').text('Secondary GIS ID enter pannunga.').show();
+                    return;
+                }
+                if (primaryGisId === secondaryGisId) {
+                    $('#mergeGisError').text(
+                        'Primary and Secondary GIS ID same ah irukka koodathu.').show();
+                    return;
+                }
+
+                const primaryFeature = polygonSource.getFeatureById(primaryGisId);
+                const secondaryFeature = polygonSource.getFeatureById(secondaryGisId);
+
+                if (!secondaryFeature) {
+                    $('#mergeGisError').text(
+                        'Secondary GIS ID map la kidaikala. Sariyana GIS ID ah check pannunga.'
+                        ).show();
+                    return;
+                }
+                if (!primaryFeature) {
+                    $('#mergeGisError').text('Primary GIS ID map la kidaikala.').show();
+                    return;
+                }
+
+                // ─── Union geometry client-side (turf.js already loaded via CDN) ───
+                const geoJsonFormat = new ol.format.GeoJSON();
+                const primaryGeoJson = geoJsonFormat.writeFeatureObject(primaryFeature);
+                const secondaryGeoJson = geoJsonFormat.writeFeatureObject(secondaryFeature);
+
+                let mergedGeometry;
+                try {
+                    const unioned = turf.union(primaryGeoJson, secondaryGeoJson);
+                    if (!unioned) throw new Error('Union returned null');
+                    mergedGeometry = unioned.geometry;
+                } catch (err) {
+                    console.error('Turf union error:', err);
+                    Swal.fire('Error',
+                        'Rendu polygons overlap/touch aagalanu therikirathu — adhanaala merge panna mudiyala.',
+                        'error');
+                    return;
+                }
+
+                const mergedOlFeature = geoJsonFormat.readFeature({
+                    type: 'Feature',
+                    geometry: mergedGeometry,
+                    properties: {}
+                });
+                const mergedGeom = mergedOlFeature.getGeometry();
+
+                let finalPolygonCoords;
+                if (mergedGeom.getType() === 'MultiPolygon') {
+                    const polys = mergedGeom.getPolygons();
+                    polys.sort((a, b) => b.getArea() - a.getArea());
+                    finalPolygonCoords = polys[0].getCoordinates();
                 } else {
-                    hideMergeButton();
-                }
-            }
-
-            // ─── SHOW MERGE BUTTON ───
-            function showMergeButton(count) {
-                hideMergeButton();
-                const $btn = $(`
-        <div class="merge-action-btn show" id="mergeActionBtn">
-            <i class="bi bi-union"></i>
-            Merge ${count} Polygons
-            <span class="merge-count">${count}</span>
-            <span class="close-btn">✕</span>
-        </div>
-    `);
-                $('#map').append($btn);
-
-                $btn.on('click', function(e) {
-                    if (!$(e.target).hasClass('close-btn')) {
-                        performMerge();
-                    }
-                });
-
-                $btn.find('.close-btn').on('click', function(e) {
-                    e.stopPropagation();
-                    cancelMerge();
-                });
-            }
-
-            // ─── HIDE MERGE BUTTON ───
-            function hideMergeButton() {
-                $('#mergeActionBtn').remove();
-            }
-
-            // ─── CANCEL MERGE ───
-            function cancelMerge() {
-                selectedFeaturesForMerge.forEach(function(feature) {
-                    feature.setStyle(null);
-                });
-                selectedFeaturesForMerge = [];
-                hideMergeButton();
-                showToast('❌ Merge cancelled', 2000);
-
-                if (mergeSelectInteraction) {
-                    mergeSelectInteraction.getFeatures().clear();
-                }
-                setNoneMode();
-            }
-
-            // ─── PERFORM MERGE ───
-            function performMerge() {
-                if (selectedFeaturesForMerge.length < 2) {
-                    showToast('⚠️ Please select at least 2 polygons', 2000);
-                    return;
+                    finalPolygonCoords = mergedGeom.getCoordinates();
                 }
 
-                const allPolygons = selectedFeaturesForMerge.every(f => f.get('type') === 'Polygon');
-                if (!allPolygons) {
-                    Swal.fire('Error', 'All selected features must be polygons', 'error');
-                    return;
-                }
+                const areaSqm = new ol.geom.Polygon(finalPolygonCoords).getArea();
+                const sqft = (areaSqm * 10.7639).toFixed(0);
 
-                const featuresData = selectedFeaturesForMerge.map(f => ({
-                    gisid: f.get('gisid'),
-                    geometry: f.getGeometry().clone()
-                }));
-
-                const gisids = featuresData.map(f => f.gisid);
-                const geometries = featuresData.map(f => f.geometry);
-
-                const $btn = $('#mergeActionBtn');
+                const $btn = $('#confirmMergeBtn');
                 const originalHtml = $btn.html();
                 $btn.html('<i class="fas fa-spinner fa-spin"></i> Merging...').prop('disabled', true);
 
@@ -4131,79 +3876,48 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     data: {
-                        gisids: gisids,
-                        geometries: geometries.map(g => JSON.stringify(g.getCoordinates())),
-                        _token: $('meta[name="csrf-token"]').attr('content')
+                        primary_gisid: primaryGisId,
+                        secondary_gisid: secondaryGisId,
+                        coordinates: JSON.stringify(finalPolygonCoords),
+                        sqfeet: sqft
                     },
                     success: function(response) {
+                        $btn.html(originalHtml).prop('disabled', false);
+
+                        if (!response.success) {
+                            $('#mergeGisError').text(response.message || 'Merge failed').show();
+                            return;
+                        }
+
                         Swal.fire('Success!', 'Polygons merged successfully', 'success');
 
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
                         lines = response.data.lines ?? lines;
-
-                        selectedFeaturesForMerge.forEach(function(f) {
-                            f.setStyle(null);
-                        });
-                        selectedFeaturesForMerge = [];
-                        hideMergeButton();
+                        polygonDatas = response.data.polygonDatas ?? polygonDatas;
+                        pointDatas = response.data.pointDatas ?? pointDatas;
 
                         reloadAllSources();
 
+                        mergePolygonModal.hide();
+                        cleanupMergeModal();
                         disableAllInteractions();
-                        clearDrawInteraction();
 
-                        mergeModeActive = false;
-                        if (mergeSelectInteraction) {
-                            map.removeInteraction(mergeSelectInteraction);
-                            mergeSelectInteraction = null;
-                        }
-                        if (mergeHoverInteraction) {
-                            map.removeInteraction(mergeHoverInteraction);
-                            mergeHoverInteraction = null;
-                        }
-                        map.getTargetElement().classList.remove('merge-mode');
+                        $('.edit-dropdown-item').removeClass('active');
+                        $('.edit-dropdown').removeClass('show');
+                        $('#editToggleBtn').removeClass('active-edit');
 
                         showToast('✅ Merge complete!', 2000);
                         setNoneMode();
                     },
                     error: function(xhr) {
-                        console.error('Merge error:', xhr);
-                        let errorMsg = 'Failed to merge polygons.';
-                        if (xhr.responseJSON?.message) {
-                            errorMsg = xhr.responseJSON.message;
-                        }
-                        Swal.fire('Error', errorMsg, 'error');
-
                         $btn.html(originalHtml).prop('disabled', false);
-
-                        selectedFeaturesForMerge.forEach(function(f) {
-                            f.setStyle(null);
-                        });
-                        selectedFeaturesForMerge = [];
-                        hideMergeButton();
-                        setNoneMode();
+                        const msg = xhr.responseJSON?.message || 'Failed to merge polygons.';
+                        $('#mergeGisError').text(msg).show();
                     }
                 });
-            }
-            // ─── CLEANUP MERGE ───
-            function cleanupMerge() {
-                if (mergeSelectInteraction) {
-                    map.removeInteraction(mergeSelectInteraction);
-                    mergeSelectInteraction = null;
-                }
-                if (mergeHoverInteraction) {
-                    map.removeInteraction(mergeHoverInteraction);
-                    mergeHoverInteraction = null;
-                }
-                selectedFeaturesForMerge.forEach(function(f) {
-                    f.setStyle(null);
-                });
-                selectedFeaturesForMerge = [];
-                hideMergeButton();
-                map.getTargetElement().classList.remove('merge-mode');
-                mergeModeActive = false;
-            }
+            });
+
             // ─── SPLIT MODE ───
             function setSplitMode() {
                 currentMode = 'split';
@@ -4330,7 +4044,6 @@
                             setNoneMode();
                         },
                         error: function(xhr) {
-                            console.error('Split error:', xhr);
                             Swal.fire('Error', 'Failed to split polygon', 'error');
                             map.removeInteraction(splitDraw);
                             splitLineSource.clear();
@@ -4408,7 +4121,6 @@
                         setNoneMode();
                     },
                     error: function(xhr) {
-                        console.log(xhr.responseText);
                         Swal.fire('Error', 'Error saving feature', 'error');
                         setNoneMode();
                     }
@@ -4491,10 +4203,8 @@
             }
 
             function searchGIS(value) {
-
                 const v = value.toString().toLowerCase().trim();
                 if (!v) return [];
-                console.log(v);
                 return searchIndex.filter(item =>
                     (item.id && item.id.toString().toLowerCase().includes(v)) ||
                     (item.assessment && item.assessment.toString().toLowerCase().includes(v)) ||
@@ -4517,7 +4227,6 @@
                     const feature = lineSource.getFeatureById(gisid);
                     if (feature) coords = ol.extent.getCenter(feature.getGeometry().getExtent());
                 } else {
-                    // point, pointdata (id here is either a point gisid or a point_gisid)
                     coords = getCoordsByGisId(gisid);
                 }
 
@@ -4539,7 +4248,7 @@
                     const coords = typeof point.coordinates === 'string' ?
                         JSON.parse(point.coordinates) :
                         point.coordinates;
-                    return coords; // already in map projection (EPSG:3857)
+                    return coords;
                 } catch (e) {
                     console.error('Coord parse error for gisid:', gisid, e);
                     return null;
@@ -4632,7 +4341,6 @@
                     const dur = Math.round(data.routes[0].duration / 60);
                     showToast(`✅ Route found! Distance: ${dist}km, Time: ${dur}min`, 4000);
                 }).catch(err => {
-                    console.error('Route error:', err);
                     Swal.fire('Error', 'Failed to calculate route. Please check your internet connection.',
                         'error');
                 });
@@ -4668,18 +4376,15 @@
                 });
             }
 
-            // ─── FIX: calculateDirection — always use point coords by gisid ───
             function calculateDirection(loc, feature) {
                 if (!loc) return;
 
-                // Always resolve via matching point in the points array
                 const coords = getCoordsByGisId(feature.id);
                 if (!coords) {
                     Swal.fire('Error', `No point coordinates found for GIS ID: ${feature.id}`, 'error');
                     return;
                 }
 
-                // coords are in EPSG:3857 — convert to WGS84 lon/lat for OSRM
                 const lonLat = ol.proj.toLonLat(coords);
                 const destLon = lonLat[0];
                 const destLat = lonLat[1];
@@ -4690,7 +4395,6 @@
                     return;
                 }
 
-                console.log(`Routing to GIS ID ${feature.id}: lon=${destLon}, lat=${destLat}`);
                 getRoute(loc.lon, loc.lat, destLon, destLat);
             }
 
@@ -4911,7 +4615,6 @@
 
             // ─── EVENT HANDLERS ───
 
-            // Edit toggle
             $(document).on('click', '#editToggleBtn', function(e) {
                 e.stopPropagation();
                 $('#editDropdown').toggleClass('show');
@@ -4922,7 +4625,6 @@
                 $('#searchToggleBtn').removeClass('active-search');
             });
 
-            // Edit dropdown items
             $(document).on('click', '.edit-dropdown-item', function(e) {
                 e.stopPropagation();
                 const tool = $(this).data('tool');
@@ -4975,7 +4677,6 @@
                 $('#editToggleBtn').removeClass('active-edit');
             });
 
-            // Layer toggle
             $(document).on('click', '.layer-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.layer-dropdown').toggleClass('show');
@@ -5008,7 +4709,6 @@
                 }
             });
 
-            // Location toggle
             $(document).on('click', '#locationToggleBtn', function(e) {
                 e.stopPropagation();
                 $('#locationDropdown').toggleClass('show');
@@ -5061,7 +4761,6 @@
                 $('#locationDropdown').removeClass('show');
             });
 
-            // Search toggle
             $(document).on('click', '#searchToggleBtn', function(e) {
                 e.stopPropagation();
                 $('#searchDropdown').toggleClass('show');
@@ -5138,7 +4837,6 @@
                 }
             });
 
-            // Close dropdowns on outside click
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass(
                     'show');
@@ -5154,7 +4852,6 @@
                 }
             });
 
-            // Fullscreen
             let isFullscreen = false;
             $(document).on('click', '#fullscreenBtn', function() {
                 const $icon = $(this).find('i');
@@ -5220,7 +4917,6 @@
                         $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
                             false);
 
-                        // ✅ FIXED: Properly update from response data
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
                         lines = response.data.lines ?? lines;
@@ -5252,13 +4948,11 @@
             updateLayerUI();
             setNoneMode();
             syncLocationUI();
-            loadBoundary(); // <-- Make sure this line exists
+            loadBoundary();
 
             if (!droneImageURL || droneImageURL === "{{ asset('') }}") {
                 droneLayer.setVisible(false);
             }
-
-            console.log('✅ GIS Dashboard ready — Simplified and fixed!');
 
             function fillFields(record) {
                 $('#old_assessment').val(record.old_assessment || '');
@@ -5284,7 +4978,6 @@
                     .val('');
             }
 
-            // Assessment Search
             $('#assessment').on('input', function() {
                 const value = $(this).val().trim();
 
@@ -5304,7 +4997,6 @@
                 }
             });
 
-            // Old Assessment Search
             $('#old_assessment').on('input', function() {
                 const value = $(this).val().trim();
 
@@ -5319,103 +5011,121 @@
 
                 if (record) {
                     fillFields(record);
-
-                    // Replace assessment with matching assessment number
                     $('#assessment').val(record.assessment || '');
                 } else {
                     clearFields();
                 }
             });
 
-            $('#addProfessionalBtn').click(function() {
-                let html = `
-        <div class="card mb-3 professional-card">
-            <div class="card-header d-flex justify-content-between">
-                <strong>Professional Tax #${ptIndex + 1}</strong>
-                <button type="button" class="btn btn-danger btn-sm removeProfessional">
-                    Remove
-                </button>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label>PT Number</label>
-                        <input class="form-control" name="professional[${ptIndex}][pt_number]">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Old PT Number</label>
-                        <input class="form-control" name="professional[${ptIndex}][old_pt_number]">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Establishment Name</label>
-                        <input class="form-control" name="professional[${ptIndex}][establishment_name]">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Profession Type</label>
-                        <input class="form-control" name="professional[${ptIndex}][profession_type]">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Trade License</label>
-                        <input class="form-control" name="professional[${ptIndex}][trade_license]" placeholder="Enter trade license number">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Employee Count</label>
-                        <input type="number" class="form-control" name="professional[${ptIndex}][employee_count]">
-                    </div>
-                    <div class="col-md-4">
-                        <label>shop owner name</label>
-                        <input type="text" class="form-control" name="professional[${ptIndex}][shop_owner]">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Half Year Tax</label>
-                        <input type="number" class="form-control" name="professional[${ptIndex}][half_year_tax]">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Arrears</label>
-                        <input type="number" class="form-control" name="professional[${ptIndex}][arrears]">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Penalty</label>
-                        <input type="number" class="form-control" name="professional[${ptIndex}][penalty]">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Balance</label>
-                        <input type="number" class="form-control" name="professional[${ptIndex}][balance]">
-                            </div>
-                            <div class="col-md-4">
-                                <label>Payment Status</label>
-                                <select class="form-control" name="professional[${ptIndex}][payment_status]">
-                                    <option value="">Select Status</option>
-                                    <option value="Paid">Paid</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Partially Paid">Partially Paid</option>
-                                    <option value="Overdue">Overdue</option>
-                                </select>
-                            </div>
-                            <div class="col-md-12">
-                                <label>Remarks</label>
-                                <textarea class="form-control" name="professional[${ptIndex}][pt_remarks]"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-                $('#professionalContainer').append(html);
-                ptIndex++;
-            });
-
             $(document).on('click', '.removeProfessional', function() {
-                $(this).closest('.professional-card').remove();
+                const $card = $(this).closest('.professional-card');
+                const existingId = $card.find('input[name$="[id]"]').val();
+                if (existingId) {
+                    if (!$('#removedProfessionalWrap').length) {
+                        $('#pointDetailsForm').append('<div id="removedProfessionalWrap"></div>');
+                    }
+                    $('#removedProfessionalWrap').append(
+                        `<input type="hidden" name="removed_professional_ids[]" value="${existingId}">`
+                    );
+                }
+                $card.remove();
             });
 
-            $(document).on('click', '.edit-btn', function(e) {
-                e.stopPropagation();
-                const id = $(this).data('id');
-                const dataid = $(this).data('dataid');
-                loadPointDataForEdit(id, dataid);
-                $('#searchDropdown').removeClass('show');
-                $('#searchToggleBtn').removeClass('active-search');
+            $('#applyFilterBtn').on('click', function() {
+                $.get('/point-data/filter', {
+                    assessment: $('#filterAssessment').val(),
+                    old_assessment: $('#filterOldAssessment').val(),
+                    owner_name: $('#filterOwnerName').val()
+                }, function(res) {
+                    let html = '';
+                    (res.data || []).forEach(pd => {
+                        html += `
+                <div class="search-result-item">
+                    <div class="search-result-title">${pd.owner_name} — ${pd.assessment}</div>
+                    <div class="search-result-subtitle">GIS ID: ${pd.point_gisid}${pd.old_assessment ? ' | Old Assessment: ' + pd.old_assessment : ''}</div>
+                    <div class="mt-2 d-flex gap-2">
+                        <button class="btn btn-sm btn-success zoom-btn" data-id="${pd.point_gisid}" data-type="pointdata">Zoom</button>
+                        <button class="btn btn-sm btn-warning edit-btn" data-id="${pd.id}">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                    </div>
+                </div>`;
+                    });
+                    $('#filterResults').html(html ||
+                        '<div class="p-2 text-muted">No matches</div>');
+                });
             });
+
+            $(document).on('click', '.search-tab-btn', function() {
+                $('.search-tab-btn').removeClass('active');
+                $(this).addClass('active');
+                const tab = $(this).data('tab');
+                $('#quickSearchTab').toggle(tab === 'quick');
+                $('#filterTab').toggle(tab === 'filter');
+            });
+
+            $(document).on('click', '#openGmapBtn', function() {
+                const gisid = $('#building_gisid').val();
+
+                if (!gisid) {
+                    showFlashMessage('GIS ID not found', 'error');
+                    return;
+                }
+
+                openGoogleMapsByGisId(gisid);
+            });
+
+            $(document).on('click', '#pointGmapBtn', function() {
+                const gisid = $('#point_gisid').val();
+
+                if (!gisid) {
+                    showFlashMessage('GIS ID not found', 'error');
+                    return;
+                }
+
+                openGoogleMapsByGisId(gisid);
+            });
+
+            $(document).on('click', '.gmap-btn', function(e) {
+                e.stopPropagation();
+                const gisid = $(this).data('gisid');
+                openGoogleMapsByGisId(gisid);
+            });
+
+            function openGoogleMapsByGisId(gisid) {
+                if (!gisid) {
+                    showFlashMessage('GIS ID not found', 'error');
+                    return false;
+                }
+
+                const point = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
+
+                if (!point) {
+                    showFlashMessage('No point coordinates found for GIS ID: ' + gisid, 'error');
+                    return false;
+                }
+
+                try {
+                    let coords = typeof point.coordinates === 'string' ?
+                        JSON.parse(point.coordinates) :
+                        point.coordinates;
+
+                    const lonLat = ol.proj.toLonLat(coords);
+                    const lat = lonLat[1];
+                    const lng = lonLat[0];
+
+                    const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+                    window.open(googleMapsUrl, '_blank');
+
+                    showFlashMessage('Opening Google Maps for GIS ID: ' + gisid, 'success');
+                    return true;
+
+                } catch (e) {
+                    showFlashMessage('Error opening Google Maps: ' + e.message, 'error');
+                    return false;
+                }
+            }
 
             $('#qrCodeAssessmentBtn').on('click', function(e) {
                 e.preventDefault();
@@ -5497,10 +5207,7 @@
             });
 
             function loadPointDataForEdit(id, dataid) {
-                // Show loading indicator
                 showFlashMessage('Loading data...', 'info');
-
-                console.log('Loading point data for edit, ID:', id);
 
                 $.ajax({
                     url: `/point-data/${dataid}`,
@@ -5509,8 +5216,6 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(res) {
-                        console.log('Edit response:', res);
-
                         if (!res.success) {
                             showFlashMessage(res.message || 'Failed to load data', 'error');
                             return;
@@ -5521,7 +5226,6 @@
                         const ugd = res.ugd_tax;
                         const pts = res.professional || [];
 
-                        // Check if we have the data
                         if (!pd) {
                             showFlashMessage('No data found for this record', 'error');
                             return;
@@ -5531,14 +5235,10 @@
                         modal.show();
                         $('#pointDetailsTabs button:first').tab('show');
 
-                        // ✅ MARK EDIT MODE - Store the ID
                         $('#pointDetailsForm').attr('data-edit-id', pd.id);
-
-                        // ✅ Change button text for edit mode
                         $('#savePointDetails').html(
                             '<i class="bi bi-pencil-square me-1"></i>Update Point Data');
 
-                        // ─── BASIC INFO ───
                         $('#point_gisid').val(pd.point_gisid || '');
                         $('#id').val(pd.id || '');
                         $('#assessment_type').val(pd.assessment_type || '');
@@ -5560,7 +5260,6 @@
                         $('#remarks').val(pd.remarks || '');
                         $('#qrCodeAssessmentBtn').data('point-id', pd.id);
 
-                        // ─── WATER TAX ───
                         if (wt) {
                             $('#watertax_no').val(wt.watertax_no || '');
                             $('#old_watertax_no').val(wt.old_watertax_no || '');
@@ -5575,7 +5274,6 @@
                             $('#water_slab_description').val('');
                         }
 
-                        // ─── UGD TAX ───
                         if (ugd) {
                             $('#ugd_no').val(ugd.ugd_no || '');
                             $('#old_ugd_no').val(ugd.old_ugd_no || '');
@@ -5590,7 +5288,6 @@
                             $('#ugd_slab_description').val('');
                         }
 
-                        // ─── PROFESSIONAL TAX ───
                         $('#professionalContainer').empty();
                         ptIndex = 0;
                         if (pts && pts.length > 0) {
@@ -5604,8 +5301,7 @@
                                     trade_license: pt.trade_license || '',
                                     employee_count: pt.employee_count || '',
                                     half_year_tax: pt.half_year_tax || '',
-                                    shop_owner: pt.owner_name ||
-                                        '', // ✅ This maps owner_name to shop_owner
+                                    shop_owner: pt.owner_name || '',
                                     arrears: pt.arrears || '',
                                     penalty: pt.penalty || '',
                                     balance: pt.balance || '',
@@ -5615,7 +5311,6 @@
                             });
                         }
 
-                        // Clear any previous validation errors
                         $('.is-invalid').removeClass('is-invalid');
                         $('.invalid-feedback').remove();
                         $('.error-message').html('');
@@ -5623,8 +5318,6 @@
                         showFlashMessage('Data loaded for editing', 'success');
                     },
                     error: function(xhr) {
-                        console.error('Edit load error:', xhr);
-
                         let errorMsg = 'Failed to load record for editing.';
 
                         if (xhr.status === 404) {
@@ -5640,58 +5333,57 @@
                 });
             }
 
-            // Updated addProfessionalCard function
             function addProfessionalCard(data = {}) {
                 const idx = ptIndex;
                 const html = `
-                            <div class="card mb-3 professional-card" data-index="${idx}">
-                                <div class="card-header d-flex justify-content-between">
-                                    <strong>Professional Tax #${idx + 1}</strong>
-                                    <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
-                                </div>
-                                <div class="card-body">
-                                    <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label>PT Number</label>
-                                            <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Old PT Number</label>
-                                            <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Establishment Name</label>
-                                            <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Profession Type</label>
-                                            <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Trade License</label>
-                                            <input class="form-control" name="professional[${idx}][trade_license]" value="${data.trade_license || ''}" placeholder="Enter trade license number">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Employee Count</label>
-                                            <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Half Year Tax</label>
-                                            <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Arrears</label>
-                                            <input type="number" class="form-control" name="professional[${idx}][arrears]" value="${data.arrears || ''}">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label>Penalty</label>
-                                            <input type="number" class="form-control" name="professional[${idx}][penalty]" value="${data.penalty || ''}">
-                                        </div>
-                                        <div class="col-md-4">
-                        <label>Shop Owner Name</label>
-                        <input type="text" class="form-control" name="professional[${idx}][shop_owner]" value="${data.shop_owner || ''}">
+        <div class="card mb-3 professional-card" data-index="${idx}">
+            <div class="card-header d-flex justify-content-between">
+                <strong>Professional Tax #${idx + 1}</strong>
+                <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
+            </div>
+            <div class="card-body">
+                <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label>PT Number</label>
+                        <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}">
                     </div>
+                    <div class="col-md-4">
+                        <label>Old PT Number</label>
+                        <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Establishment Name</label>
+                        <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Profession Type</label>
+                        <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Trade License</label>
+                        <input class="form-control" name="professional[${idx}][trade_license]" value="${data.trade_license || ''}" placeholder="Enter trade license number">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Employee Count</label>
+                        <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Half Year Tax</label>
+                        <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Arrears</label>
+                        <input type="number" class="form-control" name="professional[${idx}][arrears]" value="${data.arrears || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label>Penalty</label>
+                        <input type="number" class="form-control" name="professional[${idx}][penalty]" value="${data.penalty || ''}">
+                    </div>
+                    <div class="col-md-4">
+    <label>Shop Owner Name</label>
+    <input type="text" class="form-control" name="professional[${idx}][shop_owner]" value="${data.shop_owner || ''}">
+</div>
                     <div class="col-md-4">
                         <label>Balance</label>
                         <input type="number" class="form-control" name="professional[${idx}][balance]" value="${data.balance || ''}">
@@ -5721,125 +5413,16 @@
                 addProfessionalCard();
             });
 
-            $(document).on('click', '.removeProfessional', function() {
-                const $card = $(this).closest('.professional-card');
-                const existingId = $card.find('input[name$="[id]"]').val();
-                if (existingId) {
-                    if (!$('#removedProfessionalWrap').length) {
-                        $('#pointDetailsForm').append('<div id="removedProfessionalWrap"></div>');
-                    }
-                    $('#removedProfessionalWrap').append(
-                        `<input type="hidden" name="removed_professional_ids[]" value="${existingId}">`
-                    );
-                }
-                $card.remove();
-            });
-
-            $('#applyFilterBtn').on('click', function() {
-                $.get('/point-data/filter', {
-                    assessment: $('#filterAssessment').val(),
-                    old_assessment: $('#filterOldAssessment').val(),
-                    owner_name: $('#filterOwnerName').val()
-                }, function(res) {
-                    let html = '';
-                    (res.data || []).forEach(pd => {
-                        html += `
-                <div class="search-result-item">
-                    <div class="search-result-title">${pd.owner_name} — ${pd.assessment}</div>
-                    <div class="search-result-subtitle">GIS ID: ${pd.point_gisid}${pd.old_assessment ? ' | Old Assessment: ' + pd.old_assessment : ''}</div>
-                    <div class="mt-2 d-flex gap-2">
-                        <button class="btn btn-sm btn-success zoom-btn" data-id="${pd.point_gisid}" data-type="pointdata">Zoom</button>
-                        <button class="btn btn-sm btn-warning edit-btn" data-id="${pd.id}">
-                            <i class="bi bi-pencil"></i> Edit
-                        </button>
-                    </div>
-                </div>`;
-                    });
-                    $('#filterResults').html(html ||
-                        '<div class="p-2 text-muted">No matches</div>');
-                });
-            });
-
-            $(document).on('click', '.search-tab-btn', function() {
-                $('.search-tab-btn').removeClass('active');
-                $(this).addClass('active');
-                const tab = $(this).data('tab');
-                $('#quickSearchTab').toggle(tab === 'quick');
-                $('#filterTab').toggle(tab === 'filter');
-            });
-
-            // ─── GOOGLE MAPS FROM BUILDING MODAL ───
-            $(document).on('click', '#openGmapBtn', function() {
-                const gisid = $('#building_gisid').val();
-
-                if (!gisid) {
-                    showFlashMessage('GIS ID not found', 'error');
-                    return;
-                }
-
-                openGoogleMapsByGisId(gisid);
-            });
-
-            // ─── GOOGLE MAPS FROM POINT DETAILS MODAL ───
-            $(document).on('click', '#pointGmapBtn', function() {
-                const gisid = $('#point_gisid').val();
-
-                if (!gisid) {
-                    showFlashMessage('GIS ID not found', 'error');
-                    return;
-                }
-
-                openGoogleMapsByGisId(gisid);
-            });
-
-            // ─── GOOGLE MAPS FROM SEARCH RESULTS ───
-            $(document).on('click', '.gmap-btn', function(e) {
+            $(document).on('click', '.edit-btn', function(e) {
                 e.stopPropagation();
-                const gisid = $(this).data('gisid');
-                openGoogleMapsByGisId(gisid);
+                const id = $(this).data('id');
+                const dataid = $(this).data('dataid');
+                loadPointDataForEdit(id, dataid);
+                $('#searchDropdown').removeClass('show');
+                $('#searchToggleBtn').removeClass('active-search');
             });
 
-            // ─── HELPER: Open Google Maps by GIS ID ───
-            function openGoogleMapsByGisId(gisid) {
-                if (!gisid) {
-                    showFlashMessage('GIS ID not found', 'error');
-                    return false;
-                }
-
-                // Find the point with matching GIS ID
-                const point = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
-
-                if (!point) {
-                    showFlashMessage('No point coordinates found for GIS ID: ' + gisid, 'error');
-                    return false;
-                }
-
-                try {
-                    // Parse coordinates (they should be in EPSG:3857)
-                    let coords = typeof point.coordinates === 'string' ?
-                        JSON.parse(point.coordinates) :
-                        point.coordinates;
-
-                    // Convert from EPSG:3857 to WGS84 (latitude/longitude)
-                    const lonLat = ol.proj.toLonLat(coords);
-                    const lat = lonLat[1];
-                    const lng = lonLat[0];
-
-                    // Build Google Maps URL
-                    const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-
-                    // Open in new tab
-                    window.open(googleMapsUrl, '_blank');
-
-                    showFlashMessage('Opening Google Maps for GIS ID: ' + gisid, 'success');
-                    return true;
-
-                } catch (e) {
-                    console.error('Error opening Google Maps:', e);
-                    showFlashMessage('Error opening Google Maps: ' + e.message, 'error');
-                    return false;
-                }
-            }
+            console.log('✅ GIS Dashboard ready — Merge feature (modal-based) integrated!');
         });
     </script>
 @endpush
