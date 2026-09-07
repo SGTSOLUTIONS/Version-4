@@ -658,18 +658,18 @@ class PointdataController extends Controller
                     'updated_at' => now(),
                 ];
 
-                $misExists = DB::table($misTableName)
-                    ->where('assessment', $request->assessment)
-                    ->exists();
+                // $misExists = DB::table($misTableName)
+                //     ->where('assessment', $request->assessment)
+                //     ->exists();
 
-                if ($misExists) {
-                    DB::table($misTableName)
-                        ->where('assessment', $request->assessment)
-                        ->update($misData);
-                } else {
-                    $misData['created_at'] = now();
-                    DB::table($misTableName)->insert($misData);
-                }
+                // if ($misExists) {
+                //     DB::table($misTableName)
+                //         ->where('assessment', $request->assessment)
+                //         ->update($misData);
+                // } else {
+                //     $misData['created_at'] = now();
+                //     DB::table($misTableName)->insert($misData);
+                // }
 
                 // ============================================================
                 // 5. If any validation errors exist, rollback
@@ -996,18 +996,18 @@ class PointdataController extends Controller
                 'updated_at' => now(),
             ];
 
-            $misExists = DB::table($misTableName)
-                ->where('assessment', $request->assessment)
-                ->exists();
+            // $misExists = DB::table($misTableName)
+            //     ->where('assessment', $request->assessment)
+            //     ->exists();
 
-            if ($misExists) {
-                DB::table($misTableName)
-                    ->where('assessment', $request->assessment)
-                    ->update($misData);
-            } else {
-                $misData['created_at'] = now();
-                DB::table($misTableName)->insert($misData);
-            }
+            // if ($misExists) {
+            //     DB::table($misTableName)
+            //         ->where('assessment', $request->assessment)
+            //         ->update($misData);
+            // } else {
+            //     $misData['created_at'] = now();
+            //     DB::table($misTableName)->insert($misData);
+            // }
 
                 // 2. Water tax - Update or Insert
                 if ($request->filled('watertax_no')) {
