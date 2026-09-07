@@ -620,7 +620,7 @@ class PointdataController extends Controller
                                 'ward_no' => $wardNo,
                                 'gisid' => $request->point_gisid,
                                 'assessment'         => $request->assessment,
-                                'owner_name' => $request->show_owner,
+                               'owner_name' => $professional['shop_owner'] ?? $request->owner_name ?? null,
                                 'phone_number'       => $request->phone_number ?? null,
                                 'pt_number' => $professional['pt_number'],
                                 'old_pt_number' => $professional['old_pt_number'] ?? null,
@@ -1059,7 +1059,7 @@ class PointdataController extends Controller
                                 ->where('id', $prof['id'])
                                 ->where('corporation_id', $corpId)
                                 ->update([
-                                    'owner_name'         => $request->show_owner ?? null, // <-- ADD THIS
+                                    'owner_name'         => $prof['shop_owner'] ?? null, // <-- ADD THIS
                                     'pt_number'          => $prof['pt_number'],
                                     'old_pt_number'      => $prof['old_pt_number'] ?? null,
                                     'establishment_name' => $prof['establishment_name'] ?? null,
@@ -1077,7 +1077,7 @@ class PointdataController extends Controller
                                 'gisid'              => $request->point_gisid,
                                 'ward_no'            => $ward->ward_no,
                                 'assessment'         => $request->assessment,
-                                'owner_name'         => $request->show_owner,
+                                'owner_name'         => $prof['shop_owner'] ?? null,
                                 'phone_number'       => $request->phone_number ?? null,
                                 'pt_number'          => $prof['pt_number'],
                                 'old_pt_number'      => $prof['old_pt_number'] ?? null,
