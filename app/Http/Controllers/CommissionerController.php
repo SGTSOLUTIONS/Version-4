@@ -837,7 +837,6 @@ class CommissionerController extends Controller
             $lines = Schema::hasTable($linesTableName) ? DB::table($linesTableName)->get() : collect();
             $points = Schema::hasTable($pointsTableName) ? DB::table($pointsTableName)->get() : collect();
             $polygonDatas = Schema::hasTable($polygonDataTableName) ? DB::table($polygonDataTableName)->get() : collect();
-            return response()->json($polygonDatas);
             $pointDatas = Schema::hasTable($pointDataTableName) ? DB::table($pointDataTableName)->get() : collect();
 
             $misData = Schema::hasTable($misTableName) ? DB::table($misTableName . ' as mis')
@@ -882,34 +881,30 @@ class CommissionerController extends Controller
                 : null;
 
             foreach ($polygons as $polygon) {
-
                 $groundSqfeet = (float) ($polygon->sqfeet ?? 0);
-
                 $polyData = $polygonDatas->firstWhere('gisid', $polygon->gisid);
 
                 if ($polyData) {
-
                     $numberFloor = (float) ($polyData->number_floor ?? 0);
                     $basement    = (float) ($polyData->basement ?? 0);
                     $percentage  = (float) ($polyData->percentage ?? 100);
 
                     $floors = $numberFloor > 0 ? $numberFloor : 1;
 
-                    // Percentage-based floor area
-                    $floorArea = $groundSqfeet * ($percentage / 100);
+                    // Use groundSqfeet from polygon, or if 0, use sqfeet from polygon_data
+                    if ($groundSqfeet == 0 && isset($polyData->sqfeet) && $polyData->sqfeet > 0) {
+                        $groundSqfeet = (float) $polyData->sqfeet;
+                    }
 
-                    // Total floor area
+                    $floorArea = $groundSqfeet * ($percentage / 100);
                     $totalSqfeet = $floorArea * $floors;
 
-                    // Basement
                     if ($basement > 0) {
                         $totalSqfeet += $floorArea * $basement;
                     }
 
-                    // 2 decimal places
                     $polygon->sqfeet = round($totalSqfeet, 2);
                 } else {
-
                     $polygon->sqfeet = round($groundSqfeet, 2);
                 }
             }
