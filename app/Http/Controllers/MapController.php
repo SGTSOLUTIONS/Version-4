@@ -95,8 +95,11 @@ class MapController extends Controller
             ->distinct()
             ->orderBy('zone')
             ->pluck('zone');
-        $surveycount = $pointDatas = DB::table($pointDataTableName)->where('worker_name',$user->id)->get();
+      $pointDatas = DB::table($pointDataTableName)
+    ->where('worker_name', $user->id)
+    ->get();
 
+$surveycount = $pointDatas->count();
         return view('map.mapview', compact(
             'ward',
             'polygons',
