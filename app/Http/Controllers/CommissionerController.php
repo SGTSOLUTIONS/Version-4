@@ -837,6 +837,7 @@ class CommissionerController extends Controller
             $lines = Schema::hasTable($linesTableName) ? DB::table($linesTableName)->get() : collect();
             $points = Schema::hasTable($pointsTableName) ? DB::table($pointsTableName)->get() : collect();
             $polygonDatas = Schema::hasTable($polygonDataTableName) ? DB::table($polygonDataTableName)->get() : collect();
+            return response()->json($polygonDatas);
             $pointDatas = Schema::hasTable($pointDataTableName) ? DB::table($pointDataTableName)->get() : collect();
 
             $misData = Schema::hasTable($misTableName) ? DB::table($misTableName . ' as mis')
@@ -909,7 +910,7 @@ class CommissionerController extends Controller
                     $polygon->sqfeet = round($totalSqfeet, 2);
                 } else {
 
-                    $polygon->sqfeet =0;
+                    $polygon->sqfeet = round($groundSqfeet, 2);
                 }
             }
 
