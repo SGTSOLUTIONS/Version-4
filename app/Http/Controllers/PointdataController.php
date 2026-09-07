@@ -423,7 +423,7 @@ class PointdataController extends Controller
             }
 
             // Validate floor
-            if ($request->floor >= $buildingdata->number_floor) {
+            if ($request->floor > $buildingdata->number_floor) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation errors',
