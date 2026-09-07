@@ -5232,26 +5232,27 @@
                         // ─── PROFESSIONAL TAX ───
                         $('#professionalContainer').empty();
                         ptIndex = 0;
-if (pts && pts.length > 0) {
-    pts.forEach(function(pt) {
-        addProfessionalCard({
-            id: pt.id,
-            pt_number: pt.pt_number || '',
-            old_pt_number: pt.old_pt_number || '',
-            establishment_name: pt.establishment_name || '',
-            profession_type: pt.profession_type || '',
-            trade_license: pt.trade_license || '',
-            employee_count: pt.employee_count || '',
-            half_year_tax: pt.half_year_tax || '',
-            shop_owner: pt.owner_name || '', // ✅ This maps owner_name to shop_owner
-            arrears: pt.arrears || '',
-            penalty: pt.penalty || '',
-            balance: pt.balance || '',
-            payment_status: pt.payment_status || '',
-            remarks: pt.remarks || ''
-        });
-    });
-}
+                        if (pts && pts.length > 0) {
+                            pts.forEach(function(pt) {
+                                addProfessionalCard({
+                                    id: pt.id,
+                                    pt_number: pt.pt_number || '',
+                                    old_pt_number: pt.old_pt_number || '',
+                                    establishment_name: pt.establishment_name || '',
+                                    profession_type: pt.profession_type || '',
+                                    trade_license: pt.trade_license || '',
+                                    employee_count: pt.employee_count || '',
+                                    half_year_tax: pt.half_year_tax || '',
+                                    shop_owner: pt.owner_name ||
+                                    '', // ✅ This maps owner_name to shop_owner
+                                    arrears: pt.arrears || '',
+                                    penalty: pt.penalty || '',
+                                    balance: pt.balance || '',
+                                    payment_status: pt.payment_status || '',
+                                    remarks: pt.remarks || ''
+                                });
+                            });
+                        }
 
                         // Clear any previous validation errors
                         $('.is-invalid').removeClass('is-invalid');

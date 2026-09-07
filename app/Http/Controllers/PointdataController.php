@@ -578,64 +578,57 @@ class PointdataController extends Controller
                 // ============================================================
                 // 3. PROFESSIONAL TAX - INSERT IF NOT EXISTS (WITH TRADE LICENSE)
                 // ============================================================
-                if ($request->has('professional') && is_array($request->professional)) {
-                    foreach ($request->professional as $index => $professional) {
-                        if (empty($professional['pt_number'])) {
-                            continue;
-                        }
+               // 4. Professional tax: update existing / insert new
+if ($request->has('professional') && is_array($request->professional)) {
+    foreach ($request->professional as $prof) {
+        // ✅ Check if we have an ID - if yes, update even without pt_number
+        if (!empty($prof['id'])) {
+            // Update existing record (even if pt_number is empty)
+            $updateData = [
+                'old_pt_number'      => $prof['old_pt_number'] ?? null,
+                'establishment_name' => $prof['establishment_name'] ?? null,
+                'profession_type'    => $prof['profession_type'] ?? null,
+                'trade_license'      => $prof['trade_license'] ?? null,
+                'employee_count'     => $prof['employee_count'] ?? null,
+                'half_year_tax'      => $prof['half_year_tax'] ?? null,
+                'shop_owner'         => $prof['shop_owner'] ?? null,
+                'remarks'            => $prof['pt_remarks'] ?? null,
+                'updated_at'         => now(),
+            ];
 
-                        $existing = DB::table($professionalTaxTableName)
-                            ->where('pt_number', $professional['pt_number'])
-                            ->first();
+            // Only update pt_number if provided (to avoid overwriting with empty)
+            if (!empty($prof['pt_number'])) {
+                $updateData['pt_number'] = $prof['pt_number'];
+            }
 
-                        if ($existing) {
-                            if (!empty($existing->gisid) && $existing->gisid != $request->point_gisid) {
-                                $validationErrors["professional.{$index}.pt_number"] = [
-                                    "Professional Tax Number '{$professional['pt_number']}' is already linked with another GIS ID."
-                                ];
-                            } else {
-                                // UPDATE EXISTING PROFESSIONAL TAX (WITH TRADE LICENSE)
-                                DB::table($professionalTaxTableName)
-                                    ->where('id', $existing->id)
-                                    ->update([
-                                        'corporation_id' => $corpId,
-                                        'ward_no' => $wardNo,
-                                        'gisid' => $request->point_gisid,
-                                        'assessment' => $request->assessment,
-                                        'owner_name' => $request->show_owner,
-                                        'old_pt_number' => $professional['old_pt_number'] ?? $existing->old_pt_number,
-                                        'establishment_name' => $professional['establishment_name'] ?? $existing->establishment_name,
-                                        'profession_type' => $professional['profession_type'] ?? $existing->profession_type,
-                                        'trade_license' => $professional['trade_license'] ?? $existing->trade_license ?? null, // <-- ADDED
-                                        'employee_count' => $professional['employee_count'] ?? $existing->employee_count,
-                                        'half_year_tax' => $professional['half_year_tax'] ?? $existing->half_year_tax,
-                                        'remarks' => $professional['pt_remarks'] ?? $existing->remarks,
-                                        'updated_at' => now(),
-                                    ]);
-                            }
-                        } else {
-                            // INSERT NEW PROFESSIONAL TAX (WITH TRADE LICENSE)
-                            DB::table($professionalTaxTableName)->insert([
-                                'corporation_id' => $corpId,
-                                'ward_no' => $wardNo,
-                                'gisid' => $request->point_gisid,
-                                'assessment'         => $request->assessment,
-                               'owner_name' => $professional['shop_owner'] ?? $request->owner_name ?? null,
-                                'phone_number'       => $request->phone_number ?? null,
-                                'pt_number' => $professional['pt_number'],
-                                'old_pt_number' => $professional['old_pt_number'] ?? null,
-                                'establishment_name' => $professional['establishment_name'] ?? null,
-                                'profession_type' => $professional['profession_type'] ?? null,
-                                'trade_license' => $professional['trade_license'] ?? null, // <-- ADDED
-                                'employee_count' => $professional['employee_count'] ?? null,
-                                'half_year_tax' => $professional['half_year_tax'] ?? null,
-                                'remarks' => $professional['pt_remarks'] ?? null,
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]);
-                        }
-                    }
-                }
+            DB::table($professionalTaxTable)
+                ->where('id', $prof['id'])
+                ->where('corporation_id', $corpId)
+                ->update($updateData);
+
+        } else if (!empty($prof['pt_number'])) {
+            // Insert new - only if pt_number exists
+            DB::table($professionalTaxTable)->insert([
+                'corporation_id'     => $corpId,
+                'gisid'              => $request->point_gisid,
+                'ward_no'            => $ward->ward_no,
+                'assessment'         => $request->assessment,
+                'owner_name'         => $prof['shop_owner'] ?? null,
+                'phone_number'       => $request->phone_number ?? null,
+                'pt_number'          => $prof['pt_number'],
+                'old_pt_number'      => $prof['old_pt_number'] ?? null,
+                'establishment_name' => $prof['establishment_name'] ?? null,
+                'profession_type'    => $prof['profession_type'] ?? null,
+                'trade_license'      => $prof['trade_license'] ?? null,
+                'employee_count'     => $prof['employee_count'] ?? null,
+                'half_year_tax'      => $prof['half_year_tax'] ?? null,
+                'remarks'            => $prof['pt_remarks'] ?? null,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ]);
+        }
+    }
+}
 
                 // ============================================================
                 // 4. MIS TABLE - INSERT/UPDATE
@@ -1045,55 +1038,65 @@ class PointdataController extends Controller
                     }
                 }
 
-                // 4. Professional tax: update existing / insert new (WITH TRADE LICENSE)
-                if ($request->has('professional') && is_array($request->professional)) {
-                    foreach ($request->professional as $prof) {
-                        // Skip if pt_number is empty
-                        if (empty($prof['pt_number'])) {
-                            continue;
-                        }
+             // 3. PROFESSIONAL TAX - INSERT IF NOT EXISTS
+if ($request->has('professional') && is_array($request->professional)) {
+    foreach ($request->professional as $index => $professional) {
+        // ✅ Check if we have EITHER an ID (update) OR pt_number (new)
+        $hasExistingId = !empty($professional['id']);
+        $hasPtNumber = !empty($professional['pt_number']);
 
-                        if (!empty($prof['id'])) {
-                            // Update existing (WITH OWNER NAME)
-                            DB::table($professionalTaxTable)
-                                ->where('id', $prof['id'])
-                                ->where('corporation_id', $corpId)
-                                ->update([
-                                    'owner_name'         => $prof['shop_owner'] ?? null, // <-- ADD THIS
-                                    'pt_number'          => $prof['pt_number'],
-                                    'old_pt_number'      => $prof['old_pt_number'] ?? null,
-                                    'establishment_name' => $prof['establishment_name'] ?? null,
-                                    'profession_type'    => $prof['profession_type'] ?? null,
-                                    'trade_license'      => $prof['trade_license'] ?? null,
-                                    'employee_count'     => $prof['employee_count'] ?? null,
-                                    'half_year_tax'      => $prof['half_year_tax'] ?? null,
-                                    'remarks'            => $prof['pt_remarks'] ?? null,
-                                    'updated_at'         => now(),
-                                ]);
-                        } else {
-                            // Insert new (WITH TRADE LICENSE)
-                            DB::table($professionalTaxTable)->insert([
-                                'corporation_id'     => $corpId,
-                                'gisid'              => $request->point_gisid,
-                                'ward_no'            => $ward->ward_no,
-                                'assessment'         => $request->assessment,
-                                'owner_name'         => $prof['shop_owner'] ?? null,
-                                'phone_number'       => $request->phone_number ?? null,
-                                'pt_number'          => $prof['pt_number'],
-                                'old_pt_number'      => $prof['old_pt_number'] ?? null,
-                                'establishment_name' => $prof['establishment_name'] ?? null,
-                                'profession_type'    => $prof['profession_type'] ?? null,
-                                'trade_license'      => $prof['trade_license'] ?? null, // <-- ADDED
-                                'employee_count'     => $prof['employee_count'] ?? null,
-                                'half_year_tax'      => $prof['half_year_tax'] ?? null,
-                                'remarks'            => $prof['pt_remarks'] ?? null,
-                                'created_at'         => now(),
-                                'updated_at'         => now(),
-                            ]);
-                        }
-                    }
-                }
+        if (!$hasExistingId && !$hasPtNumber) {
+            continue; // Skip only if neither exists
+        }
 
+        // If it has an ID, it's an update
+        if ($hasExistingId) {
+            $existing = DB::table($professionalTaxTable)
+                ->where('id', $professional['id'])
+                ->first();
+
+            if ($existing) {
+                DB::table($professionalTaxTable)
+                    ->where('id', $existing->id)
+                    ->update([
+                        'corporation_id'     => $corpId,
+                        'ward_no'            => $wardNo,
+                        'gisid'              => $request->point_gisid,
+                        'assessment'         => $request->assessment,
+                        'owner_name'         => $professional['shop_owner'] ?? $request->owner_name ?? null,
+                        'old_pt_number'      => $professional['old_pt_number'] ?? $existing->old_pt_number,
+                        'establishment_name' => $professional['establishment_name'] ?? $existing->establishment_name,
+                        'profession_type'    => $professional['profession_type'] ?? $existing->profession_type,
+                        'trade_license'      => $professional['trade_license'] ?? $existing->trade_license ?? null,
+                        'employee_count'     => $professional['employee_count'] ?? $existing->employee_count,
+                        'half_year_tax'      => $professional['half_year_tax'] ?? $existing->half_year_tax,
+                        'remarks'            => $professional['pt_remarks'] ?? $existing->remarks,
+                        'updated_at'         => now(),
+                    ]);
+            }
+        } else if ($hasPtNumber) {
+            // Insert new
+            DB::table($professionalTaxTable)->insert([
+                'corporation_id'     => $corpId,
+                'ward_no'            => $wardNo,
+                'gisid'              => $request->point_gisid,
+                'assessment'         => $request->assessment,
+                'owner_name'         => $professional['shop_owner'] ?? $request->owner_name ?? null,
+                'phone_number'       => $request->phone_number ?? null,
+                'pt_number'          => $professional['pt_number'],
+                'old_pt_number'      => $professional['old_pt_number'] ?? null,
+                'establishment_name' => $professional['establishment_name'] ?? null,
+                'profession_type'    => $professional['profession_type'] ?? null,
+                'trade_license'      => $professional['trade_license'] ?? null,
+                'employee_count'     => $professional['employee_count'] ?? null,
+                'half_year_tax'      => $professional['half_year_tax'] ?? null,
+                'remarks'            => $professional['pt_remarks'] ?? null,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ]);
+        }
+    }
+}
                 // 5. Delete professional tax rows the user removed
                 if ($request->filled('removed_professional_ids')) {
                     DB::table($professionalTaxTable)
