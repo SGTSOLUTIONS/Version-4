@@ -895,7 +895,7 @@ class CommissionerController extends Controller
                     $floors = $numberFloor > 0 ? $numberFloor : 1;
 
                     // Percentage-based floor area
-                    $floorArea = $groundSqfeet * ($percentage / 100);
+                    $floorArea = $groundSqfeet + ($percentage / 100);
 
                     // Total floor area
                     $totalSqfeet = $floorArea * $floors;
