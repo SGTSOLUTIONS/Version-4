@@ -74,16 +74,23 @@ class PointdataController extends Controller
                 ->where('gisid', $data['building_gisid'])
                 ->first();
 
-            // ========== IMAGE VALIDATION LOGIC ==========
-            if (!$existingRecord && !$request->hasFile('image') && !$request->hasFile('image2')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation errors',
-                    'errors' => [
-                        'image' => ['At least one image is required for new building records.']
-                    ]
-                ], 422);
-            }
+           // ========== IMAGE VALIDATION LOGIC ==========
+if (!$existingRecord) {
+    $hasImage1 = $request->hasFile('image') && $request->file('image')->isValid() && $request->file('image')->getError() === UPLOAD_ERR_OK;
+    $hasImage2 = $request->hasFile('image2') && $request->file('image2')->isValid() && $request->file('image2')->getError() === UPLOAD_ERR_OK;
+
+    // Check if files were actually uploaded
+    if (!$hasImage1 && !$hasImage2) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation errors',
+            'errors' => [
+                'image' => ['At least one image (Image 1 or Image 2) is required for new building records.'],
+                'image2' => ['At least one image (Image 1 or Image 2) is required for new building records.']
+            ]
+        ], 422);
+    }
+}
 
             // Flat validation
             if ($request->building_type == "Flat" && $request->number_floor < 3) {
