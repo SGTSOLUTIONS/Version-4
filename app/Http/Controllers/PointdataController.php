@@ -712,9 +712,13 @@ class PointdataController extends Controller
 
                 DB::commit();
                 $pointDatasFresh = DB::table($pointDataTableName)->get();
+                $count = DB::table($pointDataTableName)
+    ->where('worker_name', $user->id)
+    ->count();
                 return response()->json([
                     'success' => true,
                     'message' => 'Point data stored successfully.',
+                    '$count'=> $count,
                     'data' => [
                         'assessment' => $request->assessment,
                         'gisid' => $request->point_gisid,

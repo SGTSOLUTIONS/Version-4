@@ -34,7 +34,7 @@
                     Property Survey Active | WebGIS Live
                 </div>
 
-                <h1>Spatial Revenue<br>Intelligent<br><span>System</span></h1>
+                <h1>GIS-BASED<br>MUNICIPAL REVENUE<br><span>INTELLIGENCE SYSTEM</span></h1>
 
                 <p>Authorised personnel only. WebGIS + Property Survey integration.</p>
             </div>
@@ -58,7 +58,12 @@
         </div>
 
         {{-- RIGHT PANEL --}}
-        <div class="rv-right">
+
+
+<div class="rv-right">
+    {{-- SGT SOLUTIONS LOGO --}}
+
+        <img src="{{ asset('images/sgtlogo.jpeg') }}" alt="SGT Solutions" class="rv-logo-img">
 
             <div class="rv-form-wrap">
 
