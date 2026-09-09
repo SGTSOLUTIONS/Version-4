@@ -107,7 +107,7 @@ class MapController extends Controller
             'lines',
             'polygonDatas',
             'pointDatas',
-            ' $count',
+            'count',
             'misData',
             'uniqueRoadNames',
             'surveycount',
