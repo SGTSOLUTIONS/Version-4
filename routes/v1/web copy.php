@@ -1,0 +1,240 @@
+<?php
+
+use App\Http\Controllers\AdminController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommissionerController;
+use App\Http\Controllers\CorporationController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\FeatureController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SurveyorController;
+use App\Http\Controllers\TeamleaderController;
+use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\WardController;
+use App\Http\Controllers\ZoneController;
+use App\Http\Controllers\MapController;
+use App\Http\Controllers\PointdataController;
+use App\Http\Controllers\TeamManagementController;
+use App\Http\Controllers\InfrastructureController;
+use App\Http\Controllers\VariationController;
+
+Route::prefix('infrastructure')->group(function () {
+    Route::get('/data/{wardId}', [InfrastructureController::class, 'getInfrastructureData']);
+    Route::get('/summary/{wardId}', [InfrastructureController::class, 'getInfrastructureSummary']);
+    Route::get('/type/{wardId}/{type}', [InfrastructureController::class, 'getFeatureByType']);
+});
+
+Route::post('/qr-code-assessment', [PointdataController::class, 'qrCodeAssessment'])->name('qrCodeAssessment');
+Route::get('/view-assessment/{wardNo}/{pointId}', [PointdataController::class, 'showQr'])->name('view.assessment');
+
+// Guest routes
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'submitLogin'])->name('login.submit');
+
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'submitRegister'])->name('register.submit');
+
+    Route::get('/forget', [AuthController::class, 'shownForget'])->name('forgetemail');
+    Route::post('/forget', [AuthController::class, 'submitForget'])->name('sendForget');
+
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'submitResetPassword'])->name('password.update');
+});
+
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Root redirect
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'profileShow'])->name('profile');
+    Route::put('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/save-feature', [FeatureController::class, 'addFeature']);
+    Route::post('/polygon-split', [FeatureController::class, 'polygonSplit']);
+    Route::post('/update-polygon', [FeatureController::class, 'polygonUpdate']);
+    Route::post('/polygon-merge', [FeatureController::class, 'merge'])->name('polygon.merge');
+    Route::post('/delete-feature', [FeatureController::class, 'polygonDelete']);
+    Route::post('/point-data/{id}/qc', [CommissionerController::class, 'qcUpdate'])->name('qcUpdate');
+
+    Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])->name('area.variation');
+    Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])->name('usage.variation');
+
+    Route::get('/data-controll/{wardId}', [VariationController::class, 'dataControll'])->name('variation.show');
+    Route::get('/data-variation/export/{wardId}', [VariationController::class, 'exportVariation'])->name('data-variation.export');
+    Route::get('/data-variation/pdf/{wardId}', [VariationController::class, 'exportPdffile'])->name('data-variation.pdf');
+    Route::get('/data-variation/single-pdf/{wardId}/{gisid}', [VariationController::class, 'exportSinglePdf'])->name('data-variation.single-pdf');
+    Route::get('/data-variation/details/{wardId}/{gisid}', [VariationController::class, 'getBuildingDetails'])->name('data-variation.details');
+    Route::get('/data-variation/paginated/{wardId}', [VariationController::class, 'getPaginatedData'])->name('data-variation.paginated');
+
+    // Assessment PDF routes
+    Route::get('/data-variation/export-assessment-pdf/{wardId}', [VariationController::class, 'exportSingleAssessmentPdf'])->name('data-variation.export-assessment-pdf');
+    Route::get('/data-variation/export-all-assessment-pdf/{wardId}/{gisid}', [VariationController::class, 'exportAllAssessmentsPdf'])->name('data-variation.export-all-assessment-pdf');
+
+    Route::post('/variation/filter', [VariationController::class, 'filterVariations'])->name('variation.filter');
+    Route::post('/variation/export', [VariationController::class, 'exportVariations'])->name('variation.export');
+    Route::get('/usage-variation/{wardId}', [VariationController::class, 'usageVariation'])->name('variation.usage');
+    Route::get('/area-variation/{wardId}', [VariationController::class, 'areaVariation'])->name('variation.area');
+    Route::get('/wards/{wardId}', [WardController::class, 'missingBuiilding'])->name('missing-building');
+    Route::get('/wards/{ward_id}/missing-building-excel', [WardController::class, 'missingBuiildingExcel'])->name('wards.missing-building-excel');
+    Route::get('/wards/{ward_id}/missing-bill-excel', [WardController::class, 'missingBillExcel'])->name('wards.missing-bill-excel');
+    Route::get('/wards/{ward_id}/missing-bill-pdf', [WardController::class, 'missingBillPdf'])->name('wards.missing-bill-pdf');
+    Route::get('/wards/{ward_id}/export-all-polygons', [WardController::class, 'exportAllPolygons'])->name('wards.export-all-polygons');
+    Route::get('/wards/{ward_id}/export-all-road', [WardController::class, 'exportAllRoads'])->name('wards.export-all-road');
+
+    // MIS Bill Excel
+    Route::get('/wards/{ward_id}/mis-bill-excel', [WardController::class, 'misBillExcel'])->name('wards.mis-bill-excel');
+    // UGD Tax Excel
+    Route::get('/wards/{ward_id}/ugd-tax-excel', [WardController::class, 'ugdTaxExcel'])->name('wards.ugd-tax-excel');
+    // Water Tax Excel
+    Route::get('/wards/{ward_id}/water-tax-excel', [WardController::class, 'waterTaxExcel'])->name('wards.water-tax-excel');
+    // Professional Tax Excel
+    Route::get('/wards/{ward_id}/professional-tax-excel', [WardController::class, 'professionalTaxExcel'])->name('wards.professional-tax-excel');
+});
+
+// ─── Admin Routes ────────────────────────────────────────────────
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    // Corporation routes
+    Route::get('corporations/list', [CorporationController::class, 'list'])->name('corporations.list');
+    Route::resource('corporations', CorporationController::class);
+
+    // Zone routes
+    Route::get('zones/by-corporation', [ZoneController::class, 'getZonesByCorporation'])->name('zones.byCorporation');
+    Route::get('zones/list', [ZoneController::class, 'list'])->name('zone.list');
+    Route::resource('zones', ZoneController::class);
+
+    // Ward routes
+    Route::get('wards/list', [WardController::class, 'list'])->name('ward.list');
+    Route::resource('wards', WardController::class);
+
+    // User routes
+    Route::get('users/list', [UserManagementController::class, 'list'])->name('users.list');
+    Route::resource('users', UserManagementController::class);
+
+    // Team Management routes
+    Route::get('teams', [TeamManagementController::class, 'index'])->name('teams.index');
+    Route::get('teams/list', [TeamManagementController::class, 'list'])->name('teams.list');
+    Route::get('teams/stats', [TeamManagementController::class, 'getTeamStats'])->name('teams.stats');
+    Route::get('teams/export', [TeamManagementController::class, 'exportTeams'])->name('teams.export');
+    Route::get('teams/wards-with-teams', [TeamManagementController::class, 'getWardsWithTeams'])->name('teams.wardsWithTeams');
+    Route::get('teams/all-with-surveyors', [TeamManagementController::class, 'getAllTeamsWithSurveyors'])->name('teams.allWithSurveyors');
+    Route::get('teams/{id}', [TeamManagementController::class, 'show'])->name('teams.show');
+    Route::get('teams/{id}/available-surveyors', [TeamManagementController::class, 'getAvailableSurveyors'])->name('teams.availableSurveyors');
+    Route::get('teams/{id}/members', [TeamManagementController::class, 'getTeamMembers'])->name('teams.members');
+    Route::post('teams/{id}/assign-surveyor', [TeamManagementController::class, 'assignSurveyor'])->name('teams.assignSurveyor');
+    Route::post('teams/{id}/bulk-assign', [TeamManagementController::class, 'bulkAssignSurveyors'])->name('teams.bulkAssign');
+    Route::post('teams/{id}/remove-surveyor', [TeamManagementController::class, 'removeSurveyor'])->name('teams.removeSurveyor');
+    Route::post('teams/{id}/remove-multiple', [TeamManagementController::class, 'removeMultipleSurveyors'])->name('teams.removeMultiple');
+    Route::delete('teams/{id}', [TeamManagementController::class, 'destroy'])->name('teams.destroy');
+
+    Route::get('expenses/list', [ExpenseController::class, 'list'])->name('expenses.list');
+    Route::get('expenses/statistics', [ExpenseController::class, 'statistics'])->name('expenses.statistics');
+    Route::get('expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
+    Route::resource('expenses', ExpenseController::class);
+});
+
+// API route for corporation boundaries
+Route::get('/api/corporation/{id}/boundaries', function ($id) {
+    $corporation = App\Models\Corporation::find($id);
+    if (!$corporation) {
+        return response()->json(['error' => 'Corporation not found'], 404);
+    }
+
+    // Get all wards for this corporation with their boundaries
+    $wards = App\Models\Ward::where('corporation_id', $id)->get();
+    $boundaries = [];
+
+    foreach ($wards as $ward) {
+        // Check if ward has boundary data
+        if (isset($ward->boundary) && !empty($ward->boundary)) {
+            $boundaries[] = $ward->boundary;
+        }
+    }
+
+    return response()->json(['boundaries' => $boundaries]);
+})->name('api.corporation.boundaries');
+
+// ─── Commissioner ─────────────────────────────────────────
+Route::middleware(['auth', 'role:commissioner,dc,ac,aro,bc'])->prefix('commissioner')->name('commissioner.')->group(function () {
+    Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/map', [CommissionerController::class, 'map'])->name('map');
+    Route::get('/map/{id}', [CommissionerController::class, 'showMap'])->name('ward.showmap');
+
+    // API Routes for map data
+    Route::get('/get-point-details', [CommissionerController::class, 'getPointDetails'])->name('getPointDetails');
+    Route::get('/get-ward-data/{wardId}', [CommissionerController::class, 'getWardData'])->name('getWardData');
+    Route::post('/update-polygon', [CommissionerController::class, 'updatePolygon'])->name('updatePolygon');
+    Route::post('/polygon-split', [CommissionerController::class, 'splitPolygon'])->name('splitPolygon');
+    Route::post('/save-feature', [CommissionerController::class, 'saveFeature'])->name('saveFeature');
+    Route::post('/delete-feature', [CommissionerController::class, 'deleteFeature'])->name('deleteFeature');
+    Route::post('/point-data/{id}/qc', [CommissionerController::class, 'qcUpdate'])->name('qcUpdate');
+    Route::get('/infrastructure/data/{wardId}', [CommissionerController::class, 'getInfrastructureData'])->name('infrastructure.data');
+
+    // Zone routes
+    Route::get('zones/by-corporation', [ZoneController::class, 'getZonesByCorporation'])->name('zones.byCorporation');
+    Route::get('zones/list', [ZoneController::class, 'list'])->name('zone.list');
+    Route::resource('zones', ZoneController::class);
+
+    // Corporation routes
+    Route::get('corporations/list', [CorporationController::class, 'list'])->name('corporations.list');
+    Route::resource('corporations', CorporationController::class);
+    Route::get('corporations/{corporation}', [CorporationController::class, 'show'])->name('corporations.show');
+
+    // Ward routes - using only resource, removed duplicate manual routes
+    Route::get('wards/list', [WardController::class, 'list'])->name('ward.list');
+    Route::resource('wards', WardController::class);
+    // Removed duplicate: Route::get('wards/{ward}', [WardController::class, 'show'])->name('wards.show');
+    // Removed duplicate: Route::post('wards', [WardController::class, 'store'])->name('wards.store');
+    // Removed duplicate: Route::put('wards/{ward}', [WardController::class, 'update'])->name('wards.update');
+});
+
+// ─── DC ───────────────────────────────────────────────────
+Route::middleware(['auth', 'role:dc'])->prefix('dc')->name('dc.')->group(function () {
+    Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
+});
+
+// ─── AC ───────────────────────────────────────────────────
+Route::middleware(['auth', 'role:ac'])->prefix('ac')->name('ac.')->group(function () {
+    Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
+});
+
+// ─── ARO ──────────────────────────────────────────────────
+Route::middleware(['auth', 'role:aro'])->prefix('aro')->name('aro.')->group(function () {
+    Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
+    // Add aro specific routes here
+});
+
+// ─── BC ───────────────────────────────────────────────────
+Route::middleware(['auth', 'role:bc'])->prefix('bc')->name('bc.')->group(function () {
+    Route::get('/dashboard', [CommissionerController::class, 'dashboard'])->name('dashboard');
+    // Add bc specific routes here
+});
+
+// ─── Team Leader ──────────────────────────────────────────
+Route::middleware(['auth', 'role:teamleader'])->prefix('teamleader')->name('teamleader.')->group(function () {
+    Route::get('/dashboard', [TeamleaderController::class, 'dashboard'])->name('dashboard');
+});
+
+// ─── Surveyor ─────────────────────────────────────────────
+Route::middleware(['auth', 'role:surveyor'])->prefix('surveyor')->name('surveyor.')->group(function () {
+    Route::get('/dashboard', [SurveyorController::class, 'dashboard'])->name('dashboard');
+    Route::get('/status', [SurveyorController::class, 'status'])->name('status');
+    Route::post('/buildings/save', [PointdataController::class, 'store'])->name('store.pointdata');
+    // Add surveyor specific routes here
+});
+
+Route::middleware(['auth', 'role:surveyor,teamleader'])->group(function () {
+    Route::post('/buildings/save', [PointdataController::class, 'store'])->name('store.buuildingdata');
+    Route::post('/point-data', [PointdataController::class, 'pointDataStore'])->name('store.pointdata');
+    Route::post('/line-data', [PointdataController::class, 'lineDataStore'])->name('store.linedata');
+    Route::get('/point-data/filter', [PointdataController::class, 'pointDataFilter'])->name('pointdata.filter');
+    Route::get('/point-data/{id}', [PointdataController::class, 'editData'])->name('pointdata.edit');
+    Route::put('/point-data/{id}', [PointdataController::class, 'pointDataUpdate'])->name('pointdata.update');
+});
+
+Route::get('/survey/map', [MapController::class, 'map'])->name('teamleader.map');

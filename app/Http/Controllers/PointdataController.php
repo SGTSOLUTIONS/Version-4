@@ -281,6 +281,7 @@ class PointdataController extends Controller
             'professional.*.establishment_name' => 'nullable|string|max:255',
             'professional.*.profession_type' => 'nullable|string|max:100',
             'professional.*.trade_license' => 'nullable|string|max:255', // <-- ADDED
+            'professional.*.phone_number' => 'nullable|string|max:15', // ✅ ADD THIS
             'professional.*.employee_count' => 'nullable|integer|min:0',
             'professional.*.half_year_tax' => 'nullable|numeric|min:0',
             'professional.*.pt_remarks' => 'nullable|string',
@@ -575,9 +576,6 @@ class PointdataController extends Controller
                     }
                 }
 
-                // ============================================================
-                // 3. PROFESSIONAL TAX - INSERT IF NOT EXISTS (WITH TRADE LICENSE)
-                // ============================================================
                 if ($request->has('professional') && is_array($request->professional)) {
                     foreach ($request->professional as $index => $professional) {
                         if (empty($professional['pt_number'])) {
@@ -589,12 +587,12 @@ class PointdataController extends Controller
                             ->first();
 
                         if ($existing) {
+                            // UPDATE EXISTING
                             if (!empty($existing->gisid) && $existing->gisid != $request->point_gisid) {
                                 $validationErrors["professional.{$index}.pt_number"] = [
                                     "Professional Tax Number '{$professional['pt_number']}' is already linked with another GIS ID."
                                 ];
                             } else {
-                                // UPDATE EXISTING PROFESSIONAL TAX (WITH TRADE LICENSE)
                                 DB::table($professionalTaxTableName)
                                     ->where('id', $existing->id)
                                     ->update([
@@ -608,7 +606,8 @@ class PointdataController extends Controller
                                         'old_pt_number' => $professional['old_pt_number'] ?? $existing->old_pt_number,
                                         'establishment_name' => $professional['establishment_name'] ?? $existing->establishment_name,
                                         'profession_type' => $professional['profession_type'] ?? $existing->profession_type,
-                                        'trade_license' => $professional['trade_license'] ?? $existing->trade_license ?? null, // <-- ADDED
+                                        'trade_license' => $professional['trade_license'] ?? $existing->trade_license ?? null,
+                                        'phone_number' => $professional['phone_number'] ?? $existing->phone_number ?? null, // ✅ ADD THIS
                                         'employee_count' => $professional['employee_count'] ?? $existing->employee_count,
                                         'half_year_tax' => $professional['half_year_tax'] ?? $existing->half_year_tax,
                                         'remarks' => $professional['pt_remarks'] ?? $existing->remarks,
@@ -616,19 +615,20 @@ class PointdataController extends Controller
                                     ]);
                             }
                         } else {
-                            // INSERT NEW PROFESSIONAL TAX (WITH TRADE LICENSE)
+                            // INSERT NEW
                             DB::table($professionalTaxTableName)->insert([
                                 'corporation_id' => $corpId,
                                 'ward_no' => $wardNo,
                                 'gisid' => $request->point_gisid,
-                                'assessment'         => $request->assessment,
+                                'assessment' => $request->assessment,
                                 'owner_name' => $professional['shop_owner'] ?? $request->owner_name ?? null,
-                                'phone_number'       => $request->phone_number ?? null,
+                                'phone_number' => $request->phone_number ?? null,
                                 'pt_number' => $professional['pt_number'],
                                 'old_pt_number' => $professional['old_pt_number'] ?? null,
                                 'establishment_name' => $professional['establishment_name'] ?? null,
                                 'profession_type' => $professional['profession_type'] ?? null,
-                                'trade_license' => $professional['trade_license'] ?? null, // <-- ADDED
+                                'trade_license' => $professional['trade_license'] ?? null,
+                                'phone_number' => $professional['phone_number'] ?? null, // ✅ ADD THIS
                                 'employee_count' => $professional['employee_count'] ?? null,
                                 'half_year_tax' => $professional['half_year_tax'] ?? null,
                                 'remarks' => $professional['pt_remarks'] ?? null,
@@ -713,12 +713,12 @@ class PointdataController extends Controller
                 DB::commit();
                 $pointDatasFresh = DB::table($pointDataTableName)->get();
                 $count = DB::table($pointDataTableName)
-    ->where('worker_name', $user->id)
-    ->count();
+                    ->where('worker_name', $user->id)
+                    ->count();
                 return response()->json([
                     'success' => true,
                     'message' => 'Point data stored successfully.',
-                    '$count'=> $count,
+                    '$count' => $count,
                     'data' => [
                         'assessment' => $request->assessment,
                         'gisid' => $request->point_gisid,
@@ -912,6 +912,8 @@ class PointdataController extends Controller
             'professional.*.establishment_name' => 'nullable|string|max:255',
             'professional.*.profession_type' => 'nullable|string|max:100',
             'professional.*.trade_license' => 'nullable|string|max:255', // <-- ADDED
+            'professional.*.phone_number' => 'nullable|string|max:15', // ✅ ADD THIS
+
             'professional.*.employee_count' => 'nullable|integer|min:0',
             'professional.*.half_year_tax' => 'nullable|numeric|min:0',
             'professional.*.pt_remarks' => 'nullable|string',
@@ -952,7 +954,7 @@ class PointdataController extends Controller
             $waterTaxTable        = "water_tax_{$corpId}";
             $ugdTaxTable          = "ugd_tax_{$corpId}";
             $professionalTaxTable = "professional_tax_{$corpId}";
- $misTableName = "mis_{$corpId}"; // ✅ ADD THIS LINE
+            $misTableName = "mis_{$corpId}"; // ✅ ADD THIS LINE
 
             // Check if point data exists
             $existing = DB::table($pointDataTable)->where('id', $id)->first();
@@ -984,34 +986,34 @@ class PointdataController extends Controller
                     'remarks'              => $request->remarks,
                     'updated_at'           => now(),
                 ]);
- $misData = [
-                'corporation_id' => $corpId,
-                'gisid' => $request->point_gisid,
-                // 'ward_no' => $ward->ward_no,
-                // 'assessment' => $request->assessment,
-                // 'old_assessment' => $request->old_assessment ?? null,
-                // 'road_name' => $request->road_name ?? null,
-                // 'owner_name' => $request->owner_name,
-                // 'old_door_no' => $request->old_door_no,
-                // 'new_door_no' => $request->new_door_no,
-                // 'phone_number' => $request->phone_number,
-                // 'usage' => $request->bill_usage ?? null,
-                // 'type' => $request->type ?? null,
-                'updated_at' => now(),
-            ];
+                $misData = [
+                    'corporation_id' => $corpId,
+                    'gisid' => $request->point_gisid,
+                    // 'ward_no' => $ward->ward_no,
+                    // 'assessment' => $request->assessment,
+                    // 'old_assessment' => $request->old_assessment ?? null,
+                    // 'road_name' => $request->road_name ?? null,
+                    // 'owner_name' => $request->owner_name,
+                    // 'old_door_no' => $request->old_door_no,
+                    // 'new_door_no' => $request->new_door_no,
+                    // 'phone_number' => $request->phone_number,
+                    // 'usage' => $request->bill_usage ?? null,
+                    // 'type' => $request->type ?? null,
+                    'updated_at' => now(),
+                ];
 
-            $misExists = DB::table($misTableName)
-                ->where('assessment', $request->assessment)
-                ->exists();
-
-            if ($misExists) {
-                DB::table($misTableName)
+                $misExists = DB::table($misTableName)
                     ->where('assessment', $request->assessment)
-                    ->update($misData);
-            } else {
-                $misData['created_at'] = now();
-                DB::table($misTableName)->insert($misData);
-            }
+                    ->exists();
+
+                if ($misExists) {
+                    DB::table($misTableName)
+                        ->where('assessment', $request->assessment)
+                        ->update($misData);
+                } else {
+                    $misData['created_at'] = now();
+                    DB::table($misTableName)->insert($misData);
+                }
 
                 // 2. Water tax - Update or Insert
                 if ($request->filled('watertax_no')) {
@@ -1077,50 +1079,50 @@ class PointdataController extends Controller
                     }
                 }
 
-                // 4. Professional tax: update existing / insert new (WITH TRADE LICENSE)
                 if ($request->has('professional') && is_array($request->professional)) {
                     foreach ($request->professional as $prof) {
-                        // Skip if pt_number is empty
                         if (empty($prof['pt_number'])) {
                             continue;
                         }
 
                         if (!empty($prof['id'])) {
-                            // Update existing (WITH OWNER NAME)
+                            // Update existing
                             DB::table($professionalTaxTable)
                                 ->where('id', $prof['id'])
                                 ->where('corporation_id', $corpId)
                                 ->update([
-                                    'owner_name'         => $prof['shop_owner'] ?? null, // <-- ADD THIS
-                                    'pt_number'          => $prof['pt_number'],
-                                    'old_pt_number'      => $prof['old_pt_number'] ?? null,
+                                    'owner_name' => $prof['shop_owner'] ?? null,
+                                    'pt_number' => $prof['pt_number'],
+                                    'old_pt_number' => $prof['old_pt_number'] ?? null,
                                     'establishment_name' => $prof['establishment_name'] ?? null,
-                                    'profession_type'    => $prof['profession_type'] ?? null,
-                                    'trade_license'      => $prof['trade_license'] ?? null,
-                                    'employee_count'     => $prof['employee_count'] ?? null,
-                                    'half_year_tax'      => $prof['half_year_tax'] ?? null,
-                                    'remarks'            => $prof['pt_remarks'] ?? null,
-                                    'updated_at'         => now(),
+                                    'profession_type' => $prof['profession_type'] ?? null,
+                                    'trade_license' => $prof['trade_license'] ?? null,
+                                    'phone_number' => $prof['phone_number'] ?? null, // ✅ ADD THIS
+                                    'employee_count' => $prof['employee_count'] ?? null,
+                                    'half_year_tax' => $prof['half_year_tax'] ?? null,
+                                    'remarks' => $prof['pt_remarks'] ?? null,
+                                    'updated_at' => now(),
                                 ]);
                         } else {
-                            // Insert new (WITH TRADE LICENSE)
+                            // Insert new
                             DB::table($professionalTaxTable)->insert([
-                                'corporation_id'     => $corpId,
-                                'gisid'              => $request->point_gisid,
-                                'ward_no'            => $ward->ward_no,
-                                'assessment'         => $request->assessment,
-                                'owner_name'         => $prof['shop_owner'] ?? null,
-                                'phone_number'       => $request->phone_number ?? null,
-                                'pt_number'          => $prof['pt_number'],
-                                'old_pt_number'      => $prof['old_pt_number'] ?? null,
+                                'corporation_id' => $corpId,
+                                'gisid' => $request->point_gisid,
+                                'ward_no' => $ward->ward_no,
+                                'assessment' => $request->assessment,
+                                'owner_name' => $prof['shop_owner'] ?? null,
+                                'phone_number' => $request->phone_number ?? null,
+                                'pt_number' => $prof['pt_number'],
+                                'old_pt_number' => $prof['old_pt_number'] ?? null,
                                 'establishment_name' => $prof['establishment_name'] ?? null,
-                                'profession_type'    => $prof['profession_type'] ?? null,
-                                'trade_license'      => $prof['trade_license'] ?? null, // <-- ADDED
-                                'employee_count'     => $prof['employee_count'] ?? null,
-                                'half_year_tax'      => $prof['half_year_tax'] ?? null,
-                                'remarks'            => $prof['pt_remarks'] ?? null,
-                                'created_at'         => now(),
-                                'updated_at'         => now(),
+                                'profession_type' => $prof['profession_type'] ?? null,
+                                'trade_license' => $prof['trade_license'] ?? null,
+                                'phone_number' => $prof['phone_number'] ?? null, // ✅ ADD THIS
+                                'employee_count' => $prof['employee_count'] ?? null,
+                                'half_year_tax' => $prof['half_year_tax'] ?? null,
+                                'remarks' => $prof['pt_remarks'] ?? null,
+                                'created_at' => now(),
+                                'updated_at' => now(),
                             ]);
                         }
                     }

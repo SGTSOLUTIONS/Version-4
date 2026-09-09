@@ -4,7 +4,8 @@
 
 @push('styles')
     <style>
-        /* YOUR CSS STAYS EXACTLY SAME */
+        /* YOUR EXISTING CSS FROM THE FILE STAYS HERE */
+        /* I'll add the new CSS at the end of this section */
     </style>
 @endpush
 
@@ -34,7 +35,12 @@
                     Property Survey Active | WebGIS Live
                 </div>
 
-                <h1>GIS-BASED<br>MUNICIPAL REVENUE<br><span>INTELLIGENCE SYSTEM</span></h1>
+                <h1>
+                    <span class="word-spatial">Spatial</span>
+                    <span class="word-revenue">Revenue</span>
+                    <span class="word-intelligence">Intelligence</span>
+                    <span class="word-system">System</span>
+                </h1>
 
                 <p>Authorised personnel only. WebGIS + Property Survey integration.</p>
             </div>
@@ -58,15 +64,30 @@
         </div>
 
         {{-- RIGHT PANEL --}}
+        <div class="rv-right">
 
+           {{-- SGT SOLUTIONS LOGO - TOP OF LOGIN CARD --}}
+<div class="rv-sgt-top">
+    <div class="rv-sgt-icon-wrapper">
+        <img src="{{ asset('images/sgtlogo.jpeg') }}" alt="SGT Solutions" class="rv-sgt-logo-img">
+    </div>
+    <div class="rv-sgt-text">
+        <strong>SGT</strong> Solutions
+    </div>
+</div>
 
-<div class="rv-right">
-    {{-- SGT SOLUTIONS LOGO --}}
-
-        <img src="{{ asset('images/sgtlogo.jpeg') }}" alt="SGT Solutions" class="rv-logo-img">
-
+            {{-- FORM WRAPPER (LOGIN CARD) --}}
             <div class="rv-form-wrap">
-
+                    {{-- THANJAVUR MUNICIPAL CORPORATION BRANDING --}}
+<div class="rv-municipal-brand">
+    <div class="rv-municipal-logo">
+        <img src="{{ asset('images/tnjlogo.jpg') }}" alt="Thanjavur City Municipal Corporation" class="rv-municipal-logo-img">
+    </div>
+    <div class="rv-municipal-text">
+        <div class="rv-municipal-name">Thanjavur City Municipal Corporation</div>
+        <div class="rv-municipal-tagline">GIS Survey & Revenue Intelligence</div>
+    </div>
+</div>
                 <div class="rv-form-eyebrow">SRIS | Property Survey Portal</div>
                 <div class="rv-form-title">Sign In</div>
                 <div class="rv-form-sub">Enter credentials to access dashboard</div>
@@ -79,14 +100,11 @@
                     {{-- EMAIL --}}
                     <div class="rv-field">
                         <label class="rv-label">Email</label>
-
                         <div class="rv-input-box">
                             <i class="fas fa-envelope rv-input-icon"></i>
                             <input type="email" id="email" name="email" class="rv-input"
                                 placeholder="operator@domain.com">
-
                         </div>
-
                         <div class="rv-alert error d-none" id="email_error">
                             <i class="fas fa-exclamation-circle"></i>
                             <span class="email_msg"></span>
@@ -95,41 +113,36 @@
 
                     {{-- PASSWORD --}}
                     <div class="rv-field">
-                        <label class="rv-label">
-                            <span>Password</span>
-                        </label>
-
+                        <label class="rv-label">Password</label>
                         <div class="rv-input-box">
                             <i class="fas fa-key rv-input-icon"></i>
-
-                            <input type="password" id="password" name="password" class="rv-input" placeholder="••••••••">
-
+                            <input type="password" id="password" name="password" class="rv-input"
+                                placeholder="••••••••">
                         </div>
-
                         <div class="rv-alert error d-none" id="password_error">
                             <i class="fas fa-exclamation-circle"></i>
                             <span class="password_msg"></span>
                         </div>
                     </div>
 
+
+
                     {{-- BUTTON --}}
                     <button type="submit" class="btn rv-submit" id="rvLoginBtn">
                         <span class="rv-submit-shimmer"></span>
-
                         <div class="rv-submit-inner">
                             <span>Access SRIS WebGIS</span>
                             <span class="rv-submit-arrow">
                                 <i class="fas fa-arrow-right"></i>
                             </span>
                         </div>
-
                         <div class="rv-spinner"></div>
                     </button>
 
                 </form>
 
-                <div class="rv-form-footer ">
-                    Need access? <a href="{{ route('register') }}">Request here</a>| Forget password? <a
+                <div class="rv-form-footer">
+                    Need access? <a href="{{ route('register') }}">Request here</a> | Forget password? <a
                         href="{{ route('forgetemail') }}">Find here</a>
                 </div>
 
@@ -241,15 +254,15 @@
                             .prop("disabled", false)
                             .removeClass("loading")
                             .html(`
-                        <span class="rv-submit-shimmer"></span>
-                        <div class="rv-submit-inner">
-                            <span>Access SRIS WebGIS</span>
-                            <span class="rv-submit-arrow">
-                                <i class="fas fa-arrow-right"></i>
-                            </span>
-                        </div>
-                        <div class="rv-spinner"></div>
-                    `);
+                                <span class="rv-submit-shimmer"></span>
+                                <div class="rv-submit-inner">
+                                    <span>Access SRIS WebGIS</span>
+                                    <span class="rv-submit-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </span>
+                                </div>
+                                <div class="rv-spinner"></div>
+                            `);
                     }
                 });
 

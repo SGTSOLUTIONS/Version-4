@@ -1111,7 +1111,7 @@
         <div class="map-header">
             <h5 class="map-title">
                 <i class="bi bi-geo-alt-fill text-primary me-2"></i>
-                Revenue GIS Dashboard | <span id="surveycount">{{ $surveycount}}</span>
+                Revenue GIS Dashboard | <span id="surveycount">{{ $surveycount }}</span>
             </h5>
             <span class="badge bg-primary" id="activeLayerBadge">OpenStreetMap</span>
 
@@ -2014,8 +2014,7 @@
                             ID</label>
                         <input type="text" id="mergeSecondaryGisId" class="form-control"
                             placeholder="Enter secondary GIS ID…"
-                            style="border-radius:10px; border:1.5px solid #e5e7eb; padding:10px 14px;"
-                            autocomplete="off">
+                            style="border-radius:10px; border:1.5px solid #e5e7eb; padding:10px 14px;" autocomplete="off">
                         <div id="mergeGisError" class="text-danger mt-1" style="font-size:0.8rem; display:none;"></div>
                     </div>
                 </div>
@@ -3821,7 +3820,7 @@
                 if (!secondaryFeature) {
                     $('#mergeGisError').text(
                         'Secondary GIS ID map la kidaikala. Sariyana GIS ID ah check pannunga.'
-                        ).show();
+                    ).show();
                     return;
                 }
                 if (!primaryFeature) {
@@ -5382,9 +5381,14 @@
                         <input type="number" class="form-control" name="professional[${idx}][penalty]" value="${data.penalty || ''}">
                     </div>
                     <div class="col-md-4">
-    <label>Shop Owner Name</label>
-    <input type="text" class="form-control" name="professional[${idx}][shop_owner]" value="${data.shop_owner || ''}">
-</div>
+                        <label>Shop Owner Name</label>
+                        <input type="text" class="form-control" name="professional[${idx}][shop_owner]" value="${data.shop_owner || ''}">
+                    </div>
+                    <!-- 🔥 NEW PHONE NUMBER FIELD 🔥 -->
+                    <div class="col-md-4">
+                        <label>Phone Number</label>
+                        <input type="tel" class="form-control" name="professional[${idx}][phone_number]" value="${data.phone_number || ''}" placeholder="Enter phone number" maxlength="10">
+                    </div>
                     <div class="col-md-4">
                         <label>Balance</label>
                         <input type="number" class="form-control" name="professional[${idx}][balance]" value="${data.balance || ''}">
