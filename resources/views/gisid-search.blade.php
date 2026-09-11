@@ -433,6 +433,7 @@
 <script>
 $(document).ready(function() {
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    let currentData = null;
 
     // ─── TAB SWITCHING ───
     $(document).on('click', '.gis-tab-btn', function() {
@@ -486,6 +487,7 @@ $(document).ready(function() {
                     return;
                 }
 
+                currentData = res.data;
                 renderResults(res.data);
             },
             error: function(xhr) {
@@ -509,19 +511,19 @@ $(document).ready(function() {
         $('#hiddenGisid').val(data.gisid);
 
         // Counts
-        $('#tabCountAssessment').text(data.pointDatas?.length || 0);
-        $('#tabCountWater').text(data.waterTaxes?.length || 0);
-        $('#tabCountUgd').text(data.ugdTaxes?.length || 0);
-        $('#tabCountProfessional').text(data.professionalTaxes?.length || 0);
+        const assessments = data.assessments || [];
+        $('#tabCountAssessment').text(assessments.length);
+        $('#tabCountWater').text(assessments.filter(a => a.waterTax).length);
+        $('#tabCountUgd').text(assessments.filter(a => a.ugdTax).length);
+        $('#tabCountProfessional').text(
+            assessments.reduce((sum, a) => sum + (a.professionalTaxes?.length || 0), 0)
+        );
 
         renderBuilding(data.building);
-        renderAssessments(data.pointDatas || []);
-        renderWaterTaxes(data.waterTaxes || []);
-        renderUgdTaxes(data.ugdTaxes || []);
-        renderProfessionalTaxes(data.professionalTaxes || []);
+        renderAssessments(assessments);
     }
 
-    // ─── BUILDING FIELDS ───
+    // ─── BUILDING FIELDS (same as before) ───
     function renderBuilding(b) {
         if (!b) {
             $('#buildingFields').html('<div class="col-12 text-muted">No building data</div>');
@@ -570,240 +572,238 @@ $(document).ready(function() {
         $('#buildingFields').html(html);
     }
 
-    // ─── ASSESSMENTS ───
-    function renderAssessments(list) {
-        if (!list.length) {
+    // ─── ASSESSMENTS (with nested Water/UGD/Professional) ───
+    function renderAssessments(assessments) {
+        if (!assessments.length) {
             $('#assessmentList').html('<div class="empty-state"><i class="bi bi-inbox"></i><p>No assessments found</p></div>');
-            return;
-        }
-
-        let html = '';
-        list.forEach((pd, i) => {
-            html += `
-                <div class="data-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="record-chip"><i class="bi bi-clipboard"></i> Assessment #${i + 1}</span>
-                        <input type="hidden" name="pointDatas[${i}][id]" value="${pd.id}">
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <div class="form-label-sm">Assessment Type</div>
-                            <input type="text" name="pointDatas[${i}][assessment_type]" class="form-control form-control-sm-custom" value="${pd.assessment_type || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">Assessment</div>
-                            <input type="text" name="pointDatas[${i}][assessment]" class="form-control form-control-sm-custom" value="${pd.assessment || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">Old Assessment</div>
-                            <input type="text" name="pointDatas[${i}][old_assessment]" class="form-control form-control-sm-custom" value="${pd.old_assessment || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">Zonation</div>
-                            <input type="text" name="pointDatas[${i}][zone]" class="form-control form-control-sm-custom" value="${pd.zone || ''}">
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-label-sm">Owner Name</div>
-                            <input type="text" name="pointDatas[${i}][owner_name]" class="form-control form-control-sm-custom" value="${pd.owner_name || ''}">
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-label-sm">Present Owner Name</div>
-                            <input type="text" name="pointDatas[${i}][present_owner_name]" class="form-control form-control-sm-custom" value="${pd.present_owner_name || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">Phone</div>
-                            <input type="text" name="pointDatas[${i}][phone_number]" class="form-control form-control-sm-custom" value="${pd.phone_number || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">Old Door No</div>
-                            <input type="text" name="pointDatas[${i}][old_door_no]" class="form-control form-control-sm-custom" value="${pd.old_door_no || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">New Door No</div>
-                            <input type="text" name="pointDatas[${i}][new_door_no]" class="form-control form-control-sm-custom" value="${pd.new_door_no || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">Floor</div>
-                            <input type="text" name="pointDatas[${i}][floor]" class="form-control form-control-sm-custom" value="${pd.floor || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">Aadhar No</div>
-                            <input type="text" name="pointDatas[${i}][aadhar_no]" class="form-control form-control-sm-custom" value="${pd.aadhar_no || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">Ration No</div>
-                            <input type="text" name="pointDatas[${i}][ration_no]" class="form-control form-control-sm-custom" value="${pd.ration_no || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">No. of Persons</div>
-                            <input type="text" name="pointDatas[${i}][number_persons]" class="form-control form-control-sm-custom" value="${pd.no_of_persons || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">Bill Usage</div>
-                            <input type="text" name="pointDatas[${i}][bill_usage]" class="form-control form-control-sm-custom" value="${pd.bill_usage || ''}">
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-label-sm">EB</div>
-                            <input type="text" name="pointDatas[${i}][eb]" class="form-control form-control-sm-custom" value="${pd.eb || ''}">
-                        </div>
-                        <div class="col-12">
-                            <div class="form-label-sm">Remarks</div>
-                            <textarea name="pointDatas[${i}][remarks]" class="form-control form-control-sm-custom" rows="2">${pd.remarks || ''}</textarea>
-                        </div>
-                    </div>
-                </div>`;
-        });
-
-        $('#assessmentList').html(html);
-    }
-
-    // ─── WATER TAX ───
-    function renderWaterTaxes(list) {
-        if (!list.length) {
             $('#waterList').html('<div class="empty-state"><i class="bi bi-droplet"></i><p>No water tax records</p></div>');
-            return;
-        }
-
-        let html = '';
-        list.forEach((w, i) => {
-            html += `
-                <div class="data-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="record-chip"><i class="bi bi-droplet"></i> Water Tax #${i + 1}</span>
-                        <input type="hidden" name="waterTaxes[${i}][id]" value="${w.id}">
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Water Tax No</div>
-                            <input type="text" name="waterTaxes[${i}][watertax_no]" class="form-control form-control-sm-custom" value="${w.watertax_no || ''}">
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Old Water Tax No</div>
-                            <input type="text" name="waterTaxes[${i}][old_watertax_no]" class="form-control form-control-sm-custom" value="${w.old_watertax_no || ''}">
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Usage</div>
-                            <input type="text" name="waterTaxes[${i}][usage]" class="form-control form-control-sm-custom" value="${w.usage || ''}">
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">DBC Type</div>
-                            <input type="text" name="waterTaxes[${i}][DBC_type]" class="form-control form-control-sm-custom" value="${w.DBC_type || ''}">
-                        </div>
-                        <div class="col-12">
-                            <div class="form-label-sm">Slab Description</div>
-                            <textarea name="waterTaxes[${i}][slab_description]" class="form-control form-control-sm-custom" rows="2">${w.slab_description || ''}</textarea>
-                        </div>
-                    </div>
-                </div>`;
-        });
-
-        $('#waterList').html(html);
-    }
-
-    // ─── UGD TAX ───
-    function renderUgdTaxes(list) {
-        if (!list.length) {
-            $('#ugdList').html('<div class="empty-state"><i class="bi bi-water"></i><p>No UGD tax records</p></div>');
-            return;
-        }
-
-        let html = '';
-        list.forEach((u, i) => {
-            html += `
-                <div class="data-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="record-chip"><i class="bi bi-water"></i> UGD Tax #${i + 1}</span>
-                        <input type="hidden" name="ugdTaxes[${i}][id]" value="${u.id}">
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="form-label-sm">UGD No</div>
-                            <input type="text" name="ugdTaxes[${i}][ugd_no]" class="form-control form-control-sm-custom" value="${u.ugd_no || ''}">
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Old UGD No</div>
-                            <input type="text" name="ugdTaxes[${i}][old_ugd_no]" class="form-control form-control-sm-custom" value="${u.old_ugd_no || ''}">
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Usage</div>
-                            <input type="text" name="ugdTaxes[${i}][usage]" class="form-control form-control-sm-custom" value="${u.usage || ''}">
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">DBC Type</div>
-                            <input type="text" name="ugdTaxes[${i}][DBC_type]" class="form-control form-control-sm-custom" value="${u.DBC_type || ''}">
-                        </div>
-                        <div class="col-12">
-                            <div class="form-label-sm">Slab Description</div>
-                            <textarea name="ugdTaxes[${i}][slab_description]" class="form-control form-control-sm-custom" rows="2">${u.slab_description || ''}</textarea>
-                        </div>
-                    </div>
-                </div>`;
-        });
-
-        $('#ugdList').html(html);
-    }
-
-    // ─── PROFESSIONAL TAX ───
-    function renderProfessionalTaxes(list) {
-        if (!list.length) {
+            $('#ugdList').html('<div class="empty-state"><i class="bi bi-water"></i><p>No UGD records</p></div>');
             $('#professionalList').html('<div class="empty-state"><i class="bi bi-briefcase"></i><p>No professional tax records</p></div>');
             return;
         }
 
-        let html = '';
-        list.forEach((p, i) => {
-            html += `
+        // ── ASSESSMENT TAB ──
+        let assessmentHtml = '';
+        assessments.forEach((a, i) => {
+            const pd = a.pointData || {};
+            assessmentHtml += `
                 <div class="data-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="record-chip"><i class="bi bi-briefcase"></i> Professional Tax #${i + 1}</span>
-                        <input type="hidden" name="professionalTaxes[${i}][id]" value="${p.id}">
+                        <span class="record-chip"><i class="bi bi-clipboard"></i> Assessment #${i + 1} — ${pd.assessment || 'N/A'}</span>
+                        <input type="hidden" name="assessments[${i}][pointData][id]" value="${pd.id || ''}">
                     </div>
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="form-label-sm">PT Number</div>
-                            <input type="text" name="professionalTaxes[${i}][pt_number]" class="form-control form-control-sm-custom" value="${p.pt_number || ''}">
+                        <div class="col-md-3">
+                            <div class="form-label-sm">Assessment Type</div>
+                            <input type="text" name="assessments[${i}][pointData][assessment_type]" class="form-control form-control-sm-custom" value="${pd.assessment_type || ''}">
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Old PT Number</div>
-                            <input type="text" name="professionalTaxes[${i}][old_pt_number]" class="form-control form-control-sm-custom" value="${p.old_pt_number || ''}">
+                        <div class="col-md-3">
+                            <div class="form-label-sm">Assessment</div>
+                            <input type="text" name="assessments[${i}][pointData][assessment]" class="form-control form-control-sm-custom" value="${pd.assessment || ''}">
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Establishment Name</div>
-                            <input type="text" name="professionalTaxes[${i}][establishment_name]" class="form-control form-control-sm-custom" value="${p.establishment_name || ''}">
+                        <div class="col-md-3">
+                            <div class="form-label-sm">Old Assessment</div>
+                            <input type="text" name="assessments[${i}][pointData][old_assessment]" class="form-control form-control-sm-custom" value="${pd.old_assessment || ''}">
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Profession Type</div>
-                            <input type="text" name="professionalTaxes[${i}][profession_type]" class="form-control form-control-sm-custom" value="${p.profession_type || ''}">
+                        <div class="col-md-3">
+                            <div class="form-label-sm">Zonation</div>
+                            <input type="text" name="assessments[${i}][pointData][zone]" class="form-control form-control-sm-custom" value="${pd.zone || ''}">
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Trade License</div>
-                            <input type="text" name="professionalTaxes[${i}][trade_license]" class="form-control form-control-sm-custom" value="${p.trade_license || ''}">
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-label-sm">Owner Name</div>
-                            <input type="text" name="professionalTaxes[${i}][owner_name]" class="form-control form-control-sm-custom" value="${p.owner_name || ''}">
+                            <input type="text" name="assessments[${i}][pointData][owner_name]" class="form-control form-control-sm-custom" value="${pd.owner_name || ''}">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
+                            <div class="form-label-sm">Present Owner Name</div>
+                            <input type="text" name="assessments[${i}][pointData][present_owner_name]" class="form-control form-control-sm-custom" value="${pd.present_owner_name || ''}">
+                        </div>
+                        <div class="col-md-3">
                             <div class="form-label-sm">Phone</div>
-                            <input type="text" name="professionalTaxes[${i}][phone_number]" class="form-control form-control-sm-custom" value="${p.phone_number || ''}">
+                            <input type="text" name="assessments[${i}][pointData][phone_number]" class="form-control form-control-sm-custom" value="${pd.phone_number || ''}">
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Employee Count</div>
-                            <input type="text" name="professionalTaxes[${i}][employee_count]" class="form-control form-control-sm-custom" value="${p.employee_count || ''}">
+                        <div class="col-md-3">
+                            <div class="form-label-sm">Old Door No</div>
+                            <input type="text" name="assessments[${i}][pointData][old_door_no]" class="form-control form-control-sm-custom" value="${pd.old_door_no || ''}">
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-label-sm">Half Year Tax</div>
-                            <input type="text" name="professionalTaxes[${i}][half_year_tax]" class="form-control form-control-sm-custom" value="${p.half_year_tax || ''}">
+                        <div class="col-md-3">
+                            <div class="form-label-sm">New Door No</div>
+                            <input type="text" name="assessments[${i}][pointData][new_door_no]" class="form-control form-control-sm-custom" value="${pd.new_door_no || ''}">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-label-sm">Floor</div>
+                            <input type="text" name="assessments[${i}][pointData][floor]" class="form-control form-control-sm-custom" value="${pd.floor || ''}">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-label-sm">Aadhar No</div>
+                            <input type="text" name="assessments[${i}][pointData][aadhar_no]" class="form-control form-control-sm-custom" value="${pd.aadhar_no || ''}">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-label-sm">Ration No</div>
+                            <input type="text" name="assessments[${i}][pointData][ration_no]" class="form-control form-control-sm-custom" value="${pd.ration_no || ''}">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-label-sm">No. of Persons</div>
+                            <input type="text" name="assessments[${i}][pointData][number_persons]" class="form-control form-control-sm-custom" value="${pd.no_of_persons || ''}">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-label-sm">Bill Usage</div>
+                            <input type="text" name="assessments[${i}][pointData][bill_usage]" class="form-control form-control-sm-custom" value="${pd.bill_usage || ''}">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-label-sm">EB</div>
+                            <input type="text" name="assessments[${i}][pointData][eb]" class="form-control form-control-sm-custom" value="${pd.eb || ''}">
                         </div>
                         <div class="col-12">
                             <div class="form-label-sm">Remarks</div>
-                            <textarea name="professionalTaxes[${i}][remarks]" class="form-control form-control-sm-custom" rows="2">${p.remarks || ''}</textarea>
+                            <textarea name="assessments[${i}][pointData][remarks]" class="form-control form-control-sm-custom" rows="2">${pd.remarks || ''}</textarea>
                         </div>
                     </div>
                 </div>`;
         });
+        $('#assessmentList').html(assessmentHtml);
 
-        $('#professionalList').html(html);
+        // ── WATER TAX TAB (assessment-wise) ──
+        let waterHtml = '';
+        assessments.forEach((a, i) => {
+            const wt = a.waterTax || {};
+            const pd = a.pointData || {};
+            waterHtml += `
+                <div class="data-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="record-chip"><i class="bi bi-droplet"></i> Assessment: ${pd.assessment || 'N/A'}</span>
+                        <input type="hidden" name="assessments[${i}][waterTax][id]" value="${wt.id || ''}">
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="form-label-sm">Water Tax No</div>
+                            <input type="text" name="assessments[${i}][waterTax][watertax_no]" class="form-control form-control-sm-custom" value="${wt.watertax_no || ''}">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-label-sm">Old Water Tax No</div>
+                            <input type="text" name="assessments[${i}][waterTax][old_watertax_no]" class="form-control form-control-sm-custom" value="${wt.old_watertax_no || ''}">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-label-sm">Usage</div>
+                            <input type="text" name="assessments[${i}][waterTax][usage]" class="form-control form-control-sm-custom" value="${wt.usage || ''}">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-label-sm">DBC Type</div>
+                            <input type="text" name="assessments[${i}][waterTax][DBC_type]" class="form-control form-control-sm-custom" value="${wt.DBC_type || ''}">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-label-sm">Slab Description</div>
+                            <textarea name="assessments[${i}][waterTax][slab_description]" class="form-control form-control-sm-custom" rows="2">${wt.slab_description || ''}</textarea>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        $('#waterList').html(waterHtml || '<div class="empty-state"><i class="bi bi-droplet"></i><p>No water tax records</p></div>');
+
+        // ── UGD TAB (assessment-wise) ──
+        let ugdHtml = '';
+        assessments.forEach((a, i) => {
+            const ut = a.ugdTax || {};
+            const pd = a.pointData || {};
+            ugdHtml += `
+                <div class="data-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="record-chip"><i class="bi bi-water"></i> Assessment: ${pd.assessment || 'N/A'}</span>
+                        <input type="hidden" name="assessments[${i}][ugdTax][id]" value="${ut.id || ''}">
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="form-label-sm">UGD No</div>
+                            <input type="text" name="assessments[${i}][ugdTax][ugd_no]" class="form-control form-control-sm-custom" value="${ut.ugd_no || ''}">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-label-sm">Old UGD No</div>
+                            <input type="text" name="assessments[${i}][ugdTax][old_ugd_no]" class="form-control form-control-sm-custom" value="${ut.old_ugd_no || ''}">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-label-sm">Usage</div>
+                            <input type="text" name="assessments[${i}][ugdTax][usage]" class="form-control form-control-sm-custom" value="${ut.usage || ''}">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-label-sm">DBC Type</div>
+                            <input type="text" name="assessments[${i}][ugdTax][DBC_type]" class="form-control form-control-sm-custom" value="${ut.DBC_type || ''}">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-label-sm">Slab Description</div>
+                            <textarea name="assessments[${i}][ugdTax][slab_description]" class="form-control form-control-sm-custom" rows="2">${ut.slab_description || ''}</textarea>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        $('#ugdList').html(ugdHtml || '<div class="empty-state"><i class="bi bi-water"></i><p>No UGD records</p></div>');
+
+        // ── PROFESSIONAL TAX TAB (assessment-wise, multiple per assessment) ──
+        let profHtml = '';
+        assessments.forEach((a, i) => {
+            const pd = a.pointData || {};
+            const pts = a.professionalTaxes || [];
+
+            if (!pts.length) {
+                profHtml += `
+                    <div class="data-card" style="opacity:0.7;">
+                        <div class="record-chip"><i class="bi bi-briefcase"></i> Assessment: ${pd.assessment || 'N/A'}</div>
+                        <p class="text-muted mb-0" style="font-size:0.85rem;">No professional tax records</p>
+                    </div>`;
+                return;
+            }
+
+            pts.forEach((p, j) => {
+                profHtml += `
+                    <div class="data-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="record-chip"><i class="bi bi-briefcase"></i> Assessment: ${pd.assessment || 'N/A'} — PT #${j + 1}</span>
+                            <input type="hidden" name="assessments[${i}][professionalTaxes][${j}][id]" value="${p.id || ''}">
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-label-sm">PT Number</div>
+                                <input type="text" name="assessments[${i}][professionalTaxes][${j}][pt_number]" class="form-control form-control-sm-custom" value="${p.pt_number || ''}">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-label-sm">Old PT Number</div>
+                                <input type="text" name="assessments[${i}][professionalTaxes][${j}][old_pt_number]" class="form-control form-control-sm-custom" value="${p.old_pt_number || ''}">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-label-sm">Establishment Name</div>
+                                <input type="text" name="assessments[${i}][professionalTaxes][${j}][establishment_name]" class="form-control form-control-sm-custom" value="${p.establishment_name || ''}">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-label-sm">Profession Type</div>
+                                <input type="text" name="assessments[${i}][professionalTaxes][${j}][profession_type]" class="form-control form-control-sm-custom" value="${p.profession_type || ''}">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-label-sm">Trade License</div>
+                                <input type="text" name="assessments[${i}][professionalTaxes][${j}][trade_license]" class="form-control form-control-sm-custom" value="${p.trade_license || ''}">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-label-sm">Owner Name</div>
+                                <input type="text" name="assessments[${i}][professionalTaxes][${j}][owner_name]" class="form-control form-control-sm-custom" value="${p.owner_name || ''}">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-label-sm">Phone</div>
+                                <input type="text" name="assessments[${i}][professionalTaxes][${j}][phone_number]" class="form-control form-control-sm-custom" value="${p.phone_number || ''}">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-label-sm">Employee Count</div>
+                                <input type="text" name="assessments[${i}][professionalTaxes][${j}][employee_count]" class="form-control form-control-sm-custom" value="${p.employee_count || ''}">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-label-sm">Half Year Tax</div>
+                                <input type="text" name="assessments[${i}][professionalTaxes][${j}][half_year_tax]" class="form-control form-control-sm-custom" value="${p.half_year_tax || ''}">
+                            </div>
+                            <div class="col-12">
+                                <div class="form-label-sm">Remarks</div>
+                                <textarea name="assessments[${i}][professionalTaxes][${j}][remarks]" class="form-control form-control-sm-custom" rows="2">${p.remarks || ''}</textarea>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        });
+        $('#professionalList').html(profHtml || '<div class="empty-state"><i class="bi bi-briefcase"></i><p>No professional tax records</p></div>');
     }
 
     // ─── SAVE ALL ───

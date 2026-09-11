@@ -1370,9 +1370,6 @@ class PointdataController extends Controller
 
 
 
-    /**
- * Search all details by GIS ID
- */
 public function searchByGisId(Request $request)
 {
     $validator = Validator::make($request->all(), [
@@ -1402,15 +1399,15 @@ public function searchByGisId(Request $request)
         $wardId = $ward->id;
         $corpId = $corporation->id;
 
-        $polygonDataTable = "polygon_data_{$wardId}";
-        $pointDataTable   = "point_data_{$wardId}";
-        $waterTaxTable    = "water_tax_{$corpId}";
-        $ugdTaxTable      = "ugd_tax_{$corpId}";
+        $polygonDataTable     = "polygon_data_{$wardId}";
+        $pointDataTable       = "point_data_{$wardId}";
+        $waterTaxTable        = "water_tax_{$corpId}";
+        $ugdTaxTable          = "ugd_tax_{$corpId}";
         $professionalTaxTable = "professional_tax_{$corpId}";
 
         $gisid = $request->gisid;
 
-        // Building data
+        // Building
         $buildingData = DB::table($polygonDataTable)
             ->where('gisid', $gisid)
             ->first();
@@ -1422,38 +1419,51 @@ public function searchByGisId(Request $request)
             ], 404);
         }
 
-        // Point data (all assessments for this GIS ID)
+        // All point_data (assessments) for this GIS ID
         $pointDatas = DB::table($pointDataTable)
             ->where('point_gisid', $gisid)
+            ->orderBy('id')
             ->get();
 
-        // Water tax (by gisid)
-        $waterTaxes = DB::table($waterTaxTable)
-            ->where('gisid', $gisid)
-            ->get();
+        // 🔥 Group Water Tax / UGD / Professional — assessment-wise
+        $assessments = [];
 
-        // UGD tax (by gisid)
-        $ugdTaxes = DB::table($ugdTaxTable)
-            ->where('gisid', $gisid)
-            ->get();
+        foreach ($pointDatas as $pd) {
+            $assessmentNo = $pd->assessment;
 
-        // Professional tax (by gisid)
-        $professionalTaxes = DB::table($professionalTaxTable)
-            ->where('gisid', $gisid)
-            ->get();
+            // Water tax linked by assessment
+            $waterTax = DB::table($waterTaxTable)
+                ->where('assessment', $assessmentNo)
+                ->first();
+
+            // UGD tax linked by assessment
+            $ugdTax = DB::table($ugdTaxTable)
+                ->where('assessment', $assessmentNo)
+                ->first();
+
+            // Professional taxes linked by gisid + assessment
+            $professionalTaxes = DB::table($professionalTaxTable)
+                ->where('gisid', $gisid)
+                ->where('assessment', $assessmentNo)
+                ->get();
+
+            $assessments[] = [
+                'pointData'         => $pd,
+                'waterTax'          => $waterTax,
+                'ugdTax'            => $ugdTax,
+                'professionalTaxes' => $professionalTaxes,
+            ];
+        }
 
         return response()->json([
             'success' => true,
             'data' => [
-                'gisid'          => $gisid,
-                'ward'           => $ward,
-                'zone'           => $zone,
-                'corporation'    => $corporation,
-                'building'       => $buildingData,
-                'pointDatas'     => $pointDatas,
-                'waterTaxes'     => $waterTaxes,
-                'ugdTaxes'       => $ugdTaxes,
-                'professionalTaxes' => $professionalTaxes,
+                'gisid'       => $gisid,
+                'ward'        => $ward,
+                'zone'        => $zone,
+                'corporation' => $corporation,
+                'building'    => $buildingData,
+                'assessments' => $assessments,
             ]
         ]);
     } catch (\Exception $e) {
