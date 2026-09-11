@@ -7,17 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use geoPHP;
 use Exception;
-use PolygonSplitter; // <-- add this line
-
-
+use PolygonSplitter;
 
 class FeatureController extends Controller
 {
     protected $wardService;
 
-    public function __construct(
-        WardService $wardService
-    ) {
+    public function __construct(WardService $wardService)
+    {
         $this->wardService = $wardService;
     }
     public function addFeature(Request $request)
@@ -257,53 +254,118 @@ class FeatureController extends Controller
             'data'    => $result
         ]);
     }
-   public function polygonDelete(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'gisid' => 'required|string',
-        'type'  => 'required|in:polygon,line',
-    ]);
+    public function polygonDelete(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'gisid' => 'required|string',
+            'type'  => 'required|in:polygon,line',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'errors'  => $validator->errors()
-        ], 422);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+
+        $wardId = $user->ward_id;
+
+        if (!$wardId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User has no ward assigned'
+            ], 400);
+        }
+
+        $data = [
+            'ward_id' => $wardId,
+            'gisid'   => $request->gisid,
+        ];
+
+        // Delete based on type
+        if ($request->type === 'polygon') {
+
+            $result = $this->wardService->deletePolygon($data);
+        } elseif ($request->type === 'line') {
+
+            $result = $this->wardService->deleteLine($data);
+        }
+
+        return response()->json($result);
     }
+    public function merge(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'primary_gisid'   => 'required|string',
+            'secondary_gisid' => 'required|string|different:primary_gisid',
+            'coordinates'     => 'required|string',
+            'sqfeet'          => 'nullable|string',
+        ]);
 
-    $user = auth()->user();
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
 
-    if (!$user) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Unauthenticated'
-        ], 401);
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
+
+        $wardId = $user->ward_id;
+
+        if (!$wardId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User has no ward assigned',
+            ], 400);
+        }
+
+        try {
+            $coordinates = json_decode($request->coordinates, true);
+
+            if (!is_array($coordinates) || empty($coordinates)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid merged coordinates',
+                ], 422);
+            }
+
+            $result = $this->wardService->mergePolygons([
+                'ward_id'         => $wardId,
+                'primary_gisid'   => $request->primary_gisid,
+                'secondary_gisid' => $request->secondary_gisid,
+                'coordinates'     => $coordinates,
+                'sqfeet'          => $request->sqfeet ?? '0',
+            ]);
+
+            return response()->json([
+                'success' => $result['status'] ?? true,
+                'message' => $result['message'] ?? 'Polygons merged successfully',
+                'data'    => $result,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+                'file'    => $e->getFile(),
+            ], 500);
+        }
     }
-
-    $wardId = $user->ward_id;
-
-    if (!$wardId) {
-        return response()->json([
-            'success' => false,
-            'message' => 'User has no ward assigned'
-        ], 400);
-    }
-
-    $data = [
-        'ward_id' => $wardId,
-        'gisid'   => $request->gisid,
-    ];
-
-    // Delete based on type
-    if ($request->type === 'polygon') {
-
-        $result = $this->wardService->deletePolygon($data);
-
-    } elseif ($request->type === 'line') {
-
-        $result = $this->wardService->deleteLine($data);
-    }
-
-    return response()->json($result);
-}
 }

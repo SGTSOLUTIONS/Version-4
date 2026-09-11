@@ -4,8 +4,79 @@
 
 @push('styles')
     <style>
-        /* YOUR EXISTING CSS FROM THE FILE STAYS HERE */
-        /* I'll add the new CSS at the end of this section */
+.property-banner {
+    width: 100%;
+    height: 110px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 10px 25px;
+
+    position: relative;
+    overflow: hidden;
+
+    border-radius: 8px;
+
+    background-image: url("{{ asset('images/property-banner-bg.png') }}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    box-sizing: border-box;
+}
+
+/* QR Code */
+.banner-qr {
+    width: 65px;
+    min-width: 65px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 2;
+}
+
+.banner-qr i {
+    font-size: 45px;
+    color: #155a91;
+}
+
+/* Text */
+.banner-content {
+    margin-left: 10px;
+
+    line-height: 1.1;
+
+    z-index: 2;
+}
+
+.banner-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #164f7a;
+}
+
+.banner-subtitle {
+    font-size: 21px;
+    font-weight: 800;
+
+    margin-top: 4px;
+
+    color: #1d3f5c;
+}
+
+.banner-services {
+    margin-top: 7px;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 0.5px;
+
+    color: #607d8b;
+}
     </style>
 @endpush
 
@@ -42,7 +113,9 @@
                     <span class="word-system">System</span>
                 </h1>
 
-                <p>Authorised personnel only. WebGIS + Property Survey integration.</p>
+                <p><span class="right-border">Property Tax</span><span class="right-border">Trade License</span><span
+                        class="right-border">Professional Tax</span><span class="right-border">Gis Survey</span><span
+                        class="left-border">Data-Driven Govermance</span></p>
             </div>
 
             <div class="rv-secure">
@@ -66,40 +139,36 @@
         {{-- RIGHT PANEL --}}
         <div class="rv-right">
 
-           {{-- SGT SOLUTIONS LOGO - TOP OF LOGIN CARD --}}
-<div class="rv-sgt-top">
-    <div class="rv-sgt-icon-wrapper">
-        <img src="{{ asset('images/sgtlogo.jpeg') }}" alt="SGT Solutions" class="rv-sgt-logo-img">
-    </div>
-    <div class="rv-sgt-text">
-        <strong>SGT</strong> Solutions
-    </div>
-</div>
+            {{-- SGT SOLUTIONS LOGO - TOP OF LOGIN CARD --}}
 
             {{-- FORM WRAPPER (LOGIN CARD) --}}
             <div class="rv-form-wrap">
-                    {{-- THANJAVUR MUNICIPAL CORPORATION BRANDING --}}
-<div class="rv-municipal-brand">
-    <div class="rv-municipal-logo">
-        <img src="{{ asset('images/tnjlogo.jpg') }}" alt="Thanjavur City Municipal Corporation" class="rv-municipal-logo-img">
-    </div>
-    <div class="rv-municipal-text">
-        <div class="rv-municipal-name">Thanjavur City Municipal Corporation</div>
-        <div class="rv-municipal-tagline">GIS Survey & Revenue Intelligence</div>
-    </div>
-</div>
+                {{-- SGT LOGO --}}
+                <div class="sgt-logo">
+                    <img src="{{ asset('images/sgtlogo.png') }}" alt="SGT Solutions">
+                </div>
+                {{-- THANJAVUR MUNICIPAL CORPORATION BRANDING --}}
+                <div class="rv-municipal-brand">
+                    <div class="rv-municipal-logo">
+                        <img src="{{ asset('images/tnjlogo.jpg') }}" alt="Thanjavur City Municipal Corporation"
+                            class="rv-municipal-logo-img">
+                    </div>
+                    <div class="rv-municipal-text">
+                        <div class="rv-municipal-name">Thanjavur City Municipal Corporation</div>
+                        <div class="rv-municipal-tagline">GIS Survey & Revenue Intelligence</div>
+                    </div>
+                </div>
                 <div class="rv-form-eyebrow">SRIS | Property Survey Portal</div>
-                <div class="rv-form-title">Sign In</div>
-                <div class="rv-form-sub">Enter credentials to access dashboard</div>
+                <div class="rv-form-title text-center">Sign In to continue</div>
+                {{-- <div class="rv-form-sub">Enter credentials to access dashboard</div> --}}
 
-                <div class="rv-form-divider"></div>
 
                 <form id="LoginForm">
                     @csrf
 
                     {{-- EMAIL --}}
                     <div class="rv-field">
-                        <label class="rv-label">Email</label>
+                        {{-- <label class="rv-label">Email</label> --}}
                         <div class="rv-input-box">
                             <i class="fas fa-envelope rv-input-icon"></i>
                             <input type="email" id="email" name="email" class="rv-input"
@@ -113,11 +182,10 @@
 
                     {{-- PASSWORD --}}
                     <div class="rv-field">
-                        <label class="rv-label">Password</label>
+                        {{-- <label class="rv-label">Password</label> --}}
                         <div class="rv-input-box">
                             <i class="fas fa-key rv-input-icon"></i>
-                            <input type="password" id="password" name="password" class="rv-input"
-                                placeholder="••••••••">
+                            <input type="password" id="password" name="password" class="rv-input" placeholder="••••••••">
                         </div>
                         <div class="rv-alert error d-none" id="password_error">
                             <i class="fas fa-exclamation-circle"></i>
@@ -140,7 +208,29 @@
                     </button>
 
                 </form>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <div class="property-banner">
 
+                            <div class="banner-qr">
+                                <i class="fa fa-qrcode"></i>
+                            </div>
+
+                            <div class="banner-content">
+                                <div class="banner-title">Every Property</div>
+
+                                <div class="banner-subtitle">
+                                    A Digital Identity
+                                </div>
+
+                                <div class="banner-services">
+                                    GIS&nbsp; | &nbsp;Survey&nbsp; | &nbsp;Transparency
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
                 <div class="rv-form-footer">
                     Need access? <a href="{{ route('register') }}">Request here</a> | Forget password? <a
                         href="{{ route('forgetemail') }}">Find here</a>

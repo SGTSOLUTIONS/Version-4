@@ -234,7 +234,7 @@ class WardService
                     ?? $feature['properties']['ROAD_NAME']
                     ?? $feature['properties']['RoadName']
                     ?? null;
-                    $pincode = $feature['properties']['pincode']
+                $pincode = $feature['properties']['pincode']
                     ?? $feature['properties']['pincode']
                     ?? $feature['properties']['pincode']
                     ?? null;
@@ -380,7 +380,7 @@ class WardService
                 $t->string('type')->default('LineString');
                 $t->json('coordinates')->nullable();
                 $t->string('road_name')->nullable();
-                 $t->string('pincode')->nullable();
+                $t->string('pincode')->nullable();
                 $t->timestamps();
                 $t->softDeletes();
             });
@@ -389,98 +389,98 @@ class WardService
 
         return $table;
     }
-public function exportAllRoads($ward_id)
-{
-    try {
-        $lineTable = "lines_" . $ward_id;
+    public function exportAllRoads($ward_id)
+    {
+        try {
+            $lineTable = "lines_" . $ward_id;
 
-        // Check if table exists
-        if (!Schema::hasTable($lineTable)) {
-            return response()->json([
-                "success" => false,
-                "message" => "Line table not found for ward #{$ward_id}"
-            ], 404);
-        }
-
-        $allLines = DB::table($lineTable)->get();
-
-        if ($allLines->isEmpty()) {
-            return response()->json([
-                "success" => false,
-                "message" => "No lines found for ward #{$ward_id}"
-            ], 404);
-        }
-
-        $features = [];
-
-        foreach ($allLines as $line) {
-            $coordinates = json_decode($line->coordinates, true);
-
-            if (!$coordinates) {
-                continue;
+            // Check if table exists
+            if (!Schema::hasTable($lineTable)) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Line table not found for ward #{$ward_id}"
+                ], 404);
             }
 
-            // Convert to valid GeoJSON LineString format if needed
-            if ($line->type == 'LineString') {
-                // If coordinates are stored as [[x,y],[x,y],...] (already correct format)
-                // No conversion needed for LineString, but we ensure it's a valid array
-                if (!isset($coordinates[0][0]) || !is_numeric($coordinates[0][0])) {
-                    // If stored in a different format, attempt to fix
-                    if (isset($coordinates[0]) && is_array($coordinates[0]) && isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
-                        // Already correct
-                    } else {
-                        // Try to convert if it's a flat array
-                        continue;
+            $allLines = DB::table($lineTable)->get();
+
+            if ($allLines->isEmpty()) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "No lines found for ward #{$ward_id}"
+                ], 404);
+            }
+
+            $features = [];
+
+            foreach ($allLines as $line) {
+                $coordinates = json_decode($line->coordinates, true);
+
+                if (!$coordinates) {
+                    continue;
+                }
+
+                // Convert to valid GeoJSON LineString format if needed
+                if ($line->type == 'LineString') {
+                    // If coordinates are stored as [[x,y],[x,y],...] (already correct format)
+                    // No conversion needed for LineString, but we ensure it's a valid array
+                    if (!isset($coordinates[0][0]) || !is_numeric($coordinates[0][0])) {
+                        // If stored in a different format, attempt to fix
+                        if (isset($coordinates[0]) && is_array($coordinates[0]) && isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
+                            // Already correct
+                        } else {
+                            // Try to convert if it's a flat array
+                            continue;
+                        }
                     }
                 }
-            }
 
-            $properties = [
-                "gisid" => $line->gisid,
-                "type" => $line->type ?? 'LineString',
-            ];
-
-            // Add optional fields if they exist
-            if (isset($line->road_name) && !is_null($line->road_name)) {
-                $properties["road_name"] = $line->road_name;
-            }
-
-            if (isset($line->pincode) && !is_null($line->pincode)) {
-                $properties["pincode"] = $line->pincode;
-            }
-
-            $features[] = [
-                "type" => "Feature",
-                "properties" => $properties,
-                "geometry" => [
+                $properties = [
+                    "gisid" => $line->gisid,
                     "type" => $line->type ?? 'LineString',
-                    "coordinates" => $coordinates
-                ]
+                ];
+
+                // Add optional fields if they exist
+                if (isset($line->road_name) && !is_null($line->road_name)) {
+                    $properties["road_name"] = $line->road_name;
+                }
+
+                if (isset($line->pincode) && !is_null($line->pincode)) {
+                    $properties["pincode"] = $line->pincode;
+                }
+
+                $features[] = [
+                    "type" => "Feature",
+                    "properties" => $properties,
+                    "geometry" => [
+                        "type" => $line->type ?? 'LineString',
+                        "coordinates" => $coordinates
+                    ]
+                ];
+            }
+
+            $geojson = [
+                "type" => "FeatureCollection",
+                "features" => $features
             ];
+
+            $fileName = "all_lines_ward_{$ward_id}.geojson";
+
+            return response()->streamDownload(function () use ($geojson) {
+                echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            }, $fileName, [
+                'Content-Type' => 'application/geo+json',
+                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "line"    => $e->getLine(),
+                "file"    => $e->getFile(),
+            ], 500);
         }
-
-        $geojson = [
-            "type" => "FeatureCollection",
-            "features" => $features
-        ];
-
-        $fileName = "all_lines_ward_{$ward_id}.geojson";
-
-        return response()->streamDownload(function () use ($geojson) {
-            echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        }, $fileName, [
-            'Content-Type' => 'application/geo+json',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-        ]);
-    } catch (\Throwable $e) {
-        return response()->json([
-            "success" => false,
-            "message" => $e->getMessage(),
-            "line"    => $e->getLine(),
-            "file"    => $e->getFile(),
-        ], 500);
     }
-}
     private function createPointTable($wardId): string
     {
         $table = 'points_' . $wardId;
@@ -594,10 +594,6 @@ public function exportAllRoads($ward_id)
 
         return $table;
     }
-
-    // ─────────────────────────────────────────────────────────────
-    //  PUBLIC: Store single polygon (WITHOUT transaction)
-    // ─────────────────────────────────────────────────────────────
 
     public function storeSinglePolygon($data, $useTransaction = true)
     {
@@ -1146,144 +1142,142 @@ public function exportAllRoads($ward_id)
         }
     }
 
-  public function deletePolygon($data, $useTransaction = true)
-{
-    try {
+    public function deletePolygon($data, $useTransaction = true)
+    {
+        try {
 
-        if ($useTransaction && DB::transactionLevel() === 0) {
-            DB::beginTransaction();
-            $startedTransaction = true;
-        } else {
-            $startedTransaction = false;
-        }
+            if ($useTransaction && DB::transactionLevel() === 0) {
+                DB::beginTransaction();
+                $startedTransaction = true;
+            } else {
+                $startedTransaction = false;
+            }
 
-        $tableName = 'polygons_' . $data['ward_id'];
-        $pointTableName = 'points_' . $data['ward_id'];
+            $tableName = 'polygons_' . $data['ward_id'];
+            $pointTableName = 'points_' . $data['ward_id'];
 
-        $gisid = $data['gisid'];
+            $gisid = $data['gisid'];
 
-        // Check polygon exists
-        $polygonExists = DB::table($tableName)
-            ->where('gisid', $gisid)
-            ->exists();
+            // Check polygon exists
+            $polygonExists = DB::table($tableName)
+                ->where('gisid', $gisid)
+                ->exists();
 
-        if (!$polygonExists) {
+            if (!$polygonExists) {
+
+                if ($startedTransaction) {
+                    DB::rollBack();
+                }
+
+                return [
+                    'status' => false,
+                    'message' => 'Polygon not found'
+                ];
+            }
+
+            // Delete polygon
+            DB::table($tableName)
+                ->where('gisid', $gisid)
+                ->delete();
+
+            // Delete corresponding point
+            DB::table($pointTableName)
+                ->where('gisid', $gisid)
+                ->delete();
 
             if ($startedTransaction) {
+                DB::commit();
+            }
+
+            // Get remaining data
+            $polygons = DB::table($tableName)->get();
+            $points = DB::table($pointTableName)->get();
+
+            return [
+                'status' => true,
+                'gisid' => $gisid,
+                'message' => 'Polygon deleted successfully',
+                'polygons' => $polygons,
+                'points' => $points
+            ];
+        } catch (\Exception $e) {
+
+            if (isset($startedTransaction) && $startedTransaction) {
                 DB::rollBack();
             }
 
+            Log::error('deletePolygon error: ' . $e->getMessage());
+
             return [
                 'status' => false,
-                'message' => 'Polygon not found'
+                'message' => $e->getMessage()
             ];
         }
-
-        // Delete polygon
-        DB::table($tableName)
-            ->where('gisid', $gisid)
-            ->delete();
-
-        // Delete corresponding point
-        DB::table($pointTableName)
-            ->where('gisid', $gisid)
-            ->delete();
-
-        if ($startedTransaction) {
-            DB::commit();
-        }
-
-        // Get remaining data
-        $polygons = DB::table($tableName)->get();
-        $points = DB::table($pointTableName)->get();
-
-        return [
-            'status' => true,
-            'gisid' => $gisid,
-            'message' => 'Polygon deleted successfully',
-            'polygons' => $polygons,
-            'points' => $points
-        ];
-
-    } catch (\Exception $e) {
-
-        if (isset($startedTransaction) && $startedTransaction) {
-            DB::rollBack();
-        }
-
-        Log::error('deletePolygon error: ' . $e->getMessage());
-
-        return [
-            'status' => false,
-            'message' => $e->getMessage()
-        ];
     }
-}
-public function deleteLine($data, $useTransaction = true)
-{
-    try {
+    public function deleteLine($data, $useTransaction = true)
+    {
+        try {
 
-        if ($useTransaction && DB::transactionLevel() === 0) {
-            DB::beginTransaction();
-            $startedTransaction = true;
-        } else {
-            $startedTransaction = false;
-        }
+            if ($useTransaction && DB::transactionLevel() === 0) {
+                DB::beginTransaction();
+                $startedTransaction = true;
+            } else {
+                $startedTransaction = false;
+            }
 
-        $tableName = 'lines_' . $data['ward_id'];
+            $tableName = 'lines_' . $data['ward_id'];
 
-        $gisid = $data['gisid'];
+            $gisid = $data['gisid'];
 
-        // Check line exists
-        $lineExists = DB::table($tableName)
-            ->where('gisid', $gisid)
-            ->exists();
+            // Check line exists
+            $lineExists = DB::table($tableName)
+                ->where('gisid', $gisid)
+                ->exists();
 
-        if (!$lineExists) {
+            if (!$lineExists) {
+
+                if ($startedTransaction) {
+                    DB::rollBack();
+                }
+
+                return [
+                    'status' => false,
+                    'message' => 'Line not found'
+                ];
+            }
+
+            // Delete line
+            DB::table($tableName)
+                ->where('gisid', $gisid)
+                ->delete();
 
             if ($startedTransaction) {
+                DB::commit();
+            }
+
+            // Get remaining lines
+            $lines = DB::table($tableName)->get();
+
+            return [
+                'status' => true,
+                'gisid' => $gisid,
+                'message' => 'Line deleted successfully',
+                'lines' => $lines
+            ];
+        } catch (\Exception $e) {
+
+            if (isset($startedTransaction) && $startedTransaction) {
                 DB::rollBack();
             }
 
+            Log::error('deleteLine error: ' . $e->getMessage());
+
             return [
                 'status' => false,
-                'message' => 'Line not found'
+                'message' => $e->getMessage()
             ];
         }
-
-        // Delete line
-        DB::table($tableName)
-            ->where('gisid', $gisid)
-            ->delete();
-
-        if ($startedTransaction) {
-            DB::commit();
-        }
-
-        // Get remaining lines
-        $lines = DB::table($tableName)->get();
-
-        return [
-            'status' => true,
-            'gisid' => $gisid,
-            'message' => 'Line deleted successfully',
-            'lines' => $lines
-        ];
-
-    } catch (\Exception $e) {
-
-        if (isset($startedTransaction) && $startedTransaction) {
-            DB::rollBack();
-        }
-
-        Log::error('deleteLine error: ' . $e->getMessage());
-
-        return [
-            'status' => false,
-            'message' => $e->getMessage()
-        ];
     }
-}
 
     // ─────────────────────────────────────────────────────────────
     //  PRIVATE: Geometry helpers (unchanged)
@@ -1510,5 +1504,128 @@ public function deleteLine($data, $useTransaction = true)
             round($lngSum / $count, 8),
             round($latSum / $count, 8),
         ];
+    }
+    public function mergePolygons(array $data, $useTransaction = true): array
+    {
+        $startedTransaction = false;
+
+        try {
+            if ($useTransaction && DB::transactionLevel() === 0) {
+                DB::beginTransaction();
+                $startedTransaction = true;
+            }
+
+            $wardId         = $data['ward_id'];
+            $primaryGisId   = $data['primary_gisid'];
+            $secondaryGisId = $data['secondary_gisid'];
+            $coordinates    = $data['coordinates'];
+            $sqfeet         = $data['sqfeet'] ?? '0';
+
+            $polygonTable   = 'polygons_'     . $wardId;
+            $pointTable     = 'points_'       . $wardId;
+            $polygonDataTable = 'polygon_data_' . $wardId;
+            $pointDataTable   = 'point_data_'   . $wardId;
+
+            // ─── 1. Verify both polygons exist in THIS ward ───
+            $primary = DB::table($polygonTable)->where('gisid', $primaryGisId)->first();
+
+            if (!$primary) {
+                throw new \Exception("Primary polygon (GIS ID: {$primaryGisId}) not found in this ward.");
+            }
+
+            $secondary = DB::table($polygonTable)->where('gisid', $secondaryGisId)->first();
+
+            if (!$secondary) {
+                throw new \Exception("Secondary polygon (GIS ID: {$secondaryGisId}) not found in this ward.");
+            }
+
+            // ─── 2. Update primary polygon: new geometry + area ───
+            DB::table($polygonTable)
+                ->where('gisid', $primaryGisId)
+                ->update([
+                    'coordinates' => json_encode($coordinates),
+                    'sqfeet'      => (string) $sqfeet,
+                    'updated_at'  => now(),
+                ]);
+
+            // ─── 3. Update primary's centroid (midpoint) ───
+            $midpoint = $this->calculateMidpoint($coordinates[0] ?? $coordinates);
+
+            if ($midpoint) {
+                DB::table($pointTable)->updateOrInsert(
+                    ['gisid' => $primaryGisId],
+                    [
+                        'type'        => 'Point',
+                        'coordinates' => json_encode($midpoint),
+                        'updated_at'  => now(),
+                        'created_at'  => now(),
+                    ]
+                );
+            }
+
+            // ─── 4. Re-link polygon_data (building records) ───
+            if (Schema::hasTable($polygonDataTable)) {
+                DB::table($polygonDataTable)
+                    ->where('gisid', $secondaryGisId)
+                    ->update([
+                        'gisid'      => $primaryGisId,
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            // ─── 5. Re-link point_data (assessments/bills) ───
+            if (Schema::hasTable($pointDataTable)) {
+                DB::table($pointDataTable)
+                    ->where('point_gisid', $secondaryGisId)
+                    ->update([
+                        'point_gisid' => $primaryGisId,
+                        'updated_at'  => now(),
+                    ]);
+            }
+
+            // ─── 6. Delete secondary's centroid point ───
+            DB::table($pointTable)
+                ->where('gisid', $secondaryGisId)
+                ->delete();
+
+            // ─── 7. Delete secondary polygon ───
+            DB::table($polygonTable)
+                ->where('gisid', $secondaryGisId)
+                ->delete();
+
+            if ($startedTransaction) {
+                DB::commit();
+            }
+
+            // ─── 8. Return fresh data for frontend refresh ───
+            $polygonDatas = Schema::hasTable($polygonDataTable)
+                ? DB::table($polygonDataTable)->get()
+                : collect();
+
+            $pointDatas = Schema::hasTable($pointDataTable)
+                ? DB::table($pointDataTable)->get()
+                : collect();
+
+            return [
+                'status'       => true,
+                'message'      => "Polygons merged successfully. Primary: {$primaryGisId}, Secondary: {$secondaryGisId} deleted.",
+                'polygons'     => DB::table($polygonTable)->get(),
+                'points'       => DB::table($pointTable)->get(),
+                'lines'        => DB::table('lines_' . $wardId)->get(),
+                'polygonDatas' => $polygonDatas,
+                'pointDatas'   => $pointDatas,
+            ];
+        } catch (\Exception $e) {
+            if ($startedTransaction) {
+                DB::rollBack();
+            }
+
+            Log::error('mergePolygons error: ' . $e->getMessage());
+
+            return [
+                'status'  => false,
+                'message' => $e->getMessage(),
+            ];
+        }
     }
 }
