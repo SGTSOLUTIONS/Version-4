@@ -5358,7 +5358,38 @@
                     </div>
                     <div class="col-md-4">
                         <label>Profession Type</label>
-                        <input class="form-control" name="professional[${idx}][profession_type]" value="${data.profession_type || ''}">
+                        <select class="form-control" name="professional[${idx}][profession_type]">
+                            <option value="">Select Profession / Business Type</option>
+                            <option value="Grocery Shop" ${data.profession_type === 'Grocery Shop' ? 'selected' : ''}>Grocery / Maligai Shop</option>
+                            <option value="Supermarket" ${data.profession_type === 'Supermarket' ? 'selected' : ''}>Supermarket</option>
+                            <option value="Hotel" ${data.profession_type === 'Hotel' ? 'selected' : ''}>Hotel / Restaurant</option>
+                            <option value="Shop" ${data.profession_type === 'Shop' ? 'selected' : ''}>Shop</option>
+                            <option value="Office" ${data.profession_type === 'Office' ? 'selected' : ''}>Office</option>
+                            <option value="Hostel" ${data.profession_type === 'Hostel' ? 'selected' : ''}>Hostel</option>
+                            <option value="Lodge" ${data.profession_type === 'Lodge' ? 'selected' : ''}>Lodge</option>
+                            <option value="Bakery" ${data.profession_type === 'Bakery' ? 'selected' : ''}>Bakery</option>
+                            <option value="Medical Shop" ${data.profession_type === 'Medical Shop' ? 'selected' : ''}>Medical Shop</option>
+                            <option value="Textile Shop" ${data.profession_type === 'Textile Shop' ? 'selected' : ''}>Textile Shop</option>
+                            <option value="Hardware Shop" ${data.profession_type === 'Hardware Shop' ? 'selected' : ''}>Hardware Shop</option>
+                            <option value="Electrical Shop" ${data.profession_type === 'Electrical Shop' ? 'selected' : ''}>Electrical Shop</option>
+                            <option value="Mobile Shop" ${data.profession_type === 'Mobile Shop' ? 'selected' : ''}>Mobile Shop</option>
+                            <option value="Restaurant" ${data.profession_type === 'Restaurant' ? 'selected' : ''}>Restaurant</option>
+                            <option value="Beauty Parlour" ${data.profession_type === 'Beauty Parlour' ? 'selected' : ''}>Beauty Parlour</option>
+                            <option value="Saloon" ${data.profession_type === 'Saloon' ? 'selected' : ''}>Saloon</option>
+                            <option value="Showroom" ${data.profession_type === 'Showroom' ? 'selected' : ''}>Showroom</option>
+                            <option value="Shopping Mall" ${data.profession_type === 'Shopping Mall' ? 'selected' : ''}>Shopping Mall</option>
+                            <option value="Warehouse" ${data.profession_type === 'Warehouse' ? 'selected' : ''}>Warehouse</option>
+                            <option value="Workshop" ${data.profession_type === 'Workshop' ? 'selected' : ''}>Workshop</option>
+                            <option value="Factory" ${data.profession_type === 'Factory' ? 'selected' : ''}>Factory</option>
+                            <option value="Hospital" ${data.profession_type === 'Hospital' ? 'selected' : ''}>Hospital</option>
+                            <option value="Clinic" ${data.profession_type === 'Clinic' ? 'selected' : ''}>Clinic</option>
+                            <option value="School" ${data.profession_type === 'School' ? 'selected' : ''}>School</option>
+                            <option value="College" ${data.profession_type === 'College' ? 'selected' : ''}>College</option>
+                            <option value="Gym" ${data.profession_type === 'Gym' ? 'selected' : ''}>Gym / Fitness Centre</option>
+                            <option value="Marriage Hall" ${data.profession_type === 'Marriage Hall' ? 'selected' : ''}>Marriage Hall</option>
+                            <option value="Petrol Bunk" ${data.profession_type === 'Petrol Bunk' ? 'selected' : ''}>Petrol Bunk</option>
+                            <option value="Other" ${data.profession_type === 'Other' ? 'selected' : ''}>Other</option>
+                        </select>
                     </div>
                     <div class="col-md-4">
                         <label>Trade License</label>
@@ -5384,10 +5415,10 @@
                         <label>Shop Owner Name</label>
                         <input type="text" class="form-control" name="professional[${idx}][shop_owner]" value="${data.shop_owner || ''}">
                     </div>
-                    <!-- 🔥 NEW PHONE NUMBER FIELD 🔥 -->
                     <div class="col-md-4">
                         <label>Phone Number</label>
-                        <input type="tel" class="form-control" name="professional[${idx}][phone_number]" value="${data.phone_number || ''}" placeholder="Enter phone number" maxlength="10">
+                        <input type="tel" class="form-control" name="professional[${idx}][phone_number]"
+                               value="${data.phone_number || ''}" placeholder="Enter phone number" maxlength="10">
                     </div>
                     <div class="col-md-4">
                         <label>Balance</label>
