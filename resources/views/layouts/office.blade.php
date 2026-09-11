@@ -89,6 +89,10 @@
                         <i class="bi bi-map"></i>
                         <span class="ol-nav-label">Map View</span>
                     </a>
+                    <a href="{{ route('gisid.search') }}" class="ol-nav-item">
+    <i class="bi bi-search"></i>
+    <span class="ol-nav-label">GIS ID Search</span>
+</a>
 
                     {{-- ================= ADMIN ================= --}}
                 @elseif(Auth::user()->role == 'admin')
@@ -178,7 +182,10 @@
                         <i class="bi bi-map"></i>
                         <span class="ol-nav-label">Map View</span>
                     </a>
-
+<a href="{{ route('gisid.search') }}" class="ol-nav-item">
+    <i class="bi bi-search"></i>
+    <span class="ol-nav-label">GIS ID Search</span>
+</a>
                     {{-- ================= COMMISSIONER ================= --}}
                 @elseif(Auth::user()->role == 'commissioner')
                     <a href="{{ route('teamleader.map') }}" class="ol-nav-item">

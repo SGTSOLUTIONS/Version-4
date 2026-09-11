@@ -255,6 +255,18 @@ Route::middleware(['auth', 'role:surveyor,teamleader'])->group(function () {
     Route::get('/point-data/filter', [PointdataController::class, 'pointDataFilter'])->name('pointdata.filter');
     Route::get('/point-data/{id}', [PointdataController::class, 'editData'])->name('pointdata.edit');
     Route::put('/point-data/{id}', [PointdataController::class, 'pointDataUpdate'])->name('pointdata.update');
+
+
+
+       Route::get('/gisid-search', function () {
+        return view('gisid-search');
+    })->name('gisid.search');
+    
+    Route::post('/gisid-search/fetch', [PointdataController::class, 'searchByGisId'])
+        ->name('gisid.fetch');
+    
+    Route::post('/gisid-search/update-all', [PointdataController::class, 'updateAllByGisId'])
+        ->name('gisid.updateAll');
  });
 
 Route::get('/survey/map', [MapController::class, 'map'])->name('teamleader.map');

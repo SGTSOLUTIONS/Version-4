@@ -1367,4 +1367,277 @@ class PointdataController extends Controller
             abort(500, 'Error loading assessment details: ' . $e->getMessage());
         }
     }
+
+
+
+    /**
+ * Search all details by GIS ID
+ */
+public function searchByGisId(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'gisid' => 'required|string|max:100',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors'  => $validator->errors()
+        ], 422);
+    }
+
+    try {
+        $user = User::find(Auth::id());
+        if (!$user || !$user->ward_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ward not assigned to user.'
+            ], 400);
+        }
+
+        $ward = Ward::find($user->ward_id);
+        $zone = Zone::find($ward->zone_id);
+        $corporation = Corporation::find($zone->corp_id);
+
+        $wardId = $ward->id;
+        $corpId = $corporation->id;
+
+        $polygonDataTable = "polygon_data_{$wardId}";
+        $pointDataTable   = "point_data_{$wardId}";
+        $waterTaxTable    = "water_tax_{$corpId}";
+        $ugdTaxTable      = "ugd_tax_{$corpId}";
+        $professionalTaxTable = "professional_tax_{$corpId}";
+
+        $gisid = $request->gisid;
+
+        // Building data
+        $buildingData = DB::table($polygonDataTable)
+            ->where('gisid', $gisid)
+            ->first();
+
+        if (!$buildingData) {
+            return response()->json([
+                'success' => false,
+                'message' => "No building found for GIS ID: {$gisid}"
+            ], 404);
+        }
+
+        // Point data (all assessments for this GIS ID)
+        $pointDatas = DB::table($pointDataTable)
+            ->where('point_gisid', $gisid)
+            ->get();
+
+        // Water tax (by gisid)
+        $waterTaxes = DB::table($waterTaxTable)
+            ->where('gisid', $gisid)
+            ->get();
+
+        // UGD tax (by gisid)
+        $ugdTaxes = DB::table($ugdTaxTable)
+            ->where('gisid', $gisid)
+            ->get();
+
+        // Professional tax (by gisid)
+        $professionalTaxes = DB::table($professionalTaxTable)
+            ->where('gisid', $gisid)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'gisid'          => $gisid,
+                'ward'           => $ward,
+                'zone'           => $zone,
+                'corporation'    => $corporation,
+                'building'       => $buildingData,
+                'pointDatas'     => $pointDatas,
+                'waterTaxes'     => $waterTaxes,
+                'ugdTaxes'       => $ugdTaxes,
+                'professionalTaxes' => $professionalTaxes,
+            ]
+        ]);
+    } catch (\Exception $e) {
+        Log::error('GIS ID search error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Update all data by GIS ID
+ */
+public function updateAllByGisId(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'gisid' => 'required|string|max:100',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors'  => $validator->errors()
+        ], 422);
+    }
+
+    try {
+        $user = User::find(Auth::id());
+        if (!$user || !$user->ward_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ward not assigned to user.'
+            ], 400);
+        }
+
+        $ward = Ward::find($user->ward_id);
+        $zone = Zone::find($ward->zone_id);
+        $corporation = Corporation::find($zone->corp_id);
+
+        $wardId = $ward->id;
+        $corpId = $corporation->id;
+
+        $polygonDataTable = "polygon_data_{$wardId}";
+        $pointDataTable   = "point_data_{$wardId}";
+        $waterTaxTable    = "water_tax_{$corpId}";
+        $ugdTaxTable      = "ugd_tax_{$corpId}";
+        $professionalTaxTable = "professional_tax_{$corpId}";
+
+        $gisid = $request->gisid;
+
+        DB::beginTransaction();
+
+        try {
+            // 1. Update Building Data
+            if ($request->filled('building')) {
+                $b = $request->building;
+                DB::table($polygonDataTable)
+                    ->where('gisid', $gisid)
+                    ->update([
+                        'building_name'         => $b['building_name'] ?? null,
+                        'road_name'             => $b['road_name'] ?? null,
+                        'phone'                 => $b['phone'] ?? null,
+                        'building_usage'        => $b['building_usage'] ?? null,
+                        'construction_type'     => $b['construction_type'] ?? null,
+                        'building_type'         => $b['building_type'] ?? null,
+                        'ugd'                   => $b['ugd'] ?? null,
+                        'number_bill'           => $b['number_bill'] ?? null,
+                        'number_shop'           => $b['number_shop'] ?? null,
+                        'number_floor'          => $b['number_floor'] ?? null,
+                        'percentage'            => $b['percentage'] ?? null,
+                        'basement'              => $b['basement'] ?? null,
+                        'zone'                  => $b['building_zone'] ?? null,
+                        'remarks'               => $b['remarks'] ?? null,
+                        'corporationremarks'    => $b['corporationremarks'] ?? null,
+                        'qc_remarks'            => $b['qc_remarks'] ?? null,
+                        'updated_at'            => now(),
+                    ]);
+            }
+
+            // 2. Update Point Data records
+            if ($request->filled('pointDatas') && is_array($request->pointDatas)) {
+                foreach ($request->pointDatas as $pd) {
+                    if (empty($pd['id'])) continue;
+
+                    DB::table($pointDataTable)
+                        ->where('id', $pd['id'])
+                        ->update([
+                            'assessment_type'    => $pd['assessment_type'] ?? null,
+                            'assessment'         => $pd['assessment'] ?? null,
+                            'old_assessment'     => $pd['old_assessment'] ?? null,
+                            'zone'               => $pd['zone'] ?? null,
+                            'owner_name'         => $pd['owner_name'] ?? null,
+                            'present_owner_name' => $pd['present_owner_name'] ?? null,
+                            'phone_number'       => $pd['phone_number'] ?? null,
+                            'old_door_no'        => $pd['old_door_no'] ?? null,
+                            'new_door_no'        => $pd['new_door_no'] ?? null,
+                            'aadhar_no'          => $pd['aadhar_no'] ?? null,
+                            'ration_no'          => $pd['ration_no'] ?? null,
+                            'floor'              => $pd['floor'] ?? null,
+                            'no_of_persons'      => $pd['number_persons'] ?? null,
+                            'bill_usage'         => $pd['bill_usage'] ?? null,
+                            'eb'                 => $pd['eb'] ?? null,
+                            'remarks'            => $pd['remarks'] ?? null,
+                            'updated_at'         => now(),
+                        ]);
+                }
+            }
+
+            // 3. Update Water Tax
+            if ($request->filled('waterTaxes') && is_array($request->waterTaxes)) {
+                foreach ($request->waterTaxes as $wt) {
+                    if (empty($wt['id'])) continue;
+
+                    DB::table($waterTaxTable)
+                        ->where('id', $wt['id'])
+                        ->update([
+                            'watertax_no'        => $wt['watertax_no'] ?? null,
+                            'old_watertax_no'    => $wt['old_watertax_no'] ?? null,
+                            'usage'              => $wt['usage'] ?? null,
+                            'DBC_type'           => $wt['DBC_type'] ?? null,
+                            'slab_description'   => $wt['slab_description'] ?? null,
+                            'updated_at'         => now(),
+                        ]);
+                }
+            }
+
+            // 4. Update UGD Tax
+            if ($request->filled('ugdTaxes') && is_array($request->ugdTaxes)) {
+                foreach ($request->ugdTaxes as $ut) {
+                    if (empty($ut['id'])) continue;
+
+                    DB::table($ugdTaxTable)
+                        ->where('id', $ut['id'])
+                        ->update([
+                            'ugd_no'             => $ut['ugd_no'] ?? null,
+                            'old_ugd_no'         => $ut['old_ugd_no'] ?? null,
+                            'usage'              => $ut['usage'] ?? null,
+                            'DBC_type'           => $ut['DBC_type'] ?? null,
+                            'slab_description'   => $ut['slab_description'] ?? null,
+                            'updated_at'         => now(),
+                        ]);
+                }
+            }
+
+            // 5. Update Professional Tax
+            if ($request->filled('professionalTaxes') && is_array($request->professionalTaxes)) {
+                foreach ($request->professionalTaxes as $pt) {
+                    if (empty($pt['id'])) continue;
+
+                    DB::table($professionalTaxTable)
+                        ->where('id', $pt['id'])
+                        ->update([
+                            'pt_number'          => $pt['pt_number'] ?? null,
+                            'old_pt_number'      => $pt['old_pt_number'] ?? null,
+                            'establishment_name' => $pt['establishment_name'] ?? null,
+                            'profession_type'    => $pt['profession_type'] ?? null,
+                            'trade_license'      => $pt['trade_license'] ?? null,
+                            'owner_name'         => $pt['owner_name'] ?? null,
+                            'phone_number'       => $pt['phone_number'] ?? null,
+                            'employee_count'     => $pt['employee_count'] ?? null,
+                            'half_year_tax'      => $pt['half_year_tax'] ?? null,
+                            'remarks'            => $pt['remarks'] ?? null,
+                            'updated_at'         => now(),
+                        ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'All data updated successfully!'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    } catch (\Exception $e) {
+        Log::error('GIS ID update error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Update failed: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }
