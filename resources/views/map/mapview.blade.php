@@ -2071,7 +2071,6 @@
                         width: 4,
                         lineDash: [8, 4]
                     }),
-
                 }),
                 visible: true,
                 title: 'Ward Boundary',
@@ -2211,23 +2210,20 @@
             function createPointStyle(feature) {
                 const gisid = feature.get('gisid');
 
-                // Find building data for this GIS ID
                 const buildingData = polygonDatas.find(d => d.gisid == gisid);
-
-                // Count points that have this GIS ID as point_gisid
                 const pointCount = pointDatas.filter(d => d.point_gisid == gisid).length;
 
-                let color = 'blue'; // Default color
+                let color = 'blue';
 
                 if (buildingData) {
                     const expectedBills = parseInt(buildingData.number_bill) || 0;
 
                     if (pointCount === 0) {
-                        color = 'blue'; // No points mapped
+                        color = 'blue';
                     } else if (pointCount >= expectedBills) {
-                        color = 'green'; // All bills are mapped (or more)
+                        color = 'green';
                     } else {
-                        color = 'red'; // Some bills missing
+                        color = 'red';
                     }
                 }
 
@@ -2641,6 +2637,7 @@
                     zoom: 18
                 })
             });
+
             // ─── INTERACTIONS & MODE STATE ───
             let drawInteraction = null,
                 selectInteraction = null,
@@ -2711,7 +2708,6 @@
                     translateInteraction = null;
                 }
 
-                // ─── MERGE MODAL CLEANUP ───
                 cleanupMergeModal();
 
                 tempDrawSource.clear();
@@ -3056,7 +3052,14 @@
                 modal.show();
             }
 
+            // ✅ FIX: Reset file inputs and form before populating
             function populateBuildingForm(item) {
+                // ── Ensure we start from a clean slate (no leftover file inputs) ──
+                const form = document.getElementById('buildingForm');
+                if (form) form.reset();
+                $('#image1_input').val('');
+                $('#image2_input').val('');
+
                 $("#building_gisid").val(item.gisid || "");
                 $("#number_bill").val(item.number_bill || "");
                 $("#number_shop").val(item.number_shop || "");
@@ -3126,7 +3129,11 @@
                 }
             }
 
+            // ✅ FIX: Correct file input IDs
             function resetBuildingForm(gisid) {
+                const form = document.getElementById('buildingForm');
+                if (form) form.reset();
+
                 $("#building_gisid").val(gisid || "");
                 $("#number_bill").val("");
                 $("#number_shop").val("");
@@ -3159,8 +3166,10 @@
                 $("#buildingImagePreview2").hide().attr("src", "");
                 $("#noImagePlaceholder").show();
                 $("#noImagePlaceholder2").show();
-                $("#building_image").val("");
-                $("#building_image2").val("");
+
+                // ✅ FIX: correct file input IDs
+                $("#image1_input").val("");
+                $("#image2_input").val("");
 
                 $(".error-message").html("");
                 $(".is-invalid").removeClass("is-invalid");
@@ -3168,6 +3177,24 @@
                 $("#buildingsubmitBtn").prop('disabled', false).html(
                     '<i class="fas fa-save me-2"></i>Save Building Data');
             }
+
+            // ✅ FIX: Full reset on modal close
+            $('#buildingDataModal').on('hidden.bs.modal', function() {
+                const form = document.getElementById('buildingForm');
+                if (form) form.reset();
+
+                $('#image1_input').val('');
+                $('#image2_input').val('');
+
+                $('#buildingImagePreview').hide().attr('src', '');
+                $('#buildingImagePreview2').hide().attr('src', '');
+                $('#noImagePlaceholder').show();
+                $('#noImagePlaceholder2').show();
+
+                $('.error-message').html('');
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+            });
 
             // ─── Image Preview ───
             $('#image1_input').on('change', function(e) {
@@ -3253,6 +3280,11 @@
                                     polygonDatas;
                                 reloadAllSources();
                             }
+
+                            // ✅ FIX: Clear file inputs immediately after save
+                            $('#image1_input').val('');
+                            $('#image2_input').val('');
+
                             setTimeout(() => {
                                 const modal = bootstrap.Modal.getInstance(
                                     document.getElementById(
@@ -3718,9 +3750,7 @@
                 });
             }
 
-            // ═══════════════════════════════════════════════════════
-            // ─── MERGE MODE (Modal-based: Primary via map click, Secondary via typed GIS ID) ───
-            // ═══════════════════════════════════════════════════════
+            // ─── MERGE MODE ───
             let mergeModalSelectInteraction = null;
 
             const mergePolygonModalEl = document.getElementById('mergePolygonModal');
@@ -3828,7 +3858,6 @@
                     return;
                 }
 
-                // ─── Union geometry client-side (turf.js already loaded via CDN) ───
                 const geoJsonFormat = new ol.format.GeoJSON();
                 const primaryGeoJson = geoJsonFormat.writeFeatureObject(primaryFeature);
                 const secondaryGeoJson = geoJsonFormat.writeFeatureObject(secondaryFeature);
@@ -3958,7 +3987,6 @@
                 showToast('✂️ Split Mode: Click a polygon to select it', 2000);
             }
 
-            // ─── Split button ───
             function showSplitButton(feature) {
                 hideSplitButton();
                 const gisid = feature.get('gisid');
@@ -3993,7 +4021,6 @@
                 $('#splitActionBtn').remove();
             }
 
-            // ─── Perform split ───
             function performSplit(feature) {
                 if (!feature || feature.get('type') !== 'Polygon') {
                     Swal.fire('Error', 'Please select a polygon first', 'error');
@@ -5336,111 +5363,111 @@
             function addProfessionalCard(data = {}) {
                 const idx = ptIndex;
                 const html = `
-        <div class="card mb-3 professional-card" data-index="${idx}">
-            <div class="card-header d-flex justify-content-between">
-                <strong>Professional Tax #${idx + 1}</strong>
-                <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
-            </div>
-            <div class="card-body">
-                <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label>PT Number</label>
-                        <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Old PT Number</label>
-                        <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Establishment Name</label>
-                        <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Profession Type</label>
-                        <select class="form-control" name="professional[${idx}][profession_type]">
-                            <option value="">Select Profession / Business Type</option>
-                            <option value="Grocery Shop" ${data.profession_type === 'Grocery Shop' ? 'selected' : ''}>Grocery / Maligai Shop</option>
-                            <option value="Supermarket" ${data.profession_type === 'Supermarket' ? 'selected' : ''}>Supermarket</option>
-                            <option value="Hotel" ${data.profession_type === 'Hotel' ? 'selected' : ''}>Hotel / Restaurant</option>
-                            <option value="Shop" ${data.profession_type === 'Shop' ? 'selected' : ''}>Shop</option>
-                            <option value="Office" ${data.profession_type === 'Office' ? 'selected' : ''}>Office</option>
-                            <option value="Hostel" ${data.profession_type === 'Hostel' ? 'selected' : ''}>Hostel</option>
-                            <option value="Lodge" ${data.profession_type === 'Lodge' ? 'selected' : ''}>Lodge</option>
-                            <option value="Bakery" ${data.profession_type === 'Bakery' ? 'selected' : ''}>Bakery</option>
-                            <option value="Medical Shop" ${data.profession_type === 'Medical Shop' ? 'selected' : ''}>Medical Shop</option>
-                            <option value="Textile Shop" ${data.profession_type === 'Textile Shop' ? 'selected' : ''}>Textile Shop</option>
-                            <option value="Hardware Shop" ${data.profession_type === 'Hardware Shop' ? 'selected' : ''}>Hardware Shop</option>
-                            <option value="Electrical Shop" ${data.profession_type === 'Electrical Shop' ? 'selected' : ''}>Electrical Shop</option>
-                            <option value="Mobile Shop" ${data.profession_type === 'Mobile Shop' ? 'selected' : ''}>Mobile Shop</option>
-                            <option value="Restaurant" ${data.profession_type === 'Restaurant' ? 'selected' : ''}>Restaurant</option>
-                            <option value="Beauty Parlour" ${data.profession_type === 'Beauty Parlour' ? 'selected' : ''}>Beauty Parlour</option>
-                            <option value="Saloon" ${data.profession_type === 'Saloon' ? 'selected' : ''}>Saloon</option>
-                            <option value="Showroom" ${data.profession_type === 'Showroom' ? 'selected' : ''}>Showroom</option>
-                            <option value="Shopping Mall" ${data.profession_type === 'Shopping Mall' ? 'selected' : ''}>Shopping Mall</option>
-                            <option value="Warehouse" ${data.profession_type === 'Warehouse' ? 'selected' : ''}>Warehouse</option>
-                            <option value="Workshop" ${data.profession_type === 'Workshop' ? 'selected' : ''}>Workshop</option>
-                            <option value="Factory" ${data.profession_type === 'Factory' ? 'selected' : ''}>Factory</option>
-                            <option value="Hospital" ${data.profession_type === 'Hospital' ? 'selected' : ''}>Hospital</option>
-                            <option value="Clinic" ${data.profession_type === 'Clinic' ? 'selected' : ''}>Clinic</option>
-                            <option value="School" ${data.profession_type === 'School' ? 'selected' : ''}>School</option>
-                            <option value="College" ${data.profession_type === 'College' ? 'selected' : ''}>College</option>
-                            <option value="Gym" ${data.profession_type === 'Gym' ? 'selected' : ''}>Gym / Fitness Centre</option>
-                            <option value="Marriage Hall" ${data.profession_type === 'Marriage Hall' ? 'selected' : ''}>Marriage Hall</option>
-                            <option value="Petrol Bunk" ${data.profession_type === 'Petrol Bunk' ? 'selected' : ''}>Petrol Bunk</option>
-                            <option value="Other" ${data.profession_type === 'Other' ? 'selected' : ''}>Other</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label>Trade License</label>
-                        <input class="form-control" name="professional[${idx}][trade_license]" value="${data.trade_license || ''}" placeholder="Enter trade license number">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Employee Count</label>
-                        <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Half Year Tax</label>
-                        <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Arrears</label>
-                        <input type="number" class="form-control" name="professional[${idx}][arrears]" value="${data.arrears || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Penalty</label>
-                        <input type="number" class="form-control" name="professional[${idx}][penalty]" value="${data.penalty || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Shop Owner Name</label>
-                        <input type="text" class="form-control" name="professional[${idx}][shop_owner]" value="${data.shop_owner || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Phone Number</label>
-                        <input type="tel" class="form-control" name="professional[${idx}][phone_number]"
-                               value="${data.phone_number || ''}" placeholder="Enter phone number" maxlength="10">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Balance</label>
-                        <input type="number" class="form-control" name="professional[${idx}][balance]" value="${data.balance || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label>Payment Status</label>
-                        <select class="form-control" name="professional[${idx}][payment_status]">
-                            <option value="">Select Status</option>
-                            <option value="Paid" ${data.payment_status === 'Paid' ? 'selected' : ''}>Paid</option>
-                            <option value="Pending" ${data.payment_status === 'Pending' ? 'selected' : ''}>Pending</option>
-                            <option value="Partially Paid" ${data.payment_status === 'Partially Paid' ? 'selected' : ''}>Partially Paid</option>
-                            <option value="Overdue" ${data.payment_status === 'Overdue' ? 'selected' : ''}>Overdue</option>
-                        </select>
-                    </div>
-                    <div class="col-md-12">
-                        <label>Remarks</label>
-                        <textarea class="form-control" name="professional[${idx}][pt_remarks]">${data.remarks || ''}</textarea>
-                    </div>
-                </div>
-            </div>
-        </div>`;
+                    <div class="card mb-3 professional-card" data-index="${idx}">
+                        <div class="card-header d-flex justify-content-between">
+                            <strong>Professional Tax #${idx + 1}</strong>
+                            <button type="button" class="btn btn-danger btn-sm removeProfessional">Remove</button>
+                        </div>
+                        <div class="card-body">
+                            <input type="hidden" name="professional[${idx}][id]" value="${data.id || ''}">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label>PT Number</label>
+                                    <input class="form-control" name="professional[${idx}][pt_number]" value="${data.pt_number || ''}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Old PT Number</label>
+                                    <input class="form-control" name="professional[${idx}][old_pt_number]" value="${data.old_pt_number || ''}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Establishment Name</label>
+                                    <input class="form-control" name="professional[${idx}][establishment_name]" value="${data.establishment_name || ''}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Profession Type</label>
+                                    <select class="form-control" name="professional[${idx}][profession_type]">
+                                        <option value="">Select Profession / Business Type</option>
+                                        <option value="Grocery Shop" ${data.profession_type === 'Grocery Shop' ? 'selected' : ''}>Grocery / Maligai Shop</option>
+                                        <option value="Supermarket" ${data.profession_type === 'Supermarket' ? 'selected' : ''}>Supermarket</option>
+                                        <option value="Hotel" ${data.profession_type === 'Hotel' ? 'selected' : ''}>Hotel / Restaurant</option>
+                                        <option value="Shop" ${data.profession_type === 'Shop' ? 'selected' : ''}>Shop</option>
+                                        <option value="Office" ${data.profession_type === 'Office' ? 'selected' : ''}>Office</option>
+                                        <option value="Hostel" ${data.profession_type === 'Hostel' ? 'selected' : ''}>Hostel</option>
+                                        <option value="Lodge" ${data.profession_type === 'Lodge' ? 'selected' : ''}>Lodge</option>
+                                        <option value="Bakery" ${data.profession_type === 'Bakery' ? 'selected' : ''}>Bakery</option>
+                                        <option value="Medical Shop" ${data.profession_type === 'Medical Shop' ? 'selected' : ''}>Medical Shop</option>
+                                        <option value="Textile Shop" ${data.profession_type === 'Textile Shop' ? 'selected' : ''}>Textile Shop</option>
+                                        <option value="Hardware Shop" ${data.profession_type === 'Hardware Shop' ? 'selected' : ''}>Hardware Shop</option>
+                                        <option value="Electrical Shop" ${data.profession_type === 'Electrical Shop' ? 'selected' : ''}>Electrical Shop</option>
+                                        <option value="Mobile Shop" ${data.profession_type === 'Mobile Shop' ? 'selected' : ''}>Mobile Shop</option>
+                                        <option value="Restaurant" ${data.profession_type === 'Restaurant' ? 'selected' : ''}>Restaurant</option>
+                                        <option value="Beauty Parlour" ${data.profession_type === 'Beauty Parlour' ? 'selected' : ''}>Beauty Parlour</option>
+                                        <option value="Saloon" ${data.profession_type === 'Saloon' ? 'selected' : ''}>Saloon</option>
+                                        <option value="Showroom" ${data.profession_type === 'Showroom' ? 'selected' : ''}>Showroom</option>
+                                        <option value="Shopping Mall" ${data.profession_type === 'Shopping Mall' ? 'selected' : ''}>Shopping Mall</option>
+                                        <option value="Warehouse" ${data.profession_type === 'Warehouse' ? 'selected' : ''}>Warehouse</option>
+                                        <option value="Workshop" ${data.profession_type === 'Workshop' ? 'selected' : ''}>Workshop</option>
+                                        <option value="Factory" ${data.profession_type === 'Factory' ? 'selected' : ''}>Factory</option>
+                                        <option value="Hospital" ${data.profession_type === 'Hospital' ? 'selected' : ''}>Hospital</option>
+                                        <option value="Clinic" ${data.profession_type === 'Clinic' ? 'selected' : ''}>Clinic</option>
+                                        <option value="School" ${data.profession_type === 'School' ? 'selected' : ''}>School</option>
+                                        <option value="College" ${data.profession_type === 'College' ? 'selected' : ''}>College</option>
+                                        <option value="Gym" ${data.profession_type === 'Gym' ? 'selected' : ''}>Gym / Fitness Centre</option>
+                                        <option value="Marriage Hall" ${data.profession_type === 'Marriage Hall' ? 'selected' : ''}>Marriage Hall</option>
+                                        <option value="Petrol Bunk" ${data.profession_type === 'Petrol Bunk' ? 'selected' : ''}>Petrol Bunk</option>
+                                        <option value="Other" ${data.profession_type === 'Other' ? 'selected' : ''}>Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Trade License</label>
+                                    <input class="form-control" name="professional[${idx}][trade_license]" value="${data.trade_license || ''}" placeholder="Enter trade license number">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Employee Count</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][employee_count]" value="${data.employee_count || ''}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Half Year Tax</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][half_year_tax]" value="${data.half_year_tax || ''}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Arrears</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][arrears]" value="${data.arrears || ''}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Penalty</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][penalty]" value="${data.penalty || ''}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Shop Owner Name</label>
+                                    <input type="text" class="form-control" name="professional[${idx}][shop_owner]" value="${data.shop_owner || ''}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Phone Number</label>
+                                    <input type="tel" class="form-control" name="professional[${idx}][phone_number]"
+                                        value="${data.phone_number || ''}" placeholder="Enter phone number" maxlength="10">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Balance</label>
+                                    <input type="number" class="form-control" name="professional[${idx}][balance]" value="${data.balance || ''}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Payment Status</label>
+                                    <select class="form-control" name="professional[${idx}][payment_status]">
+                                        <option value="">Select Status</option>
+                                        <option value="Paid" ${data.payment_status === 'Paid' ? 'selected' : ''}>Paid</option>
+                                        <option value="Pending" ${data.payment_status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Partially Paid" ${data.payment_status === 'Partially Paid' ? 'selected' : ''}>Partially Paid</option>
+                                        <option value="Overdue" ${data.payment_status === 'Overdue' ? 'selected' : ''}>Overdue</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label>Remarks</label>
+                                    <textarea class="form-control" name="professional[${idx}][pt_remarks]">${data.remarks || ''}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
                 $('#professionalContainer').append(html);
                 ptIndex++;
             }
