@@ -3918,16 +3918,36 @@
                             return;
                         }
 
-                        Swal.fire('Success!', 'Polygons merged successfully', 'success');
+                        // ─── 1. REASSIGN DATA FROM RESPONSE ───
+                        // response.data is the payload from WardService::mergePolygons()
+                        const d = response.data || {};
 
-                        polygons = response.data.polygons ?? polygons;
-                        points = response.data.points ?? points;
-                        lines = response.data.lines ?? lines;
-                        polygonDatas = response.data.polygonDatas ?? polygonDatas;
-                        pointDatas = response.data.pointDatas ?? pointDatas;
+                        if (d.polygons) polygons = d.polygons;
+                        if (d.polygonDatas) polygonDatas = d.polygonDatas;
+                        if (d.points) points = d.points;
+                        if (d.pointDatas) pointDatas = d.pointDatas;
 
-                        reloadAllSources();
+                        // ─── 2. HARD REFRESH POLYGON + POINT SOURCES ───
+                        // Clear and rebuild from the fresh arrays
+                        polygonSource.clear();
+                        pointSource.clear();
 
+                        loadPolygonsToSource();
+                        loadPointsToSource();
+                        loadLinesToSource(); // optional, but keeps line index fresh
+
+                        // ─── 3. FORCE STYLE RE-EVALUATION ───
+                        // Recolours points based on new pointDatas counts
+                        polygonSource.changed();
+                        pointSource.changed();
+
+                        // ─── 4. REBUILD SEARCH INDEX ───
+                        buildSearchIndex();
+
+                        // ─── 5. UPDATE SURVEY COUNT (optional) ───
+                        $('#surveycount').text(polygons.length);
+
+                        // ─── 6. CLOSE MODAL & RESET MODE ───
                         mergePolygonModal.hide();
                         cleanupMergeModal();
                         disableAllInteractions();
@@ -3936,7 +3956,16 @@
                         $('.edit-dropdown').removeClass('show');
                         $('#editToggleBtn').removeClass('active-edit');
 
-                        showToast('✅ Merge complete!', 2000);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Merged!',
+                            text: 'Polygons merged successfully.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+
+                        showToast('✅ Merge complete — polygon & point layers refreshed', 2500);
+
                         setNoneMode();
                     },
                     error: function(xhr) {
@@ -4612,10 +4641,10 @@
                     <div class="edit-check"><i class="bi bi-check-lg"></i></div>
                 </div>
                 <div class="edit-dropdown-item" data-tool="merge">
-    <div class="edit-icon"><i class="bi bi-union"></i></div>
-    <div class="edit-name">Merge Polygons</div>
-    <div class="edit-check"><i class="bi bi-check-lg"></i></div>
-</div>
+                    <div class="edit-icon"><i class="bi bi-union"></i></div>
+                    <div class="edit-name">Merge Polygons</div>
+                    <div class="edit-check"><i class="bi bi-check-lg"></i></div>
+                </div>
                 <div class="edit-dropdown-item" data-tool="drawLine">
                     <div class="edit-icon"><i class="bi bi-vector-pen"></i></div>
                     <div class="edit-name">Draw Line</div>

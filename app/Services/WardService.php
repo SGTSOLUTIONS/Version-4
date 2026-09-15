@@ -1506,82 +1506,72 @@ class WardService
         ];
     }
     public function mergePolygons(array $data)
-{
-    $wardId          = $data['ward_id'];
-    $primaryGisid    = $data['primary_gisid'];
-    $secondaryGisid  = $data['secondary_gisid'];
-    $coordinates     = $data['coordinates'];
-    $sqfeet          = $data['sqfeet'] ?? '0';
+    {
+        $wardId          = $data['ward_id'];
+        $primaryGisid    = $data['primary_gisid'];
+        $secondaryGisid  = $data['secondary_gisid'];
+        $coordinates     = $data['coordinates'];
+        $sqfeet          = $data['sqfeet'] ?? '0';
 
-    $polygonTable = "polygon_data_{$wardId}";
-    $pointTable   = "point_data_{$wardId}";
-
-    DB::beginTransaction();
-
-    try {
-        // ───────────────────────────────────────────────────────
-        // 1. CHECK POINT DATA for Secondary GIS ID
-        // ───────────────────────────────────────────────────────
-        $pointCount = DB::table($pointTable)
-            ->where('point_gisid', $secondaryGisid)
-            ->count();
-
-        if ($pointCount > 0) {
-            DB::rollBack();
-            return [
-                'status'  => false,
-                'message' => "Cannot merge: Secondary GIS ID ({$secondaryGisid}) has {$pointCount} assessment(s) mapped. Please remove those assessments first.",
-                'code'    => 'SECONDARY_HAS_POINT_DATA',
-            ];
-        }
-
-        // ───────────────────────────────────────────────────────
-        // 2. CHECK POLYGON DATA for Secondary GIS ID
-        // ───────────────────────────────────────────────────────
-        $secondaryPolygon = DB::table($polygonTable)
-            ->where('gisid', $secondaryGisid)
-            ->first();
-
-        if ($secondaryPolygon) {
-            // Delete polygon_data for secondary
-            DB::table($polygonTable)
-                ->where('gisid', $secondaryGisid)
-                ->delete();
-        }
-
-        // ───────────────────────────────────────────────────────
-        // 3. VERIFY Primary Polygon exists
-        // ───────────────────────────────────────────────────────
-        $primaryPolygon = DB::table($polygonTable)
-            ->where('gisid', $primaryGisid)
-            ->first();
-
-        if (!$primaryPolygon) {
-            DB::rollBack();
-            return [
-                'status'  => false,
-                'message' => "Primary GIS ID ({$primaryGisid}) not found in polygon data.",
-                'code'    => 'PRIMARY_NOT_FOUND',
-            ];
-        }
-
-        // ───────────────────────────────────────────────────────
-        // 4. UPDATE Primary Polygon with merged coordinates
-        // ───────────────────────────────────────────────────────
-        DB::table($polygonTable)
-            ->where('gisid', $primaryGisid)
-            ->update([
-                'coordinates' => json_encode($coordinates),
-                'sqfeet'      => $sqfeet,
-                'updated_at'  => now(),
-            ]);
-
-        // ───────────────────────────────────────────────────────
-        // 5. UPDATE polygons table (geometry storage) if used
-        // ───────────────────────────────────────────────────────
+        $polygonTable = "polygon_data_{$wardId}";
+        $pointTable   = "point_data_{$wardId}";
         $polygonsTable = "polygons_{$wardId}";
+        $pointsTable   = "points_{$wardId}";
 
-        if (Schema::hasTable($polygonsTable)) {
+        DB::beginTransaction();
+
+        try {
+            // ───────────────────────────────────────────────────────
+            // 1. CHECK POINT DATA for Secondary GIS ID
+            // ───────────────────────────────────────────────────────
+            $pointCount = DB::table($pointTable)
+                ->where('point_gisid', $secondaryGisid)
+                ->count();
+
+            if ($pointCount > 0) {
+                DB::rollBack();
+                return [
+                    'status'  => false,
+                    'message' => "Cannot merge: Secondary GIS ID ({$secondaryGisid}) has {$pointCount} assessment(s) mapped. Please remove those assessments first.",
+                    'code'    => 'SECONDARY_HAS_POINT_DATA',
+                ];
+            }
+
+            // ───────────────────────────────────────────────────────
+            // 2. VERIFY Primary Polygon exists in polygons table
+            // ───────────────────────────────────────────────────────
+            $primaryPolygon = DB::table($polygonsTable)
+                ->where('gisid', $primaryGisid)
+                ->first();
+
+            if (!$primaryPolygon) {
+                DB::rollBack();
+                return [
+                    'status'  => false,
+                    'message' => "Primary GIS ID ({$primaryGisid}) not found in polygons table.",
+                    'code'    => 'PRIMARY_NOT_FOUND',
+                ];
+            }
+
+            // ───────────────────────────────────────────────────────
+            // 3. VERIFY Secondary Polygon exists in polygons table
+            // ───────────────────────────────────────────────────────
+            $secondaryPolygon = DB::table($polygonsTable)
+                ->where('gisid', $secondaryGisid)
+                ->first();
+
+            if (!$secondaryPolygon) {
+                DB::rollBack();
+                return [
+                    'status'  => false,
+                    'message' => "Secondary GIS ID ({$secondaryGisid}) not found in polygons table.",
+                    'code'    => 'SECONDARY_NOT_FOUND',
+                ];
+            }
+
+            // ───────────────────────────────────────────────────────
+            // 4. UPDATE Primary Polygon geometry in polygons table
+            // ───────────────────────────────────────────────────────
             DB::table($polygonsTable)
                 ->where('gisid', $primaryGisid)
                 ->update([
@@ -1590,35 +1580,118 @@ class WardService
                     'updated_at'  => now(),
                 ]);
 
-            // Delete secondary from polygons table
+            // ───────────────────────────────────────────────────────
+            // 5. DELETE Secondary Polygon from polygons table
+            // ───────────────────────────────────────────────────────
             DB::table($polygonsTable)
                 ->where('gisid', $secondaryGisid)
                 ->delete();
+
+            // ───────────────────────────────────────────────────────
+            // 6. DELETE Secondary Point from points table
+            // ───────────────────────────────────────────────────────
+            DB::table($pointsTable)
+                ->where('gisid', $secondaryGisid)
+                ->delete();
+
+            // ───────────────────────────────────────────────────────
+            // 7. UPDATE Primary midpoint in points table
+            // ───────────────────────────────────────────────────────
+            // Recalculate midpoint from merged coordinates
+            $midpoint = $this->calculateMidpointFromMerged($coordinates);
+            if ($midpoint) {
+                DB::table($pointsTable)->updateOrInsert(
+                    ['gisid' => $primaryGisid],
+                    [
+                        'type'        => 'point',
+                        'coordinates' => json_encode($midpoint),
+                        'updated_at'  => now(),
+                        'created_at'  => now(),
+                    ]
+                );
+            }
+
+            // ───────────────────────────────────────────────────────
+            // 8. HANDLE polygon_data table
+            // ───────────────────────────────────────────────────────
+            // Delete secondary polygon_data if exists
+            DB::table($polygonTable)
+                ->where('gisid', $secondaryGisid)
+                ->delete();
+
+            // Update primary polygon_data sqfeet if it exists
+            DB::table($polygonTable)
+                ->where('gisid', $primaryGisid)
+                ->update([
+                    'sqfeet'     => $sqfeet,
+                    'updated_at' => now(),
+                ]);
+
+            // ───────────────────────────────────────────────────────
+            // 9. HANDLE point_data table (if any orphaned records)
+            // ───────────────────────────────────────────────────────
+            // Reassign any point_data from secondary to primary (safety net)
+            DB::table($pointTable)
+                ->where('point_gisid', $secondaryGisid)
+                ->update(['point_gisid' => $primaryGisid]);
+
+            DB::commit();
+
+            // ───────────────────────────────────────────────────────
+            // 10. Fetch fresh data to return
+            // ───────────────────────────────────────────────────────
+            $polygons     = DB::table($polygonsTable)->get();
+            $polygonDatas = DB::table($polygonTable)->get();
+            $points       = DB::table($pointsTable)->get();
+            $pointDatas   = DB::table($pointTable)->get();
+            return [
+                'status'       => true,
+                'message'      => 'Polygons merged successfully.',
+                'polygons'     => $polygons,
+                'polygonDatas' => $polygonDatas,
+                'points'       => $points,
+                'pointDatas'   => $pointDatas,   // ← MUST be included
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return [
+                'status'  => false,
+                'message' => 'Merge failed: ' . $e->getMessage(),
+                'code'    => 'MERGE_ERROR',
+            ];
+        }
+    }
+
+    /**
+     * Calculate midpoint from merged polygon coordinates
+     * Handles various coordinate structures
+     */
+    private function calculateMidpointFromMerged($coordinates): ?array
+    {
+        if (empty($coordinates)) {
+            return null;
         }
 
-        DB::commit();
+        // Extract the ring based on coordinate structure
+        $ring = null;
 
-        // ───────────────────────────────────────────────────────
-        // 6. Fetch fresh data to return
-        // ───────────────────────────────────────────────────────
-        $polygons     = DB::table($polygonsTable)->get() ?? collect([]);
-        $polygonDatas = DB::table($polygonTable)->get();
-        $points       = DB::table($pointTable)->get();
+        if (isset($coordinates[0]) && is_array($coordinates[0])) {
+            if (isset($coordinates[0][0]) && is_array($coordinates[0][0])) {
+                // Polygon: [[[x,y],...]]
+                $ring = $coordinates[0];
+            } elseif (isset($coordinates[0][0][0]) && is_array($coordinates[0][0][0])) {
+                // MultiPolygon: [[[[x,y],...]]]
+                $ring = $coordinates[0][0];
+            } elseif (is_numeric($coordinates[0][0])) {
+                // Flat: [[x,y],...]
+                $ring = $coordinates;
+            }
+        }
 
-        return [
-            'status'        => true,
-            'message'       => 'Polygons merged successfully.',
-            'polygons'      => $polygons,
-            'polygonDatas'  => $polygonDatas,
-            'points'        => $points,
-        ];
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return [
-            'status'  => false,
-            'message' => 'Merge failed: ' . $e->getMessage(),
-            'code'    => 'MERGE_ERROR',
-        ];
+        if (!$ring || count($ring) < 3) {
+            return null;
+        }
+
+        return $this->calculateMidpoint($ring);
     }
-}
 }
