@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use geoPHP;
 use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use PolygonSplitter;
 
 class FeatureController extends Controller
@@ -302,74 +304,258 @@ class FeatureController extends Controller
 
         return response()->json($result);
     }
-public function merge(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'primary_gisid'   => 'required|string',
-        'secondary_gisid' => 'required|string|different:primary_gisid',
-        'coordinates'     => 'required|string',
-        'sqfeet'          => 'nullable|string',
-    ]);
+    public function merge(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'primary_gisid'   => 'required|string',
+            'secondary_gisid' => 'required|string|different:primary_gisid',
+            'sqfeet'          => 'nullable|string',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'errors'  => $validator->errors(),
-        ], 422);
-    }
-
-    $user = auth()->user();
-
-    if (!$user) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Unauthenticated',
-        ], 401);
-    }
-
-    $wardId = $user->ward_id;
-
-    if (!$wardId) {
-        return response()->json([
-            'success' => false,
-            'message' => 'User has no ward assigned',
-        ], 400);
-    }
-
-    try {
-
-        $coordinates = json_decode($request->coordinates, true);
-
-        if (!is_array($coordinates) || empty($coordinates)) {
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid merged coordinates',
+                'errors'  => $validator->errors(),
             ], 422);
         }
 
-        $result = $this->wardService->mergePolygons([
-            'ward_id'         => $wardId,
-            'primary_gisid'   => $request->primary_gisid,
-            'secondary_gisid' => $request->secondary_gisid,
-            'coordinates'     => $coordinates,
-            'sqfeet'          => $request->sqfeet ?? '0',
-        ]);
+        $user = auth()->user();
 
-        return response()->json([
-            'success' => $result['status'] ?? false,
-            'message' => $result['message'] ?? 'Polygons merged successfully',
-            'data'    => $result,
-        ]);
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        }
 
-    } catch (\Exception $e) {
+        $wardId = $user->ward_id;
 
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-            'line'    => $e->getLine(),
-            'file'    => $e->getFile(),
-        ], 500);
+        if (!$wardId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User has no ward assigned',
+            ], 400);
+        }
+
+        try {
+
+            // ---------------------------------------------------------
+            // TABLES
+            // ---------------------------------------------------------
+
+            $polygonTable   = 'polygons_' . $wardId;
+            $pointTable     = 'points_'   . $wardId;
+            $pointDataTable = 'point_data_' . $wardId;
+
+            if (!Schema::hasTable($polygonTable)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Polygon table not found: {$polygonTable}",
+                ], 404);
+            }
+
+            if (!Schema::hasTable($pointTable)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Point table not found: {$pointTable}",
+                ], 404);
+            }
+
+            // ---------------------------------------------------------
+            // FETCH POLYGONS
+            // ---------------------------------------------------------
+
+            $primaryPolygon = DB::table($polygonTable)
+                ->where('gisid', $request->primary_gisid)
+                ->first();
+
+            if (!$primaryPolygon) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Primary polygon not found: {$request->primary_gisid}",
+                ], 404);
+            }
+
+            $secondaryPolygon = DB::table($polygonTable)
+                ->where('gisid', $request->secondary_gisid)
+                ->first();
+
+            if (!$secondaryPolygon) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Secondary polygon not found: {$request->secondary_gisid}",
+                ], 404);
+            }
+
+            // ---------------------------------------------------------
+            // GUARD: BLOCK MERGE IF SECONDARY HAS POINT DATA
+            // ---------------------------------------------------------
+
+            if (Schema::hasTable($pointDataTable)) {
+
+                $hasPointData = DB::table($pointDataTable)
+                    ->where('point_gisid', $request->secondary_gisid)
+                    ->exists();
+
+                if ($hasPointData) {
+                    return response()->json([
+                        'success'         => false,
+                        'merge_allowed'   => false,
+                        'message'         => "GISID {$request->secondary_gisid} contains point data. Merge cancelled.",
+                        'primary_gisid'   => $request->primary_gisid,
+                        'secondary_gisid' => $request->secondary_gisid,
+                    ], 409);
+                }
+            }
+
+            // ---------------------------------------------------------
+            // DECODE COORDINATES
+            // ---------------------------------------------------------
+
+            $primaryCoordinates   = json_decode($primaryPolygon->coordinates, true);
+            $secondaryCoordinates = json_decode($secondaryPolygon->coordinates, true);
+
+            if (!is_array($primaryCoordinates) || empty($primaryCoordinates)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Invalid coordinates for primary GISID: {$request->primary_gisid}",
+                ], 422);
+            }
+
+            if (!is_array($secondaryCoordinates) || empty($secondaryCoordinates)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Invalid coordinates for secondary GISID: {$request->secondary_gisid}",
+                ], 422);
+            }
+
+            // ---------------------------------------------------------
+            // NORMALISE TO MULTIPOLYGON
+            // ---------------------------------------------------------
+
+            $primaryMultiPolygon   = $this->toMultiPolygonCoordinates($primaryCoordinates);
+            $secondaryMultiPolygon = $this->toMultiPolygonCoordinates($secondaryCoordinates);
+
+            // Flatten one level — do NOT nest the two arrays
+            $mergedCoordinates = array_merge($primaryMultiPolygon, $secondaryMultiPolygon);
+
+            if (empty($mergedCoordinates)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Merged MultiPolygon coordinates are empty.',
+                ], 422);
+            }
+
+            // ---------------------------------------------------------
+            // SUM SQFEET OF BOTH POLYGONS
+            // ---------------------------------------------------------
+
+            $primarySqfeet   = (float) ($primaryPolygon->sqfeet ?? 0);
+            $secondarySqfeet = (float) ($secondaryPolygon->sqfeet ?? 0);
+
+            // If a manual sqfeet is passed in the request, use it as the primary's value
+            if (!empty($request->sqfeet) && (float) $request->sqfeet > 0) {
+                $primarySqfeet = (float) $request->sqfeet;
+            }
+
+            $totalSqfeet = $primarySqfeet + $secondarySqfeet;
+
+            // ---------------------------------------------------------
+            // TRANSACTION
+            // ---------------------------------------------------------
+
+            DB::beginTransaction();
+
+            // Update primary polygon as MultiPolygon with summed sqfeet
+            DB::table($polygonTable)
+                ->where('gisid', $request->primary_gisid)
+                ->update([
+                    'type'        => 'MultiPolygon',
+                    'coordinates' => json_encode($mergedCoordinates, JSON_UNESCAPED_UNICODE),
+                    'sqfeet'      => (string) $totalSqfeet,
+                    'updated_at'  => now(),
+                ]);
+
+            // Delete secondary point
+            DB::table($pointTable)
+                ->where('gisid', $request->secondary_gisid)
+                ->delete();
+
+            // Delete secondary polygon
+            DB::table($polygonTable)
+                ->where('gisid', $request->secondary_gisid)
+                ->delete();
+
+            DB::commit();
+
+            // ---------------------------------------------------------
+            // FETCH UPDATED PRIMARY
+            // ---------------------------------------------------------
+
+            $mergedPolygon = DB::table($polygonTable)
+                ->where('gisid', $request->primary_gisid)
+                ->first();
+
+            $mergedPoint = DB::table($pointTable)
+                ->where('gisid', $request->primary_gisid)
+                ->first();
+
+            return response()->json([
+                'success'         => true,
+                'message'         => "Polygon {$request->secondary_gisid} merged into {$request->primary_gisid} successfully.",
+                'merge_allowed'   => true,
+                'primary_gisid'   => $request->primary_gisid,
+                'secondary_gisid' => $request->secondary_gisid,
+                'type'            => 'MultiPolygon',
+                'sqfeet'          => $totalSqfeet,
+                'polygon'         => $mergedPolygon,
+                'point'           => $mergedPoint,
+            ], 200);
+        } catch (\Throwable $e) {
+
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
+            Log::error('Merge Polygon Error: ' . $e->getMessage(), [
+                'primary_gisid'   => $request->primary_gisid,
+                'secondary_gisid' => $request->secondary_gisid,
+                'ward_id'         => $user->ward_id ?? null,
+            ]);
+
+            return response()->json([
+                'success'         => false,
+                'merge_allowed'   => false,
+                'message'         => $e->getMessage(),
+                'line'            => $e->getLine(),
+                'file'            => $e->getFile(),
+            ], 500);
+        }
     }
-}
+    protected function toMultiPolygonCoordinates(array $coordinates): array
+    {
+        if (empty($coordinates)) {
+            return [];
+        }
 
+        $first = $coordinates[0] ?? null;
+
+        // MultiPolygon: coordinates[0][0][0] is [x, y]
+        // Polygon:      coordinates[0][0]    is [x, y]
+        if (
+            is_array($first) &&
+            isset($first[0]) &&
+            is_array($first[0]) &&
+            isset($first[0][0]) &&
+            is_array($first[0][0]) &&
+            isset($first[0][0][0]) &&
+            is_numeric($first[0][0][0])
+        ) {
+            // Already MultiPolygon
+            return $coordinates;
+        }
+
+        // Polygon → wrap it
+        return [$coordinates];
+    }
 }
