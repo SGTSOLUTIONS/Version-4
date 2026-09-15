@@ -2033,7 +2033,6 @@
         </div>
     </div>
 @endsection
-
 @push('scripts')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
@@ -2077,9 +2076,48 @@
                 zIndex: 10
             });
 
-            // pt Dynamic add
+            // ─── HELPERS ───
             let ptIndex = 0;
             let searchIndex = [];
+
+            // ✅ NEW: Utility — detect geometry type from raw coords
+            // MultiPolygon: [[[[x,y],...], ...], ...]  (4 levels deep)
+            // Polygon:      [[[x,y],...], ...]         (3 levels deep)
+            // Ring:         [[x,y], ...]               (2 levels deep)
+            function detectCoordType(coords) {
+                if (!Array.isArray(coords) || coords.length === 0) return 'unknown';
+
+                // Level 1 → coords[0]
+                // Level 2 → coords[0][0]
+                // Level 3 → coords[0][0][0]
+                // Level 4 → coords[0][0][0][0]
+
+                if (
+                    Array.isArray(coords[0]) &&
+                    Array.isArray(coords[0][0]) &&
+                    Array.isArray(coords[0][0][0]) &&
+                    typeof coords[0][0][0][0] === 'number'
+                ) {
+                    return 'MultiPolygon';
+                }
+
+                if (
+                    Array.isArray(coords[0]) &&
+                    Array.isArray(coords[0][0]) &&
+                    typeof coords[0][0][0] === 'number'
+                ) {
+                    return 'Polygon';
+                }
+
+                if (
+                    Array.isArray(coords[0]) &&
+                    typeof coords[0][0] === 'number'
+                ) {
+                    return 'Ring';
+                }
+
+                return 'unknown';
+            }
 
             let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
                 {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
@@ -2131,51 +2169,67 @@
             });
 
             // ─── STYLES ───
-          function createPolygonStyle(feature) {
-    const gisid = feature.get('gisid');
-    const sqft = feature.get('sqfeet') || '0';
-    const polygonData = polygonDatas.find(d => d.gisid == gisid);
-    const color = polygonData ? 'red' : 'blue';
+            // ✅ FIXED: Works for both Polygon and MultiPolygon
+            function createPolygonStyle(feature) {
+                const gisid = feature.get('gisid');
+                const sqft = feature.get('sqfeet') || '0';
+                const polygonData = polygonDatas.find(d => d.gisid == gisid);
+                const color = polygonData ? 'red' : 'blue';
 
-    let labelPoint;
-    try {
-        labelPoint = feature.getGeometry().getInteriorPoint();
-    } catch (e) {
-        labelPoint = null;
-    }
+                let labelPoint = null;
+                try {
+                    labelPoint = feature.getGeometry().getInteriorPoint();
+                } catch (e) {
+                    // MultiPolygon without interior point → fallback to extent center
+                    try {
+                        const ext = feature.getGeometry().getExtent();
+                        if (ext) {
+                            labelPoint = new ol.geom.Point(ol.extent.getCenter(ext));
+                        }
+                    } catch (e2) {
+                        labelPoint = null;
+                    }
+                }
 
-    const styles = [
-        new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color,
-                width: 4,
-                lineJoin: 'round',
-                lineCap: 'round'
-            }),
-            fill: new ol.style.Fill({
-                color: 'rgba(0,0,255,0.1)'
-            })
-        })
-    ];
+                const styles = [
+                    new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color,
+                            width: 4,
+                            lineJoin: 'round',
+                            lineCap: 'round'
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0,0,255,0.1)'
+                        })
+                    })
+                ];
 
-    if (labelPoint) {
-        styles.push(new ol.style.Style({
-            geometry: labelPoint,
-            text: new ol.style.Text({
-                text: sqft + ' SQFT',
-                font: 'bold 14px Arial',
-                fill: new ol.style.Fill({ color: '#000' }),
-                backgroundFill: new ol.style.Fill({ color: '#fff' }),
-                backgroundStroke: new ol.style.Stroke({ color: '#000', width: 1 }),
-                padding: [4, 6, 4, 6],
-                overflow: true,
-                textAlign: 'center'
-            })
-        }));
-    }
+                if (labelPoint) {
+                    styles.push(new ol.style.Style({
+                        geometry: labelPoint,
+                        text: new ol.style.Text({
+                            text: sqft + ' SQFT',
+                            font: 'bold 14px Arial',
+                            fill: new ol.style.Fill({
+                                color: '#000'
+                            }),
+                            backgroundFill: new ol.style.Fill({
+                                color: '#fff'
+                            }),
+                            backgroundStroke: new ol.style.Stroke({
+                                color: '#000',
+                                width: 1
+                            }),
+                            padding: [4, 6, 4, 6],
+                            overflow: true,
+                            textAlign: 'center'
+                        })
+                    }));
+                }
 
-    return styles;
-}
+                return styles;
+            }
 
             function createLineStyle(feature) {
                 const roadName = feature.get('road_name');
@@ -2261,48 +2315,42 @@
             const lineSource = new ol.source.Vector();
             const pointSource = new ol.source.Vector();
 
+            // ✅ FIXED: Robust polygon loader — uses detectCoordType, ignores DB `type`
             function loadPolygonsToSource() {
                 polygonSource.clear();
 
                 polygons.forEach(poly => {
                     try {
-                        let coords = typeof poly.coordinates === 'string' ?
-                            JSON.parse(poly.coordinates) :
-                            poly.coordinates;
+                        let coords = typeof poly.coordinates === 'string'
+                            ? JSON.parse(poly.coordinates)
+                            : poly.coordinates;
 
-                        let geometry;
-
-                        // ── Detect MultiPolygon vs Polygon ──
-                        // MultiPolygon: coords[0][0][0] = [x, y]   → 4 levels deep
-                        // Polygon:      coords[0][0]    = [x, y]   → 3 levels deep
-                        const isMultiPolygon =
-                            Array.isArray(coords) &&
-                            Array.isArray(coords[0]) &&
-                            Array.isArray(coords[0][0]) &&
-                            Array.isArray(coords[0][0][0]) &&
-                            typeof coords[0][0][0][0] === 'number';
-
-                        if (isMultiPolygon) {
-                            geometry = new ol.geom.MultiPolygon(coords);
-                        } else {
-                            // Normal Polygon — coords is already [ring]
-                            // If coords = [ring] (array of rings), pass as-is
-                            // If coords = ring    (array of points), wrap it
-                            const isRing = Array.isArray(coords[0]) &&
-                                Array.isArray(coords[0][0]) &&
-                                typeof coords[0][0][0] === 'number';
-
-                            geometry = isRing ?
-                                new ol.geom.Polygon(coords) // [ring1, ring2...]
-                                :
-                                new ol.geom.Polygon([coords]); // wrap
+                        if (!coords || !Array.isArray(coords) || coords.length === 0) {
+                            console.warn('Empty coords for gisid:', poly.gisid);
+                            return;
                         }
 
+                        const detectedType = detectCoordType(coords);
+                        let geometry;
+
+                        if (detectedType === 'MultiPolygon') {
+                            geometry = new ol.geom.MultiPolygon(coords);
+                        } else if (detectedType === 'Polygon') {
+                            geometry = new ol.geom.Polygon(coords);
+                        } else if (detectedType === 'Ring') {
+                            geometry = new ol.geom.Polygon([coords]);
+                        } else {
+                            console.warn('Unknown coord type for gisid:', poly.gisid, coords);
+                            return;
+                        }
+
+                        // ✅ Store detected type (NOT DB type) so map click / modes work
                         const feature = new ol.Feature({
                             geometry: geometry,
                             gisid: poly.gisid,
-                            type: geometry.getType(), // 'Polygon' or 'MultiPolygon'
+                            type: geometry.getType(),      // 'Polygon' or 'MultiPolygon'
                             sqfeet: poly.sqfeet || '0',
+                            dbType: poly.type || null,     // keep original for reference
                             originalData: poly
                         });
 
@@ -2717,6 +2765,14 @@
                 $t.data('timeout', setTimeout(() => $t.removeClass('show'), duration));
             }
 
+            // ✅ NEW: Reusable check for polygon-like features
+            function isPolygonFeature(feature) {
+                const g = feature.getGeometry();
+                if (!g) return false;
+                const t = g.getType();
+                return t === 'Polygon' || t === 'MultiPolygon';
+            }
+
             // ─── Disable ALL interactions ───
             function disableAllInteractions() {
                 if (selectedFeatureForSplit) {
@@ -2762,23 +2818,20 @@
                 currentDrawType = null;
             }
 
-            // ─── Feature details popup ───
+            // ✅ FIXED: Handles MultiPolygon too
             function showFeatureDetails(feature) {
                 if (!feature) return;
-                const gisid = feature.get('gisid');
                 const type = feature.get('type');
-                switch (type) {
-                    case 'Point':
-                        pointClick(feature);
-                        break;
+                const geomType = feature.getGeometry().getType();
 
-                    case 'Polygon':
-                        polygonClick(feature);
-                        break;
-
-                    case 'LineString':
-                        lineClick(feature);
-                        break;
+                if (type === 'Point' || geomType === 'Point') {
+                    pointClick(feature);
+                } else if (type === 'Polygon' || type === 'MultiPolygon' ||
+                           geomType === 'Polygon' || geomType === 'MultiPolygon') {
+                    polygonClick(feature);
+                } else if (type === 'LineString' || geomType === 'LineString' ||
+                           type === 'MultiLineString' || geomType === 'MultiLineString') {
+                    lineClick(feature);
                 }
             }
 
@@ -3074,7 +3127,7 @@
                 }
             });
 
-            // ─── Polygon Click ───
+            // ─── Polygon Click (works for both Polygon & MultiPolygon) ───
             function polygonClick(feature) {
                 const gisid = feature.get('gisid');
                 let building = polygonDatas.find(polygondata => polygondata.gisid == gisid);
@@ -3089,9 +3142,7 @@
                 modal.show();
             }
 
-            // ✅ FIX: Reset file inputs and form before populating
             function populateBuildingForm(item) {
-                // ── Ensure we start from a clean slate (no leftover file inputs) ──
                 const form = document.getElementById('buildingForm');
                 if (form) form.reset();
                 $('#image1_input').val('');
@@ -3166,7 +3217,6 @@
                 }
             }
 
-            // ✅ FIX: Correct file input IDs
             function resetBuildingForm(gisid) {
                 const form = document.getElementById('buildingForm');
                 if (form) form.reset();
@@ -3204,7 +3254,6 @@
                 $("#noImagePlaceholder").show();
                 $("#noImagePlaceholder2").show();
 
-                // ✅ FIX: correct file input IDs
                 $("#image1_input").val("");
                 $("#image2_input").val("");
 
@@ -3215,7 +3264,6 @@
                     '<i class="fas fa-save me-2"></i>Save Building Data');
             }
 
-            // ✅ FIX: Full reset on modal close
             $('#buildingDataModal').on('hidden.bs.modal', function() {
                 const form = document.getElementById('buildingForm');
                 if (form) form.reset();
@@ -3318,7 +3366,6 @@
                                 reloadAllSources();
                             }
 
-                            // ✅ FIX: Clear file inputs immediately after save
                             $('#image1_input').val('');
                             $('#image2_input').val('');
 
@@ -3477,7 +3524,9 @@
 
                     if (e.selected.length > 0) {
                         const feature = e.selected[0];
-                        if (feature.get('type') !== 'Polygon') {
+
+                        // ✅ FIXED: accept both Polygon and MultiPolygon
+                        if (!isPolygonFeature(feature)) {
                             showToast('⚠️ Please select a Polygon', 2000);
                             return;
                         }
@@ -3572,6 +3621,9 @@
                 const geometry = feature.getGeometry();
                 const coordinates = geometry.getCoordinates();
 
+                // ✅ Send geometry type so backend can save it correctly
+                const geomType = geometry.getType();
+
                 $.ajax({
                     url: '/update-polygon',
                     type: 'POST',
@@ -3581,7 +3633,8 @@
                     data: {
                         gisid: gisid,
                         coordinates: JSON.stringify(coordinates),
-                        sqfeet: feature.get('sqfeet') || '0'
+                        sqfeet: feature.get('sqfeet') || '0',
+                        type: geomType   // ✅ 'Polygon' or 'MultiPolygon'
                     },
                     success: function(response) {
                         Swal.fire('Success!', 'Polygon updated successfully', 'success');
@@ -3646,7 +3699,9 @@
 
                     if (e.selected.length > 0) {
                         const feature = e.selected[0];
-                        if (feature.get('type') !== 'Polygon') {
+
+                        // ✅ FIXED: accept both Polygon and MultiPolygon
+                        if (!isPolygonFeature(feature)) {
                             showToast('⚠️ Please select a Polygon', 2000);
                             return;
                         }
@@ -3739,6 +3794,7 @@
                 const gisid = feature.get('gisid');
                 const geometry = feature.getGeometry();
                 const coordinates = geometry.getCoordinates();
+                const geomType = geometry.getType();
 
                 $.ajax({
                     url: '/update-polygon',
@@ -3749,7 +3805,8 @@
                     data: {
                         gisid: gisid,
                         coordinates: JSON.stringify(coordinates),
-                        sqfeet: feature.get('sqfeet') || '0'
+                        sqfeet: feature.get('sqfeet') || '0',
+                        type: geomType
                     },
                     success: function(response) {
                         Swal.fire('Success!', 'Polygon moved successfully', 'success');
@@ -3825,7 +3882,8 @@
                     if (e.selected.length > 0) {
                         const feature = e.selected[0];
 
-                        if (feature.get('type') !== 'Polygon') {
+                        // ✅ FIXED: accept both Polygon and MultiPolygon
+                        if (!isPolygonFeature(feature)) {
                             showToast('⚠️ Please select a Polygon', 2000);
                             mergeModalSelectInteraction.getFeatures().clear();
                             return;
@@ -3919,16 +3977,29 @@
                 });
                 const mergedGeom = mergedOlFeature.getGeometry();
 
-                let finalPolygonCoords;
+                // ✅ Keep it as MultiPolygon — do NOT flatten to single Polygon!
+                // This preserves both polygons when they don't overlap.
+                let finalCoords;
+                let finalType;
+
                 if (mergedGeom.getType() === 'MultiPolygon') {
-                    const polys = mergedGeom.getPolygons();
-                    polys.sort((a, b) => b.getArea() - a.getArea());
-                    finalPolygonCoords = polys[0].getCoordinates();
+                    finalType = 'MultiPolygon';
+                    finalCoords = mergedGeom.getCoordinates();
                 } else {
-                    finalPolygonCoords = mergedGeom.getCoordinates();
+                    finalType = 'Polygon';
+                    finalCoords = mergedGeom.getCoordinates();
                 }
 
-                const areaSqm = new ol.geom.Polygon(finalPolygonCoords).getArea();
+                // Area calc — works for both types
+                let areaSqm = 0;
+                if (finalType === 'MultiPolygon') {
+                    finalCoords.forEach(poly => {
+                        areaSqm += new ol.geom.Polygon(poly).getArea();
+                    });
+                } else {
+                    areaSqm = new ol.geom.Polygon(finalCoords).getArea();
+                }
+
                 const sqft = (areaSqm * 10.7639).toFixed(0);
 
                 const $btn = $('#confirmMergeBtn');
@@ -3944,7 +4015,8 @@
                     data: {
                         primary_gisid: primaryGisId,
                         secondary_gisid: secondaryGisId,
-                        coordinates: JSON.stringify(finalPolygonCoords),
+                        coordinates: JSON.stringify(finalCoords),
+                        type: finalType,           // ✅ Tell backend the type
                         sqfeet: sqft
                     },
                     success: function(response) {
@@ -4004,6 +4076,13 @@
                     }
                     if (e.selected.length > 0) {
                         const feature = e.selected[0];
+
+                        // ✅ FIXED: accept both Polygon and MultiPolygon
+                        if (!isPolygonFeature(feature)) {
+                            showToast('⚠️ Please select a Polygon', 2000);
+                            return;
+                        }
+
                         feature.setStyle(new ol.style.Style({
                             stroke: new ol.style.Stroke({
                                 color: '#dc3545',
@@ -4059,7 +4138,8 @@
             }
 
             function performSplit(feature) {
-                if (!feature || feature.get('type') !== 'Polygon') {
+                // ✅ FIXED: accept both Polygon and MultiPolygon
+                if (!feature || !isPolygonFeature(feature)) {
                     Swal.fire('Error', 'Please select a polygon first', 'error');
                     return;
                 }
@@ -4078,6 +4158,7 @@
 
                 splitDraw.on('drawend', function(e) {
                     const polygonCoords = feature.getGeometry().getCoordinates();
+                    const polygonType = feature.getGeometry().getType(); // ✅ send type
                     const lineCoords = e.feature.getGeometry().getCoordinates();
                     const gisid = feature.get('gisid');
 
@@ -4086,6 +4167,7 @@
                         type: 'POST',
                         data: {
                             polygon: JSON.stringify(polygonCoords),
+                            polygonType: polygonType,   // ✅
                             splitLine: JSON.stringify(lineCoords),
                             gisid,
                             _token: $('meta[name="csrf-token"]').attr('content')
@@ -4196,14 +4278,23 @@
                 searchIndex = [];
                 polygons.forEach(poly => {
                     try {
+                        const coords = typeof poly.coordinates === 'string'
+                            ? JSON.parse(poly.coordinates)
+                            : poly.coordinates;
+
+                        const detectedType = detectCoordType(coords);
+                        const geomType = detectedType === 'MultiPolygon'
+                            ? 'multipolygon'
+                            : 'polygon';
+
                         searchIndex.push({
                             datatId: poly.id,
                             id: poly.gisid,
                             type: 'polygon',
                             title: `GIS ID: ${poly.gisid}`,
                             subtitle: `Building (${poly.sqfeet || 0} sqft)`,
-                            coordinates: JSON.parse(poly.coordinates),
-                            geometryType: 'polygon',
+                            coordinates: coords,
+                            geometryType: geomType,        // ✅ 'polygon' or 'multipolygon'
                             searchText: `${poly.gisid} ${poly.sqfeet} building polygon`
                         });
                     } catch (e) {
@@ -4855,7 +4946,8 @@
                             `Point GIS ID: ${item.point_gisid || 'N/A'}${item.owner_name ? ' | Owner: ' + item.owner_name : ''}` :
                             item.subtitle;
                         const icon = item.geometryType === 'point' ? 'geo-alt' :
-                            item.geometryType === 'polygon' ? 'pentagon' : 'vector-pen';
+                            (item.geometryType === 'polygon' || item.geometryType === 'multipolygon') ? 'pentagon' :
+                            'vector-pen';
 
                         const editBtn = item.type === 'pointdata' ?
                             `<button class="btn btn-sm btn-warning edit-btn" data-id="${item.id}" data-dataid="${item.datatId}"><i class="bi bi-pencil"></i> Edit</button>` :
@@ -5522,7 +5614,7 @@
                 $('#searchToggleBtn').removeClass('active-search');
             });
 
-            console.log('✅ GIS Dashboard ready — Merge feature (modal-based) integrated!');
+            console.log('✅ GIS Dashboard ready — MultiPolygon-safe!');
         });
     </script>
 @endpush
