@@ -230,18 +230,38 @@ class CommissionerController extends Controller
 
    private function getConnectedByWards($corporationId, array $wardIds): int
 {
-    $misTable = $this->taxTable('mis', $corporationId);
+    try {
+        $misTable = $this->taxTable('mis', $corporationId);
+        if (!Schema::hasTable($misTable) || !Schema::hasColumn($misTable, 'assessment')) {
+            return 0;
+        }
 
-    // MIS table la irundhu gisid mattum eduthukiraanga
-    $gisids = DB::table($misTable)->pluck('gisid')->filter()->toArray();
+        // MIS la irukkura assessment numbers
+        $assessments = DB::table($misTable)
+            ->pluck('assessment')
+            ->filter()
+            ->unique()
+            ->toArray();
 
-    $total = 0;
-    foreach ($wardIds as $wardId) {
-        $table = "point_data_{$wardId}";
-        // point_data la irukkura gisid, MIS gisid kooda match aagura count
-        $total += DB::table($table)->whereIn('gisid', $gisids)->count();
+        if (empty($assessments)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($wardIds as $wardId) {
+            $table = "point_data_{$wardId}";
+            if (Schema::hasTable($table) && Schema::hasColumn($table, 'assessment')) {
+                // point_data.assessment match aagura count
+                $total += DB::table($table)
+                    ->whereIn('assessment', $assessments)
+                    ->count();
+            }
+        }
+        return $total;
+    } catch (\Exception $e) {
+        Log::error('getConnectedByWards error: ' . $e->getMessage());
+        return 0;
     }
-    return $total;
 }
 
     private function getTaxCount(string $type, $corporationId): int
