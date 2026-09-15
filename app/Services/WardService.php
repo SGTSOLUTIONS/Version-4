@@ -1505,6 +1505,552 @@ class WardService
             round($latSum / $count, 8),
         ];
     }
+   public function mergePolygons(array $data, $useTransaction = true): array
+{
+    $startedTransaction = false;
 
+    try {
 
+        // ---------------------------------------------------------
+        // INPUT
+        // ---------------------------------------------------------
+
+        $wardId         = $data['ward_id'] ?? null;
+        $primaryGisid   = $data['primary_gisid'] ?? null;
+        $secondaryGisid = $data['secondary_gisid'] ?? null;
+
+        if (empty($wardId)) {
+            throw new \Exception('Ward ID is required.');
+        }
+
+        if (empty($primaryGisid)) {
+            throw new \Exception('Primary GIS ID is required.');
+        }
+
+        if (empty($secondaryGisid)) {
+            throw new \Exception('Secondary GIS ID is required.');
+        }
+
+        if ((string) $primaryGisid === (string) $secondaryGisid) {
+            throw new \Exception(
+                'Primary and secondary GIS IDs cannot be the same.'
+            );
+        }
+
+        // ---------------------------------------------------------
+        // TABLES
+        // ---------------------------------------------------------
+
+        $polygonTable   = 'polygons_' . $wardId;
+        $pointTable     = 'points_' . $wardId;
+        $pointDataTable = 'point_data_' . $wardId;
+
+        // ---------------------------------------------------------
+        // CHECK TABLES
+        // ---------------------------------------------------------
+
+        if (!Schema::hasTable($polygonTable)) {
+            throw new \Exception(
+                "Polygon table not found: {$polygonTable}"
+            );
+        }
+
+        if (!Schema::hasTable($pointTable)) {
+            throw new \Exception(
+                "Point table not found: {$pointTable}"
+            );
+        }
+
+        // ---------------------------------------------------------
+        // TRANSACTION
+        // ---------------------------------------------------------
+
+        if ($useTransaction && DB::transactionLevel() === 0) {
+            DB::beginTransaction();
+            $startedTransaction = true;
+        }
+
+        // ---------------------------------------------------------
+        // GET PRIMARY
+        // ---------------------------------------------------------
+
+        $primaryPolygon = DB::table($polygonTable)
+            ->where('gisid', $primaryGisid)
+            ->first();
+
+        if (!$primaryPolygon) {
+            throw new \Exception(
+                "Primary polygon not found: {$primaryGisid}"
+            );
+        }
+
+        // ---------------------------------------------------------
+        // GET SECONDARY
+        // ---------------------------------------------------------
+
+        $secondaryPolygon = DB::table($polygonTable)
+            ->where('gisid', $secondaryGisid)
+            ->first();
+
+        if (!$secondaryPolygon) {
+            throw new \Exception(
+                "Secondary polygon not found: {$secondaryGisid}"
+            );
+        }
+
+        // ---------------------------------------------------------
+        // CHECK SECONDARY POINT DATA
+        // ---------------------------------------------------------
+
+        if (Schema::hasTable($pointDataTable)) {
+
+            $hasPointData = DB::table($pointDataTable)
+                ->where('point_gisid', $secondaryGisid)
+                ->exists();
+
+            if ($hasPointData) {
+
+                if ($startedTransaction) {
+                    DB::rollBack();
+                    $startedTransaction = false;
+                }
+
+                return [
+                    'status' => false,
+                    'merge_allowed' => false,
+                    'message' =>
+                        "GISID {$secondaryGisid} contains point data. Merge cancelled.",
+                    'primary_gisid' => $primaryGisid,
+                    'secondary_gisid' => $secondaryGisid,
+                ];
+            }
+        }
+
+        // ---------------------------------------------------------
+        // DECODE COORDINATES
+        // ---------------------------------------------------------
+
+        $primaryCoordinates = json_decode(
+            $primaryPolygon->coordinates,
+            true
+        );
+
+        $secondaryCoordinates = json_decode(
+            $secondaryPolygon->coordinates,
+            true
+        );
+
+        if (
+            !is_array($primaryCoordinates) ||
+            empty($primaryCoordinates)
+        ) {
+            throw new \Exception(
+                "Invalid coordinates for primary GISID: {$primaryGisid}"
+            );
+        }
+
+        if (
+            !is_array($secondaryCoordinates) ||
+            empty($secondaryCoordinates)
+        ) {
+            throw new \Exception(
+                "Invalid coordinates for secondary GISID: {$secondaryGisid}"
+            );
+        }
+
+        // ---------------------------------------------------------
+        // CONVERT PRIMARY TO MULTIPOLYGON FORMAT
+        // ---------------------------------------------------------
+        //
+        // Example existing 1640:
+        //
+        // [
+        //     [
+        //         [
+        //             [x,y],
+        //             [x,y]
+        //         ]
+        //     ],
+        //     [
+        //         [
+        //             [x,y],
+        //             [x,y]
+        //         ]
+        //     ]
+        // ]
+        //
+        // This is already:
+        //
+        // MultiPolygon
+        //
+        // Keep it exactly as it is.
+        // ---------------------------------------------------------
+
+        $primaryMultiPolygon = $this->toMultiPolygonCoordinates(
+            $primaryCoordinates
+        );
+
+        // ---------------------------------------------------------
+        // CONVERT SECONDARY TO MULTIPOLYGON FORMAT
+        // ---------------------------------------------------------
+        //
+        // If secondary is a normal Polygon:
+        //
+        // [
+        //     [
+        //         [x,y],
+        //         [x,y]
+        //     ]
+        // ]
+        //
+        // Convert to:
+        //
+        // [
+        //     [
+        //         [
+        //             [x,y],
+        //             [x,y]
+        //         ]
+        //     ]
+        // ]
+        //
+        // ---------------------------------------------------------
+
+        $secondaryMultiPolygon = $this->toMultiPolygonCoordinates(
+            $secondaryCoordinates
+        );
+
+        // ---------------------------------------------------------
+        // MERGE MULTIPOLYGONS
+        // ---------------------------------------------------------
+        //
+        // THIS IS THE IMPORTANT PART.
+        //
+        // Do NOT:
+        //
+        // [
+        //     $primaryMultiPolygon,
+        //     $secondaryMultiPolygon
+        // ]
+        //
+        // because that creates extra nesting.
+        //
+        // Instead append the individual polygons.
+        // ---------------------------------------------------------
+
+        $mergedCoordinates = array_merge(
+            $primaryMultiPolygon,
+            $secondaryMultiPolygon
+        );
+
+        // ---------------------------------------------------------
+        // VALIDATE
+        // ---------------------------------------------------------
+
+        if (empty($mergedCoordinates)) {
+            throw new \Exception(
+                'Merged MultiPolygon coordinates are empty.'
+            );
+        }
+
+        // ---------------------------------------------------------
+        // CALCULATE AREA
+        // ---------------------------------------------------------
+
+        $sqfeet = $data['sqfeet'] ?? null;
+
+        if (
+            $sqfeet === null ||
+            $sqfeet === '' ||
+            (float) $sqfeet <= 0
+        ) {
+
+            $sqfeet = 0;
+
+            foreach ($mergedCoordinates as $polygon) {
+
+                if (
+                    isset($polygon[0]) &&
+                    is_array($polygon[0])
+                ) {
+
+                    $outerRing = $polygon[0];
+
+                    if (!empty($outerRing)) {
+
+                        $sqfeet += (float)
+                            $this->calculatePolygonAreaInSquareFeet(
+                                $outerRing
+                            );
+                    }
+                }
+            }
+        }
+
+        $sqfeet = (float) $sqfeet;
+
+        // ---------------------------------------------------------
+        // CALCULATE PRIMARY POINT
+        // ---------------------------------------------------------
+        //
+        // Keep the existing primary point location.
+        // Do not create a line or midpoint between disconnected
+        // polygons.
+        // ---------------------------------------------------------
+
+        $primaryPoint = DB::table($pointTable)
+            ->where('gisid', $primaryGisid)
+            ->first();
+
+        // ---------------------------------------------------------
+        // UPDATE PRIMARY POLYGON
+        // ---------------------------------------------------------
+
+        DB::table($polygonTable)
+            ->where('gisid', $primaryGisid)
+            ->update([
+                'type' => 'MultiPolygon',
+
+                'coordinates' => json_encode(
+                    $mergedCoordinates,
+                    JSON_UNESCAPED_UNICODE
+                ),
+
+                'sqfeet' => (string) $sqfeet,
+
+                'updated_at' => now(),
+            ]);
+
+        // ---------------------------------------------------------
+        // DELETE SECONDARY POINT
+        // ---------------------------------------------------------
+
+        DB::table($pointTable)
+            ->where('gisid', $secondaryGisid)
+            ->delete();
+
+        // ---------------------------------------------------------
+        // DELETE SECONDARY POLYGON
+        // ---------------------------------------------------------
+
+        DB::table($polygonTable)
+            ->where('gisid', $secondaryGisid)
+            ->delete();
+
+        // ---------------------------------------------------------
+        // COMMIT
+        // ---------------------------------------------------------
+
+        if ($startedTransaction) {
+            DB::commit();
+            $startedTransaction = false;
+        }
+
+        // ---------------------------------------------------------
+        // GET UPDATED PRIMARY POLYGON
+        // ---------------------------------------------------------
+
+        $mergedPolygon = DB::table($polygonTable)
+            ->where('gisid', $primaryGisid)
+            ->first();
+
+        // ---------------------------------------------------------
+        // GET PRIMARY POINT
+        // ---------------------------------------------------------
+
+        $mergedPoint = DB::table($pointTable)
+            ->where('gisid', $primaryGisid)
+            ->first();
+
+        // ---------------------------------------------------------
+        // SUCCESS
+        // ---------------------------------------------------------
+
+        return [
+            'status' => true,
+
+            'merge_allowed' => true,
+
+            'message' =>
+                "Polygon {$secondaryGisid} merged into {$primaryGisid} successfully.",
+
+            'primary_gisid' => $primaryGisid,
+
+            'secondary_gisid' => $secondaryGisid,
+
+            'type' => 'MultiPolygon',
+
+            'sqfeet' => $sqfeet,
+
+            'polygon' => $mergedPolygon,
+
+            'point' => $mergedPoint,
+        ];
+
+    } catch (\Throwable $e) {
+
+        // ---------------------------------------------------------
+        // ROLLBACK
+        // ---------------------------------------------------------
+
+        if ($startedTransaction) {
+
+            try {
+                DB::rollBack();
+            } catch (\Throwable $rollbackException) {
+
+                Log::error(
+                    'Merge Polygon Rollback Error: ' .
+                    $rollbackException->getMessage()
+                );
+            }
+
+            $startedTransaction = false;
+        }
+
+        // ---------------------------------------------------------
+        // LOG
+        // ---------------------------------------------------------
+
+        Log::error(
+            'Merge Polygon Error: ' . $e->getMessage(),
+            [
+                'ward_id' =>
+                    $data['ward_id'] ?? null,
+
+                'primary_gisid' =>
+                    $data['primary_gisid'] ?? null,
+
+                'secondary_gisid' =>
+                    $data['secondary_gisid'] ?? null,
+            ]
+        );
+
+        // ---------------------------------------------------------
+        // ERROR
+        // ---------------------------------------------------------
+
+        return [
+            'status' => false,
+
+            'merge_allowed' => false,
+
+            'message' => $e->getMessage(),
+
+            'primary_gisid' =>
+                $data['primary_gisid'] ?? null,
+
+            'secondary_gisid' =>
+                $data['secondary_gisid'] ?? null,
+        ];
+    }
+}
+private function toMultiPolygonCoordinates(array $coordinates): array
+{
+    // ---------------------------------------------------------
+    // NORMAL POLYGON RING
+    //
+    // [
+    //     [x,y],
+    //     [x,y],
+    //     [x,y]
+    // ]
+    //
+    // Convert to:
+    //
+    // [
+    //     [
+    //         [x,y],
+    //         [x,y],
+    //         [x,y]
+    //     ]
+    // ]
+    // ---------------------------------------------------------
+
+    if (
+        isset($coordinates[0]) &&
+        is_array($coordinates[0]) &&
+        isset($coordinates[0][0]) &&
+        is_numeric($coordinates[0][0])
+    ) {
+        return [
+            [
+                $coordinates
+            ]
+        ];
+    }
+
+    // ---------------------------------------------------------
+    // NORMAL POLYGON WITH RINGS
+    //
+    // [
+    //     [
+    //         [x,y],
+    //         [x,y]
+    //     ]
+    // ]
+    //
+    // Convert to MultiPolygon:
+    //
+    // [
+    //     [
+    //         [
+    //             [x,y],
+    //             [x,y]
+    //         ]
+    //     ]
+    // ]
+    // ---------------------------------------------------------
+
+    if (
+        isset($coordinates[0]) &&
+        is_array($coordinates[0]) &&
+        isset($coordinates[0][0]) &&
+        is_array($coordinates[0][0]) &&
+        isset($coordinates[0][0][0]) &&
+        is_numeric($coordinates[0][0][0])
+    ) {
+        return [
+            $coordinates
+        ];
+    }
+
+    // ---------------------------------------------------------
+    // ALREADY MULTIPOLYGON
+    //
+    // [
+    //     [
+    //         [
+    //             [x,y],
+    //             [x,y]
+    //         ]
+    //     ],
+    //     [
+    //         [
+    //             [x,y],
+    //             [x,y]
+    //         ]
+    //     ]
+    // ]
+    //
+    // KEEP IT AS IT IS.
+    // ---------------------------------------------------------
+
+    if (
+        isset($coordinates[0]) &&
+        is_array($coordinates[0]) &&
+        isset($coordinates[0][0]) &&
+        is_array($coordinates[0][0]) &&
+        isset($coordinates[0][0][0]) &&
+        is_array($coordinates[0][0][0]) &&
+        isset($coordinates[0][0][0][0]) &&
+        is_numeric($coordinates[0][0][0][0])
+    ) {
+        return $coordinates;
+    }
+
+    throw new \Exception(
+        'Unsupported polygon coordinate structure.'
+    );
+}
 }
