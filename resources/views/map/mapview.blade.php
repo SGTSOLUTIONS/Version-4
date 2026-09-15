@@ -2260,20 +2260,54 @@
 
             function loadPolygonsToSource() {
                 polygonSource.clear();
+
                 polygons.forEach(poly => {
                     try {
-                        let coords = JSON.parse(poly.coordinates);
+                        let coords = typeof poly.coordinates === 'string' ?
+                            JSON.parse(poly.coordinates) :
+                            poly.coordinates;
+
+                        let geometry;
+
+                        // ── Detect MultiPolygon vs Polygon ──
+                        // MultiPolygon: coords[0][0][0] = [x, y]   → 4 levels deep
+                        // Polygon:      coords[0][0]    = [x, y]   → 3 levels deep
+                        const isMultiPolygon =
+                            Array.isArray(coords) &&
+                            Array.isArray(coords[0]) &&
+                            Array.isArray(coords[0][0]) &&
+                            Array.isArray(coords[0][0][0]) &&
+                            typeof coords[0][0][0][0] === 'number';
+
+                        if (isMultiPolygon) {
+                            geometry = new ol.geom.MultiPolygon(coords);
+                        } else {
+                            // Normal Polygon — coords is already [ring]
+                            // If coords = [ring] (array of rings), pass as-is
+                            // If coords = ring    (array of points), wrap it
+                            const isRing = Array.isArray(coords[0]) &&
+                                Array.isArray(coords[0][0]) &&
+                                typeof coords[0][0][0] === 'number';
+
+                            geometry = isRing ?
+                                new ol.geom.Polygon(coords) // [ring1, ring2...]
+                                :
+                                new ol.geom.Polygon([coords]); // wrap
+                        }
+
                         const feature = new ol.Feature({
-                            geometry: new ol.geom.Polygon([coords]),
+                            geometry: geometry,
                             gisid: poly.gisid,
-                            type: 'Polygon',
+                            type: geometry.getType(), // 'Polygon' or 'MultiPolygon'
                             sqfeet: poly.sqfeet || '0',
                             originalData: poly
                         });
+
                         feature.setId(poly.gisid);
                         polygonSource.addFeature(feature);
+
                     } catch (e) {
-                        console.error('Polygon parse error:', e);
+                        console.error('Polygon parse error for gisid:', poly.gisid, e);
                     }
                 });
             }
