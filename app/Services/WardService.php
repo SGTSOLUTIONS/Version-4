@@ -1507,14 +1507,14 @@ class WardService
     }
     public function mergePolygons(array $data)
     {
-        $wardId          = $data['ward_id'];
-        $primaryGisid    = $data['primary_gisid'];
-        $secondaryGisid  = $data['secondary_gisid'];
-        $coordinates     = $data['coordinates'];
-        $sqfeet          = $data['sqfeet'] ?? '0';
+        $wardId         = $data['ward_id'];
+        $primaryGisid   = $data['primary_gisid'];
+        $secondaryGisid = $data['secondary_gisid'];
+        $coordinates    = $data['coordinates'];
+        $sqfeet         = $data['sqfeet'] ?? '0';
 
-        $polygonTable = "polygon_data_{$wardId}";
-        $pointTable   = "point_data_{$wardId}";
+        $polygonTable  = "polygon_data_{$wardId}";
+        $pointTable    = "point_data_{$wardId}";
         $polygonsTable = "polygons_{$wardId}";
         $pointsTable   = "points_{$wardId}";
 
@@ -1523,6 +1523,7 @@ class WardService
         try {
             // ───────────────────────────────────────────────────────
             // 1. CHECK POINT DATA for Secondary GIS ID
+            //    Prevent merging if secondary has assessments mapped
             // ───────────────────────────────────────────────────────
             $pointCount = DB::table($pointTable)
                 ->where('point_gisid', $secondaryGisid)
@@ -1571,6 +1572,7 @@ class WardService
 
             // ───────────────────────────────────────────────────────
             // 4. UPDATE Primary Polygon geometry in polygons table
+            //    (sqfeet belongs ONLY here)
             // ───────────────────────────────────────────────────────
             DB::table($polygonsTable)
                 ->where('gisid', $primaryGisid)
@@ -1597,8 +1599,8 @@ class WardService
             // ───────────────────────────────────────────────────────
             // 7. UPDATE Primary midpoint in points table
             // ───────────────────────────────────────────────────────
-            // Recalculate midpoint from merged coordinates
             $midpoint = $this->calculateMidpointFromMerged($coordinates);
+
             if ($midpoint) {
                 DB::table($pointsTable)->updateOrInsert(
                     ['gisid' => $primaryGisid],
@@ -1613,24 +1615,21 @@ class WardService
 
             // ───────────────────────────────────────────────────────
             // 8. HANDLE polygon_data table
+            //    NOTE: polygon_data has NO sqfeet column.
+            //    Only delete secondary, then touch primary timestamp.
             // ───────────────────────────────────────────────────────
-            // Delete secondary polygon_data if exists
             DB::table($polygonTable)
                 ->where('gisid', $secondaryGisid)
                 ->delete();
 
-            // Update primary polygon_data sqfeet if it exists
             DB::table($polygonTable)
                 ->where('gisid', $primaryGisid)
-                ->update([
-                    'sqfeet'     => $sqfeet,
-                    'updated_at' => now(),
-                ]);
+                ->update(['updated_at' => now()]);
 
             // ───────────────────────────────────────────────────────
-            // 9. HANDLE point_data table (if any orphaned records)
+            // 9. HANDLE point_data table
+            //    Safety net: reassign any orphaned point_data records
             // ───────────────────────────────────────────────────────
-            // Reassign any point_data from secondary to primary (safety net)
             DB::table($pointTable)
                 ->where('point_gisid', $secondaryGisid)
                 ->update(['point_gisid' => $primaryGisid]);
@@ -1638,22 +1637,26 @@ class WardService
             DB::commit();
 
             // ───────────────────────────────────────────────────────
-            // 10. Fetch fresh data to return
+            // 10. Fetch fresh data to return to frontend
             // ───────────────────────────────────────────────────────
             $polygons     = DB::table($polygonsTable)->get();
             $polygonDatas = DB::table($polygonTable)->get();
             $points       = DB::table($pointsTable)->get();
             $pointDatas   = DB::table($pointTable)->get();
+
             return [
                 'status'       => true,
                 'message'      => 'Polygons merged successfully.',
                 'polygons'     => $polygons,
                 'polygonDatas' => $polygonDatas,
                 'points'       => $points,
-                'pointDatas'   => $pointDatas,   // ← MUST be included
+                'pointDatas'   => $pointDatas,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
+
+            Log::error('mergePolygons error: ' . $e->getMessage());
+
             return [
                 'status'  => false,
                 'message' => 'Merge failed: ' . $e->getMessage(),
@@ -1662,28 +1665,27 @@ class WardService
         }
     }
 
-    /**
-     * Calculate midpoint from merged polygon coordinates
-     * Handles various coordinate structures
-     */
+
     private function calculateMidpointFromMerged($coordinates): ?array
     {
-        if (empty($coordinates)) {
+        if (empty($coordinates) || !is_array($coordinates)) {
             return null;
         }
 
-        // Extract the ring based on coordinate structure
         $ring = null;
 
         if (isset($coordinates[0]) && is_array($coordinates[0])) {
-            if (isset($coordinates[0][0]) && is_array($coordinates[0][0])) {
-                // Polygon: [[[x,y],...]]
-                $ring = $coordinates[0];
-            } elseif (isset($coordinates[0][0][0]) && is_array($coordinates[0][0][0])) {
-                // MultiPolygon: [[[[x,y],...]]]
+
+            // MultiPolygon: [[[[x,y],...]]]
+            if (isset($coordinates[0][0][0]) && is_array($coordinates[0][0][0])) {
                 $ring = $coordinates[0][0];
-            } elseif (is_numeric($coordinates[0][0])) {
-                // Flat: [[x,y],...]
+            }
+            // Polygon: [[[x,y],...]]
+            elseif (isset($coordinates[0][0]) && is_array($coordinates[0][0])) {
+                $ring = $coordinates[0];
+            }
+            // Flat ring: [[x,y],...]
+            elseif (is_numeric($coordinates[0][0])) {
                 $ring = $coordinates;
             }
         }
