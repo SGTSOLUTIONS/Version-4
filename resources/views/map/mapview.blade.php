@@ -3477,7 +3477,7 @@
 
                     if (e.selected.length > 0) {
                         const feature = e.selected[0];
-                        if (feature.get('type') !== 'Polygon' && feature.get('type') !== 'MultiPolygon') {
+                        if (feature.get('type') !== 'Polygon') {
                             showToast('⚠️ Please select a Polygon', 2000);
                             return;
                         }
@@ -3646,7 +3646,7 @@
 
                     if (e.selected.length > 0) {
                         const feature = e.selected[0];
-                        if (feature.get('type') !== 'Polygon' && feature.get('type') !== 'MultiPolygon')
+                        if (feature.get('type') !== 'Polygon') {
                             showToast('⚠️ Please select a Polygon', 2000);
                             return;
                         }
@@ -3825,7 +3825,7 @@
                     if (e.selected.length > 0) {
                         const feature = e.selected[0];
 
-                        if (feature.get('type') !== 'Polygon' && feature.get('type') !== 'MultiPolygon'){
+                        if (feature.get('type') !== 'Polygon') {
                             showToast('⚠️ Please select a Polygon', 2000);
                             mergeModalSelectInteraction.getFeatures().clear();
                             return;
