@@ -304,7 +304,7 @@ class FeatureController extends Controller
     }
     public function merge(Request $request)
     {
-        // return response()->json($request->all());
+        return response()->json($request->all());
         $validator = Validator::make($request->all(), [
             'primary_gisid'   => 'required|string',
             'secondary_gisid' => 'required|string|different:primary_gisid',
