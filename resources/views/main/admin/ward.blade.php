@@ -767,6 +767,27 @@
                                                     <i class="bi bi-briefcase me-2"></i> Professional Tax (Excel)
                                                 </a>
                                             </li>
+                                            <li>
+    <a class="dropdown-item export-point-data-btn" data-id="${ward.id}" href="#">
+        <i class="bi bi-geo-alt me-2"></i> Point Data (GeoJSON)
+    </a>
+</li>
+<li>
+    <a class="dropdown-item export-point-data-excel-btn" data-id="${ward.id}" href="#">
+        <i class="bi bi-file-earmark-excel me-2"></i> Point Data (Excel)
+    </a>
+</li>
+<li>
+    <a class="dropdown-item export-building-data-btn" data-id="${ward.id}" href="#">
+        <i class="bi bi-building me-2"></i> Building Data (GeoJSON)
+    </a>
+</li>
+<li>
+    <a class="dropdown-item export-building-data-excel-btn" data-id="${ward.id}" href="#">
+        <i class="bi bi-file-earmark-excel me-2"></i> Building Data (Excel)
+    </a>
+</li>
+<li><hr class="dropdown-divider"></li>
                                             ${userRole === 'admin' ? `
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li>
@@ -1358,7 +1379,37 @@
                 window.location.href = "/wards/" + id + "/professional-tax-excel?road_name=" +
                     encodeURIComponent(roadname);
             });
+// Export Point Data (GeoJSON)
+$(document).on('click', '.export-point-data-btn', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    let id = $(this).data('id');
+    window.location.href = "/wards/" + id + "/export-point-data";
+});
 
+// Export Point Data (Excel)
+$(document).on('click', '.export-point-data-excel-btn', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    let id = $(this).data('id');
+    window.location.href = "/wards/" + id + "/export-point-data-excel";
+});
+
+// Export Building Data (GeoJSON)
+$(document).on('click', '.export-building-data-btn', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    let id = $(this).data('id');
+    window.location.href = "/wards/" + id + "/export-building-data";
+});
+
+// Export Building Data (Excel)
+$(document).on('click', '.export-building-data-excel-btn', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    let id = $(this).data('id');
+    window.location.href = "/wards/" + id + "/export-building-data-excel";
+});
             // Initial load
             loadWards(1);
         });

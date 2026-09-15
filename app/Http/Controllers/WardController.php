@@ -1171,4 +1171,339 @@ class WardController extends Controller
             ], 500);
         }
     }
+
+    /**
+ * Export ALL Point Data fields as GeoJSON for a ward.
+ * Reads from dynamic table: point_data_{ward_id}
+ */
+public function exportPointData($ward_id)
+{
+    try {
+        $table = "point_data_" . $ward_id;
+
+        if (!Schema::hasTable($table)) {
+            return response()->json([
+                "success" => false,
+                "message" => "Point data table not found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $rows = DB::table($table)->get();
+
+        if ($rows->isEmpty()) {
+            return response()->json([
+                "success" => false,
+                "message" => "No point data found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        // Get all columns dynamically
+        $columns = Schema::getColumnListing($table);
+
+        $features = [];
+
+        foreach ($rows as $row) {
+            $rowArray = (array) $row;
+
+            // Try to detect lat/lng columns from various common names
+            $lat = $this->firstExisting($rowArray, ['latitude', 'lat', 'y']);
+            $lng = $this->firstExisting($rowArray, ['longitude', 'lng', 'long', 'lon', 'x']);
+
+            // If no lat/lng columns found, skip (can't build geometry)
+            if ($lat === null || $lng === null) {
+                continue;
+            }
+
+            // Build properties containing EVERY column
+            $properties = [];
+            foreach ($columns as $col) {
+                $value = $rowArray[$col] ?? null;
+                // Avoid huge objects breaking JSON
+                if (is_string($value) && strlen($value) > 5000) {
+                    $value = substr($value, 0, 5000) . '...[truncated]';
+                }
+                $properties[$col] = $value;
+            }
+
+            $features[] = [
+                "type" => "Feature",
+                "properties" => $properties,
+                "geometry" => [
+                    "type" => "Point",
+                    "coordinates" => [(float) $lng, (float) $lat]
+                ]
+            ];
+        }
+
+        $geojson = [
+            "type" => "FeatureCollection",
+            "features" => $features
+        ];
+
+        $fileName = "point_data_ward_{$ward_id}.geojson";
+
+        return response()->streamDownload(function () use ($geojson) {
+            echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }, $fileName, [
+            'Content-Type' => 'application/geo+json',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            "success" => false,
+            "message" => $e->getMessage(),
+            "line"    => $e->getLine(),
+            "file"    => $e->getFile(),
+        ], 500);
+    }
+}
+
+/**
+ * Export ALL Point Data fields as CSV (Excel-compatible) for a ward.
+ * Reads from dynamic table: point_data_{ward_id}
+ */
+public function exportPointDataExcel($ward_id)
+{
+    try {
+        $table = "point_data_" . $ward_id;
+
+        if (!Schema::hasTable($table)) {
+            return response()->json([
+                "success" => false,
+                "message" => "Point data table not found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $rows = DB::table($table)->get();
+
+        if ($rows->isEmpty()) {
+            return response()->json([
+                "success" => false,
+                "message" => "No point data found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $columns = Schema::getColumnListing($table);
+
+        $fileName = "point_data_ward_{$ward_id}.csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+        ];
+
+        $callback = function () use ($rows, $columns) {
+            $file = fopen('php://output', 'w');
+
+            // Header row — ALL columns
+            fputcsv($file, $columns);
+
+            // Data rows — ALL columns
+            foreach ($rows as $row) {
+                $rowArray = (array) $row;
+                $line = [];
+                foreach ($columns as $col) {
+                    $value = $rowArray[$col] ?? '';
+                    // Flatten arrays/objects to JSON strings for CSV safety
+                    if (is_array($value) || is_object($value)) {
+                        $value = json_encode($value);
+                    }
+                    $line[] = $value;
+                }
+                fputcsv($file, $line);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    } catch (\Throwable $e) {
+        return response()->json([
+            "success" => false,
+            "message" => $e->getMessage(),
+            "line"    => $e->getLine(),
+            "file"    => $e->getFile(),
+        ], 500);
+    }
+}
+
+/**
+ * Export ALL Building (Polygon) Data fields as GeoJSON for a ward.
+ * Reads from dynamic table: polygons_{ward_id}
+ */
+public function exportBuildingData($ward_id)
+{
+    try {
+        $table = "polygons_" . $ward_id;
+
+        if (!Schema::hasTable($table)) {
+            return response()->json([
+                "success" => false,
+                "message" => "Polygon table not found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $rows = DB::table($table)->get();
+
+        if ($rows->isEmpty()) {
+            return response()->json([
+                "success" => false,
+                "message" => "No polygon data found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $columns = Schema::getColumnListing($table);
+
+        $features = [];
+
+        foreach ($rows as $row) {
+            $rowArray = (array) $row;
+
+            $coordinates = json_decode($row->coordinates ?? '[]', true);
+
+            if (!$coordinates) {
+                continue;
+            }
+
+            $type = $row->type ?? 'Polygon';
+
+            // Handle Polygon — wrap and close ring if needed
+            if ($type === 'Polygon') {
+                if (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
+                    $coordinates = [$coordinates];
+                }
+                if (isset($coordinates[0]) && is_array($coordinates[0])) {
+                    $ring = &$coordinates[0];
+                    if (!empty($ring) && $ring[0] != end($ring)) {
+                        $ring[] = $ring[0];
+                    }
+                }
+            }
+
+            // Build properties containing EVERY column
+            $properties = [];
+            foreach ($columns as $col) {
+                if ($col === 'coordinates') {
+                    continue; // skip geometry column in properties
+                }
+                $value = $rowArray[$col] ?? null;
+                if (is_string($value) && strlen($value) > 5000) {
+                    $value = substr($value, 0, 5000) . '...[truncated]';
+                }
+                $properties[$col] = $value;
+            }
+
+            $features[] = [
+                "type" => "Feature",
+                "properties" => $properties,
+                "geometry" => [
+                    "type" => $type,
+                    "coordinates" => $coordinates
+                ]
+            ];
+        }
+
+        $geojson = [
+            "type" => "FeatureCollection",
+            "features" => $features
+        ];
+
+        $fileName = "building_data_ward_{$ward_id}.geojson";
+
+        return response()->streamDownload(function () use ($geojson) {
+            echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }, $fileName, [
+            'Content-Type' => 'application/geo+json',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            "success" => false,
+            "message" => $e->getMessage(),
+            "line"    => $e->getLine(),
+            "file"    => $e->getFile(),
+        ], 500);
+    }
+}
+
+/**
+ * Export ALL Building (Polygon) Data fields as CSV (Excel-compatible) for a ward.
+ * Reads from dynamic table: polygons_{ward_id}
+ */
+public function exportBuildingDataExcel($ward_id)
+{
+    try {
+        $table = "polygons_" . $ward_id;
+
+        if (!Schema::hasTable($table)) {
+            return response()->json([
+                "success" => false,
+                "message" => "Polygon table not found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $rows = DB::table($table)->get();
+
+        if ($rows->isEmpty()) {
+            return response()->json([
+                "success" => false,
+                "message" => "No polygon data found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $columns = Schema::getColumnListing($table);
+
+        $fileName = "building_data_ward_{$ward_id}.csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+        ];
+
+        $callback = function () use ($rows, $columns) {
+            $file = fopen('php://output', 'w');
+
+            // Header row — ALL columns
+            fputcsv($file, $columns);
+
+            // Data rows — ALL columns
+            foreach ($rows as $row) {
+                $rowArray = (array) $row;
+                $line = [];
+                foreach ($columns as $col) {
+                    $value = $rowArray[$col] ?? '';
+                    if (is_array($value) || is_object($value)) {
+                        $value = json_encode($value);
+                    }
+                    $line[] = $value;
+                }
+                fputcsv($file, $line);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    } catch (\Throwable $e) {
+        return response()->json([
+            "success" => false,
+            "message" => $e->getMessage(),
+            "line"    => $e->getLine(),
+            "file"    => $e->getFile(),
+        ], 500);
+    }
+}
+
+/**
+ * Helper: return first non-null value from a row for any of the given keys.
+ */
+protected function firstExisting(array $row, array $keys)
+{
+    foreach ($keys as $key) {
+        if (isset($row[$key]) && $row[$key] !== '' && $row[$key] !== null) {
+            return $row[$key];
+        }
+    }
+    return null;
+}
 }
