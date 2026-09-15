@@ -2131,48 +2131,51 @@
             });
 
             // ─── STYLES ───
-            function createPolygonStyle(feature) {
-                const gisid = feature.get('gisid');
-                const sqft = feature.get('sqfeet') || '0';
-                const polygonData = polygonDatas.find(d => d.gisid == gisid);
-                const color = polygonData ? 'red' : 'blue';
-                const centerPoint = feature.getGeometry().getInteriorPoint();
+          function createPolygonStyle(feature) {
+    const gisid = feature.get('gisid');
+    const sqft = feature.get('sqfeet') || '0';
+    const polygonData = polygonDatas.find(d => d.gisid == gisid);
+    const color = polygonData ? 'red' : 'blue';
 
-                return [
-                    new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color,
-                            width: 4,
-                            lineJoin: 'round',
-                            lineCap: 'round'
-                        }),
-                        fill: new ol.style.Fill({
-                            color: 'rgba(0,0,255,0.1)'
-                        })
-                    }),
-                    new ol.style.Style({
-                        geometry: centerPoint,
-                        text: new ol.style.Text({
-                            text: sqft + ' SQFT',
-                            font: 'bold 14px Arial',
-                            fill: new ol.style.Fill({
-                                color: '#000'
-                            }),
-                            backgroundFill: new ol.style.Fill({
-                                color: '#fff'
-                            }),
-                            backgroundStroke: new ol.style.Stroke({
-                                color: '#000',
-                                width: 1
-                            }),
-                            padding: [4, 6, 4, 6],
-                            overflow: true,
-                            textAlign: 'center',
-                            offsetY: 0
-                        })
-                    })
-                ];
-            }
+    let labelPoint;
+    try {
+        labelPoint = feature.getGeometry().getInteriorPoint();
+    } catch (e) {
+        labelPoint = null;
+    }
+
+    const styles = [
+        new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color,
+                width: 4,
+                lineJoin: 'round',
+                lineCap: 'round'
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(0,0,255,0.1)'
+            })
+        })
+    ];
+
+    if (labelPoint) {
+        styles.push(new ol.style.Style({
+            geometry: labelPoint,
+            text: new ol.style.Text({
+                text: sqft + ' SQFT',
+                font: 'bold 14px Arial',
+                fill: new ol.style.Fill({ color: '#000' }),
+                backgroundFill: new ol.style.Fill({ color: '#fff' }),
+                backgroundStroke: new ol.style.Stroke({ color: '#000', width: 1 }),
+                padding: [4, 6, 4, 6],
+                overflow: true,
+                textAlign: 'center'
+            })
+        }));
+    }
+
+    return styles;
+}
 
             function createLineStyle(feature) {
                 const roadName = feature.get('road_name');
