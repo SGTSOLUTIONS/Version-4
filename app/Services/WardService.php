@@ -1611,7 +1611,7 @@ class WardService
             if (Schema::hasTable($pointDataTable)) {
 
                 $hasPointData = DB::table($pointDataTable)
-                    ->where('gisid', $secondaryGisid)
+                    ->where('point_gisid', $secondaryGisid)
                     ->exists();
 
                 if ($hasPointData) {
