@@ -3533,7 +3533,12 @@
 
                 const gisid = feature.get('gisid');
                 const geometry = feature.getGeometry();
-                const coordinates = geometry.getCoordinates();
+
+                // ─── ✅ Transform 3857 → WGS84 ───
+                const coordinates3857 = geometry.getCoordinates();
+                const coordinatesWGS84 = coordinates3857.map(ring =>
+                    ring.map(coord => ol.proj.toLonLat(coord))
+                );
 
                 $.ajax({
                     url: '/update-polygon',
@@ -3543,29 +3548,31 @@
                     },
                     data: {
                         gisid: gisid,
-                        coordinates: JSON.stringify(coordinates),
+                        coordinates: JSON.stringify(coordinatesWGS84), // ← WGS84
                         sqfeet: feature.get('sqfeet') || '0'
                     },
                     success: function(response) {
                         Swal.fire('Success!', 'Polygon updated successfully', 'success');
 
-                        polygons = response.data.polygons ?? polygons;
-                        points = response.data.points ?? points;
-                        lines = response.data.lines ?? lines;
+                        if (response.data) {
+                            polygons = response.data.polygons ?? polygons;
+                            points = response.data.points ?? points;
+                            lines = response.data.lines ?? lines;
+                        }
+
                         $('.edit-dropdown-item').removeClass('active');
                         $('.edit-dropdown').removeClass('show');
                         $('#editToggleBtn').removeClass('active-edit');
                         reloadAllSources();
                         disableAllInteractions();
                         clearDrawInteraction();
-                        selectedFeatureForEdit.setStyle(null);
-                        selectedFeatureForEdit = null;
-                        originalGeometry = null;
-                        hideEditControls();
 
-                        $('.edit-dropdown-item').removeClass('active');
-                        $('.edit-dropdown').removeClass('show');
-                        $('#editToggleBtn').removeClass('active-edit');
+                        if (selectedFeatureForEdit) {
+                            selectedFeatureForEdit.setStyle(null);
+                            selectedFeatureForEdit = null;
+                            originalGeometry = null;
+                        }
+                        hideEditControls();
 
                         showToast('✅ Polygon updated!', 2000);
                         setNoneMode();
@@ -3701,7 +3708,12 @@
 
                 const gisid = feature.get('gisid');
                 const geometry = feature.getGeometry();
-                const coordinates = geometry.getCoordinates();
+
+                // ─── ✅ Transform 3857 → WGS84 ───
+                const coordinates3857 = geometry.getCoordinates();
+                const coordinatesWGS84 = coordinates3857.map(ring =>
+                    ring.map(coord => ol.proj.toLonLat(coord))
+                );
 
                 $.ajax({
                     url: '/update-polygon',
@@ -3711,34 +3723,36 @@
                     },
                     data: {
                         gisid: gisid,
-                        coordinates: JSON.stringify(coordinates),
+                        coordinates: JSON.stringify(coordinatesWGS84), // ← WGS84
                         sqfeet: feature.get('sqfeet') || '0'
                     },
                     success: function(response) {
                         Swal.fire('Success!', 'Polygon moved successfully', 'success');
 
-                        polygons = response.data.polygons ?? polygons;
-                        points = response.data.points ?? points;
-                        lines = response.data.lines ?? lines;
+                        if (response.data) {
+                            polygons = response.data.polygons ?? polygons;
+                            points = response.data.points ?? points;
+                            lines = response.data.lines ?? lines;
+                        }
+
                         $('.edit-dropdown-item').removeClass('active');
                         $('.edit-dropdown').removeClass('show');
                         $('#editToggleBtn').removeClass('active-edit');
                         reloadAllSources();
                         disableAllInteractions();
                         clearDrawInteraction();
-                        selectedFeatureForEdit.setStyle(null);
-                        selectedFeatureForEdit = null;
-                        originalGeometry = null;
+
+                        if (selectedFeatureForEdit) {
+                            selectedFeatureForEdit.setStyle(null);
+                            selectedFeatureForEdit = null;
+                            originalGeometry = null;
+                        }
                         hideEditControls();
 
                         if (translateInteraction) {
                             map.removeInteraction(translateInteraction);
                             translateInteraction = null;
                         }
-
-                        $('.edit-dropdown-item').removeClass('active');
-                        $('.edit-dropdown').removeClass('show');
-                        $('#editToggleBtn').removeClass('active-edit');
 
                         showToast('✅ Polygon moved!', 2000);
                         setNoneMode();
@@ -3839,8 +3853,8 @@
                     return;
                 }
                 if (primaryGisId === secondaryGisId) {
-                    $('#mergeGisError').text(
-                        'Primary and Secondary GIS ID same ah irukka koodathu.').show();
+                    $('#mergeGisError').text('Primary and Secondary GIS ID same ah irukka koodathu.')
+                        .show();
                     return;
                 }
 
@@ -3849,8 +3863,7 @@
 
                 if (!secondaryFeature) {
                     $('#mergeGisError').text(
-                        'Secondary GIS ID map la kidaikala. Sariyana GIS ID ah check pannunga.'
-                    ).show();
+                        'Secondary GIS ID map la kidaikala. Sariyana GIS ID ah check pannunga.').show();
                     return;
                 }
                 if (!primaryFeature) {
@@ -3882,17 +3895,24 @@
                 });
                 const mergedGeom = mergedOlFeature.getGeometry();
 
-                let finalPolygonCoords;
+                // ─── Extract final polygon ring (3857) ───
+                let finalPolygonCoords3857;
                 if (mergedGeom.getType() === 'MultiPolygon') {
                     const polys = mergedGeom.getPolygons();
                     polys.sort((a, b) => b.getArea() - a.getArea());
-                    finalPolygonCoords = polys[0].getCoordinates();
+                    finalPolygonCoords3857 = polys[0].getCoordinates();
                 } else {
-                    finalPolygonCoords = mergedGeom.getCoordinates();
+                    finalPolygonCoords3857 = mergedGeom.getCoordinates();
                 }
 
-                const areaSqm = new ol.geom.Polygon(finalPolygonCoords).getArea();
+                // ─── Area from 3857 (accurate for small polys) ───
+                const areaSqm = new ol.geom.Polygon(finalPolygonCoords3857).getArea();
                 const sqft = (areaSqm * 10.7639).toFixed(0);
+
+                // ─── ✅ Transform 3857 → WGS84 (lon/lat) before sending ───
+                const finalPolygonCoordsWGS84 = finalPolygonCoords3857.map(ring =>
+                    ring.map(coord => ol.proj.toLonLat(coord))
+                );
 
                 const $btn = $('#confirmMergeBtn');
                 const originalHtml = $btn.html();
@@ -3907,7 +3927,7 @@
                     data: {
                         primary_gisid: primaryGisId,
                         secondary_gisid: secondaryGisId,
-                        coordinates: JSON.stringify(finalPolygonCoords),
+                        coordinates: JSON.stringify(finalPolygonCoordsWGS84), // ← WGS84
                         sqfeet: sqft
                     },
                     success: function(response) {
@@ -3918,36 +3938,28 @@
                             return;
                         }
 
-                        // ─── 1. REASSIGN DATA FROM RESPONSE ───
-                        // response.data is the payload from WardService::mergePolygons()
+                        // ─── Reassign fresh data ───
                         const d = response.data || {};
-
                         if (d.polygons) polygons = d.polygons;
                         if (d.polygonDatas) polygonDatas = d.polygonDatas;
                         if (d.points) points = d.points;
                         if (d.pointDatas) pointDatas = d.pointDatas;
 
-                        // ─── 2. HARD REFRESH POLYGON + POINT SOURCES ───
-                        // Clear and rebuild from the fresh arrays
+                        // ─── Hard refresh polygon + point layers ───
                         polygonSource.clear();
                         pointSource.clear();
+                        lineSource.clear();
 
                         loadPolygonsToSource();
                         loadPointsToSource();
-                        loadLinesToSource(); // optional, but keeps line index fresh
+                        loadLinesToSource();
 
-                        // ─── 3. FORCE STYLE RE-EVALUATION ───
-                        // Recolours points based on new pointDatas counts
                         polygonSource.changed();
                         pointSource.changed();
 
-                        // ─── 4. REBUILD SEARCH INDEX ───
                         buildSearchIndex();
-
-                        // ─── 5. UPDATE SURVEY COUNT (optional) ───
                         $('#surveycount').text(polygons.length);
 
-                        // ─── 6. CLOSE MODAL & RESET MODE ───
                         mergePolygonModal.hide();
                         cleanupMergeModal();
                         disableAllInteractions();
@@ -3964,8 +3976,7 @@
                             showConfirmButton: false
                         });
 
-                        showToast('✅ Merge complete — polygon & point layers refreshed', 2500);
-
+                        showToast('✅ Merge complete — layers refreshed', 2500);
                         setNoneMode();
                     },
                     error: function(xhr) {
@@ -4069,16 +4080,22 @@
                 showToast('✂️ Draw a line across the polygon', 3000);
 
                 splitDraw.on('drawend', function(e) {
-                    const polygonCoords = feature.getGeometry().getCoordinates();
-                    const lineCoords = e.feature.getGeometry().getCoordinates();
+                    const polygonCoords3857 = feature.getGeometry().getCoordinates();
+                    const lineCoords3857 = e.feature.getGeometry().getCoordinates();
                     const gisid = feature.get('gisid');
+
+                    // ─── ✅ Transform 3857 → WGS84 ───
+                    const polygonCoordsWGS84 = polygonCoords3857.map(ring =>
+                        ring.map(coord => ol.proj.toLonLat(coord))
+                    );
+                    const lineCoordsWGS84 = lineCoords3857.map(coord => ol.proj.toLonLat(coord));
 
                     $.ajax({
                         url: '/polygon-split',
                         type: 'POST',
                         data: {
-                            polygon: JSON.stringify(polygonCoords),
-                            splitLine: JSON.stringify(lineCoords),
+                            polygon: JSON.stringify(polygonCoordsWGS84), // ← WGS84
+                            splitLine: JSON.stringify(lineCoordsWGS84), // ← WGS84
                             gisid,
                             _token: $('meta[name="csrf-token"]').attr('content')
                         },
@@ -4086,16 +4103,19 @@
                             Swal.fire('Success!', 'Polygon split successfully', 'success');
                             map.removeInteraction(splitDraw);
                             splitLineSource.clear();
+
                             if (selectedFeatureForSplit) {
                                 selectedFeatureForSplit.setStyle(null);
                                 selectedFeatureForSplit = null;
                             }
                             hideSplitButton();
+
                             polygons = response.polygons ?? polygons;
                             points = response.points ?? points;
                             reloadAllSources();
                             disableAllInteractions();
                             clearDrawInteraction();
+
                             showToast('✅ Split complete', 2000);
                             setNoneMode();
                         },
@@ -4153,6 +4173,23 @@
             }
 
             function saveFeature(feature, type) {
+                const geom = feature.getGeometry();
+                let payload;
+
+                // ─── ✅ Transform 3857 → WGS84 based on geometry type ───
+                if (type === 'Polygon') {
+                    const coords3857 = geom.getCoordinates();
+                    payload = coords3857.map(ring =>
+                        ring.map(coord => ol.proj.toLonLat(coord))
+                    );
+                } else if (type === 'LineString') {
+                    const coords3857 = geom.getCoordinates();
+                    payload = coords3857.map(coord => ol.proj.toLonLat(coord));
+                } else if (type === 'Point') {
+                    const coord3857 = geom.getCoordinates();
+                    payload = ol.proj.toLonLat(coord3857);
+                }
+
                 $.ajax({
                     url: '/save-feature',
                     type: 'POST',
@@ -4161,18 +4198,21 @@
                     },
                     data: {
                         layer_type: type,
-                        feature: JSON.stringify(feature.getGeometry().getCoordinates())
+                        feature: JSON.stringify(payload) // ← WGS84
                     },
                     success: function(response) {
                         polygons = response.data.polygons ?? polygons;
                         points = response.data.points ?? points;
                         lines = response.data.lines ?? lines;
+
                         $('.edit-dropdown-item').removeClass('active');
                         $('.edit-dropdown').removeClass('show');
                         $('#editToggleBtn').removeClass('active-edit');
+
                         reloadAllSources();
                         disableAllInteractions();
                         clearDrawInteraction();
+
                         Swal.fire('Success', 'Feature saved successfully', 'success');
                         setNoneMode();
                     },

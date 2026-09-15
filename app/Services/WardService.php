@@ -1666,34 +1666,33 @@ class WardService
     }
 
 
-    private function calculateMidpointFromMerged($coordinates): ?array
-    {
-        if (empty($coordinates) || !is_array($coordinates)) {
-            return null;
-        }
-
-        $ring = null;
-
-        if (isset($coordinates[0]) && is_array($coordinates[0])) {
-
-            // MultiPolygon: [[[[x,y],...]]]
-            if (isset($coordinates[0][0][0]) && is_array($coordinates[0][0][0])) {
-                $ring = $coordinates[0][0];
-            }
-            // Polygon: [[[x,y],...]]
-            elseif (isset($coordinates[0][0]) && is_array($coordinates[0][0])) {
-                $ring = $coordinates[0];
-            }
-            // Flat ring: [[x,y],...]
-            elseif (is_numeric($coordinates[0][0])) {
-                $ring = $coordinates;
-            }
-        }
-
-        if (!$ring || count($ring) < 3) {
-            return null;
-        }
-
-        return $this->calculateMidpoint($ring);
+ private function calculateMidpointFromMerged($coordinates): ?array
+{
+    if (empty($coordinates) || !is_array($coordinates)) {
+        return null;
     }
+
+    $ring = null;
+
+    if (isset($coordinates[0]) && is_array($coordinates[0])) {
+        // MultiPolygon: [[[[x,y],...]]]
+        if (isset($coordinates[0][0][0]) && is_array($coordinates[0][0][0])) {
+            $ring = $coordinates[0][0];
+        }
+        // Polygon: [[[x,y],...]]
+        elseif (isset($coordinates[0][0]) && is_array($coordinates[0][0])) {
+            $ring = $coordinates[0];
+        }
+        // Flat ring: [[x,y],...]
+        elseif (is_numeric($coordinates[0][0])) {
+            $ring = $coordinates;
+        }
+    }
+
+    if (!$ring || count($ring) < 3) {
+        return null;
+    }
+
+    return $this->calculateMidpoint($ring);
+}
 }
