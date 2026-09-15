@@ -104,6 +104,11 @@ Route::middleware(['auth'])->group(function () {
     // Professional Tax Excel
     Route::get('/wards/{ward_id}/professional-tax-excel', [WardController::class, 'professionalTaxExcel'])
         ->name('wards.professional-tax-excel');
+        // ─── Ward Point Data & Building Data Exports (ALL fields) ─────────
+Route::get('/wards/{ward_id}/export-point-data', [WardController::class, 'exportPointData'])->name('wards.export-point-data');
+Route::get('/wards/{ward_id}/export-point-data-excel', [WardController::class, 'exportPointDataExcel'])->name('wards.export-point-data-excel');
+Route::get('/wards/{ward_id}/export-building-data', [WardController::class, 'exportBuildingData'])->name('wards.export-building-data');
+Route::get('/wards/{ward_id}/export-building-data-excel', [WardController::class, 'exportBuildingDataExcel'])->name('wards.export-building-data-excel');
 });
 
 
@@ -261,10 +266,10 @@ Route::middleware(['auth', 'role:surveyor,teamleader'])->group(function () {
        Route::get('/gisid-search', function () {
         return view('gisid-search');
     })->name('gisid.search');
-    
+
     Route::post('/gisid-search/fetch', [PointdataController::class, 'searchByGisId'])
         ->name('gisid.fetch');
-    
+
     Route::post('/gisid-search/update-all', [PointdataController::class, 'updateAllByGisId'])
         ->name('gisid.updateAll');
  });

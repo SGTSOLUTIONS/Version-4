@@ -93,7 +93,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/wards/{ward_id}/water-tax-excel', [WardController::class, 'waterTaxExcel'])->name('wards.water-tax-excel');
     // Professional Tax Excel
     Route::get('/wards/{ward_id}/professional-tax-excel', [WardController::class, 'professionalTaxExcel'])->name('wards.professional-tax-excel');
-    // ─── Ward Point Data & Building Data Exports ──────────────────────
+   // ─── Ward Point Data & Building Data Exports (ALL fields) ─────────
 Route::get('/wards/{ward_id}/export-point-data', [WardController::class, 'exportPointData'])->name('wards.export-point-data');
 Route::get('/wards/{ward_id}/export-point-data-excel', [WardController::class, 'exportPointDataExcel'])->name('wards.export-point-data-excel');
 Route::get('/wards/{ward_id}/export-building-data', [WardController::class, 'exportBuildingData'])->name('wards.export-building-data');
