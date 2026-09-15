@@ -2321,9 +2321,9 @@
 
                 polygons.forEach(poly => {
                     try {
-                        let coords = typeof poly.coordinates === 'string'
-                            ? JSON.parse(poly.coordinates)
-                            : poly.coordinates;
+                        let coords = typeof poly.coordinates === 'string' ?
+                            JSON.parse(poly.coordinates) :
+                            poly.coordinates;
 
                         if (!coords || !Array.isArray(coords) || coords.length === 0) {
                             console.warn('Empty coords for gisid:', poly.gisid);
@@ -2348,9 +2348,9 @@
                         const feature = new ol.Feature({
                             geometry: geometry,
                             gisid: poly.gisid,
-                            type: geometry.getType(),      // 'Polygon' or 'MultiPolygon'
+                            type: geometry.getType(), // 'Polygon' or 'MultiPolygon'
                             sqfeet: poly.sqfeet || '0',
-                            dbType: poly.type || null,     // keep original for reference
+                            dbType: poly.type || null, // keep original for reference
                             originalData: poly
                         });
 
@@ -2424,6 +2424,7 @@
                 loadLinesToSource();
                 loadPointsToSource();
                 buildSearchIndex();
+                map.renderSync(); // ✅ force immediate redraw
             }
 
             loadPolygonsToSource();
@@ -2827,10 +2828,10 @@
                 if (type === 'Point' || geomType === 'Point') {
                     pointClick(feature);
                 } else if (type === 'Polygon' || type === 'MultiPolygon' ||
-                           geomType === 'Polygon' || geomType === 'MultiPolygon') {
+                    geomType === 'Polygon' || geomType === 'MultiPolygon') {
                     polygonClick(feature);
                 } else if (type === 'LineString' || geomType === 'LineString' ||
-                           type === 'MultiLineString' || geomType === 'MultiLineString') {
+                    type === 'MultiLineString' || geomType === 'MultiLineString') {
                     lineClick(feature);
                 }
             }
@@ -3634,7 +3635,7 @@
                         gisid: gisid,
                         coordinates: JSON.stringify(coordinates),
                         sqfeet: feature.get('sqfeet') || '0',
-                        type: geomType   // ✅ 'Polygon' or 'MultiPolygon'
+                        type: geomType // ✅ 'Polygon' or 'MultiPolygon'
                     },
                     success: function(response) {
                         Swal.fire('Success!', 'Polygon updated successfully', 'success');
@@ -4016,7 +4017,7 @@
                         primary_gisid: primaryGisId,
                         secondary_gisid: secondaryGisId,
                         coordinates: JSON.stringify(finalCoords),
-                        type: finalType,           // ✅ Tell backend the type
+                        type: finalType, // ✅ Tell backend the type
                         sqfeet: sqft
                     },
                     success: function(response) {
@@ -4029,13 +4030,19 @@
 
                         Swal.fire('Success!', 'Polygons merged successfully', 'success');
 
-                        polygons = response.data.polygons ?? polygons;
-                        points = response.data.points ?? points;
-                        lines = response.data.lines ?? lines;
-                        polygonDatas = response.data.polygonDatas ?? polygonDatas;
-                        pointDatas = response.data.pointDatas ?? pointDatas;
+                        // ✅ Refresh ALL arrays from the server response
+                        if (response.data) {
+                            if (response.data.polygons) polygons = response.data.polygons;
+                            if (response.data.points) points = response.data.points;
+                            if (response.data.lines) lines = response.data.lines;
+                            if (response.data.polygonDatas) polygonDatas = response.data
+                                .polygonDatas;
+                            if (response.data.pointDatas) pointDatas = response.data.pointDatas;
+                        }
 
+                        // ✅ Rebuild all vector sources + redraw
                         reloadAllSources();
+                        map.renderSync();
 
                         mergePolygonModal.hide();
                         cleanupMergeModal();
@@ -4167,7 +4174,7 @@
                         type: 'POST',
                         data: {
                             polygon: JSON.stringify(polygonCoords),
-                            polygonType: polygonType,   // ✅
+                            polygonType: polygonType, // ✅
                             splitLine: JSON.stringify(lineCoords),
                             gisid,
                             _token: $('meta[name="csrf-token"]').attr('content')
@@ -4278,14 +4285,14 @@
                 searchIndex = [];
                 polygons.forEach(poly => {
                     try {
-                        const coords = typeof poly.coordinates === 'string'
-                            ? JSON.parse(poly.coordinates)
-                            : poly.coordinates;
+                        const coords = typeof poly.coordinates === 'string' ?
+                            JSON.parse(poly.coordinates) :
+                            poly.coordinates;
 
                         const detectedType = detectCoordType(coords);
-                        const geomType = detectedType === 'MultiPolygon'
-                            ? 'multipolygon'
-                            : 'polygon';
+                        const geomType = detectedType === 'MultiPolygon' ?
+                            'multipolygon' :
+                            'polygon';
 
                         searchIndex.push({
                             datatId: poly.id,
@@ -4294,7 +4301,7 @@
                             title: `GIS ID: ${poly.gisid}`,
                             subtitle: `Building (${poly.sqfeet || 0} sqft)`,
                             coordinates: coords,
-                            geometryType: geomType,        // ✅ 'polygon' or 'multipolygon'
+                            geometryType: geomType, // ✅ 'polygon' or 'multipolygon'
                             searchText: `${poly.gisid} ${poly.sqfeet} building polygon`
                         });
                     } catch (e) {
@@ -4946,7 +4953,8 @@
                             `Point GIS ID: ${item.point_gisid || 'N/A'}${item.owner_name ? ' | Owner: ' + item.owner_name : ''}` :
                             item.subtitle;
                         const icon = item.geometryType === 'point' ? 'geo-alt' :
-                            (item.geometryType === 'polygon' || item.geometryType === 'multipolygon') ? 'pentagon' :
+                            (item.geometryType === 'polygon' || item.geometryType ===
+                                'multipolygon') ? 'pentagon' :
                             'vector-pen';
 
                         const editBtn = item.type === 'pointdata' ?
@@ -5073,11 +5081,18 @@
                         $btn.html('<i class="bi bi-trash3 me-1"></i>Delete').prop('disabled',
                             false);
 
-                        polygons = response.data.polygons ?? polygons;
-                        points = response.data.points ?? points;
-                        lines = response.data.lines ?? lines;
+                        // ✅ Refresh ALL arrays
+                        if (response.data) {
+                            if (response.data.polygons) polygons = response.data.polygons;
+                            if (response.data.points) points = response.data.points;
+                            if (response.data.lines) lines = response.data.lines;
+                            if (response.data.polygonDatas) polygonDatas = response.data
+                                .polygonDatas;
+                            if (response.data.pointDatas) pointDatas = response.data.pointDatas;
+                        }
 
                         reloadAllSources();
+                        map.renderSync();
                         disableAllInteractions();
                         setNoneMode();
 
