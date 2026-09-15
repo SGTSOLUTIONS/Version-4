@@ -302,71 +302,74 @@ class FeatureController extends Controller
 
         return response()->json($result);
     }
-    public function merge(Request $request)
-    {
-        return response()->json($request->all());
-        $validator = Validator::make($request->all(), [
-            'primary_gisid'   => 'required|string',
-            'secondary_gisid' => 'required|string|different:primary_gisid',
-            'coordinates'     => 'required|string',
-            'sqfeet'          => 'nullable|string',
-        ]);
+public function merge(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'primary_gisid'   => 'required|string',
+        'secondary_gisid' => 'required|string|different:primary_gisid',
+        'coordinates'     => 'required|string',
+        'sqfeet'          => 'nullable|string',
+    ]);
 
-        if ($validator->fails()) {
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors'  => $validator->errors(),
+        ], 422);
+    }
+
+    $user = auth()->user();
+
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthenticated',
+        ], 401);
+    }
+
+    $wardId = $user->ward_id;
+
+    if (!$wardId) {
+        return response()->json([
+            'success' => false,
+            'message' => 'User has no ward assigned',
+        ], 400);
+    }
+
+    try {
+
+        $coordinates = json_decode($request->coordinates, true);
+
+        if (!is_array($coordinates) || empty($coordinates)) {
             return response()->json([
                 'success' => false,
-                'errors'  => $validator->errors(),
+                'message' => 'Invalid merged coordinates',
             ], 422);
         }
 
-        $user = auth()->user();
+        $result = $this->wardService->mergePolygons([
+            'ward_id'         => $wardId,
+            'primary_gisid'   => $request->primary_gisid,
+            'secondary_gisid' => $request->secondary_gisid,
+            'coordinates'     => $coordinates,
+            'sqfeet'          => $request->sqfeet ?? '0',
+        ]);
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated',
-            ], 401);
-        }
+        return response()->json([
+            'success' => $result['status'] ?? false,
+            'message' => $result['message'] ?? 'Polygons merged successfully',
+            'data'    => $result,
+        ]);
 
-        $wardId = $user->ward_id;
+    } catch (\Exception $e) {
 
-        if (!$wardId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User has no ward assigned',
-            ], 400);
-        }
-
-        try {
-            $coordinates = json_decode($request->coordinates, true);
-
-            if (!is_array($coordinates) || empty($coordinates)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid merged coordinates',
-                ], 422);
-            }
-
-            $result = $this->wardService->mergePolygons([
-                'ward_id'         => $wardId,
-                'primary_gisid'   => $request->primary_gisid,
-                'secondary_gisid' => $request->secondary_gisid,
-                'coordinates'     => $coordinates,
-                'sqfeet'          => $request->sqfeet ?? '0',
-            ]);
-
-            return response()->json([
-                'success' => $result['status'] ?? true,
-                'message' => $result['message'] ?? 'Polygons merged successfully',
-                'data'    => $result,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'line'    => $e->getLine(),
-                'file'    => $e->getFile(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'line'    => $e->getLine(),
+            'file'    => $e->getFile(),
+        ], 500);
     }
+}
+
 }
