@@ -1505,11 +1505,23 @@ class WardService
             round($latSum / $count, 8),
         ];
     }
-    public function mergePolygons(array $data, $useTransaction = true): array
+       public function mergePolygons(array $data, $useTransaction = true): array
     {
         $startedTransaction = false;
 
         try {
+            // ---------------------------------------------------------
+            // Validate required input EARLY
+            // ---------------------------------------------------------
+
+            foreach (['ward_id', 'primary_gisid', 'secondary_gisid', 'coordinates'] as $key) {
+                if (!isset($data[$key])) {
+                    return [
+                        'status'  => false,
+                        'message' => "Missing required key: {$key}",
+                    ];
+                }
+            }
 
             $wardId = $data['ward_id'];
 
@@ -1526,19 +1538,15 @@ class WardService
             $sqfeet      = $data['sqfeet'] ?? '0';
 
             // ---------------------------------------------------------
-            // Validate tables
+            // Validate tables BEFORE any query
             // ---------------------------------------------------------
 
             if (!Schema::hasTable($tableName)) {
-                throw new \Exception(
-                    "Polygon table not found: {$tableName}"
-                );
+                throw new \Exception("Polygon table not found: {$tableName}");
             }
 
             if (!Schema::hasTable($pointTableName)) {
-                throw new \Exception(
-                    "Point table not found: {$pointTableName}"
-                );
+                throw new \Exception("Point table not found: {$pointTableName}");
             }
 
             // ---------------------------------------------------------
@@ -1559,9 +1567,7 @@ class WardService
                 ->first();
 
             if (!$primaryPolygon) {
-                throw new \Exception(
-                    "Primary polygon not found: {$primaryGisid}"
-                );
+                throw new \Exception("Primary polygon not found: {$primaryGisid}");
             }
 
             // ---------------------------------------------------------
@@ -1573,98 +1579,63 @@ class WardService
                 ->first();
 
             if (!$secondaryPolygon) {
-                throw new \Exception(
-                    "Secondary polygon not found: {$secondaryGisid}"
-                );
+                throw new \Exception("Secondary polygon not found: {$secondaryGisid}");
             }
 
             // ---------------------------------------------------------
-            // CHECK SECONDARY POLYGON DATA
-            // ---------------------------------------------------------
-
-            if (Schema::hasTable($polygonDataTable)) {
-
-                $hasPolygonData = DB::table($polygonDataTable)
-                    ->where('gisid', $secondaryGisid)
-                    ->exists();
-
-                if ($hasPolygonData) {
-
-                    if ($startedTransaction) {
-                        DB::rollBack();
-                    }
-
-                    return [
-                        'status'           => false,
-                        'merge_allowed'    => false,
-                        'message'          => "GISID {$secondaryGisid} contains polygon data. Merge cancelled.",
-                        'primary_gisid'    => $primaryGisid,
-                        'secondary_gisid'  => $secondaryGisid,
-                    ];
-                }
-            }
-
-            // ---------------------------------------------------------
-            // CHECK SECONDARY POINT DATA
+            // CHECK SECONDARY POINT DATA — cannot merge if it has point data
             // ---------------------------------------------------------
 
             if (Schema::hasTable($pointDataTable)) {
-
                 $hasPointData = DB::table($pointDataTable)
                     ->where('point_gisid', $secondaryGisid)
                     ->exists();
 
                 if ($hasPointData) {
-
                     if ($startedTransaction) {
                         DB::rollBack();
                     }
 
                     return [
-                        'status'           => false,
-                        'merge_allowed'    => false,
-                        'message'          => "GISID {$secondaryGisid} contains point data. Merge cancelled.",
-                        'primary_gisid'    => $primaryGisid,
-                        'secondary_gisid'  => $secondaryGisid,
+                        'status'          => false,
+                        'merge_allowed'   => false,
+                        'message'         => "GISID {$secondaryGisid} contains point data. Merge cancelled.",
+                        'primary_gisid'   => $primaryGisid,
+                        'secondary_gisid' => $secondaryGisid,
                     ];
                 }
             }
 
             // ---------------------------------------------------------
-            // Validate coordinates
+            // Validate merged coordinates
             // ---------------------------------------------------------
 
-            if (
-                !is_array($coordinates) ||
-                empty($coordinates)
-            ) {
-                throw new \Exception(
-                    'Invalid merged polygon coordinates.'
-                );
+            if (!is_array($coordinates) || empty($coordinates)) {
+                throw new \Exception('Invalid merged polygon coordinates.');
             }
 
             // ---------------------------------------------------------
             // Calculate area if sqfeet was not supplied
             // ---------------------------------------------------------
 
-            if (
-                empty($sqfeet) ||
-                $sqfeet === '0'
-            ) {
-                $sqfeet = $this->calculatePolygonAreaInSquareFeet(
-                    $coordinates
-                );
+            if (empty($sqfeet) || (float) $sqfeet === 0.0) {
+                $sqfeet = $this->calculatePolygonAreaInSquareFeet($coordinates);
             }
 
+            $sqfeet = (float) $sqfeet;
+
             // ---------------------------------------------------------
-            // Calculate midpoint
+            // Calculate midpoint — handle GeoJSON wrapping
             // ---------------------------------------------------------
 
             $ring = $coordinates;
 
+            // GeoJSON Polygon wraps ring inside an outer array:
+            //   [[[lng,lat], [lng,lat], ...]]
             if (
                 isset($coordinates[0]) &&
-                is_array($coordinates[0])
+                is_array($coordinates[0]) &&
+                is_array($coordinates[0][0] ?? null)
             ) {
                 $ring = $coordinates[0];
             }
@@ -1679,43 +1650,36 @@ class WardService
                 ->where('gisid', $primaryGisid)
                 ->update([
                     'type'        => 'Polygon',
-                    'coordinates' => json_encode(
-                        $coordinates,
-                        JSON_UNESCAPED_UNICODE
-                    ),
+                    'coordinates' => json_encode($coordinates, JSON_UNESCAPED_UNICODE),
                     'sqfeet'      => (string) $sqfeet,
                     'updated_at'  => now(),
                 ]);
 
             // ---------------------------------------------------------
-            // UPDATE PRIMARY POINT
+            // UPDATE / INSERT PRIMARY POINT (midpoint)
             // ---------------------------------------------------------
 
-            if ($midpoint) {
-
+            if (!empty($midpoint)) {
                 $existingPrimaryPoint = DB::table($pointTableName)
                     ->where('gisid', $primaryGisid)
                     ->exists();
 
                 if ($existingPrimaryPoint) {
-
                     DB::table($pointTableName)
                         ->where('gisid', $primaryGisid)
                         ->update([
                             'type'        => 'point',
-                            'coordinates' => json_encode($midpoint),
+                            'coordinates' => json_encode($midpoint, JSON_UNESCAPED_UNICODE),
                             'updated_at'  => now(),
                         ]);
                 } else {
-
-                    DB::table($pointTableName)
-                        ->insert([
-                            'gisid'       => $primaryGisid,
-                            'type'        => 'point',
-                            'coordinates' => json_encode($midpoint),
-                            'created_at'  => now(),
-                            'updated_at'  => now(),
-                        ]);
+                    DB::table($pointTableName)->insert([
+                        'gisid'       => $primaryGisid,
+                        'type'        => 'point',
+                        'coordinates' => json_encode($midpoint, JSON_UNESCAPED_UNICODE),
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ]);
                 }
             }
 
@@ -1760,22 +1724,22 @@ class WardService
             // ---------------------------------------------------------
 
             return [
-                'status'           => true,
-                'merge_allowed'    => true,
-                'message'          => "Polygon {$secondaryGisid} merged into {$primaryGisid} successfully.",
-                'primary_gisid'    => $primaryGisid,
-                'secondary_gisid'  => $secondaryGisid,
-                'sqfeet'           => $sqfeet,
-                'polygon'          => $mergedPolygon,
-                'point'            => $mergedPoint,
+                'status'          => true,
+                'merge_allowed'   => true,
+                'message'         => "Polygon {$secondaryGisid} merged into {$primaryGisid} successfully.",
+                'primary_gisid'   => $primaryGisid,
+                'secondary_gisid' => $secondaryGisid,
+                'sqfeet'          => $sqfeet,
+                'polygon'         => $mergedPolygon,
+                'point'           => $mergedPoint,
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
 
             // ---------------------------------------------------------
             // Rollback transaction
             // ---------------------------------------------------------
 
-            if ($startedTransaction) {
+            if ($startedTransaction && DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
 
@@ -1783,14 +1747,12 @@ class WardService
             // Log error
             // ---------------------------------------------------------
 
-            Log::error(
-                'Merge Polygon Error: ' . $e->getMessage(),
-                [
-                    'ward_id'         => $data['ward_id'] ?? null,
-                    'primary_gisid'   => $data['primary_gisid'] ?? null,
-                    'secondary_gisid' => $data['secondary_gisid'] ?? null,
-                ]
-            );
+            Log::error('Merge Polygon Error: ' . $e->getMessage(), [
+                'ward_id'         => $data['ward_id'] ?? null,
+                'primary_gisid'   => $data['primary_gisid'] ?? null,
+                'secondary_gisid' => $data['secondary_gisid'] ?? null,
+                'trace'           => $e->getTraceAsString(),
+            ]);
 
             // ---------------------------------------------------------
             // Return error
