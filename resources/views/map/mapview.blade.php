@@ -2168,68 +2168,109 @@
                 })
             });
 
-            // ─── STYLES ───
-            // ✅ FIXED: Works for both Polygon and MultiPolygon
-            function createPolygonStyle(feature) {
-                const gisid = feature.get('gisid');
-                const sqft = feature.get('sqfeet') || '0';
-                const polygonData = polygonDatas.find(d => d.gisid == gisid);
-                const color = polygonData ? 'red' : 'blue';
+           // ✅ Helper: Compute a point guaranteed INSIDE the polygon (works for Polygon & MultiPolygon)
+function getPointInsidePolygon(geometry) {
+    if (!geometry) return null;
 
-                let labelPoint = null;
-                try {
-                    labelPoint = feature.getGeometry().getInteriorPoint();
-                } catch (e) {
-                    // MultiPolygon without interior point → fallback to extent center
-                    try {
-                        const ext = feature.getGeometry().getExtent();
-                        if (ext) {
-                            labelPoint = new ol.geom.Point(ol.extent.getCenter(ext));
-                        }
-                    } catch (e2) {
-                        labelPoint = null;
-                    }
+    const geomType = geometry.getType();
+
+    try {
+        if (geomType === 'Polygon') {
+            return geometry.getInteriorPoint();
+        }
+
+        if (geomType === 'MultiPolygon') {
+            // Pick the LARGEST polygon and get its interior point
+            const polygons = geometry.getPolygons();
+            let largestPoly = null;
+            let largestArea = 0;
+
+            polygons.forEach(poly => {
+                const area = poly.getArea();
+                if (area > largestArea) {
+                    largestArea = area;
+                    largestPoly = poly;
                 }
+            });
 
-                const styles = [
-                    new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color,
-                            width: 4,
-                            lineJoin: 'round',
-                            lineCap: 'round'
-                        }),
-                        fill: new ol.style.Fill({
-                            color: 'rgba(0,0,255,0.1)'
-                        })
-                    })
-                ];
-
-                if (labelPoint) {
-                    styles.push(new ol.style.Style({
-                        geometry: labelPoint,
-                        text: new ol.style.Text({
-                            text: sqft + ' SQFT',
-                            font: 'bold 14px Arial',
-                            fill: new ol.style.Fill({
-                                color: '#000'
-                            }),
-                            backgroundFill: new ol.style.Fill({
-                                color: '#fff'
-                            }),
-                            backgroundStroke: new ol.style.Stroke({
-                                color: '#000',
-                                width: 1
-                            }),
-                            padding: [4, 6, 4, 6],
-                            overflow: true,
-                            textAlign: 'center'
-                        })
-                    }));
-                }
-
-                return styles;
+            if (largestPoly) {
+                return largestPoly.getInteriorPoint();
             }
+        }
+    } catch (e) {
+        console.warn('Interior point failed:', e);
+    }
+
+    // Fallback: extent center
+    try {
+        const ext = geometry.getExtent();
+        if (ext && isFinite(ext[0]) && isFinite(ext[2])) {
+            return new ol.geom.Point(ol.extent.getCenter(ext));
+        }
+    } catch (e2) {
+        console.warn('Extent center fallback failed:', e2);
+    }
+
+    return null;
+}
+
+function createPolygonStyle(feature) {
+    const gisid = feature.get('gisid');
+    const sqft = feature.get('sqfeet') || '0';
+    const polygonData = polygonDatas.find(d => d.gisid == gisid);
+    const color = polygonData ? 'red' : 'blue';
+
+    const geometry = feature.getGeometry();
+    if (!geometry) return null;
+
+    // ✅ Get guaranteed-inside label point
+    const labelPoint = getPointInsidePolygon(geometry);
+
+    const styles = [
+        new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color,
+                width: 4,
+                lineJoin: 'round',
+                lineCap: 'round'
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(0,0,255,0.1)'
+            })
+        })
+    ];
+
+    if (labelPoint) {
+        styles.push(new ol.style.Style({
+            geometry: labelPoint,
+            text: new ol.style.Text({
+                text: sqft + ' SQFT',
+                font: 'bold 14px Arial',
+                fill: new ol.style.Fill({
+                    color: '#000'
+                }),
+                backgroundFill: new ol.style.Fill({
+                    color: '#fff'
+                }),
+                backgroundStroke: new ol.style.Stroke({
+                    color: '#000',
+                    width: 1
+                }),
+                padding: [4, 6, 4, 6],
+                overflow: true,
+                textAlign: 'center',
+                // ✅ Force label INSIDE — no overflow beyond polygon
+                overflow: false,
+                // ✅ Keep label fixed at computed point (no auto-placement)
+                placement: 'point',
+                // ✅ Prevent label from being clipped by map edge
+                rotateWithView: false
+            })
+        }));
+    }
+
+    return styles;
+}
 
             function createLineStyle(feature) {
                 const roadName = feature.get('road_name');
