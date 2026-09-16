@@ -14,16 +14,47 @@ class VariationController extends Controller
 {
     /**
      * Normalize an assessment number for reliable matching.
-     * Removes ALL whitespace, uppercases, trims slashes/spaces.
+     * Removes ALL whitespace, uppercases.
      */
     private function normalizeAssessment($value): string
     {
         $value = (string) $value;
-        $value = preg_replace('/\s+/', '', $value);   // remove ALL whitespace
-        $value = strtoupper(trim($value));
-        return $value;
+        $value = preg_replace('/\s+/', '', $value);
+        return strtoupper(trim($value));
     }
 
+    /**
+     * Fetch MIS rows for a specific ward (tries string, then int, then PHP filter).
+     */
+    private function fetchMisData(string $misTableName, $wardNo)
+    {
+        // Try string match
+        $misData = DB::table($misTableName)
+            ->where('ward_no', (string) $wardNo)
+            ->get();
+
+        if ($misData->isEmpty()) {
+            // Try integer match
+            $misData = DB::table($misTableName)
+                ->where('ward_no', (int) $wardNo)
+                ->get();
+        }
+
+        if ($misData->isEmpty()) {
+            // Fallback: full fetch + PHP filter (handles odd formatting like "057")
+            $all = DB::table($misTableName)->get();
+            $misData = $all->filter(function ($row) use ($wardNo) {
+                return (string) ($row->ward_no ?? '') === (string) $wardNo;
+            })->values();
+        }
+
+        return $misData;
+    }
+
+    /**
+     * Fetch ALL MIS rows for the corp (no ward filter).
+     * Used as fallback when a point_data assessment isn't in the ward-filtered MIS.
+     */
     private function fetchAllMisData(string $misTableName)
     {
         return DB::table($misTableName)->get();
@@ -37,31 +68,29 @@ class VariationController extends Controller
         $ward = Ward::findOrFail($wardId);
         $zone = Zone::findOrFail($ward->zone_id);
 
-        $corp = $zone->corp_id;
+        $corp   = $zone->corp_id;
         $wardNo = $ward->ward_no;
 
-        // Dynamic table names
-        $polygonsTableName     = "polygons_{$wardId}";
-        $polygonDataTableName  = "polygon_data_{$wardId}";
-        $pointDataTableName    = "point_data_{$wardId}";
+        $polygonsTableName    = "polygons_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName   = "point_data_{$wardId}";
+        $misTableName         = "mis_{$corp}";
 
-        // Fetch GIS Data
-        $polygons      = DB::table($polygonsTableName)->get();
-        $polygonDatas  = DB::table($polygonDataTableName)->get();
-        $pointDatas    = DB::table($pointDataTableName)->get();
+        $polygons     = DB::table($polygonsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas   = DB::table($pointDataTableName)->get();
 
-        // MIS Data
-        $misTableName = "mis_{$corp}";
-        $misData = $this->fetchMisData($misTableName, $wardNo);
+        // Ward-filtered MIS (primary) + all corp MIS (fallback)
+        $misData    = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData = $this->fetchAllMisData($misTableName);
 
-        // Build variations
         $buildingVariations = $this->buildBuildingVariations(
             $polygons,
             $polygonDatas,
             $pointDatas,
-            $misData
+            $misData,
+            $allMisData
         );
-        return response()->json($buildingVariations);
 
         return view('variation.area_variation', compact(
             'ward',
@@ -78,25 +107,27 @@ class VariationController extends Controller
         $ward = Ward::findOrFail($wardId);
         $zone = Zone::findOrFail($ward->zone_id);
 
-        $corp = $zone->corp_id;
+        $corp   = $zone->corp_id;
         $wardNo = $ward->ward_no;
 
-        $polygonsTableName     = "polygons_{$wardId}";
-        $polygonDataTableName  = "polygon_data_{$wardId}";
-        $pointDataTableName    = "point_data_{$wardId}";
-        $misTableName          = "mis_{$corp}";
+        $polygonsTableName    = "polygons_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName   = "point_data_{$wardId}";
+        $misTableName         = "mis_{$corp}";
 
-        $polygons      = DB::table($polygonsTableName)->get();
-        $polygonDatas  = DB::table($polygonDataTableName)->get();
-        $pointDatas    = DB::table($pointDataTableName)->get();
+        $polygons     = DB::table($polygonsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas   = DB::table($pointDataTableName)->get();
 
-        $misData = $this->fetchMisData($misTableName, $wardNo);
+        $misData    = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData = $this->fetchAllMisData($misTableName);
 
         $buildingVariations = $this->buildBuildingVariations(
             $polygons,
             $polygonDatas,
             $pointDatas,
-            $misData
+            $misData,
+            $allMisData
         );
 
         return view('variation.usage_variation', compact(
@@ -107,15 +138,19 @@ class VariationController extends Controller
     }
 
     /**
-     * Build Area & Usage Variation with All Use Cases
-     * (Used by areaVariation() and usageVariation())
+     * Build Area & Usage Variation (used by areaVariation + usageVariation)
      */
-    private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData)
+    private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData, $allMisData = null)
     {
         $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
 
-        // ─── NORMALIZED MIS LOOKUP ───
+        // ─── PRIMARY MIS LOOKUP (ward-filtered) ───
         $misByAssessment = collect($misData)->keyBy(function ($item) {
+            return $this->normalizeAssessment($item->assessment ?? '');
+        });
+
+        // ─── FALLBACK MIS LOOKUP (all corp MIS, no ward filter) ───
+        $allMisByAssessment = collect($allMisData ?? $misData)->keyBy(function ($item) {
             return $this->normalizeAssessment($item->assessment ?? '');
         });
 
@@ -124,7 +159,7 @@ class VariationController extends Controller
         foreach ($pointDatas as $pd) {
             $pointDataByGisid[$pd->point_gisid][] = $pd;
         }
-        return $misByAssessment;
+
         $result = [];
 
         foreach ($polygons as $polygon) {
@@ -164,7 +199,6 @@ class VariationController extends Controller
             $matchedCount        = 0;
             $mismatchedCount     = 0;
 
-            // MIXED flags
             $hasResidential  = false;
             $hasCommercial   = false;
             $commercialIsNew = false;
@@ -175,9 +209,14 @@ class VariationController extends Controller
 
                     $assessmentCount++;
 
-                    // ─── NORMALIZED MIS LOOKUP ───
+                    // ─── NORMALIZED MIS LOOKUP (ward first, then any ward) ───
                     $assessmentKey = $this->normalizeAssessment($pd->assessment ?? '');
                     $mis = $misByAssessment->get($assessmentKey);
+
+                    if (!$mis) {
+                        // Fallback: check MIS from other wards for this assessment
+                        $mis = $allMisByAssessment->get($assessmentKey);
+                    }
 
                     // ─── POINT AREA (qcsqfeet first, then MIS plot_area) ───
                     $pointArea = 0;
@@ -235,12 +274,8 @@ class VariationController extends Controller
                         } elseif ($buildingUsageUpper === 'RESIDENTIAL') {
                             $isMatch = ($pointUsageUpper === 'RESIDENTIAL');
                         } elseif (in_array($buildingUsageUpper, [
-                            'COMMERCIAL',
-                            'INDUSTRIAL',
-                            'INSTITUTIONAL',
-                            'GOVERNMENT',
-                            'VACANT',
-                            'OTHER',
+                            'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
+                            'GOVERNMENT', 'VACANT', 'OTHER',
                         ])) {
                             $isMatch = ($pointUsageUpper === 'COMMERCIAL');
                         }
@@ -255,7 +290,7 @@ class VariationController extends Controller
             }
 
             // ═══════════════════════════════════════════════════════════
-            // BUILDING-LEVEL RULES
+            // BUILDING-LEVEL USAGE RULES
             // ═══════════════════════════════════════════════════════════
             $usageStatus      = 'NO_DATA';
             $usageStatusLabel = 'No Data';
@@ -276,12 +311,8 @@ class VariationController extends Controller
                 }
                 // COMMERCIAL family rule
                 elseif (in_array($buildingUsageUpper, [
-                    'COMMERCIAL',
-                    'INDUSTRIAL',
-                    'INSTITUTIONAL',
-                    'GOVERNMENT',
-                    'VACANT',
-                    'OTHER',
+                    'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
+                    'GOVERNMENT', 'VACANT', 'OTHER',
                 ])) {
                     if ($hasResidential) {
                         $forceVariation = true;
@@ -294,7 +325,6 @@ class VariationController extends Controller
                     }
                 }
 
-                // Set status
                 if ($forceVariation) {
                     $usageStatus      = 'VARIATION';
                     $usageStatusLabel = 'Variation';
@@ -354,7 +384,6 @@ class VariationController extends Controller
 
                 'assessment_count' => $assessmentCount,
 
-                // debug
                 'has_residential'   => $hasResidential,
                 'has_commercial'    => $hasCommercial,
                 'commercial_is_new' => $commercialIsNew,
@@ -375,17 +404,19 @@ class VariationController extends Controller
         $corp = $zone->corp_id;
         $wardNo = $ward->ward_no;
 
-        $polygonsTableName     = "polygons_{$wardId}";
-        $polygonDataTableName  = "polygon_data_{$wardId}";
-        $pointDataTableName    = "point_data_{$wardId}";
-        $misTableName          = "mis_{$corp}";
+        $polygonsTableName    = "polygons_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName   = "point_data_{$wardId}";
+        $misTableName         = "mis_{$corp}";
 
-        $polygons      = DB::table($polygonsTableName)->get();
-        $polygonDatas  = DB::table($polygonDataTableName)->get();
-        $pointDatas    = DB::table($pointDataTableName)->get();
-        $misData       = $this->fetchMisData($misTableName, $wardNo);
+        $polygons     = DB::table($polygonsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas   = DB::table($pointDataTableName)->get();
 
-        $allVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData);
+        $misData    = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData = $this->fetchAllMisData($misTableName);
+
+        $allVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
 
         $filtered = array_filter($allVariations, function ($item) use ($request) {
             if ($request->usage_status != 'all' && $item['usage_status'] != $request->usage_status) {
@@ -445,17 +476,19 @@ class VariationController extends Controller
         $corp = $zone->corp_id;
         $wardNo = $ward->ward_no;
 
-        $polygonsTableName     = "polygons_{$wardId}";
-        $polygonDataTableName  = "polygon_data_{$wardId}";
-        $pointDataTableName    = "point_data_{$wardId}";
-        $misTableName          = "mis_{$corp}";
+        $polygonsTableName    = "polygons_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName   = "point_data_{$wardId}";
+        $misTableName         = "mis_{$corp}";
 
-        $polygons      = DB::table($polygonsTableName)->get();
-        $polygonDatas  = DB::table($polygonDataTableName)->get();
-        $pointDatas    = DB::table($pointDataTableName)->get();
-        $misData       = $this->fetchMisData($misTableName, $wardNo);
+        $polygons     = DB::table($polygonsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas   = DB::table($pointDataTableName)->get();
 
-        $allVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData);
+        $misData    = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData = $this->fetchAllMisData($misTableName);
+
+        $allVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
 
         $filtered = array_filter($allVariations, function ($item) use ($request) {
             if ($request->usage_status != 'all' && $item['usage_status'] != $request->usage_status) return false;
@@ -682,25 +715,27 @@ class VariationController extends Controller
         $ward = Ward::findOrFail($wardId);
         $zone = Zone::findOrFail($ward->zone_id);
 
-        $corp = $zone->corp_id;
+        $corp   = $zone->corp_id;
         $wardNo = $ward->ward_no;
 
-        $polygonsTableName     = "polygons_{$wardId}";
-        $polygonDataTableName  = "polygon_data_{$wardId}";
-        $pointDataTableName    = "point_data_{$wardId}";
-        $misTableName          = "mis_{$corp}";
+        $polygonsTableName    = "polygons_{$wardId}";
+        $polygonDataTableName = "polygon_data_{$wardId}";
+        $pointDataTableName   = "point_data_{$wardId}";
+        $misTableName         = "mis_{$corp}";
 
-        $polygons      = DB::table($polygonsTableName)->get();
-        $polygonDatas  = DB::table($polygonDataTableName)->get();
-        $pointDatas    = DB::table($pointDataTableName)->get();
+        $polygons     = DB::table($polygonsTableName)->get();
+        $polygonDatas = DB::table($polygonDataTableName)->get();
+        $pointDatas   = DB::table($pointDataTableName)->get();
 
-        $misData = $this->fetchMisData($misTableName, $wardNo);
+        $misData    = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData = $this->fetchAllMisData($misTableName);
 
         $buildingVariations = $this->buildBuildingData(
             $polygons,
             $polygonDatas,
             $pointDatas,
-            $misData
+            $misData,
+            $allMisData
         );
 
         $filterOptions = $this->getFilterOptions($buildingVariations);
@@ -739,12 +774,17 @@ class VariationController extends Controller
     /**
      * Build building data from polygons, polygon data, point data and MIS data
      */
-    private function buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData)
+    private function buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData = null)
     {
         $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
 
-        // ─── NORMALIZED MIS LOOKUP ───
+        // ─── PRIMARY MIS LOOKUP (ward-filtered) ───
         $misByAssessment = collect($misData)->keyBy(function ($item) {
+            return $this->normalizeAssessment($item->assessment ?? '');
+        });
+
+        // ─── FALLBACK MIS LOOKUP (all corp MIS, no ward filter) ───
+        $allMisByAssessment = collect($allMisData ?? $misData)->keyBy(function ($item) {
             return $this->normalizeAssessment($item->assessment ?? '');
         });
 
@@ -818,9 +858,13 @@ class VariationController extends Controller
                 foreach ($pointDataByGisid[$gisid] as $pd) {
                     $assessmentCount++;
 
-                    // ─── NORMALIZED MIS LOOKUP ───
+                    // ─── NORMALIZED MIS LOOKUP (ward first, then any ward) ───
                     $assessmentKey = $this->normalizeAssessment($pd->assessment ?? '');
                     $mis = $misByAssessment->get($assessmentKey);
+
+                    if (!$mis) {
+                        $mis = $allMisByAssessment->get($assessmentKey);
+                    }
 
                     // ─── POINT AREA (qcsqfeet first, then MIS plot_area) ───
                     $pointArea = 0;
@@ -839,7 +883,7 @@ class VariationController extends Controller
                     $pointUsage      = $pd->qcusage ?? $pd->bill_usage ?? null;
                     $pointUsageUpper = $pointUsage ? strtoupper(trim($pointUsage)) : null;
 
-                    // ─── POINT ASSESSMENT TYPE (NEW / OLD) ───
+                    // ─── POINT ASSESSMENT TYPE ───
                     $pointAssessmentType = strtoupper(trim($pd->assessment_type ?? ''));
 
                     if ($pointUsage) {
@@ -873,6 +917,7 @@ class VariationController extends Controller
                             'plot_area'  => $mis->plot_area ?? null,
                             'assessment' => $mis->assessment ?? null,
                             'usage'      => $mis->usage ?? null,
+                            'ward_no'    => $mis->ward_no ?? null,
                         ] : null,
                     ];
 
@@ -922,12 +967,8 @@ class VariationController extends Controller
                     }
                     // 3) COMMERCIAL family
                     elseif (in_array($buildingUsageUpper, [
-                        'COMMERCIAL',
-                        'INDUSTRIAL',
-                        'INSTITUTIONAL',
-                        'GOVERNMENT',
-                        'VACANT',
-                        'OTHER',
+                        'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
+                        'GOVERNMENT', 'VACANT', 'OTHER',
                     ])) {
                         $hasResidentialBill = false;
                         foreach ($allAssessmentUsages as $u) {
@@ -975,12 +1016,8 @@ class VariationController extends Controller
                         $usageStatusLabel = 'Variation';
                         $usageBadgeClass  = 'badge-variation';
                     } elseif (in_array($buildingUsageUpper, [
-                        'COMMERCIAL',
-                        'INDUSTRIAL',
-                        'INSTITUTIONAL',
-                        'GOVERNMENT',
-                        'VACANT',
-                        'OTHER',
+                        'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
+                        'GOVERNMENT', 'VACANT', 'OTHER',
                     ])) {
                         $usageStatus      = 'VARIATION';
                         $usageStatusLabel = 'Variation';
@@ -1075,9 +1112,9 @@ class VariationController extends Controller
                         ? array_map(fn($item) => (array) $item, $pointDataByGisid[$gisid])
                         : null,
                     'mis_data'     => isset($pointDataByGisid[$gisid])
-                        ? array_map(function ($pd) use ($misByAssessment) {
+                        ? array_map(function ($pd) use ($misByAssessment, $allMisByAssessment) {
                             $key = $this->normalizeAssessment($pd->assessment ?? '');
-                            $mis = $misByAssessment->get($key);
+                            $mis = $misByAssessment->get($key) ?? $allMisByAssessment->get($key);
                             return $mis ? (array) $mis : null;
                         }, $pointDataByGisid[$gisid] ?? [])
                         : null,
@@ -1097,15 +1134,18 @@ class VariationController extends Controller
             $ward = Ward::findOrFail($wardId);
             $zone = Zone::findOrFail($ward->zone_id);
 
-            $corp = $zone->corp_id;
+            $corp   = $zone->corp_id;
             $wardNo = $ward->ward_no;
 
             $polygons     = DB::table("polygons_{$wardId}")->where('gisid', $gisid)->get();
             $polygonDatas = DB::table("polygon_data_{$wardId}")->where('gisid', $gisid)->get();
             $pointDatas   = DB::table("point_data_{$wardId}")->where('point_gisid', $gisid)->get();
-            $misData      = $this->fetchMisData("mis_{$corp}", $wardNo);
 
-            $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData);
+            $misTableName = "mis_{$corp}";
+            $misData      = $this->fetchMisData($misTableName, $wardNo);
+            $allMisData   = $this->fetchAllMisData($misTableName);
+
+            $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
             $data = $buildingVariations[$gisid] ?? null;
 
             if (!$data) {
@@ -1137,9 +1177,12 @@ class VariationController extends Controller
         $polygons     = DB::table("polygons_{$wardId}")->get();
         $polygonDatas = DB::table("polygon_data_{$wardId}")->get();
         $pointDatas   = DB::table("point_data_{$wardId}")->get();
-        $misData      = $this->fetchMisData("mis_{$corp}", $wardNo);
 
-        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData);
+        $misTableName = "mis_{$corp}";
+        $misData      = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData   = $this->fetchAllMisData($misTableName);
+
+        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
         $buildingVariations = $this->applyFilters($buildingVariations, $request);
 
         $perPage = $request->get('per_page', 20);
@@ -1174,9 +1217,12 @@ class VariationController extends Controller
         $polygons     = DB::table("polygons_{$wardId}")->get();
         $polygonDatas = DB::table("polygon_data_{$wardId}")->get();
         $pointDatas   = DB::table("point_data_{$wardId}")->get();
-        $misData      = $this->fetchMisData("mis_{$corp}", $wardNo);
 
-        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData);
+        $misTableName = "mis_{$corp}";
+        $misData      = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData   = $this->fetchAllMisData($misTableName);
+
+        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
         $buildingVariations = $this->applyFilters($buildingVariations, $request);
 
         $spreadsheet = new Spreadsheet();
@@ -1184,21 +1230,10 @@ class VariationController extends Controller
         $sheet->setTitle('Data Variation');
 
         $headers = [
-            'S.No',
-            'GIS ID',
-            'Building Usage',
-            'Building Area (sqft)',
-            'Assessment Usage',
-            'Assessment Area (sqft)',
-            'Area Variation (sqft)',
-            'Variation %',
-            'Area Status',
-            'Usage Status',
-            'Floor Count',
-            'Basement',
-            'Percentage',
-            'Assessment Count',
-            'Assessment Type',
+            'S.No', 'GIS ID', 'Building Usage', 'Building Area (sqft)',
+            'Assessment Usage', 'Assessment Area (sqft)', 'Area Variation (sqft)',
+            'Variation %', 'Area Status', 'Usage Status', 'Floor Count',
+            'Basement', 'Percentage', 'Assessment Count', 'Assessment Type',
         ];
 
         $headerStyle = [
@@ -1261,9 +1296,12 @@ class VariationController extends Controller
         $polygons     = DB::table("polygons_{$wardId}")->get();
         $polygonDatas = DB::table("polygon_data_{$wardId}")->get();
         $pointDatas   = DB::table("point_data_{$wardId}")->get();
-        $misData      = $this->fetchMisData("mis_{$corp}", $wardNo);
 
-        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData);
+        $misTableName = "mis_{$corp}";
+        $misData      = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData   = $this->fetchAllMisData($misTableName);
+
+        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
         $buildingVariations = $this->applyFilters($buildingVariations, $request);
 
         $pdf = PDF::loadView('variation.pdf-export', [
@@ -1286,9 +1324,12 @@ class VariationController extends Controller
         $polygons     = DB::table("polygons_{$wardId}")->where('gisid', $gisid)->get();
         $polygonDatas = DB::table("polygon_data_{$wardId}")->where('gisid', $gisid)->get();
         $pointDatas   = DB::table("point_data_{$wardId}")->where('point_gisid', $gisid)->get();
-        $misData      = $this->fetchMisData("mis_{$corp}", $wardNo);
 
-        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData);
+        $misTableName = "mis_{$corp}";
+        $misData      = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData   = $this->fetchAllMisData($misTableName);
+
+        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
         $data = $buildingVariations[$gisid] ?? null;
 
         if (!$data) {
@@ -1320,9 +1361,12 @@ class VariationController extends Controller
         $polygons     = DB::table("polygons_{$wardId}")->where('gisid', $gisid)->get();
         $polygonDatas = DB::table("polygon_data_{$wardId}")->where('gisid', $gisid)->get();
         $pointDatas   = DB::table("point_data_{$wardId}")->where('point_gisid', $gisid)->get();
-        $misData      = $this->fetchMisData("mis_{$corp}", $wardNo);
 
-        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData);
+        $misTableName = "mis_{$corp}";
+        $misData      = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData   = $this->fetchAllMisData($misTableName);
+
+        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
         $buildingData = $buildingVariations[$gisid] ?? null;
 
         if (!$buildingData) {
@@ -1379,9 +1423,12 @@ class VariationController extends Controller
         $polygons     = DB::table("polygons_{$wardId}")->where('gisid', $gisid)->get();
         $polygonDatas = DB::table("polygon_data_{$wardId}")->where('gisid', $gisid)->get();
         $pointDatas   = DB::table("point_data_{$wardId}")->where('point_gisid', $gisid)->get();
-        $misData      = $this->fetchMisData("mis_{$corp}", $wardNo);
 
-        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData);
+        $misTableName = "mis_{$corp}";
+        $misData      = $this->fetchMisData($misTableName, $wardNo);
+        $allMisData   = $this->fetchAllMisData($misTableName);
+
+        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
         $buildingData = $buildingVariations[$gisid] ?? null;
 
         if (!$buildingData) {
