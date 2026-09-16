@@ -113,9 +113,15 @@
                     <span class="word-system">System</span>
                 </h1>
 
-                <p><span class="right-border">Property Tax</span><span class="right-border">Trade License</span><span
-                        class="right-border">Professional Tax</span><span class="right-border">Gis Survey</span><span
-                        class="left-border">Data-Driven Govermance</span></p>
+                <p>
+    <span>Property Tax</span>
+    <span>Trade License</span>
+    <span>Professional Tax</span>
+
+    <span>Water Tax</span>
+    <span>GIS Survey</span>
+    <span>Data-Driven Governance</span>
+</p>
             </div>
 
             <div class="rv-secure">
