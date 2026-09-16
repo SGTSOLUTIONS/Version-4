@@ -9,6 +9,108 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
     <style>
+        /* ─── Searchable Profession Dropdown ─── */
+        .prof-search-wrap {
+            position: relative;
+        }
+
+        .prof-search-input {
+            width: 100%;
+            padding: 8px 34px 8px 12px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .prof-search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+        }
+
+        .prof-search-wrap .prof-caret {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+
+        .prof-search-list {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            max-height: 260px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, .15);
+            z-index: 9999;
+            display: none;
+            padding: 4px 0;
+        }
+
+        .prof-search-list.show {
+            display: block;
+        }
+
+        .prof-search-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .prof-search-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .prof-option {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            color: #1e293b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background .12s;
+        }
+
+        .prof-option:hover,
+        .prof-option.highlight {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .prof-option.selected {
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        .prof-option .opt-cat {
+            font-size: 0.65rem;
+            padding: 1px 6px;
+            border-radius: 20px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .prof-no-result {
+            padding: 12px 14px;
+            font-size: 0.82rem;
+            color: #94a3b8;
+            text-align: center;
+            font-style: italic;
+        }
+
         .dropdown-header {
             padding: 8px 18px;
             font-size: 0.75rem;
@@ -2078,6 +2180,805 @@
 
             // ─── HELPERS ───
             let ptIndex = 0;
+            // ═══════════════════════════════════════════════════════════
+            // PROFESSION TAX — MASTER LIST (add any new type here)
+            // ═══════════════════════════════════════════════════════════
+            const PROFESSION_MASTER = [
+                // ── Shops / Retail ──
+                {
+                    value: 'Grocery Shop',
+                    label: 'Grocery / Maligai Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Supermarket',
+                    label: 'Supermarket',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Provision Store',
+                    label: 'Provision Store',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Vegetable Shop',
+                    label: 'Vegetable Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Fruit Shop',
+                    label: 'Fruit Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Meat Shop',
+                    label: 'Meat / Chicken Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Fish Shop',
+                    label: 'Fish Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Bakery',
+                    label: 'Bakery',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Sweet Stall',
+                    label: 'Sweet Stall',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Tea Shop',
+                    label: 'Tea Shop / Tea Stall',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Cool Bar',
+                    label: 'Cool Bar / Juice Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Medical Shop',
+                    label: 'Medical / Pharmacy',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Textile Shop',
+                    label: 'Textile / Cloth Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Readymade Shop',
+                    label: 'Readymade Garments',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Footwear Shop',
+                    label: 'Footwear Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Fancy Store',
+                    label: 'Fancy / Gift Store',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Stationery Shop',
+                    label: 'Stationery Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Hardware Shop',
+                    label: 'Hardware Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Paint Shop',
+                    label: 'Paint Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Electrical Shop',
+                    label: 'Electrical Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Plumbing Shop',
+                    label: 'Plumbing Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Mobile Shop',
+                    label: 'Mobile / Cell Phone Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Mobile Service',
+                    label: 'Mobile Service Center',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Computer Shop',
+                    label: 'Computer / Laptop Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Furniture Shop',
+                    label: 'Furniture Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Optical Shop',
+                    label: 'Optical Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Watch Shop',
+                    label: 'Watch Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Jewellery Shop',
+                    label: 'Jewellery Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Book Shop',
+                    label: 'Book Shop / Book Stall',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Pet Shop',
+                    label: 'Pet Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Flower Shop',
+                    label: 'Flower Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Photo Studio',
+                    label: 'Photo Studio',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Studio',
+                    label: 'Studio (Photo/Video)',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Xerox Shop',
+                    label: 'Xerox / Photocopy Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Printing Press',
+                    label: 'Printing Press',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'DTP Center',
+                    label: 'DTP / Typing Center',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Internet Cafe',
+                    label: 'Internet Cafe',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Cyber Cafe',
+                    label: 'Cyber Cafe',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Courier Service',
+                    label: 'Courier Service',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Tailor Shop',
+                    label: 'Tailor / Tailoring Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Saloon',
+                    label: 'Saloon / Barber Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Beauty Parlour',
+                    label: 'Beauty Parlour',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Spa',
+                    label: 'Spa / Massage Center',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Tattoo Studio',
+                    label: 'Tattoo Studio',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Gym',
+                    label: 'Gym / Fitness Centre',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Yoga Center',
+                    label: 'Yoga Center',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Driving School',
+                    label: 'Driving School',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Travel Agency',
+                    label: 'Travel Agency',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Real Estate',
+                    label: 'Real Estate Office',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Insurance Agency',
+                    label: 'Insurance Agency',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Finance Company',
+                    label: 'Finance / Loan Company',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Pawn Broker',
+                    label: 'Pawn Broker',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Petrol Bunk',
+                    label: 'Petrol Bunk',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Gas Agency',
+                    label: 'Gas Agency',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Water Can Supply',
+                    label: 'Water Can Supply',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Scrap Shop',
+                    label: 'Scrap / Iron Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Timber Depot',
+                    label: 'Timber Depot',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Cement Shop',
+                    label: 'Cement / Building Materials',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Tile Shop',
+                    label: 'Tile / Marble Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Sanitary Shop',
+                    label: 'Sanitary Ware Shop',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Borewell Service',
+                    label: 'Borewell Service',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Car Wash',
+                    label: 'Car Wash / Service',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Automobile Shop',
+                    label: 'Automobile / Spare Parts',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Two Wheeler Service',
+                    label: 'Two Wheeler Service',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Others Shop',
+                    label: 'Others (Shop)',
+                    cat: 'Shop'
+                },
+
+                // ── Hotels / Food ──
+                {
+                    value: 'Hotel',
+                    label: 'Hotel / Restaurant',
+                    cat: 'Food'
+                },
+                {
+                    value: 'Restaurant',
+                    label: 'Restaurant',
+                    cat: 'Food'
+                },
+                {
+                    value: 'Fast Food',
+                    label: 'Fast Food Center',
+                    cat: 'Food'
+                },
+                {
+                    value: 'Food Court',
+                    label: 'Food Court',
+                    cat: 'Food'
+                },
+                {
+                    value: 'Catering Service',
+                    label: 'Catering Service',
+                    cat: 'Food'
+                },
+                {
+                    value: 'Lodge',
+                    label: 'Lodge / Guest House',
+                    cat: 'Food'
+                },
+                {
+                    value: 'Marriage Hall',
+                    label: 'Marriage Hall / Kalyana Mandapam',
+                    cat: 'Food'
+                },
+                {
+                    value: 'Banquet Hall',
+                    label: 'Banquet Hall',
+                    cat: 'Food'
+                },
+                {
+                    value: 'Bar',
+                    label: 'Bar / TASMAC',
+                    cat: 'Food'
+                },
+                {
+                    value: 'Bakery Cafe',
+                    label: 'Bakery Cafe',
+                    cat: 'Food'
+                },
+
+                // ── Offices / Services ──
+                {
+                    value: 'Office',
+                    label: 'Office (General)',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Advocate Office',
+                    label: 'Advocate / Lawyer Office',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Chartered Accountant',
+                    label: 'Chartered Accountant',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Auditor Office',
+                    label: 'Auditor Office',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Doctor Clinic',
+                    label: 'Doctor Clinic',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Hospital',
+                    label: 'Hospital',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Laboratory',
+                    label: 'Medical Laboratory',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Scan Center',
+                    label: 'Scan / Diagnostic Center',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Veterinary Clinic',
+                    label: 'Veterinary Clinic',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Dental Clinic',
+                    label: 'Dental Clinic',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Software Company',
+                    label: 'Software / IT Company',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Call Center',
+                    label: 'Call Center / BPO',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Advertising Agency',
+                    label: 'Advertising Agency',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Consultancy',
+                    label: 'Consultancy Services',
+                    cat: 'Office'
+                },
+                {
+                    value: 'Others Office',
+                    label: 'Others (Office)',
+                    cat: 'Office'
+                },
+
+                // ── Education ──
+                {
+                    value: 'School',
+                    label: 'School',
+                    cat: 'Education'
+                },
+                {
+                    value: 'College',
+                    label: 'College',
+                    cat: 'Education'
+                },
+                {
+                    value: 'Tuition Center',
+                    label: 'Tuition Center',
+                    cat: 'Education'
+                },
+                {
+                    value: 'Coaching Center',
+                    label: 'Coaching Center',
+                    cat: 'Education'
+                },
+                {
+                    value: 'Play School',
+                    label: 'Play School / Kindergarten',
+                    cat: 'Education'
+                },
+                {
+                    value: 'Training Institute',
+                    label: 'Training Institute',
+                    cat: 'Education'
+                },
+                {
+                    value: 'Computer Institute',
+                    label: 'Computer Institute',
+                    cat: 'Education'
+                },
+                {
+                    value: 'Arts College',
+                    label: 'Arts & Science College',
+                    cat: 'Education'
+                },
+                {
+                    value: 'Engineering College',
+                    label: 'Engineering College',
+                    cat: 'Education'
+                },
+                {
+                    value: 'Music School',
+                    label: 'Music / Dance School',
+                    cat: 'Education'
+                },
+
+                // ── Hostel / Lodging ──
+                {
+                    value: 'Hostel',
+                    label: 'Hostel (Men/Women)',
+                    cat: 'Hostel'
+                },
+                {
+                    value: 'Working Women Hostel',
+                    label: 'Working Women Hostel',
+                    cat: 'Hostel'
+                },
+                {
+                    value: 'Boys Hostel',
+                    label: 'Boys Hostel',
+                    cat: 'Hostel'
+                },
+                {
+                    value: 'Girls Hostel',
+                    label: 'Girls Hostel',
+                    cat: 'Hostel'
+                },
+                {
+                    value: 'PG Accommodation',
+                    label: 'Paying Guest (PG)',
+                    cat: 'Hostel'
+                },
+
+                // ── Industrial ──
+                {
+                    value: 'Factory',
+                    label: 'Factory',
+                    cat: 'Industrial'
+                },
+                {
+                    value: 'Workshop',
+                    label: 'Workshop',
+                    cat: 'Industrial'
+                },
+                {
+                    value: 'Warehouse',
+                    label: 'Warehouse / Godown',
+                    cat: 'Industrial'
+                },
+                {
+                    value: 'Cold Storage',
+                    label: 'Cold Storage',
+                    cat: 'Industrial'
+                },
+                {
+                    value: 'Rice Mill',
+                    label: 'Rice Mill',
+                    cat: 'Industrial'
+                },
+                {
+                    value: 'Flour Mill',
+                    label: 'Flour Mill',
+                    cat: 'Industrial'
+                },
+                {
+                    value: 'Oil Mill',
+                    label: 'Oil Mill',
+                    cat: 'Industrial'
+                },
+                {
+                    value: 'Saw Mill',
+                    label: 'Saw Mill',
+                    cat: 'Industrial'
+                },
+                {
+                    value: 'Brick Kiln',
+                    label: 'Brick Kiln',
+                    cat: 'Industrial'
+                },
+                {
+                    value: 'Welding Shop',
+                    label: 'Welding Shop',
+                    cat: 'Industrial'
+                },
+                {
+                    value: 'Lathe Works',
+                    label: 'Lathe Works',
+                    cat: 'Industrial'
+                },
+
+                // ── Others ──
+                {
+                    value: 'Theatre',
+                    label: 'Cinema Theatre',
+                    cat: 'Entertainment'
+                },
+                {
+                    value: 'Shopping Mall',
+                    label: 'Shopping Mall',
+                    cat: 'Entertainment'
+                },
+                {
+                    value: 'Showroom',
+                    label: 'Showroom',
+                    cat: 'Entertainment'
+                },
+                {
+                    value: 'Commercial Complex',
+                    label: 'Commercial Complex',
+                    cat: 'Entertainment'
+                },
+                {
+                    value: 'Others',
+                    label: 'Others',
+                    cat: 'Others'
+                }
+            ];
+
+            /**
+             * Render a searchable profession dropdown (returns HTML string)
+             */
+            function renderProfessionDropdown(idx, selectedValue) {
+                const selected = PROFESSION_MASTER.find(p => p.value === selectedValue);
+                const displayText = selected ? selected.label : (selectedValue || '');
+
+                return `
+        <div class="prof-search-wrap" data-idx="${idx}">
+            <input type="text"
+                   class="prof-search-input"
+                   id="profInput_${idx}"
+                   placeholder="Search profession / business…"
+                   value="${displayText.replace(/"/g, '&quot;')}"
+                   autocomplete="off"
+                   readonly>
+            <i class="bi bi-chevron-down prof-caret"></i>
+            <input type="hidden"
+                   name="professional[${idx}][profession_type]"
+                   id="profValue_${idx}"
+                   value="${selectedValue || ''}">
+            <div class="prof-search-list" id="profList_${idx}"></div>
+        </div>
+    `;
+            }
+
+            /**
+             * Open the dropdown & build options
+             */
+            function openProfessionDropdown($wrap) {
+                const $list = $wrap.find('.prof-search-list');
+                const idx = $wrap.data('idx');
+                const $input = $wrap.find('.prof-search-input');
+
+                $('.prof-search-list').not($list).removeClass('show');
+
+                buildProfessionOptions($wrap, $input.val().trim());
+                $list.addClass('show');
+
+                // make input editable for typing
+                $input.prop('readonly', false).focus();
+                $input[0].setSelectionRange($input.val().length, $input.val().length);
+            }
+
+            /**
+             * Build option list filtered by query
+             */
+            function buildProfessionOptions($wrap, query) {
+                const $list = $wrap.find('.prof-search-list');
+                const idx = $wrap.data('idx');
+                const current = $wrap.find(`#profValue_${idx}`).val();
+
+                const q = (query || '').toLowerCase().trim();
+
+                // If input is showing the selected label, treat as empty search
+                const selected = PROFESSION_MASTER.find(p => p.value === current);
+                const isShowingSelected = selected && selected.label.toLowerCase() === q;
+
+                const filtered = (!q || isShowingSelected) ?
+                    PROFESSION_MASTER :
+                    PROFESSION_MASTER.filter(p =>
+                        p.label.toLowerCase().includes(q) ||
+                        p.value.toLowerCase().includes(q) ||
+                        p.cat.toLowerCase().includes(q)
+                    );
+
+                if (!filtered.length) {
+                    $list.html('<div class="prof-no-result">No matching profession found</div>');
+                    return;
+                }
+
+                let html = '';
+                filtered.forEach(p => {
+                    const isSel = p.value === current ? 'selected' : '';
+                    html += `
+            <div class="prof-option ${isSel}"
+                 data-value="${p.value.replace(/"/g, '&quot;')}">
+                <span>${p.label}</span>
+                <span class="opt-cat">${p.cat}</span>
+            </div>
+        `;
+                });
+                $list.html(html);
+            }
+            // ═══════════════════════════════════════════════════════════
+// SEARCHABLE PROFESSION DROPDOWN — EVENT HANDLERS
+// ═══════════════════════════════════════════════════════════
+
+// Open on click
+$(document).on('click', '.prof-search-input', function(e) {
+    e.stopPropagation();
+    const $wrap = $(this).closest('.prof-search-wrap');
+    const $list = $wrap.find('.prof-search-list');
+
+    if ($list.hasClass('show')) {
+        $list.removeClass('show');
+        $(this).prop('readonly', true);
+    } else {
+        openProfessionDropdown($wrap);
+    }
+});
+
+// Filter as user types
+$(document).on('input', '.prof-search-input', function(e) {
+    const $wrap = $(this).closest('.prof-search-wrap');
+    buildProfessionOptions($wrap, $(this).val());
+});
+
+// Pick an option
+$(document).on('click', '.prof-option', function(e) {
+    e.stopPropagation();
+    const $wrap = $(this).closest('.prof-search-wrap');
+    const idx   = $wrap.data('idx');
+    const value = $(this).data('value');
+    const label = $(this).find('span').first().text().trim();
+
+    // Set hidden value + visible text
+    $wrap.find(`#profValue_${idx}`).val(value);
+    $wrap.find('.prof-search-input').val(label).prop('readonly', true);
+
+    // Mark as selected
+    $wrap.find('.prof-option').removeClass('selected');
+    $(this).addClass('selected');
+
+    $wrap.find('.prof-search-list').removeClass('show');
+});
+
+// Close when clicking outside
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.prof-search-wrap').length) {
+        $('.prof-search-list').removeClass('show');
+        $('.prof-search-input').prop('readonly', true);
+    }
+});
+
+// Allow Enter to pick first match
+$(document).on('keydown', '.prof-search-input', function(e) {
+    const $wrap = $(this).closest('.prof-search-wrap');
+    const $list = $wrap.find('.prof-search-list');
+
+    if (! $list.hasClass('show')) return;
+
+    const $opts = $list.find('.prof-option');
+    const $hl   = $list.find('.prof-option.highlight');
+    let $target = null;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        $target = $hl.length ? $hl.next('.prof-option') : $opts.first();
+        if (!$target.length) $target = $opts.first();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        $target = $hl.length ? $hl.prev('.prof-option') : $opts.last();
+        if (!$target.length) $target = $opts.last();
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        $target = $hl.length ? $hl : $opts.first();
+    } else if (e.key === 'Escape') {
+        $list.removeClass('show');
+        $(this).prop('readonly', true);
+        return;
+    }
+
+    if ($target && $target.length) {
+        $opts.removeClass('highlight');
+        $target.addClass('highlight');
+        const $listEl = $list[0];
+        const $optEl  = $target[0];
+        if ($optEl.offsetTop < $listEl.scrollTop) {
+            $listEl.scrollTop = $optEl.offsetTop;
+        } else if ($optEl.offsetTop + $optEl.offsetHeight > $listEl.scrollTop + $listEl.clientHeight) {
+            $listEl.scrollTop = $optEl.offsetTop + $optEl.offsetHeight - $listEl.clientHeight;
+        }
+    }
+});
             let searchIndex = [];
 
             // ✅ NEW: Utility — detect geometry type from raw coords
@@ -5570,38 +6471,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label>Profession Type</label>
-                                    <select class="form-control" name="professional[${idx}][profession_type]">
-                                        <option value="">Select Profession / Business Type</option>
-                                        <option value="Grocery Shop" ${data.profession_type === 'Grocery Shop' ? 'selected' : ''}>Grocery / Maligai Shop</option>
-                                        <option value="Supermarket" ${data.profession_type === 'Supermarket' ? 'selected' : ''}>Supermarket</option>
-                                        <option value="Hotel" ${data.profession_type === 'Hotel' ? 'selected' : ''}>Hotel / Restaurant</option>
-                                        <option value="Shop" ${data.profession_type === 'Shop' ? 'selected' : ''}>Shop</option>
-                                        <option value="Office" ${data.profession_type === 'Office' ? 'selected' : ''}>Office</option>
-                                        <option value="Hostel" ${data.profession_type === 'Hostel' ? 'selected' : ''}>Hostel</option>
-                                        <option value="Lodge" ${data.profession_type === 'Lodge' ? 'selected' : ''}>Lodge</option>
-                                        <option value="Bakery" ${data.profession_type === 'Bakery' ? 'selected' : ''}>Bakery</option>
-                                        <option value="Medical Shop" ${data.profession_type === 'Medical Shop' ? 'selected' : ''}>Medical Shop</option>
-                                        <option value="Textile Shop" ${data.profession_type === 'Textile Shop' ? 'selected' : ''}>Textile Shop</option>
-                                        <option value="Hardware Shop" ${data.profession_type === 'Hardware Shop' ? 'selected' : ''}>Hardware Shop</option>
-                                        <option value="Electrical Shop" ${data.profession_type === 'Electrical Shop' ? 'selected' : ''}>Electrical Shop</option>
-                                        <option value="Mobile Shop" ${data.profession_type === 'Mobile Shop' ? 'selected' : ''}>Mobile Shop</option>
-                                        <option value="Restaurant" ${data.profession_type === 'Restaurant' ? 'selected' : ''}>Restaurant</option>
-                                        <option value="Beauty Parlour" ${data.profession_type === 'Beauty Parlour' ? 'selected' : ''}>Beauty Parlour</option>
-                                        <option value="Saloon" ${data.profession_type === 'Saloon' ? 'selected' : ''}>Saloon</option>
-                                        <option value="Showroom" ${data.profession_type === 'Showroom' ? 'selected' : ''}>Showroom</option>
-                                        <option value="Shopping Mall" ${data.profession_type === 'Shopping Mall' ? 'selected' : ''}>Shopping Mall</option>
-                                        <option value="Warehouse" ${data.profession_type === 'Warehouse' ? 'selected' : ''}>Warehouse</option>
-                                        <option value="Workshop" ${data.profession_type === 'Workshop' ? 'selected' : ''}>Workshop</option>
-                                        <option value="Factory" ${data.profession_type === 'Factory' ? 'selected' : ''}>Factory</option>
-                                        <option value="Hospital" ${data.profession_type === 'Hospital' ? 'selected' : ''}>Hospital</option>
-                                        <option value="Clinic" ${data.profession_type === 'Clinic' ? 'selected' : ''}>Clinic</option>
-                                        <option value="School" ${data.profession_type === 'School' ? 'selected' : ''}>School</option>
-                                        <option value="College" ${data.profession_type === 'College' ? 'selected' : ''}>College</option>
-                                        <option value="Gym" ${data.profession_type === 'Gym' ? 'selected' : ''}>Gym / Fitness Centre</option>
-                                        <option value="Marriage Hall" ${data.profession_type === 'Marriage Hall' ? 'selected' : ''}>Marriage Hall</option>
-                                        <option value="Petrol Bunk" ${data.profession_type === 'Petrol Bunk' ? 'selected' : ''}>Petrol Bunk</option>
-                                        <option value="Other" ${data.profession_type === 'Other' ? 'selected' : ''}>Other</option>
-                                    </select>
+                                    ${renderProfessionDropdown(idx, data.profession_type || '')}
                                 </div>
                                 <div class="col-md-4">
                                     <label>Trade License</label>
