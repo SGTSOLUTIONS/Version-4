@@ -155,9 +155,17 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
         }
 
         /* ─── Dropdowns ─── */
@@ -187,9 +195,18 @@
             display: block;
         }
 
-        .layer-dropdown { min-width: 220px; }
-        .location-dropdown { min-width: 200px; }
-        .search-dropdown { min-width: 320px; }
+        .layer-dropdown {
+            min-width: 220px;
+        }
+
+        .location-dropdown {
+            min-width: 200px;
+        }
+
+        .search-dropdown {
+            min-width: 320px;
+        }
+
         .filter-dropdown {
             min-width: 350px;
             max-height: 80vh;
@@ -205,14 +222,17 @@
         .filter-scroll-container::-webkit-scrollbar {
             width: 6px;
         }
+
         .filter-scroll-container::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 3px;
         }
+
         .filter-scroll-container::-webkit-scrollbar-thumb {
             background: #ccc;
             border-radius: 3px;
         }
+
         .filter-scroll-container::-webkit-scrollbar-thumb:hover {
             background: #999;
         }
@@ -397,10 +417,25 @@
             font-weight: 600;
         }
 
-        .type-badge.road { background: #0dcaf0; color: #000; }
-        .type-badge.parcel { background: #198754; color: #fff; }
-        .type-badge.point { background: #ffc107; color: #000; }
-        .type-badge.assessment { background: #0d6efd; color: #fff; }
+        .type-badge.road {
+            background: #0dcaf0;
+            color: #000;
+        }
+
+        .type-badge.parcel {
+            background: #198754;
+            color: #fff;
+        }
+
+        .type-badge.point {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .type-badge.assessment {
+            background: #0d6efd;
+            color: #fff;
+        }
 
         .filter-field-group {
             margin-bottom: 10px;
@@ -513,109 +548,674 @@
         }
 
         /* ─── Modal Styles ─── */
-        .bld-modal-content { border: none; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.18); }
-        .bld-modal-header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); border-bottom: none; padding: 18px 24px; color: #fff; }
-        .bld-header-inner { display: flex; align-items: center; gap: 14px; }
-        .bld-header-icon { width: 44px; height: 44px; background: rgba(255,255,255,.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #fff; flex-shrink: 0; }
-        .bld-modal-title { margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff; letter-spacing: .3px; }
-        .bld-gisid-badge { font-size: .72rem; background: rgba(255,255,255,.2); color: #fff; border-radius: 6px; padding: 2px 10px; display: inline-block; margin-top: 4px; letter-spacing: .4px; }
-        .bld-image-strip { display: flex; gap: 0; height: 220px; background: #0f172a; }
-        .bld-img-wrap { flex: 1; position: relative; overflow: hidden; background: #1e293b; display: flex; align-items: center; justify-content: center; }
-        .bld-img-wrap + .bld-img-wrap { border-left: 3px solid #fff; }
-        .bld-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
-        .bld-img-wrap:hover img { transform: scale(1.04); }
-        .bld-img-label { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,.65)); color: #fff; font-size: .78rem; font-weight: 600; padding: 18px 12px 8px; letter-spacing: .3px; }
-        .bld-img-wrap .bld-img-empty { color: rgba(255,255,255,0.4); font-size: 0.9rem; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .bld-img-wrap .bld-img-empty i { font-size: 2rem; opacity: 0.5; }
-        .bld-img-wrap .bld-img-error { color: #ef4444; font-size: 0.85rem; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .bld-summary-strip { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e5e7eb; background: #f8fafc; }
-        .bld-summary-card { flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #e5e7eb; }
-        .bld-summary-card:last-child { border-right: none; }
-        .bld-summary-icon { font-size: 1.3rem; line-height: 1; }
-        .bld-summary-label { font-size: .68rem; color: #000000; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; line-height: 1; }
-        .bld-summary-val { font-size: .95rem; font-weight: 700; color: #1e293b; margin-top: 2px; }
-        .bld-info-row { display: flex; align-items: flex-start; gap: 10px; background: #f8fafc; border-radius: 10px; padding: 10px 14px; border: 1px solid #e5e7eb; height: 100%; }
-        .bld-info-icon { font-size: 1rem; color: #94a3b8; margin-top: 2px; flex-shrink: 0; }
-        .bld-info-label { font-size: .68rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; line-height: 1; }
-        .bld-info-val { font-size: .9rem; font-weight: 600; color: #1e293b; margin-top: 3px; word-break: break-word; }
-        .bld-section-divider { font-size: .8rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .5px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; display: flex; align-items: center; }
-        .bld-status-tag { display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; letter-spacing: .3px; }
-        .bld-status-tag.complete { background: #dcfce7; color: #15803d; }
-        .bld-status-tag.partial { background: #fef9c3; color: #92400e; }
-        .bld-status-tag.empty { background: #fee2e2; color: #b91c1c; }
-        .bld-btn-save { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: none; border-radius: 10px; font-weight: 600; padding: 9px 22px; font-size: .875rem; transition: all .2s; }
-        .bld-btn-save:hover { background: linear-gradient(135deg, #1d4ed8, #1e40af); color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,.3); }
-        .bld-btn-cancel { background: #f1f5f9; color: #475569; border: none; border-radius: 10px; font-weight: 600; padding: 9px 20px; font-size: .875rem; transition: all .2s; }
-        .bld-btn-cancel:hover { background: #e2e8f0; color: #1e293b; }
-        .bld-modal-footer { background: #f8fafc; border-top: 1px solid #e5e7eb; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
-        .bld-footer-status { font-size: .8rem; color: #64748b; }
-        .point-data-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; position: relative; transition: box-shadow .2s, border-color .2s; }
-        .point-data-card:hover { box-shadow: 0 4px 16px rgba(37,99,235,.1); border-color: #93c5fd; }
-        .point-data-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-        .point-data-card-title { font-size: .9rem; font-weight: 700; color: #1e293b; }
-        .point-data-card-subtitle { font-size: .75rem; color: #64748b; margin-top: 2px; }
-        .point-data-card-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
-        .pdc-action-btn { width: 32px; height: 32px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; font-size: .9rem; cursor: pointer; transition: all .2s; }
-        .pdc-qc-btn { background: #fef9c3; color: #92400e; }
-        .pdc-qc-btn:hover { background: #92400e; color: #fff; }
-        .pdc-field { background: #f8fafc; border-radius: 8px; padding: 8px 10px; }
-        .pdc-field-label { font-size: .65rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
-        .pdc-field-val { font-size: .82rem; color: #1e293b; font-weight: 600; margin-top: 1px; word-break: break-word; }
-        .pdc-field-val.empty { color: #cbd5e1; font-style: italic; }
-        .tax-card { background: #f8fafc; border-radius: 10px; padding: 12px 14px; border: 1px solid #e5e7eb; margin-bottom: 8px; height: 100%; }
-        .tax-card-title { font-size: .7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 6px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
-        .tax-card-row { display: flex; justify-content: space-between; padding: 2px 0; }
-        .tax-card-label { font-size: .7rem; color: #94a3b8; }
-        .tax-card-value { font-size: .78rem; font-weight: 600; color: #1e293b; }
-        .bv-variation-strip { display: flex; flex-wrap: wrap; gap: 12px; background: #f8fafc; border-radius: 10px; padding: 12px 16px; border: 1px solid #e5e7eb; margin-bottom: 12px; }
-        .bv-variation-card { flex: 1; min-width: 120px; }
-        .bv-variation-card .stat-label { font-size: .65rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
-        .bv-variation-card .stat-value { font-size: .9rem; font-weight: 700; color: #1e293b; margin-top: 2px; }
-        .bv-variation-card .stat-sub { font-size: .7rem; font-weight: 600; color: #94a3b8; }
-        .quick-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #f8fafc; border-radius: 8px; margin: 8px 16px; padding: 12px; font-size: 12px; }
-        .quick-stats .stat-item { display: flex; justify-content: space-between; padding: 2px 0; }
-        .quick-stats .stat-item strong { color: #1e293b; }
-        .quick-stats .stat-item .stat-value { color: #0d6efd; font-weight: 600; }
+        .bld-modal-content {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .18);
+        }
+
+        .bld-modal-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            border-bottom: none;
+            padding: 18px 24px;
+            color: #fff;
+        }
+
+        .bld-header-inner {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .bld-header-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, .15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .bld-modal-title {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: .3px;
+        }
+
+        .bld-gisid-badge {
+            font-size: .72rem;
+            background: rgba(255, 255, 255, .2);
+            color: #fff;
+            border-radius: 6px;
+            padding: 2px 10px;
+            display: inline-block;
+            margin-top: 4px;
+            letter-spacing: .4px;
+        }
+
+        .bld-image-strip {
+            display: flex;
+            gap: 0;
+            height: 220px;
+            background: #0f172a;
+        }
+
+        .bld-img-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bld-img-wrap+.bld-img-wrap {
+            border-left: 3px solid #fff;
+        }
+
+        .bld-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .4s ease;
+        }
+
+        .bld-img-wrap:hover img {
+            transform: scale(1.04);
+        }
+
+        .bld-img-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, .65));
+            color: #fff;
+            font-size: .78rem;
+            font-weight: 600;
+            padding: 18px 12px 8px;
+            letter-spacing: .3px;
+        }
+
+        .bld-img-wrap .bld-img-empty {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bld-img-wrap .bld-img-empty i {
+            font-size: 2rem;
+            opacity: 0.5;
+        }
+
+        .bld-img-wrap .bld-img-error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bld-summary-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+
+        .bld-summary-card {
+            flex: 1 1 120px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .bld-summary-card:last-child {
+            border-right: none;
+        }
+
+        .bld-summary-icon {
+            font-size: 1.3rem;
+            line-height: 1;
+        }
+
+        .bld-summary-label {
+            font-size: .68rem;
+            color: #000000;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            line-height: 1;
+        }
+
+        .bld-summary-val {
+            font-size: .95rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 2px;
+        }
+
+        .bld-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            height: 100%;
+        }
+
+        .bld-info-icon {
+            font-size: 1rem;
+            color: #94a3b8;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .bld-info-label {
+            font-size: .68rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            line-height: 1;
+        }
+
+        .bld-info-val {
+            font-size: .9rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 3px;
+            word-break: break-word;
+        }
+
+        .bld-section-divider {
+            font-size: .8rem;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+        }
+
+        .bld-status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: .7rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 20px;
+            letter-spacing: .3px;
+        }
+
+        .bld-status-tag.complete {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .bld-status-tag.partial {
+            background: #fef9c3;
+            color: #92400e;
+        }
+
+        .bld-status-tag.empty {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .bld-btn-save {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 9px 22px;
+            font-size: .875rem;
+            transition: all .2s;
+        }
+
+        .bld-btn-save:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, .3);
+        }
+
+        .bld-btn-cancel {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 9px 20px;
+            font-size: .875rem;
+            transition: all .2s;
+        }
+
+        .bld-btn-cancel:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .bld-modal-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bld-footer-status {
+            font-size: .8rem;
+            color: #64748b;
+        }
+
+        .point-data-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            position: relative;
+            transition: box-shadow .2s, border-color .2s;
+        }
+
+        .point-data-card:hover {
+            box-shadow: 0 4px 16px rgba(37, 99, 235, .1);
+            border-color: #93c5fd;
+        }
+
+        .point-data-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .point-data-card-title {
+            font-size: .9rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .point-data-card-subtitle {
+            font-size: .75rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .point-data-card-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .pdc-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .9rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .pdc-qc-btn {
+            background: #fef9c3;
+            color: #92400e;
+        }
+
+        .pdc-qc-btn:hover {
+            background: #92400e;
+            color: #fff;
+        }
+
+        .pdc-field {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+
+        .pdc-field-label {
+            font-size: .65rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+
+        .pdc-field-val {
+            font-size: .82rem;
+            color: #1e293b;
+            font-weight: 600;
+            margin-top: 1px;
+            word-break: break-word;
+        }
+
+        .pdc-field-val.empty {
+            color: #cbd5e1;
+            font-style: italic;
+        }
+
+        .tax-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px 14px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 8px;
+            height: 100%;
+        }
+
+        .tax-card-title {
+            font-size: .7rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 4px;
+        }
+
+        .tax-card-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .tax-card-label {
+            font-size: .7rem;
+            color: #94a3b8;
+        }
+
+        .tax-card-value {
+            font-size: .78rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .bv-variation-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 12px;
+        }
+
+        .bv-variation-card {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .bv-variation-card .stat-label {
+            font-size: .65rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+
+        .bv-variation-card .stat-value {
+            font-size: .9rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 2px;
+        }
+
+        .bv-variation-card .stat-sub {
+            font-size: .7rem;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 8px 16px;
+            padding: 12px;
+            font-size: 12px;
+        }
+
+        .quick-stats .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .quick-stats .stat-item strong {
+            color: #1e293b;
+        }
+
+        .quick-stats .stat-item .stat-value {
+            color: #0d6efd;
+            font-weight: 600;
+        }
 
         /* Responsive */
         @media (max-width: 768px) {
-            #map, #cesiumContainer { height: 500px; }
-            .map-controls-stack { right: 12px; top: 12px; gap: 6px; }
-            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn, .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn, .filter-toggle-btn { width: 38px; height: 38px; font-size: 15px; padding: 8px; border-radius: 8px; }
-            .fullscreen-btn { width: 38px; height: 38px; font-size: 15px; padding: 8px; right: 12px; bottom: 12px; }
-            .layer-dropdown, .location-dropdown { min-width: 180px; }
-            .search-dropdown { min-width: 280px; right: -10px; }
-            .filter-dropdown { min-width: 300px; right: -10px; }
-            .bld-image-strip { height: 150px; }
-            .bld-summary-card { flex: 1 1 45%; }
-            .point-data-card-grid { grid-template-columns: 1fr 1fr; }
-            .quick-stats { grid-template-columns: 1fr 1fr; }
+
+            #map,
+            #cesiumContainer {
+                height: 500px;
+            }
+
+            .map-controls-stack {
+                right: 12px;
+                top: 12px;
+                gap: 6px;
+            }
+
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 15px;
+                padding: 8px;
+                border-radius: 8px;
+            }
+
+            .fullscreen-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 15px;
+                padding: 8px;
+                right: 12px;
+                bottom: 12px;
+            }
+
+            .layer-dropdown,
+            .location-dropdown {
+                min-width: 180px;
+            }
+
+            .search-dropdown {
+                min-width: 280px;
+                right: -10px;
+            }
+
+            .filter-dropdown {
+                min-width: 300px;
+                right: -10px;
+            }
+
+            .bld-image-strip {
+                height: 150px;
+            }
+
+            .bld-summary-card {
+                flex: 1 1 45%;
+            }
+
+            .point-data-card-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .quick-stats {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         @media (max-width: 480px) {
-            #map, #cesiumContainer { height: 400px; }
-            .map-controls-stack { right: 8px; top: 8px; gap: 5px; }
-            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn, .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn, .filter-toggle-btn { width: 34px; height: 34px; font-size: 13px; padding: 6px; border-radius: 6px; }
-            .fullscreen-btn { width: 34px; height: 34px; font-size: 13px; padding: 6px; right: 8px; bottom: 8px; }
-            .layer-dropdown, .location-dropdown { min-width: 160px; right: -5px; }
-            .search-dropdown { min-width: 240px; right: -15px; }
-            .filter-dropdown { min-width: 260px; right: -15px; max-height: 70vh; }
-            .bld-summary-card { flex: 1 1 100%; border-right: none; border-bottom: 1px solid #e5e7eb; }
-            .bld-summary-strip { flex-direction: column; }
-            .bld-image-strip { height: 120px; flex-direction: column; }
-            .bld-img-wrap + .bld-img-wrap { border-left: none; border-top: 3px solid #fff; }
-            .point-data-card-grid { grid-template-columns: 1fr; }
-            .point-data-card-header { flex-direction: column; gap: 8px; }
-            .point-data-card-actions { justify-content: flex-start; }
-            .search-result-actions { flex-direction: column; gap: 4px; }
-            .search-result-actions .btn-sm { width: 100%; }
-            .quick-stats { grid-template-columns: 1fr 1fr; font-size: 10px; }
+
+            #map,
+            #cesiumContainer {
+                height: 400px;
+            }
+
+            .map-controls-stack {
+                right: 8px;
+                top: 8px;
+                gap: 5px;
+            }
+
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn {
+                width: 34px;
+                height: 34px;
+                font-size: 13px;
+                padding: 6px;
+                border-radius: 6px;
+            }
+
+            .fullscreen-btn {
+                width: 34px;
+                height: 34px;
+                font-size: 13px;
+                padding: 6px;
+                right: 8px;
+                bottom: 8px;
+            }
+
+            .layer-dropdown,
+            .location-dropdown {
+                min-width: 160px;
+                right: -5px;
+            }
+
+            .search-dropdown {
+                min-width: 240px;
+                right: -15px;
+            }
+
+            .filter-dropdown {
+                min-width: 260px;
+                right: -15px;
+                max-height: 70vh;
+            }
+
+            .bld-summary-card {
+                flex: 1 1 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .bld-summary-strip {
+                flex-direction: column;
+            }
+
+            .bld-image-strip {
+                height: 120px;
+                flex-direction: column;
+            }
+
+            .bld-img-wrap+.bld-img-wrap {
+                border-left: none;
+                border-top: 3px solid #fff;
+            }
+
+            .point-data-card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .point-data-card-header {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .point-data-card-actions {
+                justify-content: flex-start;
+            }
+
+            .search-result-actions {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .search-result-actions .btn-sm {
+                width: 100%;
+            }
+
+            .quick-stats {
+                grid-template-columns: 1fr 1fr;
+                font-size: 10px;
+            }
         }
 
         @media (hover: none) and (pointer: coarse) {
-            .layer-toggle-btn, .location-toggle-btn, .search-toggle-btn, .label-toggle-btn, .legend-toggle-btn, .threed-toggle-btn, .filter-toggle-btn { min-height: 44px; min-width: 44px; }
-            .fullscreen-btn { min-height: 44px; min-width: 44px; }
-            .search-result-actions .btn-sm { min-height: 34px; font-size: 12px; padding: 4px 12px; }
+
+            .layer-toggle-btn,
+            .location-toggle-btn,
+            .search-toggle-btn,
+            .label-toggle-btn,
+            .legend-toggle-btn,
+            .threed-toggle-btn,
+            .filter-toggle-btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .fullscreen-btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .search-result-actions .btn-sm {
+                min-height: 34px;
+                font-size: 12px;
+                padding: 4px 12px;
+            }
         }
     </style>
 @endpush
@@ -642,7 +1242,8 @@
 
     <div class="map-card" id="mapCard">
         <div class="map-header">
-            <span class="badge" id="activeLayerBadge" style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A);">OpenStreetMap</span>
+            <span class="badge" id="activeLayerBadge"
+                style="background: linear-gradient(135deg,#6C5CE7,#FF3E9A);">OpenStreetMap</span>
             <span class="text-muted small" id="featureCountBadge">Buildings: 0</span>
         </div>
         <div id="map"></div>
@@ -665,42 +1266,53 @@
                 </div>
                 <div class="bld-image-strip">
                     <div class="bld-img-wrap" id="bv_img1_wrap">
-                        <img id="bv_img1" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
-                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <img id="bv_img1" src="" style="display:none;"
+                            onerror="this.style.display='none'; document.getElementById('bv_img1_error').style.display='flex';">
+                        <div id="bv_img1_empty" class="bld-img-empty" style="display:none;"><i
+                                class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img1_error" class="bld-img-error" style="display:none;"><i
+                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 1</div>
                     </div>
                     <div class="bld-img-wrap" id="bv_img2_wrap">
-                        <img id="bv_img2" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
-                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i class="bi bi-image"></i><span>No Image</span></div>
-                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
+                        <img id="bv_img2" src="" style="display:none;"
+                            onerror="this.style.display='none'; document.getElementById('bv_img2_error').style.display='flex';">
+                        <div id="bv_img2_empty" class="bld-img-empty" style="display:none;"><i
+                                class="bi bi-image"></i><span>No Image</span></div>
+                        <div id="bv_img2_error" class="bld-img-error" style="display:none;"><i
+                                class="bi bi-exclamation-triangle-fill"></i><span>Failed to load</span></div>
                         <div class="bld-img-label">Image 2</div>
                     </div>
                 </div>
                 <div class="modal-body" style="max-height: 65vh; overflow-y: auto; padding: 20px 24px;">
-                    <div class="bld-summary-strip" style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 2px solid #ECE7FF; background: #F5F3FF; border-radius: 12px; margin-bottom: 20px;">
-                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
+                    <div class="bld-summary-strip"
+                        style="display: flex; flex-wrap: wrap; gap: 0; border-bottom: 2px solid #ECE7FF; background: #F5F3FF; border-radius: 12px; margin-bottom: 20px;">
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🧾</div>
                             <div>
                                 <div class="bld-summary-label">Assessments</div>
                                 <div class="bld-summary-val" id="bv_bills">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🏬</div>
                             <div>
                                 <div class="bld-summary-label">Shops</div>
                                 <div class="bld-summary-val" id="bv_shops">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-right: 1px solid #ECE7FF;">
                             <div class="bld-summary-icon">🏢</div>
                             <div>
                                 <div class="bld-summary-label">Floors</div>
                                 <div class="bld-summary-val" id="bv_floors">0</div>
                             </div>
                         </div>
-                        <div class="bld-summary-card" style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
+                        <div class="bld-summary-card"
+                            style="flex: 1 1 120px; padding: 14px 16px; display: flex; align-items: center; gap: 10px;">
                             <div class="bld-summary-icon">✅</div>
                             <div>
                                 <div class="bld-summary-label">Mapped</div>
@@ -837,7 +1449,8 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="text-muted small" id="pdBillSummary"></span>
                     </div>
-                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch" placeholder="Search by assessment, owner name, or phone number...">
+                    <input type="text" class="form-control bld-input mb-3" id="pointDetailsSearch"
+                        placeholder="Search by assessment, owner name, or phone number...">
                     <div id="pointDetailsContainer"></div>
                 </div>
             </div>
@@ -857,7 +1470,9 @@
                 </div>
                 <div class="modal-body p-4">
                     <input type="hidden" id="qc_point_data_id">
-                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment <span id="qc_assessment_display" class="fw-semibold"></span></p>
+                    <p class="text-muted small mb-3"><span id="qc_owner_display" class="fw-semibold"></span> — Assessment
+                        <span id="qc_assessment_display" class="fw-semibold"></span>
+                    </p>
                     <div class="mb-3">
                         <label class="bld-form-label">QC Usage</label>
                         <select class="form-select bld-input" id="qcusage">
@@ -879,7 +1494,8 @@
                 </div>
                 <div class="modal-footer bld-modal-footer">
                     <button type="button" class="btn bld-btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save QC</button>
+                    <button type="button" class="btn bld-btn-save" id="saveQcBtn"><i class="bi bi-save me-1"></i>Save
+                        QC</button>
                 </div>
             </div>
         </div>
@@ -896,19 +1512,20 @@
     <script>
         $(document).ready(function() {
 
-            // ─── DATA ───
-            let polygons = @json($polygons ?? [], JSON_HEX_TAG);
-            let lines = @json($lines ?? [], JSON_HEX_TAG);
-            let points = @json($points ?? [], JSON_HEX_TAG);
-            let pointDatas = @json($pointDatas ?? [], JSON_HEX_TAG);
-            let boundary = @json($boundary ?? [], JSON_HEX_TAG);
-            let polygonDatas = @json($polygonDatas ?? [], JSON_HEX_TAG);
+            // ═══════════════════════════════════════════════════════════
+            // DATA
+            // ═══════════════════════════════════════════════════════════
+            let polygons        = @json($polygons ?? [], JSON_HEX_TAG);
+            let lines           = @json($lines ?? [], JSON_HEX_TAG);
+            let points          = @json($points ?? [], JSON_HEX_TAG);
+            let pointDatas      = @json($pointDatas ?? [], JSON_HEX_TAG);
+            let boundary        = @json($boundary ?? [], JSON_HEX_TAG);
+            let polygonDatas    = @json($polygonDatas ?? [], JSON_HEX_TAG);
             let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
-            let ward = @json($ward ?? [], JSON_HEX_TAG);
-            let currentPointGisid = null;
+            let ward            = @json($ward ?? [], JSON_HEX_TAG);
+            let currentPointGisid   = null;
             let currentPointRecords = [];
 
-            // Store ward ID for QR code
             const wardId = {{ $ward->id ?? 0 }};
 
             console.log('📊 Data Loaded:', {
@@ -917,29 +1534,35 @@
                 points: points.length,
                 pointDatas: pointDatas.length,
                 boundary: boundary ? 'present' : 'missing',
-                ward: ward ? 'present' : 'missing',
                 wardId: wardId
             });
 
-            // ─── BRIGHT, HIGH-SATURATION USAGE PALETTE ───
+            // ═══════════════════════════════════════════════════════════
+            // USAGE PALETTE
+            // ═══════════════════════════════════════════════════════════
             const usageColors = {
-                'RESIDENTIAL': '#00D26A',
-                'COMMERCIAL': '#00B4FF',
-                'INDUSTRIAL': '#FF9F1C',
-                'INSTITUTIONAL': '#B84DFF',
-                'MIXED': '#FF3E5F',
-                'GOVERNMENT': '#6C5CE7',
-                'VACANT': '#FFD93D',
-                'OTHER': '#FF6FB5'
+                'RESIDENTIAL':  '#00D26A',
+                'COMMERCIAL':   '#00B4FF',
+                'INDUSTRIAL':   '#FF9F1C',
+                'INSTITUTIONAL':'#B84DFF',
+                'MIXED':        '#FF3E5F',
+                'GOVERNMENT':   '#6C5CE7',
+                'VACANT':       '#FFD93D',
+                'OTHER':        '#FF6FB5'
             };
 
-            // ─── IMAGE EXTENT ───
-            let imageExtentRaw = [{{ $ward->extent_left ?? 0 }}, {{ $ward->extent_bottom ?? 0 }},
-                {{ $ward->extent_right ?? 0 }}, {{ $ward->extent_top ?? 0 }}
+            // ═══════════════════════════════════════════════════════════
+            // IMAGE EXTENT
+            // ═══════════════════════════════════════════════════════════
+            let imageExtentRaw = [
+                {{ $ward->extent_left ?? 0 }},
+                {{ $ward->extent_bottom ?? 0 }},
+                {{ $ward->extent_right ?? 0 }},
+                {{ $ward->extent_top ?? 0 }}
             ];
 
             const isLatLon = imageExtentRaw[0] > -180 && imageExtentRaw[0] < 180 &&
-                imageExtentRaw[1] > -90 && imageExtentRaw[1] < 90;
+                             imageExtentRaw[1] > -90  && imageExtentRaw[1] < 90;
 
             let imageExtent;
             if (isLatLon) {
@@ -952,7 +1575,9 @@
 
             let droneImageURL = "{{ asset($ward->drone_image ?? '') }}";
 
-            // ─── LAYERS ───
+            // ═══════════════════════════════════════════════════════════
+            // LAYERS
+            // ═══════════════════════════════════════════════════════════
             const droneLayer = new ol.layer.Image({
                 source: new ol.source.ImageStatic({
                     url: droneImageURL,
@@ -992,106 +1617,172 @@
                 })
             });
 
-            // ─── SOURCES ───
-            const polygonSource = new ol.source.Vector();
-            const lineSource = new ol.source.Vector();
+            // ═══════════════════════════════════════════════════════════
+            // SOURCES
+            // ═══════════════════════════════════════════════════════════
+            const polygonSource  = new ol.source.Vector();
+            const lineSource     = new ol.source.Vector();
             const boundarySource = new ol.source.Vector();
 
-            // ─── SEARCH INDEX ───
             let searchIndex = [];
 
-            // ─── LOCATION TRACKING ───
-            let watchId = null;
-            let isTracking = false;
-            let isLiveLocation = false;
-            let currentPosition = null;
-            let currentLocation = null;
-            let positionFeature = null;
-            let positionLayer = null;
-            let routeLine = null;
-            let routeLayer = null;
-            let routePoints = [];
-            let destinationMarker = null;
+            // ═══════════════════════════════════════════════════════════
+            // LOCATION TRACKING VARIABLES
+            // ═══════════════════════════════════════════════════════════
+            let watchId          = null;
+            let isTracking       = false;
+            let isLiveLocation   = false;
+            let currentPosition  = null;
+            let currentLocation  = null;
+            let positionFeature  = null;
+            let positionLayer    = null;
+            let routeLine        = null;
+            let routeLayer       = null;
+            let routePoints      = [];
+            let destinationMarker= null;
             let destinationLayer = null;
-            let trackInterval = null;
-            let isGettingLocation = false;
+            let trackInterval    = null;
 
-            // ─── 3D MODE VARIABLES ───
-            let is3DMode = false;
-            let cesiumViewer = null;
+            // ═══════════════════════════════════════════════════════════
+            // 3D MODE VARIABLES
+            // ═══════════════════════════════════════════════════════════
+            let is3DMode            = false;
+            let cesiumViewer        = null;
             let cesiumBuildingEntities = [];
-            let cesiumClickHandler = null;
+            let cesiumClickHandler  = null;
 
-            // ─── STYLES ───
-            function createPolygonStyle(feature) {
-                const gisid = feature.get('gisid');
-                const sqft = feature.get('sqfeet') || '0';
-                const polygonData = polygonDatas.find(d => d.gisid == gisid);
-                const buildingUsage = polygonData?.building_usage || feature.get('building_usage') || 'OTHER';
-                const strokeColor = usageColors[buildingUsage] || '#6C5CE7';
-                const fillColor = polygonData ? `${strokeColor}40` : 'rgba(108, 92, 231, 0.18)';
-                const showLabels = $('#labelToggleBtn').hasClass('active-label');
+            // ═══════════════════════════════════════════════════════════
+            // ✅ COORD TYPE DETECTOR (Polygon / MultiPolygon / Ring)
+            // ═══════════════════════════════════════════════════════════
+            function detectCoordType(coords) {
+                if (!Array.isArray(coords) || coords.length === 0) return 'unknown';
 
+                if (
+                    Array.isArray(coords[0]) &&
+                    Array.isArray(coords[0][0]) &&
+                    Array.isArray(coords[0][0][0]) &&
+                    typeof coords[0][0][0][0] === 'number'
+                ) {
+                    return 'MultiPolygon';
+                }
+
+                if (
+                    Array.isArray(coords[0]) &&
+                    Array.isArray(coords[0][0]) &&
+                    typeof coords[0][0][0] === 'number'
+                ) {
+                    return 'Polygon';
+                }
+
+                if (
+                    Array.isArray(coords[0]) &&
+                    typeof coords[0][0] === 'number'
+                ) {
+                    return 'Ring';
+                }
+
+                return 'unknown';
+            }
+
+            // ✅ Reusable polygon feature check
+            function isPolygonFeature(feature) {
+                const g = feature.getGeometry();
+                if (!g) return false;
+                const t = g.getType();
+                return t === 'Polygon' || t === 'MultiPolygon';
+            }
+
+            // ✅ Safe geometry builder from raw coords
+            function buildGeometryFromCoords(coords) {
+                const detectedType = detectCoordType(coords);
+                if (detectedType === 'MultiPolygon') return new ol.geom.MultiPolygon(coords);
+                if (detectedType === 'Polygon')      return new ol.geom.Polygon(coords);
+                if (detectedType === 'Ring')         return new ol.geom.Polygon([coords]);
+                return null;
+            }
+
+            // ✅ Safe interior point (Polygon & MultiPolygon)
+            function getInteriorPointSafe(geometry) {
+                if (!geometry) return null;
                 try {
-                    const styles = [
-                        new ol.style.Style({
-                            stroke: new ol.style.Stroke({
-                                color: strokeColor,
-                                width: 4,
-                                lineJoin: 'round',
-                                lineCap: 'round'
-                            }),
-                            fill: new ol.style.Fill({
-                                color: fillColor
-                            })
-                        })
-                    ];
+                    if (geometry.getType() === 'Polygon') {
+                        return geometry.getInteriorPoint();
+                    }
+                    if (geometry.getType() === 'MultiPolygon') {
+                        const polys = geometry.getPolygons();
+                        let largest = null, largestArea = 0;
+                        polys.forEach(p => {
+                            const a = p.getArea();
+                            if (a > largestArea) { largestArea = a; largest = p; }
+                        });
+                        if (largest) return largest.getInteriorPoint();
+                    }
+                } catch (e) {
+                    console.warn('getInteriorPointSafe failed:', e);
+                }
+                try {
+                    const ext = geometry.getExtent();
+                    if (ext && isFinite(ext[0]) && isFinite(ext[2])) {
+                        return new ol.geom.Point(ol.extent.getCenter(ext));
+                    }
+                } catch (e2) {
+                    console.warn('extent-center fallback failed:', e2);
+                }
+                return null;
+            }
 
-                    if (showLabels) {
-                        const centerPoint = feature.getGeometry().getInteriorPoint();
+            // ═══════════════════════════════════════════════════════════
+            // STYLES
+            // ═══════════════════════════════════════════════════════════
+            function createPolygonStyle(feature) {
+                const gisid  = feature.get('gisid');
+                const sqft   = feature.get('sqfeet') || '0';
+                const polygonData    = polygonDatas.find(d => d.gisid == gisid);
+                const buildingUsage  = polygonData?.building_usage || feature.get('building_usage') || 'OTHER';
+                const strokeColor    = usageColors[buildingUsage] || '#6C5CE7';
+                const fillColor      = polygonData ? `${strokeColor}40` : 'rgba(108, 92, 231, 0.18)';
+                const showLabels     = $('#labelToggleBtn').hasClass('active-label');
+
+                const geometry = feature.getGeometry();
+                if (!geometry) return null;
+
+                const styles = [
+                    new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: strokeColor,
+                            width: 4,
+                            lineJoin: 'round',
+                            lineCap: 'round'
+                        }),
+                        fill: new ol.style.Fill({ color: fillColor })
+                    })
+                ];
+
+                if (showLabels) {
+                    const labelPoint = getInteriorPointSafe(geometry);
+                    if (labelPoint) {
                         styles.push(new ol.style.Style({
-                            geometry: centerPoint,
+                            geometry: labelPoint,
                             text: new ol.style.Text({
                                 text: gisid + ' GISID\n' + sqft + ' SQFT',
                                 font: 'bold 13px Arial',
-                                fill: new ol.style.Fill({
-                                    color: '#241C4F'
-                                }),
-                                backgroundFill: new ol.style.Fill({
-                                    color: '#FFD93D'
-                                }),
-                                backgroundStroke: new ol.style.Stroke({
-                                    color: '#241C4F',
-                                    width: 1
-                                }),
+                                fill: new ol.style.Fill({ color: '#241C4F' }),
+                                backgroundFill: new ol.style.Fill({ color: '#FFD93D' }),
+                                backgroundStroke: new ol.style.Stroke({ color: '#241C4F', width: 1 }),
                                 padding: [4, 6, 4, 6],
                                 overflow: true,
-                                textAlign: 'center',
-                                offsetY: 0
+                                textAlign: 'center'
                             })
                         }));
                     }
-
-                    return styles;
-                } catch (e) {
-                    return new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: '#6C5CE7',
-                            width: 4
-                        }),
-                        fill: new ol.style.Fill({
-                            color: 'rgba(108, 92, 231, 0.18)'
-                        })
-                    });
                 }
+
+                return styles;
             }
 
             function createLineStyle() {
                 return new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: '#FF3E5F',
-                        width: 3
-                    })
+                    stroke: new ol.style.Stroke({ color: '#FF3E5F', width: 3 })
                 });
             }
 
@@ -1104,9 +1795,7 @@
                         lineCap: 'round',
                         lineJoin: 'round'
                     }),
-                    fill: new ol.style.Fill({
-                        color: 'rgba(255, 217, 61, 0.08)'
-                    })
+                    fill: new ol.style.Fill({ color: 'rgba(255, 217, 61, 0.08)' })
                 });
             }
 
@@ -1114,27 +1803,15 @@
                 return new ol.style.Style({
                     image: new ol.style.Circle({
                         radius: 12,
-                        fill: new ol.style.Fill({
-                            color: '#00B4FF'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: '#ffffff',
-                            width: 3
-                        })
+                        fill: new ol.style.Fill({ color: '#00B4FF' }),
+                        stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 })
                     }),
                     text: new ol.style.Text({
                         text: '📍 You',
                         font: 'bold 12px Arial',
-                        fill: new ol.style.Fill({
-                            color: '#241C4F'
-                        }),
-                        backgroundFill: new ol.style.Fill({
-                            color: '#fff'
-                        }),
-                        backgroundStroke: new ol.style.Stroke({
-                            color: '#00B4FF',
-                            width: 1
-                        }),
+                        fill: new ol.style.Fill({ color: '#241C4F' }),
+                        backgroundFill: new ol.style.Fill({ color: '#fff' }),
+                        backgroundStroke: new ol.style.Stroke({ color: '#00B4FF', width: 1 }),
                         padding: [2, 6, 2, 6],
                         offsetY: -18,
                         textAlign: 'center'
@@ -1146,27 +1823,15 @@
                 return new ol.style.Style({
                     image: new ol.style.Circle({
                         radius: 10,
-                        fill: new ol.style.Fill({
-                            color: '#FF3E5F'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: '#ffffff',
-                            width: 3
-                        })
+                        fill: new ol.style.Fill({ color: '#FF3E5F' }),
+                        stroke: new ol.style.Stroke({ color: '#ffffff', width: 3 })
                     }),
                     text: new ol.style.Text({
                         text: '📍 Destination',
                         font: 'bold 12px Arial',
-                        fill: new ol.style.Fill({
-                            color: '#241C4F'
-                        }),
-                        backgroundFill: new ol.style.Fill({
-                            color: '#fff'
-                        }),
-                        backgroundStroke: new ol.style.Stroke({
-                            color: '#FF3E5F',
-                            width: 1
-                        }),
+                        fill: new ol.style.Fill({ color: '#241C4F' }),
+                        backgroundFill: new ol.style.Fill({ color: '#fff' }),
+                        backgroundStroke: new ol.style.Stroke({ color: '#FF3E5F', width: 1 }),
                         padding: [2, 6, 2, 6],
                         offsetY: -18,
                         textAlign: 'center'
@@ -1174,13 +1839,18 @@
                 });
             }
 
-            // ─── BUILD SEARCH INDEX ───
+            // ═══════════════════════════════════════════════════════════
+            // BUILD SEARCH INDEX
+            // ═══════════════════════════════════════════════════════════
             function buildSearchIndex() {
                 searchIndex = [];
 
                 polygons.forEach(poly => {
                     try {
-                        const coords = JSON.parse(poly.coordinates);
+                        const coords = typeof poly.coordinates === 'string'
+                            ? JSON.parse(poly.coordinates)
+                            : poly.coordinates;
+
                         searchIndex.push({
                             id: poly.gisid,
                             type: 'polygon',
@@ -1192,8 +1862,7 @@
                             phone_number: poly.phone_number || '',
                             coordinates: coords,
                             geometryType: 'polygon',
-                            searchText: `${poly.gisid} ${poly.assessment || ''} ${poly.old_assessment || ''} ${poly.owner_name || ''} ${poly.phone_number || ''} ${poly.sqfeet || ''}`
-                                .toLowerCase()
+                            searchText: `${poly.gisid} ${poly.assessment || ''} ${poly.old_assessment || ''} ${poly.owner_name || ''} ${poly.phone_number || ''} ${poly.sqfeet || ''}`.toLowerCase()
                         });
                     } catch (e) {
                         console.error('Error indexing polygon:', e);
@@ -1202,7 +1871,10 @@
 
                 lines.forEach(line => {
                     try {
-                        const coords = JSON.parse(line.coordinates);
+                        const coords = typeof line.coordinates === 'string'
+                            ? JSON.parse(line.coordinates)
+                            : line.coordinates;
+
                         searchIndex.push({
                             id: line.gisid,
                             type: 'line',
@@ -1220,7 +1892,10 @@
 
                 points.forEach(point => {
                     try {
-                        let coords = JSON.parse(point.coordinates);
+                        const coords = typeof point.coordinates === 'string'
+                            ? JSON.parse(point.coordinates)
+                            : point.coordinates;
+
                         searchIndex.push({
                             id: point.gisid,
                             type: 'point',
@@ -1248,8 +1923,7 @@
                             owner_name: pd.owner_name || '',
                             phone_number: pd.phone_number || '',
                             geometryType: 'point',
-                            searchText: `${pointGisid} ${pd.assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`
-                                .toLowerCase()
+                            searchText: `${pointGisid} ${pd.assessment || ''} ${pd.owner_name || ''} ${pd.phone_number || ''}`.toLowerCase()
                         });
                     } catch (e) {
                         console.error('Error indexing point data:', e);
@@ -1259,17 +1933,33 @@
                 console.log('📊 Search Index Built:', searchIndex.length, 'items');
             }
 
-            // ─── LOAD SOURCES ───
+            // ═══════════════════════════════════════════════════════════
+            // ✅ LOAD POLYGON SOURCE (MultiPolygon-safe)
+            // ═══════════════════════════════════════════════════════════
             function loadPolygonSource() {
                 polygonSource.clear();
                 polygons.forEach(poly => {
                     try {
-                        let coords = JSON.parse(poly.coordinates);
+                        let coords = typeof poly.coordinates === 'string'
+                            ? JSON.parse(poly.coordinates)
+                            : poly.coordinates;
+
+                        if (!coords || !Array.isArray(coords) || coords.length === 0) {
+                            console.warn('Empty coords for gisid:', poly.gisid);
+                            return;
+                        }
+
+                        const geometry = buildGeometryFromCoords(coords);
+                        if (!geometry) {
+                            console.warn('Unknown coord type for gisid:', poly.gisid);
+                            return;
+                        }
+
                         const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const feature = new ol.Feature({
-                            geometry: new ol.geom.Polygon([coords]),
+                            geometry: geometry,
                             gisid: poly.gisid,
-                            type: 'polygon',
+                            type: geometry.getType(),
                             sqfeet: poly.sqfeet || '0',
                             assessment: poly.assessment || '',
                             old_assessment: poly.old_assessment || '',
@@ -1281,7 +1971,7 @@
                         feature.setId(poly.gisid);
                         polygonSource.addFeature(feature);
                     } catch (e) {
-                        console.error('polygon parse error:', e);
+                        console.error('polygon parse error:', poly.gisid, e);
                     }
                 });
                 console.log('📊 Polygons loaded:', polygonSource.getFeatures().length);
@@ -1293,7 +1983,10 @@
                 lineSource.clear();
                 lines.forEach(line => {
                     try {
-                        let coords = JSON.parse(line.coordinates);
+                        let coords = typeof line.coordinates === 'string'
+                            ? JSON.parse(line.coordinates)
+                            : line.coordinates;
+
                         let geometry;
                         if (Array.isArray(coords) && coords.length > 0) {
                             if (Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
@@ -1323,93 +2016,46 @@
                 console.log('📊 Lines loaded:', lineSource.getFeatures().length);
             }
 
-            // ─── LOAD BOUNDARY LAYER ───
+            // ═══════════════════════════════════════════════════════════
+            // LOAD BOUNDARY LAYER
+            // ═══════════════════════════════════════════════════════════
             function loadBoundaryLayer() {
                 try {
                     boundarySource.clear();
 
                     let boundaryCoords = null;
                     let wardNo = null;
-                    let wardId = null;
+                    let wardIdLocal = null;
 
-                    // Try different possible structures
                     if (boundary && boundary.boundary && boundary.boundary.coordinates) {
                         boundaryCoords = boundary.boundary.coordinates;
                         wardNo = boundary.ward_no || ward.ward_no || 'N/A';
-                        wardId = boundary.ward_id || ward.id || 'N/A';
-                        console.log('✅ Found boundary at boundary.boundary.coordinates');
+                        wardIdLocal = boundary.ward_id || ward.id || 'N/A';
                     } else if (boundary && boundary.coordinates) {
                         boundaryCoords = boundary.coordinates;
                         wardNo = boundary.ward_no || ward.ward_no || 'N/A';
-                        wardId = boundary.ward_id || ward.id || 'N/A';
-                        console.log('✅ Found boundary at boundary.coordinates');
+                        wardIdLocal = boundary.ward_id || ward.id || 'N/A';
                     } else if (ward && ward.boundary && ward.boundary.coordinates) {
                         boundaryCoords = ward.boundary.coordinates;
                         wardNo = ward.ward_no || 'N/A';
-                        wardId = ward.id || 'N/A';
-                        console.log('✅ Found boundary in ward.boundary.coordinates');
+                        wardIdLocal = ward.id || 'N/A';
                     } else {
-                        console.log('❌ No boundary data available in any expected location');
+                        console.log('❌ No boundary data available');
                         return;
                     }
 
                     if (!boundaryCoords || !Array.isArray(boundaryCoords) || boundaryCoords.length === 0) {
-                        console.error('❌ Invalid boundary coordinates:', boundaryCoords);
+                        console.error('❌ Invalid boundary coordinates');
                         return;
                     }
 
-                    let geometry = null;
+                    let geometry = buildGeometryFromCoords(boundaryCoords);
 
-                    try {
-                        // Handle the specific structure from your data
-                        if (Array.isArray(boundaryCoords) && boundaryCoords.length > 0) {
-                            // Check if it's a MultiPolygon structure: [[[[x,y], ...]]]
-                            if (Array.isArray(boundaryCoords[0]) &&
-                                Array.isArray(boundaryCoords[0][0]) &&
-                                Array.isArray(boundaryCoords[0][0][0]) &&
-                                typeof boundaryCoords[0][0][0][0] === 'number') {
-                                geometry = new ol.geom.MultiPolygon(boundaryCoords);
-                                console.log('✅ Parsed as MultiPolygon');
-                            }
-                            // Check if it's a Polygon structure: [[[x,y], ...]]
-                            else if (Array.isArray(boundaryCoords[0]) &&
-                                Array.isArray(boundaryCoords[0][0]) &&
-                                typeof boundaryCoords[0][0][0] === 'number') {
-                                geometry = new ol.geom.Polygon(boundaryCoords[0]);
-                                console.log('✅ Parsed as Polygon');
-                            }
-                            // Check if it's a LinearRing: [[x,y], ...]
-                            else if (Array.isArray(boundaryCoords[0]) &&
-                                typeof boundaryCoords[0][0] === 'number') {
-                                geometry = new ol.geom.Polygon([boundaryCoords]);
-                                console.log('✅ Parsed as LinearRing');
-                            }
-                            // Check if it's a Feature with geometry
-                            else if (boundaryCoords.type === 'MultiPolygon' || boundaryCoords.type === 'Polygon') {
-                                const format = new ol.format.GeoJSON();
-                                const feature = format.readFeature(boundaryCoords);
-                                geometry = feature.getGeometry();
-                                console.log('✅ Parsed as GeoJSON');
-                            } else {
-                                console.error('❌ Unrecognized boundary coordinate structure:', boundaryCoords);
-                                // Try to flatten and use as Polygon
-                                try {
-                                    const flatCoords = boundaryCoords[0][0] || boundaryCoords[0] || boundaryCoords;
-                                    if (Array.isArray(flatCoords) && flatCoords.length > 0) {
-                                        geometry = new ol.geom.Polygon([flatCoords]);
-                                        console.log('✅ Parsed using fallback flattening');
-                                    }
-                                } catch (e) {
-                                    console.error('❌ Fallback parsing failed:', e);
-                                }
-                            }
-                        } else {
-                            console.error('❌ Invalid boundary coordinates array');
-                            return;
-                        }
-                    } catch (e) {
-                        console.error('❌ Error parsing boundary coordinates:', e);
-                        return;
+                    // GeoJSON fallback
+                    if (!geometry && (boundaryCoords.type === 'MultiPolygon' || boundaryCoords.type === 'Polygon')) {
+                        const format = new ol.format.GeoJSON();
+                        const feature = format.readFeature(boundaryCoords);
+                        geometry = feature.getGeometry();
                     }
 
                     if (!geometry) {
@@ -1417,27 +2063,23 @@
                         return;
                     }
 
-                    // Create the boundary feature
                     const boundaryFeature = new ol.Feature({
                         geometry: geometry,
                         type: 'boundary',
                         ward_no: wardNo,
-                        ward_id: wardId,
+                        ward_id: wardIdLocal,
                         name: `Ward ${wardNo}`
                     });
 
                     boundaryFeature.setStyle(createBoundaryStyle());
                     boundarySource.addFeature(boundaryFeature);
 
-                    console.log('✅ Boundary layer loaded successfully!');
-                    console.log(`📍 Ward ${wardNo} boundary added`);
-
+                    console.log('✅ Boundary layer loaded! Ward:', wardNo);
                 } catch (e) {
                     console.error('❌ Error loading boundary layer:', e);
                 }
             }
 
-            // ─── CREATE BOUNDARY LAYER ───
             const boundaryLayer = new ol.layer.Vector({
                 source: boundarySource,
                 visible: true,
@@ -1454,8 +2096,8 @@
                 $('#statTotal').text(polygons.length);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(polygons.length - polygonDatas.length);
-                const variationCount = Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION')
-                    .length;
+                const variationCount = Object.values(buildingVariations)
+                    .filter(v => v.usage_status === 'VARIATION').length;
                 $('#statVariation').text(variationCount);
             }
 
@@ -1464,7 +2106,9 @@
             loadBoundaryLayer();
             buildSearchIndex();
 
-            // ─── CREATE LAYERS ───
+            // ═══════════════════════════════════════════════════════════
+            // CREATE OL LAYERS
+            // ═══════════════════════════════════════════════════════════
             const polygonLayer = new ol.layer.Vector({
                 source: polygonSource,
                 style: createPolygonStyle,
@@ -1479,7 +2123,6 @@
                 title: 'Lines'
             });
 
-            // ─── CREATE POSITION LAYERS ───
             positionLayer = new ol.layer.Vector({
                 source: new ol.source.Vector(),
                 visible: true,
@@ -1498,20 +2141,15 @@
                 zIndex: 100
             });
 
-            // ─── CREATE MAP ───
+            // ═══════════════════════════════════════════════════════════
+            // CREATE MAP
+            // ═══════════════════════════════════════════════════════════
             const map = new ol.Map({
                 target: 'map',
                 layers: [
-                    osmLayer,
-                    satelliteLayer,
-                    streetViewLayer,
-                    droneLayer,
-                    boundaryLayer,
-                    polygonLayer,
-                    lineLayer,
-                    positionLayer,
-                    routeLayer,
-                    destinationLayer
+                    osmLayer, satelliteLayer, streetViewLayer, droneLayer,
+                    boundaryLayer, polygonLayer, lineLayer,
+                    positionLayer, routeLayer, destinationLayer
                 ],
                 view: new ol.View({
                     center: ol.extent.getCenter(imageExtent),
@@ -1519,12 +2157,12 @@
                 })
             });
 
-            // ─── GET MAP CONTAINER ───
+            // ═══════════════════════════════════════════════════════════
+            // UI CONTROLS INJECTION
+            // ═══════════════════════════════════════════════════════════
             const $mapContainer = $('#mapCard');
             $mapContainer.append(`<div class="map-controls-stack" id="mapControlsStack"></div>`);
             const $stack = $('#mapControlsStack');
-
-            // ─── CONTROLS INJECTION ───
 
             // 1. FILTER TOGGLE
             $stack.append(`
@@ -1535,7 +2173,6 @@
                     <div class="filter-dropdown" id="filterDropdown">
                         <div class="dropdown-header">🔍 Filter Features</div>
                         <div class="filter-scroll-container">
-                            <!-- Building Usage -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Building Usage</div>
                                 <select class="form-select form-select-sm" id="usageFilter">
@@ -1551,8 +2188,6 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Usage Variation -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Usage Variation</div>
                                 <select class="form-select form-select-sm" id="usageVariationFilter">
@@ -1564,8 +2199,6 @@
                                 <small class="text-muted">Compare building usage with assessment records</small>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Area Variation -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Area Variation</div>
                                 <select class="form-select form-select-sm" id="areaVariationFilter">
@@ -1575,11 +2208,8 @@
                                     <option value="high_variation">High Variation (>20%)</option>
                                     <option value="low_variation">Low Variation (<5%)</option>
                                 </select>
-                                <small class="text-muted">Compare building area with assessment area</small>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Area Range -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Area Range (sqft)</div>
                                 <div class="filter-range">
@@ -1591,8 +2221,6 @@
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Zonation -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Zonation</div>
                                 <select class="form-select form-select-sm" id="zoneFilter">
@@ -1607,8 +2235,6 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Construction Type -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Construction Type</div>
                                 <select class="form-select form-select-sm" id="constructionFilter">
@@ -1623,8 +2249,6 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Assessment Info -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Assessment Info</div>
                                 <select class="form-select form-select-sm" id="assessmentinfoFilter">
@@ -1634,8 +2258,6 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Building Type -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Building Type</div>
                                 <select class="form-select form-select-sm" id="buildingTypeFilter">
@@ -1664,8 +2286,6 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Amenities -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Amenities</div>
                                 <select class="form-select form-select-sm" id="amenitiesFilter" multiple size="4">
@@ -1684,8 +2304,6 @@
                                 <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- UGD Status -->
                             <div class="filter-section">
                                 <div class="filter-section-header">UGD Status</div>
                                 <select class="form-select form-select-sm" id="ugdFilter">
@@ -1702,8 +2320,6 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Survey Status -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Survey Status</div>
                                 <select class="form-select form-select-sm" id="surveyStatusFilter">
@@ -1714,8 +2330,6 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Assessment Count -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Assessment Count</div>
                                 <select class="form-select form-select-sm" id="assessmentCountFilter">
@@ -1727,8 +2341,6 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Number of Floors -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Number of Floors</div>
                                 <select class="form-select form-select-sm" id="floorFilter">
@@ -1741,8 +2353,6 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Number of Shops -->
                             <div class="filter-section">
                                 <div class="filter-section-header">Number of Shops</div>
                                 <select class="form-select form-select-sm" id="shopFilter">
@@ -1754,8 +2364,6 @@
                                 </select>
                             </div>
                             <div class="dropdown-divider"></div>
-
-                            <!-- Quick Stats -->
                             <div class="quick-stats" id="quickStats">
                                 <div class="stat-item"><strong>Total:</strong> <span class="stat-value" id="statTotal">0</span></div>
                                 <div class="stat-item"><strong>Surveyed:</strong> <span class="stat-value" id="statSurveyed">0</span></div>
@@ -1919,7 +2527,7 @@
                 </div>
             `);
 
-            // 7. 3D TOGGLE BUTTON
+            // 7. 3D TOGGLE
             $stack.append(`
                 <div class="custom-threed-toggle">
                     <button class="threed-toggle-btn" id="threedToggleBtn" title="Toggle 3D View" aria-label="Toggle 3D view">
@@ -1928,15 +2536,16 @@
                 </div>
             `);
 
-            // 8. FULLSCREEN BUTTON
+            // 8. FULLSCREEN
             $mapContainer.append(`
                 <button class="fullscreen-btn" id="fullscreenBtn" aria-label="Toggle fullscreen">
                     <i class="bi bi-arrows-fullscreen"></i>
                 </button>
             `);
 
-            // ─── HELPER FUNCTIONS ───
-
+            // ═══════════════════════════════════════════════════════════
+            // HELPER FUNCTIONS
+            // ═══════════════════════════════════════════════════════════
             function showToast(message, duration = 3000) {
                 $('#locationToast').remove();
                 if (!$('.toast-container').length) {
@@ -1944,33 +2553,19 @@
                 }
                 const $toast = $('<div id="locationToast" class="location-toast">' + message + '</div>');
                 $('.toast-container').append($toast);
-                $toast.css({
-                    'display': 'block',
-                    'opacity': 0,
-                    'transform': 'translateX(-50%) translateY(10px)'
-                });
+                $toast.css({ 'display': 'block', 'opacity': 0, 'transform': 'translateX(-50%) translateY(10px)' });
                 setTimeout(function() {
-                    $toast.css({
-                        'opacity': 1,
-                        'transform': 'translateX(-50%) translateY(0)'
-                    });
+                    $toast.css({ 'opacity': 1, 'transform': 'translateX(-50%) translateY(0)' });
                 }, 50);
                 clearTimeout($toast.data('timeout'));
                 $toast.data('timeout', setTimeout(function() {
-                    $toast.css({
-                        'opacity': 0,
-                        'transform': 'translateX(-50%) translateY(10px)'
-                    });
-                    setTimeout(function() {
-                        $toast.remove();
-                    }, 300);
+                    $toast.css({ 'opacity': 0, 'transform': 'translateX(-50%) translateY(10px)' });
+                    setTimeout(function() { $toast.remove(); }, 300);
                 }, duration));
             }
 
             function switchBaseLayer(layer) {
-                [osmLayer, satelliteLayer, streetViewLayer].forEach(l => {
-                    l.setVisible(l === layer);
-                });
+                [osmLayer, satelliteLayer, streetViewLayer].forEach(l => l.setVisible(l === layer));
                 const layerName = layer.get('title') || 'Layer';
                 $('#activeLayerBadge').text(layerName);
                 $('.layer-dropdown-item[data-layer-type="base"]').removeClass('active');
@@ -1987,26 +2582,20 @@
                 if (!gisid) return null;
                 const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
                 if (polyFeatures.length > 0) {
-                    try {
-                        return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent());
-                    } catch (e) {}
+                    try { return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent()); } catch (e) {}
                 }
                 const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
                 if (lineFeatures.length > 0) {
-                    try {
-                        return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
-                    } catch (e) {}
+                    try { return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent()); } catch (e) {}
                 }
                 const point = points.find(p => p.gisid == gisid);
                 if (point) {
                     try {
-                        const coords = JSON.parse(point.coordinates);
+                        const coords = typeof point.coordinates === 'string' ? JSON.parse(point.coordinates) : point.coordinates;
                         if (Array.isArray(coords) && coords.length === 2) {
-                            let lon = coords[0],
-                                lat = coords[1];
+                            let lon = coords[0], lat = coords[1];
                             if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
-                                lon = coords[1];
-                                lat = coords[0];
+                                lon = coords[1]; lat = coords[0];
                             }
                             return ol.proj.fromLonLat([lon, lat]);
                         }
@@ -2016,67 +2605,44 @@
             }
 
             function zoomToFeature(item) {
-                if (!item) {
-                    showToast('❌ Invalid item', 3000);
-                    return;
-                }
+                if (!item) { showToast('❌ Invalid item', 3000); return; }
                 let coords = null;
                 const gisid = item.id || item.point_gisid;
                 const features = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                if (features.length > 0) {
-                    coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
-                }
+                if (features.length > 0) coords = ol.extent.getCenter(features[0].getGeometry().getExtent());
                 if (!coords) {
                     const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                    if (lineFeatures.length > 0) {
-                        coords = ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
-                    }
+                    if (lineFeatures.length > 0) coords = ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
                 }
                 if (!coords) {
                     const point = points.find(p => p.gisid == gisid);
                     if (point) {
                         try {
-                            const c = JSON.parse(point.coordinates);
+                            const c = typeof point.coordinates === 'string' ? JSON.parse(point.coordinates) : point.coordinates;
                             coords = ol.proj.fromLonLat(c);
                         } catch (e) {}
                     }
                 }
-                if (!coords) {
-                    showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000);
-                    return;
-                }
-                map.getView().animate({
-                    center: coords,
-                    zoom: 20,
-                    duration: 1000
-                });
+                if (!coords) { showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000); return; }
+                map.getView().animate({ center: coords, zoom: 20, duration: 1000 });
             }
 
             function zoomToExtent() {
-                map.getView().fit(imageExtent, {
-                    padding: [50, 50, 50, 50],
-                    duration: 1000,
-                    maxZoom: 20
-                });
+                map.getView().fit(imageExtent, { padding: [50, 50, 50, 50], duration: 1000, maxZoom: 20 });
                 showToast('📍 Zoomed to ward extent', 2000);
             }
 
-            // ─── GET POINT DATA WITH DETAILS ───
+            // ═══════════════════════════════════════════════════════════
+            // POINT DATA DETAILS
+            // ═══════════════════════════════════════════════════════════
             function getPointDataWithDetails(gisid, callback) {
                 $.ajax({
                     url: '/commissioner/get-point-details',
                     method: 'GET',
-                    data: {
-                        gisid: gisid,
-                        ward_id: wardId
-                    },
+                    data: { gisid: gisid, ward_id: wardId },
                     success: function(res) {
-                        if (res.status) {
-                            callback(res.data);
-                        } else {
-                            showToast('Failed to load assessment data', 3000);
-                            callback([]);
-                        }
+                        if (res.status) callback(res.data);
+                        else { showToast('Failed to load assessment data', 3000); callback([]); }
                     },
                     error: function() {
                         showToast('Failed to load assessment data', 3000);
@@ -2085,37 +2651,29 @@
                 });
             }
 
-            // ─── CESIUM 3D VIEW ───
+            // ═══════════════════════════════════════════════════════════
+            // CESIUM 3D VIEW
+            // ═══════════════════════════════════════════════════════════
             const CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZTM5MGM5ZC05YWY2LTQzZWQtYjdiOS03N2RjMTYxMGQyMWEiLCJpZCI6MzU0Mjk0LCJpYXQiOjE3NjE1NDA0Njl9.Cy2TfSSTNknORmyG4fi9P4OHSk2IKqdz7xC6xXUJK44';
 
             async function initCesiumViewer() {
                 if (cesiumViewer) return cesiumViewer;
-
                 if (typeof Cesium === 'undefined') {
                     showToast('⚠️ Cesium library failed to load.', 4000);
                     return null;
                 }
-
                 try {
                     Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
-
                     cesiumViewer = new Cesium.Viewer("cesiumContainer", {
                         baseLayer: Cesium.ImageryLayer.fromProviderAsync(
                             Cesium.IonImageryProvider.fromAssetId(2)
                         ),
                         terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(1),
-                        baseLayerPicker: false,
-                        geocoder: false,
-                        homeButton: false,
-                        sceneModePicker: false,
-                        navigationHelpButton: false,
-                        animation: false,
-                        timeline: false,
-                        fullscreenButton: false,
-                        infoBox: false,
-                        selectionIndicator: false,
-                        shadows: true,
-                        shouldAnimate: true
+                        baseLayerPicker: false, geocoder: false, homeButton: false,
+                        sceneModePicker: false, navigationHelpButton: false,
+                        animation: false, timeline: false, fullscreenButton: false,
+                        infoBox: false, selectionIndicator: false,
+                        shadows: true, shouldAnimate: true
                     });
 
                     await addDroneImageToCesium();
@@ -2127,10 +2685,7 @@
                     cesiumViewer.scene.skyAtmosphere.show = true;
                     cesiumViewer.scene.fog.enabled = true;
 
-                    cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(
-                        cesiumViewer.scene.canvas
-                    );
-
+                    cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(cesiumViewer.scene.canvas);
                     cesiumClickHandler.setInputAction(function(movement) {
                         const picked = cesiumViewer.scene.pick(movement.position);
                         if (Cesium.defined(picked) && picked.id && picked.id.gisid) {
@@ -2143,7 +2698,6 @@
                     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
                     return cesiumViewer;
-
                 } catch (e) {
                     console.error('Cesium init error:', e);
                     showToast("3D initialization failed", 4000);
@@ -2154,108 +2708,76 @@
 
             async function addDroneImageToCesium() {
                 if (!cesiumViewer) return;
-                if (!droneImageURL || droneImageURL === '') {
-                    console.log('No drone image available');
-                    return;
-                }
-
+                if (!droneImageURL || droneImageURL === '') return;
                 try {
                     const westSouth = ol.proj.transform([imageExtent[0], imageExtent[1]], 'EPSG:3857', 'EPSG:4326');
                     const eastNorth = ol.proj.transform([imageExtent[2], imageExtent[3]], 'EPSG:3857', 'EPSG:4326');
-
                     const provider = new Cesium.SingleTileImageryProvider({
                         url: droneImageURL,
-                        rectangle: Cesium.Rectangle.fromDegrees(
-                            westSouth[0],
-                            westSouth[1],
-                            eastNorth[0],
-                            eastNorth[1]
-                        )
+                        rectangle: Cesium.Rectangle.fromDegrees(westSouth[0], westSouth[1], eastNorth[0], eastNorth[1])
                     });
-
-                    const droneLayer = new Cesium.ImageryLayer(provider, {
-                        alpha: 0.80,
-                        brightness: 1.0,
-                        contrast: 1.0,
-                        show: true
+                    const layer = new Cesium.ImageryLayer(provider, {
+                        alpha: 0.80, brightness: 1.0, contrast: 1.0, show: true
                     });
-
-                    cesiumViewer.imageryLayers.add(droneLayer);
-                    console.log('✅ Drone image added to Cesium 3D view');
-                    window.droneCesiumLayer = droneLayer;
-
+                    cesiumViewer.imageryLayers.add(layer);
+                    window.droneCesiumLayer = layer;
+                    console.log('✅ Drone image added to Cesium');
                 } catch (e) {
-                    console.error('Error adding drone image to Cesium:', e);
+                    console.error('Error adding drone image:', e);
                 }
             }
 
-            function toggleDroneIn3D(show) {
-                if (window.droneCesiumLayer) {
-                    window.droneCesiumLayer.show = show;
-                }
-            }
-
-            // ─── BUILD CESIUM BOUNDARY ───
             function buildCesiumBoundary() {
                 if (!cesiumViewer) return;
-
                 try {
                     const features = boundarySource.getFeatures();
-                    if (features.length === 0) {
-                        console.log('⚠️ No boundary features to display in 3D');
-                        return;
-                    }
-
+                    if (features.length === 0) return;
                     const feature = features[0];
                     const geometry = feature.getGeometry();
-
                     if (!geometry) return;
 
-                    // Get coordinates in EPSG:4326
-                    const coords = geometry.getCoordinates();
-                    let flatCoords = [];
+                    const geomType = geometry.getType();
+                    const allRings = [];
 
-                    // Flatten the coordinates
-                    if (Array.isArray(coords) && coords.length > 0) {
-                        const rings = coords[0] || coords;
-                        rings.forEach(ring => {
-                            if (Array.isArray(ring) && ring.length > 0) {
-                                ring.forEach(pt => {
-                                    if (Array.isArray(pt) && pt.length >= 2) {
-                                        const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
-                                        flatCoords.push(lonLat[0], lonLat[1]);
-                                    }
-                                });
-                            }
+                    if (geomType === 'Polygon') {
+                        const coords = geometry.getCoordinates();
+                        if (coords[0]) allRings.push(coords[0]);
+                    } else if (geomType === 'MultiPolygon') {
+                        const coords = geometry.getCoordinates();
+                        coords.forEach(poly => {
+                            if (poly[0]) allRings.push(poly[0]);
                         });
                     }
 
-                    if (flatCoords.length < 6) {
-                        console.log('⚠️ Not enough coordinates for boundary');
-                        return;
-                    }
+                    allRings.forEach(ring => {
+                        if (!Array.isArray(ring) || ring.length < 3) return;
+                        const flatCoords = [];
+                        ring.forEach(pt => {
+                            const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
+                            flatCoords.push(lonLat[0], lonLat[1]);
+                        });
+                        if (flatCoords.length < 6) return;
 
-                    // Add boundary as a polygon in Cesium
-                    const entity = cesiumViewer.entities.add({
-                        name: 'Ward Boundary',
-                        polygon: {
-                            hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
-                            material: Cesium.Color.fromCssColorString('#FFD93D').withAlpha(0.12),
-                            outline: true,
-                            outlineColor: Cesium.Color.fromCssColorString('#FFD93D'),
-                            outlineWidth: 3,
-                            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
-                        }
+                        const entity = cesiumViewer.entities.add({
+                            name: 'Ward Boundary',
+                            polygon: {
+                                hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                                material: Cesium.Color.fromCssColorString('#FFD93D').withAlpha(0.12),
+                                outline: true,
+                                outlineColor: Cesium.Color.fromCssColorString('#FFD93D'),
+                                outlineWidth: 3,
+                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                            }
+                        });
+                        cesiumBuildingEntities.push(entity);
                     });
-
-                    cesiumBuildingEntities.push(entity);
-                    console.log('✅ Boundary added to Cesium 3D view');
-
+                    console.log('✅ Boundary added to Cesium');
                 } catch (e) {
                     console.error('Error adding boundary to Cesium:', e);
                 }
             }
 
+            // ✅ FIXED: MultiPolygon-safe Cesium extruder
             function buildCesiumBuildings() {
                 if (!cesiumViewer) return;
 
@@ -2264,14 +2786,22 @@
 
                 polygons.forEach(poly => {
                     try {
-                        const ring = JSON.parse(poly.coordinates);
-                        if (!Array.isArray(ring) || ring.length < 3) return;
+                        let coords = typeof poly.coordinates === 'string'
+                            ? JSON.parse(poly.coordinates)
+                            : poly.coordinates;
 
-                        const lonLatFlat = [];
-                        ring.forEach(pt => {
-                            const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
-                            lonLatFlat.push(lonLat[0], lonLat[1]);
-                        });
+                        const detectedType = detectCoordType(coords);
+                        let rings = [];
+
+                        if (detectedType === 'Polygon') {
+                            if (coords[0]) rings = [coords[0]];
+                        } else if (detectedType === 'MultiPolygon') {
+                            coords.forEach(polyCoords => {
+                                if (polyCoords[0]) rings.push(polyCoords[0]);
+                            });
+                        } else if (detectedType === 'Ring') {
+                            rings = [coords];
+                        }
 
                         const polygonData = polygonDatas.find(d => d.gisid == poly.gisid);
                         const usage = polygonData?.building_usage || 'OTHER';
@@ -2279,22 +2809,33 @@
                         const floors = parseInt(polygonData?.number_floor) || 0;
                         const height = Math.max((floors + 1) * 3.2, 3.2);
 
-                        const entity = cesiumViewer.entities.add({
-                            gisid: poly.gisid,
-                            polygon: {
-                                hierarchy: Cesium.Cartesian3.fromDegreesArray(lonLatFlat),
-                                extrudedHeight: height,
-                                height: 0,
-                                material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.8),
-                                outline: true,
-                                outlineColor: Cesium.Color.WHITE,
-                                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-                                extrudedHeightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
-                            }
+                        rings.forEach(ring => {
+                            if (!Array.isArray(ring) || ring.length < 3) return;
+                            const flatCoords = [];
+                            ring.forEach(pt => {
+                                if (!Array.isArray(pt) || pt.length < 2) return;
+                                const lonLat = ol.proj.transform(pt, 'EPSG:3857', 'EPSG:4326');
+                                flatCoords.push(lonLat[0], lonLat[1]);
+                            });
+                            if (flatCoords.length < 6) return;
+
+                            const entity = cesiumViewer.entities.add({
+                                gisid: poly.gisid,
+                                polygon: {
+                                    hierarchy: Cesium.Cartesian3.fromDegreesArray(flatCoords),
+                                    extrudedHeight: height,
+                                    height: 0,
+                                    material: Cesium.Color.fromCssColorString(colorHex).withAlpha(0.8),
+                                    outline: true,
+                                    outlineColor: Cesium.Color.WHITE,
+                                    heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                                    extrudedHeightReference: Cesium.HeightReference.RELATIVE_TO_GROUND
+                                }
+                            });
+                            cesiumBuildingEntities.push(entity);
                         });
-                        cesiumBuildingEntities.push(entity);
                     } catch (e) {
-                        console.error('Cesium polygon build error:', e);
+                        console.error('Cesium polygon build error:', poly.gisid, e);
                     }
                 });
 
@@ -2305,7 +2846,6 @@
                 if (!cesiumViewer) return;
                 const center = ol.extent.getCenter(imageExtent);
                 const lonLat = ol.proj.transform(center, 'EPSG:3857', 'EPSG:4326');
-
                 cesiumViewer.camera.flyTo({
                     destination: Cesium.Cartesian3.fromDegrees(lonLat[0], lonLat[1], 350),
                     orientation: {
@@ -2317,51 +2857,42 @@
                 });
             }
 
-            // ─── TOGGLE 3D MODE ───
             function toggle3DMode() {
-                const $threedBtn = $('#threedToggleBtn');
-
+                const $btn = $('#threedToggleBtn');
                 if (!is3DMode) {
                     const viewer = initCesiumViewer();
                     if (!viewer) return;
-
                     buildCesiumBuildings();
                     buildCesiumBoundary();
-
                     $('#map').hide();
                     $('#cesiumContainer').show();
                     setTimeout(() => viewer.resize(), 50);
-
                     flyCesiumToWardExtent();
-
                     is3DMode = true;
-                    $threedBtn.addClass('active-3d').html('<i class="bi bi-box-fill"></i>');
-                    showToast('🌍 3D mode activated - Buildings extruded', 3000);
+                    $btn.addClass('active-3d').html('<i class="bi bi-box-fill"></i>');
+                    showToast('🌍 3D mode activated', 3000);
                 } else {
                     $('#cesiumContainer').hide();
                     $('#map').show();
                     map.updateSize();
-
                     is3DMode = false;
-                    $threedBtn.removeClass('active-3d').html('<i class="bi bi-box"></i>');
+                    $btn.removeClass('active-3d').html('<i class="bi bi-box"></i>');
                     showToast('🗺️ 2D mode restored', 2000);
                 }
             }
 
-            // ─── 3D TOGGLE EVENT HANDLER ───
             $(document).on('click', '#threedToggleBtn', function(e) {
                 e.stopPropagation();
                 toggle3DMode();
             });
 
-            // ─── HANDLE MAP SIZE CHANGES ───
             $(window).on('resize', function() {
-                if (cesiumViewer && is3DMode) {
-                    cesiumViewer.resize();
-                }
+                if (cesiumViewer && is3DMode) cesiumViewer.resize();
             });
 
-            // ─── FUNCTION TO SHOW BUILDING VIEW ───
+            // ═══════════════════════════════════════════════════════════
+            // BUILDING VIEW
+            // ═══════════════════════════════════════════════════════════
             function showBuildingView(item) {
                 $('#bv_gisid').text(item.gisid || '-');
                 $('#bv_zone').text(item.zone || item.building_zone || '-');
@@ -2443,26 +2974,20 @@
                     const $error = $('#' + errorId);
 
                     if (imagePath) {
-                        const fullPath = imagePath.startsWith('http') ? imagePath : assetUrl + '/' + imagePath.replace(/^\/+/, '');
+                        const fullPath = imagePath.startsWith('http')
+                            ? imagePath
+                            : assetUrl + '/' + imagePath.replace(/^\/+/, '');
                         $img.attr('src', fullPath).show();
                         $empty.hide();
                         $error.hide();
-
                         $img.off('error').on('error', function() {
-                            $(this).hide();
-                            $empty.hide();
-                            $error.show();
+                            $(this).hide(); $empty.hide(); $error.show();
                         });
-
                         $img.off('load').on('load', function() {
-                            $(this).show();
-                            $empty.hide();
-                            $error.hide();
+                            $(this).show(); $empty.hide(); $error.hide();
                         });
                     } else {
-                        $img.hide();
-                        $empty.show();
-                        $error.hide();
+                        $img.hide(); $empty.show(); $error.hide();
                     }
                 }
 
@@ -2478,7 +3003,9 @@
                 modal.show();
             }
 
-            // ─── POINT DETAILS ───
+            // ═══════════════════════════════════════════════════════════
+            // POINT DETAILS MODAL
+            // ═══════════════════════════════════════════════════════════
             function openPointDetails(gisid) {
                 currentPointGisid = gisid;
                 $('#pointDetailsSearch').val('');
@@ -2508,15 +3035,14 @@
                     return;
                 }
 
-                // Set the point ID for QR code generation (use the first record's point ID)
                 const firstRecord = records[0];
                 if (firstRecord && firstRecord.point) {
                     $('#pointId').val(firstRecord.point.id);
                     $('#qrCodeAssessmentBtn').data('point-id', firstRecord.point.id);
                 }
 
-                const v = (val) => (val === null || val === undefined || val === '') ?
-                    '<span class="text-muted">-</span>' : val;
+                const v = (val) => (val === null || val === undefined || val === '')
+                    ? '<span class="text-muted">-</span>' : val;
 
                 let html = '';
                 records.forEach(record => {
@@ -2589,7 +3115,6 @@
                                         <div class="tax-card-row"><span class="tax-card-label">Type</span><span class="tax-card-value">${v(mis.type)}</span></div>
                                     </div>
                                 </div>
-
                                 <div class="col-md-4">
                                     <div class="tax-card">
                                         <div class="tax-card-title"><i class="bi bi-droplet me-1"></i>Water Tax</div>
@@ -2604,7 +3129,6 @@
                                         <div class="tax-card-row"><span class="tax-card-label">Phone</span><span class="tax-card-value">${v(wt.phone_number)}</span></div>
                                     </div>
                                 </div>
-
                                 <div class="col-md-4">
                                     <div class="tax-card">
                                         <div class="tax-card-title"><i class="bi bi-pipe me-1"></i>UGD Tax</div>
@@ -2628,51 +3152,46 @@
                             </div>
 
                             ${ptList.length ? `
-                            <div class="row mt-2 g-2">
-                                <div class="col-12">
-                                    <div class="tax-card">
-                                        <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
-                                        ${ptList.map(pt => `
-                                        <div style="border-bottom:1px dashed #d7e8df; padding:6px 0; margin-bottom:4px;">
-                                            <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
-                                            <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
-                                            <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
-                                            <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
-                                            <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
-                                            <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
-                                            <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
-                                            <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
-                                            <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
-                                            <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
-                                            <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                <div class="row mt-2 g-2">
+                                    <div class="col-12">
+                                        <div class="tax-card">
+                                            <div class="tax-card-title"><i class="bi bi-briefcase me-1"></i>Professional Tax (${ptList.length})</div>
+                                            ${ptList.map(pt => `
+                                                <div style="border-bottom:1px dashed #d7e8df; padding:6px 0; margin-bottom:4px;">
+                                                    <div class="tax-card-row"><span class="tax-card-label">PT No</span><span class="tax-card-value">${v(pt.pt_number)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Old PT No</span><span class="tax-card-value">${v(pt.old_pt_number)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Establishment</span><span class="tax-card-value">${v(pt.establishment_name)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Profession</span><span class="tax-card-value">${v(pt.profession_type)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Employees</span><span class="tax-card-value">${v(pt.employee_count)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Half Yr Tax</span><span class="tax-card-value">${v(pt.half_year_tax)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Arrears</span><span class="tax-card-value">${v(pt.arrears)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Penalty</span><span class="tax-card-value">${v(pt.penalty)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Balance</span><span class="tax-card-value">${v(pt.balance)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Status</span><span class="tax-card-value">${v(pt.payment_status)}</span></div>
+                                                    <div class="tax-card-row"><span class="tax-card-label">Remarks</span><span class="tax-card-value">${v(pt.remarks)}</span></div>
+                                                </div>
+                                            `).join('')}
                                         </div>
-                                        `).join('')}
                                     </div>
                                 </div>
-                            </div>
                             ` : ''}
                         </div>`;
                 });
 
                 $('#pointDetailsContainer').html(html);
 
-                // Re-attach search handler
                 $('#pointDetailsSearch').off('input').on('input', function() {
                     const searchVal = $(this).val().toLowerCase();
-                    if (!searchVal) {
-                        renderPointDetails(records);
-                        return;
-                    }
+                    if (!searchVal) { renderPointDetails(records); return; }
                     const filtered = records.filter(record => {
                         const pd = record.point || {};
                         return (pd.assessment || '').toString().toLowerCase().includes(searchVal) ||
-                            (pd.owner_name || '').toLowerCase().includes(searchVal) ||
-                            (pd.phone_number || '').toString().toLowerCase().includes(searchVal);
+                               (pd.owner_name || '').toLowerCase().includes(searchVal) ||
+                               (pd.phone_number || '').toString().toLowerCase().includes(searchVal);
                     });
                     renderPointDetails(filtered);
                 });
 
-                // Re-attach QR button for individual cards
                 $(document).off('click', '.pdc-action-btn[data-qr-id]').on('click', '.pdc-action-btn[data-qr-id]', function() {
                     const pointId = $(this).data('qr-id');
                     if (pointId) {
@@ -2683,106 +3202,73 @@
                 });
             }
 
-            // ─── QR CODE EXPORT FUNCTION (FIXED WITH WARD ID) ───
+            // ═══════════════════════════════════════════════════════════
+            // QR CODE
+            // ═══════════════════════════════════════════════════════════
             $(document).on('click', '#qrCodeAssessmentBtn', function(e) {
                 e.preventDefault();
-
                 const pointId = $('#pointId').val() || $(this).data('point-id');
                 if (!pointId) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Point ID not found. Please select an assessment first.',
-                        confirmButtonColor: '#0f6b47'
-                    });
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Point ID not found. Please select an assessment first.', confirmButtonColor: '#0f6b47' });
                     return;
                 }
-
                 const $btn = $(this);
                 const originalHtml = $btn.html();
                 $btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Generating...').prop('disabled', true);
 
-                // Get the CSRF token from meta tag
                 const csrfToken = $('meta[name="csrf-token"]').attr('content') || "{{ csrf_token() }}";
 
-                // Use the wardId variable defined at the top
-                const wardIdParam = wardId || 0;
-
                 fetch("{{ route('qrCodeAssessment') }}", {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: new URLSearchParams({
-                            point_id: pointId,
-                            ward_id: wardIdParam
-                        })
-                    })
-                    .then(async (response) => {
-                        if (!response.ok) {
-                            let msg = 'Failed to generate QR code';
-                            try {
-                                const err = await response.json();
-                                if (err.message) msg = err.message;
-                            } catch (_) {}
-                            throw new Error(msg);
-                        }
-
-                        let filename = 'QR_Code.png';
-                        const disposition = response.headers.get('Content-Disposition');
-                        if (disposition) {
-                            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-                            if (matches && matches[1]) filename = matches[1].replace(/['"]/g, '');
-                        }
-
-                        const blob = await response.blob();
-                        return { blob, filename };
-                    })
-                    .then(({ blob, filename }) => {
-                        if (!blob || blob.size === 0) throw new Error('Received an empty QR code file');
-
-                        const url = window.URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = filename;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'QR Code downloaded successfully',
-                            timer: 2000,
-                            showConfirmButton: false,
-                            toast: true,
-                            position: 'top-end'
-                        });
-                    })
-                    .catch((err) => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: err.message || 'Failed to generate QR code. Please try again.',
-                            confirmButtonColor: '#0f6b47'
-                        });
-                    })
-                    .finally(() => {
-                        $btn.html(originalHtml).prop('disabled', false);
-                    });
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({ point_id: pointId, ward_id: wardId || 0 })
+                })
+                .then(async (response) => {
+                    if (!response.ok) {
+                        let msg = 'Failed to generate QR code';
+                        try { const err = await response.json(); if (err.message) msg = err.message; } catch (_) {}
+                        throw new Error(msg);
+                    }
+                    let filename = 'QR_Code.png';
+                    const disposition = response.headers.get('Content-Disposition');
+                    if (disposition) {
+                        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                        if (matches && matches[1]) filename = matches[1].replace(/['"]/g, '');
+                    }
+                    const blob = await response.blob();
+                    return { blob, filename };
+                })
+                .then(({ blob, filename }) => {
+                    if (!blob || blob.size === 0) throw new Error('Received an empty QR code file');
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+                    Swal.fire({ icon: 'success', title: 'Success!', text: 'QR Code downloaded successfully', timer: 2000, showConfirmButton: false, toast: true, position: 'top-end' });
+                })
+                .catch((err) => {
+                    Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Failed to generate QR code. Please try again.', confirmButtonColor: '#0f6b47' });
+                })
+                .finally(() => {
+                    $btn.html(originalHtml).prop('disabled', false);
+                });
             });
 
-            // ─── QC MODAL ───
+            // ═══════════════════════════════════════════════════════════
+            // QC MODAL
+            // ═══════════════════════════════════════════════════════════
             function openQcModal(id) {
                 const record = currentPointRecords.find(r => r.point && r.point.id == id);
                 const pd = record ? record.point : null;
-                if (!pd) {
-                    showToast('Could not find this assessment record.', 3000);
-                    return;
-                }
+                if (!pd) { showToast('Could not find this assessment record.', 3000); return; }
                 $('#qc_point_data_id').val(id);
                 $('#qc_owner_display').text(pd.owner_name || '');
                 $('#qc_assessment_display').text(pd.assessment || '');
@@ -2793,7 +3279,7 @@
                 modal.show();
             }
 
-            $(document).on('click', '.pdc-qc-btn', function() {
+            $(document).on('click', '.pdc-qc-btn[data-qc-btn]', function() {
                 openQcModal($(this).data('id'));
             });
 
@@ -2814,10 +3300,8 @@
                     success: function(res) {
                         const idx = pointDatas.findIndex(p => p.id == id);
                         if (idx > -1) pointDatas[idx] = res.point_data;
-
                         $('#qcModal').modal('hide');
                         showToast('QC data saved successfully!', 3000);
-
                         if (currentPointGisid) {
                             getPointDataWithDetails(currentPointGisid, function(data) {
                                 currentPointRecords = data;
@@ -2834,17 +3318,16 @@
                 });
             });
 
-            // ─── MAP CLICK HANDLER ───
+            // ═══════════════════════════════════════════════════════════
+            // MAP FEATURE DETAILS
+            // ═══════════════════════════════════════════════════════════
             function showFeatureDetails(feature) {
                 if (!feature) return;
                 const gisid = feature.get('gisid');
                 if (!gisid) return;
 
                 const polygonData = polygonDatas.find(d => d.gisid == gisid);
-                if (polygonData) {
-                    showBuildingView(polygonData);
-                    return;
-                }
+                if (polygonData) { showBuildingView(polygonData); return; }
 
                 const lineData = lines.find(l => l.gisid == gisid);
                 if (lineData) {
@@ -2853,26 +3336,19 @@
                 }
 
                 const pointRecords = pointDatas.filter(pd => pd.point_gisid == gisid);
-                if (pointRecords.length > 0) {
-                    openPointDetails(gisid);
-                    return;
-                }
+                if (pointRecords.length > 0) { openPointDetails(gisid); return; }
 
                 showToast(`📍 Feature GIS ID: ${gisid}`, 2000);
             }
 
-            // ─── SELECT INTERACTION ───
+            // ═══════════════════════════════════════════════════════════
+            // SELECT INTERACTION
+            // ═══════════════════════════════════════════════════════════
             const selectInteraction = new ol.interaction.Select({
                 layers: [polygonLayer, lineLayer],
                 style: new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: '#00B4FF',
-                        width: 3,
-                        lineDash: [4, 4]
-                    }),
-                    fill: new ol.style.Fill({
-                        color: 'rgba(0,180,255,0.15)'
-                    })
+                    stroke: new ol.style.Stroke({ color: '#00B4FF', width: 3, lineDash: [4, 4] }),
+                    fill: new ol.style.Fill({ color: 'rgba(0,180,255,0.15)' })
                 })
             });
 
@@ -2885,67 +3361,45 @@
 
             map.addInteraction(selectInteraction);
 
-            // ─── EVENT HANDLERS ───
-
-            // Layer Toggle
+            // ═══════════════════════════════════════════════════════════
+            // EVENT HANDLERS
+            // ═══════════════════════════════════════════════════════════
             $(document).on('click', '.layer-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.layer-dropdown').toggleClass('active');
-                $('.location-dropdown').removeClass('active');
-                $('.search-dropdown').removeClass('active');
-                $('#filterDropdown').removeClass('active');
+                $('.location-dropdown, .search-dropdown, #filterDropdown').removeClass('active');
             });
 
-            // Location Toggle
             $(document).on('click', '.location-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.location-dropdown').toggleClass('active');
-                $('.layer-dropdown').removeClass('active');
-                $('.search-dropdown').removeClass('active');
-                $('#filterDropdown').removeClass('active');
+                $('.layer-dropdown, .search-dropdown, #filterDropdown').removeClass('active');
             });
 
-            // Search Toggle
             $(document).on('click', '.search-toggle-btn', function(e) {
                 e.stopPropagation();
                 $('.search-dropdown').toggleClass('active');
-                $('.layer-dropdown').removeClass('active');
-                $('.location-dropdown').removeClass('active');
-                $('#filterDropdown').removeClass('active');
+                $('.layer-dropdown, .location-dropdown, #filterDropdown').removeClass('active');
             });
 
-            // Filter Toggle
             $(document).on('click', '#filterToggleBtn', function(e) {
                 e.stopPropagation();
                 $('#filterDropdown').toggleClass('active');
                 $(this).toggleClass('active-filter');
-                $('.layer-dropdown').removeClass('active');
-                $('.location-dropdown').removeClass('active');
-                $('.search-dropdown').removeClass('active');
-
-                if ($('#filterDropdown').hasClass('active')) {
-                    updateFilterStats();
-                }
+                $('.layer-dropdown, .location-dropdown, .search-dropdown').removeClass('active');
+                if ($('#filterDropdown').hasClass('active')) updateFilterStats();
             });
 
-            // Close dropdowns on outside click
             $(document).on('click', function(e) {
-                if (!$(e.target).closest('.custom-layer-switcher').length) {
-                    $('.layer-dropdown').removeClass('active');
-                }
-                if (!$(e.target).closest('.custom-location-switcher').length) {
-                    $('.location-dropdown').removeClass('active');
-                }
-                if (!$(e.target).closest('.custom-search-switcher').length) {
-                    $('.search-dropdown').removeClass('active');
-                }
+                if (!$(e.target).closest('.custom-layer-switcher').length) $('.layer-dropdown').removeClass('active');
+                if (!$(e.target).closest('.custom-location-switcher').length) $('.location-dropdown').removeClass('active');
+                if (!$(e.target).closest('.custom-search-switcher').length) $('.search-dropdown').removeClass('active');
                 if (!$(e.target).closest('.custom-filter-toggle').length) {
                     $('#filterDropdown').removeClass('active');
                     $('#filterToggleBtn').removeClass('active-filter');
                 }
             });
 
-            // Layer Dropdown Items
             $(document).on('click', '.layer-dropdown-item', function(e) {
                 e.stopPropagation();
                 const layerType = $(this).data('layer-type');
@@ -2956,10 +3410,7 @@
                     if (layerTitle === 'OpenStreetMap') layer = osmLayer;
                     else if (layerTitle === 'Satellite') layer = satelliteLayer;
                     else if (layerTitle === 'Street View') layer = streetViewLayer;
-
-                    if (layer) {
-                        switchBaseLayer(layer);
-                    }
+                    if (layer) switchBaseLayer(layer);
                 } else if (layerTitle === 'Drone View') {
                     const visible = toggleDroneLayer();
                     $(this).toggleClass('active', visible);
@@ -2968,7 +3419,6 @@
                     if (layerTitle === 'Polygons') layer = polygonLayer;
                     else if (layerTitle === 'Lines') layer = lineLayer;
                     else if (layerTitle === 'Boundary') layer = boundaryLayer;
-
                     if (layer) {
                         const visible = !layer.getVisible();
                         layer.setVisible(visible);
@@ -2977,14 +3427,12 @@
                 }
             });
 
-            // Label Toggle
             $('#labelToggleBtn').on('click', function() {
                 $(this).toggleClass('active-label');
                 polygonLayer.setStyle(createPolygonStyle);
                 polygonLayer.changed();
             });
 
-            // Legend Toggle
             $('#legendToggleBtn').on('click', function() {
                 const usageLegend = Object.entries(usageColors).map(([usage, color]) => `
                     <div style="display:flex;align-items:center;margin-bottom:8px;">
@@ -3025,19 +3473,16 @@
                 });
             });
 
-            // ─── LOCATION EVENT HANDLERS ───
-
+            // ═══════════════════════════════════════════════════════════
+            // LOCATION HANDLERS
+            // ═══════════════════════════════════════════════════════════
             $('#zoomToExtentItem').on('click', function() {
                 zoomToExtent();
                 $('.location-dropdown').removeClass('active');
             });
 
             $('#liveLocationItem').on('click', function() {
-                if (!navigator.geolocation) {
-                    showToast('❌ Geolocation not supported');
-                    return;
-                }
-
+                if (!navigator.geolocation) { showToast('❌ Geolocation not supported'); return; }
                 isLiveLocation = !isLiveLocation;
                 const $badge = $('#liveLocationBadge');
                 const $btn = $('#locationToggleBtn');
@@ -3046,7 +3491,6 @@
                     $badge.text('ON').addClass('active');
                     $btn.addClass('active-location');
                     showToast('📍 Getting your location...', 2000);
-
                     navigator.geolocation.getCurrentPosition(
                         function(pos) {
                             const lon = pos.coords.longitude;
@@ -3056,37 +3500,23 @@
                             currentLocation = { lon, lat };
 
                             if (!positionFeature) {
-                                positionFeature = new ol.Feature({
-                                    geometry: new ol.geom.Point(projected)
-                                });
+                                positionFeature = new ol.Feature({ geometry: new ol.geom.Point(projected) });
                                 positionFeature.setStyle(createPositionStyle());
                                 positionLayer.getSource().addFeature(positionFeature);
                             } else {
                                 positionFeature.getGeometry().setCoordinates(projected);
                             }
-
                             showToast('📍 Live location activated', 2000);
-
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
                                         const p = ol.proj.fromLonLat([newPos.coords.longitude, newPos.coords.latitude]);
                                         currentPosition = p;
-                                        currentLocation = {
-                                            lon: newPos.coords.longitude,
-                                            lat: newPos.coords.latitude
-                                        };
-                                        if (positionFeature) {
-                                            positionFeature.getGeometry().setCoordinates(p);
-                                        }
+                                        currentLocation = { lon: newPos.coords.longitude, lat: newPos.coords.latitude };
+                                        if (positionFeature) positionFeature.getGeometry().setCoordinates(p);
                                     },
-                                    function(error) {
-                                        console.error('Watch error:', error);
-                                    }, {
-                                        enableHighAccuracy: true,
-                                        timeout: 15000,
-                                        maximumAge: 30000
-                                    }
+                                    function(error) { console.error('Watch error:', error); },
+                                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
                                 );
                             }
                         },
@@ -3095,33 +3525,21 @@
                             $badge.text('OFF').removeClass('active');
                             $btn.removeClass('active-location');
                             showToast('❌ Could not get location: ' + error.message, 4000);
-                        }, {
-                            enableHighAccuracy: true,
-                            timeout: 10000
-                        }
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
                     );
                 } else {
                     $badge.text('OFF').removeClass('active');
                     $btn.removeClass('active-location');
                     showToast('📍 Live location deactivated', 2000);
-                    if (watchId && !isTracking) {
-                        navigator.geolocation.clearWatch(watchId);
-                        watchId = null;
-                    }
-                    if (positionFeature) {
-                        positionLayer.getSource().removeFeature(positionFeature);
-                        positionFeature = null;
-                    }
+                    if (watchId && !isTracking) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+                    if (positionFeature) { positionLayer.getSource().removeFeature(positionFeature); positionFeature = null; }
                 }
                 $('.location-dropdown').removeClass('active');
             });
 
             $('#trackMeItem').on('click', function() {
-                if (!navigator.geolocation) {
-                    showToast('❌ Geolocation not supported');
-                    return;
-                }
-
+                if (!navigator.geolocation) { showToast('❌ Geolocation not supported'); return; }
                 if (!isTracking) {
                     isTracking = true;
                     routePoints = [];
@@ -3140,79 +3558,45 @@
                             currentLocation = { lon, lat };
 
                             if (!positionFeature) {
-                                positionFeature = new ol.Feature({
-                                    geometry: new ol.geom.Point(projected)
-                                });
+                                positionFeature = new ol.Feature({ geometry: new ol.geom.Point(projected) });
                                 positionFeature.setStyle(createPositionStyle());
                                 positionLayer.getSource().addFeature(positionFeature);
                             } else {
                                 positionFeature.getGeometry().setCoordinates(projected);
                             }
-
-                            map.getView().animate({
-                                center: projected,
-                                zoom: 19,
-                                duration: 500
-                            });
-
+                            map.getView().animate({ center: projected, zoom: 19, duration: 500 });
                             showToast('📍 Tracking started - auto-centering', 3000);
-
-                            if (trackInterval) {
-                                clearInterval(trackInterval);
-                            }
+                            if (trackInterval) clearInterval(trackInterval);
 
                             if (!watchId) {
                                 watchId = navigator.geolocation.watchPosition(
                                     function(newPos) {
                                         const p = ol.proj.fromLonLat([newPos.coords.longitude, newPos.coords.latitude]);
                                         currentPosition = p;
-                                        currentLocation = {
-                                            lon: newPos.coords.longitude,
-                                            lat: newPos.coords.latitude
-                                        };
-                                        if (positionFeature) {
-                                            positionFeature.getGeometry().setCoordinates(p);
-                                        }
+                                        currentLocation = { lon: newPos.coords.longitude, lat: newPos.coords.latitude };
+                                        if (positionFeature) positionFeature.getGeometry().setCoordinates(p);
                                         routePoints.push(p);
                                         updateRouteLine();
-                                        map.getView().animate({
-                                            center: p,
-                                            zoom: 19,
-                                            duration: 500
-                                        });
+                                        map.getView().animate({ center: p, zoom: 19, duration: 500 });
                                     },
-                                    function(error) {
-                                        console.error('Track error:', error);
-                                    }, {
-                                        enableHighAccuracy: true,
-                                        timeout: 15000,
-                                        maximumAge: 30000
-                                    }
+                                    function(error) { console.error('Track error:', error); },
+                                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
                                 );
                             }
-
                             trackInterval = setInterval(function() {
                                 if (currentPosition && isTracking) {
-                                    map.getView().animate({
-                                        center: currentPosition,
-                                        zoom: 19,
-                                        duration: 500
-                                    });
+                                    map.getView().animate({ center: currentPosition, zoom: 19, duration: 500 });
                                 }
                             }, 2000);
-
                             routePoints.push(projected);
-
                         },
                         function(error) {
                             isTracking = false;
                             $badge.text('OFF').removeClass('tracking');
                             $btn.removeClass('tracking');
                             showToast('❌ Could not get location: ' + error.message, 4000);
-                        }, {
-                            enableHighAccuracy: true,
-                            timeout: 10000
-                        }
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
                     );
                 } else {
                     isTracking = false;
@@ -3221,39 +3605,19 @@
                     $badge.text('OFF').removeClass('tracking');
                     $btn.removeClass('tracking');
                     showToast('⏹️ Tracking stopped', 2000);
-
-                    if (trackInterval) {
-                        clearInterval(trackInterval);
-                        trackInterval = null;
-                    }
-
-                    if (watchId && !isLiveLocation) {
-                        navigator.geolocation.clearWatch(watchId);
-                        watchId = null;
-                    }
+                    if (trackInterval) { clearInterval(trackInterval); trackInterval = null; }
+                    if (watchId && !isLiveLocation) { navigator.geolocation.clearWatch(watchId); watchId = null; }
                 }
                 $('.location-dropdown').removeClass('active');
             });
 
             $('#clearRouteItem').on('click', function() {
-                if (routeLine) {
-                    routeLayer.getSource().removeFeature(routeLine);
-                    routeLine = null;
-                }
+                if (routeLine) { routeLayer.getSource().removeFeature(routeLine); routeLine = null; }
                 routeLayer.getSource().clear();
                 routePoints = [];
-                if (destinationMarker) {
-                    destinationLayer.getSource().removeFeature(destinationMarker);
-                    destinationMarker = null;
-                }
-                if (positionFeature) {
-                    positionLayer.getSource().removeFeature(positionFeature);
-                    positionFeature = null;
-                }
-                if (watchId) {
-                    navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
-                }
+                if (destinationMarker) { destinationLayer.getSource().removeFeature(destinationMarker); destinationMarker = null; }
+                if (positionFeature) { positionLayer.getSource().removeFeature(positionFeature); positionFeature = null; }
+                if (watchId) { navigator.geolocation.clearWatch(watchId); watchId = null; }
                 isTracking = false;
                 isLiveLocation = false;
                 $('#liveLocationBadge').text('OFF').removeClass('active');
@@ -3263,43 +3627,31 @@
                 $('.location-dropdown').removeClass('active');
             });
 
-            // ─── SEARCH EVENT HANDLERS ───
-
+            // ═══════════════════════════════════════════════════════════
+            // SEARCH HANDLERS
+            // ═══════════════════════════════════════════════════════════
             $('#gisSearchInput').on('keyup', function() {
                 const value = $(this).val();
-                if (!value || value.length < 1) {
-                    $('#searchResults').html('');
-                    return;
-                }
+                if (!value || value.length < 1) { $('#searchResults').html(''); return; }
                 const results = searchGIS(value);
                 let html = '';
                 if (!results.length) {
                     html = '<div class="p-3 text-center text-muted">No results found</div>';
                 } else {
                     results.slice(0, 10).forEach(item => {
-                        const displayTitle = item.type === 'pointdata' ?
-                            `${item.title} | Assessment: ${item.assessment}` : item.title;
-                        const displaySubtitle = item.type === 'pointdata' ?
-                            `Point GIS ID: ${item.point_gisid || 'N/A'}${item.owner_name ? ' | Owner: ' + item.owner_name : ''}` :
-                            item.subtitle;
-                        const icon = item.geometryType === 'point' ? 'geo-alt' :
-                            item.geometryType === 'polygon' ? 'pentagon' : 'vector-pen';
+                        const displayTitle = item.type === 'pointdata'
+                            ? `${item.title} | Assessment: ${item.assessment}` : item.title;
+                        const displaySubtitle = item.type === 'pointdata'
+                            ? `Point GIS ID: ${item.point_gisid || 'N/A'}${item.owner_name ? ' | Owner: ' + item.owner_name : ''}`
+                            : item.subtitle;
+                        const icon = item.geometryType === 'point' ? 'geo-alt'
+                            : item.geometryType === 'polygon' ? 'pentagon' : 'vector-pen';
 
-                        let badgeClass = '';
-                        let badgeText = '';
-                        if (item.type === 'line') {
-                            badgeClass = 'road';
-                            badgeText = 'Road';
-                        } else if (item.type === 'polygon') {
-                            badgeClass = 'parcel';
-                            badgeText = 'Building';
-                        } else if (item.type === 'point') {
-                            badgeClass = 'point';
-                            badgeText = 'Point';
-                        } else if (item.type === 'pointdata') {
-                            badgeClass = 'assessment';
-                            badgeText = 'Assessment';
-                        }
+                        let badgeClass = '', badgeText = '';
+                        if (item.type === 'line') { badgeClass = 'road'; badgeText = 'Road'; }
+                        else if (item.type === 'polygon') { badgeClass = 'parcel'; badgeText = 'Building'; }
+                        else if (item.type === 'point') { badgeClass = 'point'; badgeText = 'Point'; }
+                        else if (item.type === 'pointdata') { badgeClass = 'assessment'; badgeText = 'Assessment'; }
 
                         html += `
                             <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
@@ -3322,19 +3674,11 @@
                 e.stopPropagation();
                 const id = $(this).data('id');
                 const type = $(this).data('type');
-
-                let item = searchIndex.find(i => i.id == id && i.type === type);
-                if (!item) {
-                    item = searchIndex.find(i => i.point_gisid == id);
-                }
-                if (!item) {
-                    item = searchIndex.find(i => i.id == id);
-                }
-                if (item) {
-                    zoomToFeature(item);
-                } else {
-                    showToast(`❌ Could not find feature with ID: ${id}`, 3000);
-                }
+                let item = searchIndex.find(i => i.id == id && i.type === type)
+                    || searchIndex.find(i => i.point_gisid == id)
+                    || searchIndex.find(i => i.id == id);
+                if (item) zoomToFeature(item);
+                else showToast(`❌ Could not find feature with ID: ${id}`, 3000);
                 $('.search-dropdown').removeClass('active');
                 $('#gisSearchInput').val('');
                 $('#searchResults').html('');
@@ -3344,19 +3688,10 @@
                 e.stopPropagation();
                 const id = $(this).data('id');
                 const type = $(this).data('type');
-
-                let item = searchIndex.find(i => i.id == id && i.type === type);
-                if (!item) {
-                    item = searchIndex.find(i => i.point_gisid == id);
-                }
-                if (!item) {
-                    item = searchIndex.find(i => i.id == id);
-                }
-
-                if (!item) {
-                    showToast(`❌ Could not find feature with ID: ${id}`, 3000);
-                    return;
-                }
+                let item = searchIndex.find(i => i.id == id && i.type === type)
+                    || searchIndex.find(i => i.point_gisid == id)
+                    || searchIndex.find(i => i.id == id);
+                if (!item) { showToast(`❌ Could not find feature with ID: ${id}`, 3000); return; }
 
                 const polygonData = polygonDatas.find(d => d.gisid == item.id);
                 if (polygonData) {
@@ -3395,18 +3730,13 @@
                 const tab = $(this).data('tab');
                 $('.search-tab-btn').removeClass('active');
                 $(this).addClass('active');
-
-                if (tab === 'quick') {
-                    $('#quickSearchTab').show();
-                    $('#filterTab').hide();
-                } else {
-                    $('#quickSearchTab').hide();
-                    $('#filterTab').show();
-                }
+                if (tab === 'quick') { $('#quickSearchTab').show(); $('#filterTab').hide(); }
+                else { $('#quickSearchTab').hide(); $('#filterTab').show(); }
             });
 
-            // ─── FILTER FUNCTIONS ───
-
+            // ═══════════════════════════════════════════════════════════
+            // ✅ FILTER FUNCTIONS (MultiPolygon-safe)
+            // ═══════════════════════════════════════════════════════════
             function updateFilterStats() {
                 const total = polygonSource.getFeatures().length;
                 $('#visibleCount').text(total);
@@ -3416,13 +3746,41 @@
                 updateQuickStats();
             }
 
+            // ✅ Shared polygon-feature builder (used in applyFilters & reset)
+            function buildPolygonFeature(poly) {
+                let coords = typeof poly.coordinates === 'string'
+                    ? JSON.parse(poly.coordinates)
+                    : poly.coordinates;
+
+                if (!coords || !Array.isArray(coords) || coords.length === 0) return null;
+
+                const geometry = buildGeometryFromCoords(coords);
+                if (!geometry) return null;
+
+                const buildingData = polygonDatas.find(d => d.gisid === poly.gisid);
+                const feature = new ol.Feature({
+                    geometry: geometry,
+                    gisid: poly.gisid,
+                    type: geometry.getType(),
+                    sqfeet: poly.sqfeet || '0',
+                    assessment: poly.assessment || '',
+                    old_assessment: poly.old_assessment || '',
+                    owner_name: poly.owner_name || '',
+                    phone_number: poly.phone_number || '',
+                    floors: buildingData?.number_floor || 0,
+                    originalData: poly
+                });
+                feature.setId(poly.gisid);
+                feature.setStyle(createPolygonStyle(feature));
+                return feature;
+            }
+
             function applyFilters() {
                 const selectedUsage = $('#usageFilter').val();
                 const usageVariation = $('#usageVariationFilter').val();
                 const areaVariation = $('#areaVariationFilter').val();
                 const selectedZone = $('#zoneFilter').val();
                 const selectedConstruction = $('#constructionFilter').val();
-                const selectedAssessmentInfo = $('#assessmentinfoFilter').val();
                 const selectedBuildingType = $('#buildingTypeFilter').val();
                 const selectedAmenities = $('#amenitiesFilter').val() || [];
                 const selectedUgd = $('#ugdFilter').val();
@@ -3459,119 +3817,65 @@
                     return;
                 }
 
-                let filteredGisids = new Set();
-
                 let usageGisids = null;
                 if (!allUsageSelected) {
-                    usageGisids = new Set(
-                        polygonDatas
-                        .filter(d => d.building_usage === selectedUsage)
-                        .map(d => d.gisid)
-                    );
+                    usageGisids = new Set(polygonDatas.filter(d => d.building_usage === selectedUsage).map(d => d.gisid));
                 }
 
                 let usageVariationGisids = null;
                 if (!allUsageVariationSelected) {
                     if (usageVariation === 'match') {
-                        usageVariationGisids = new Set(
-                            Object.values(buildingVariations)
-                            .filter(v => v.usage_status === 'MATCH')
-                            .map(v => v.gisid)
-                        );
+                        usageVariationGisids = new Set(Object.values(buildingVariations).filter(v => v.usage_status === 'MATCH').map(v => v.gisid));
                     } else if (usageVariation === 'variation') {
-                        usageVariationGisids = new Set(
-                            Object.values(buildingVariations)
-                            .filter(v => v.usage_status === 'VARIATION')
-                            .map(v => v.gisid)
-                        );
+                        usageVariationGisids = new Set(Object.values(buildingVariations).filter(v => v.usage_status === 'VARIATION').map(v => v.gisid));
                     } else if (usageVariation === 'unmapped') {
                         const variationGisids = new Set(Object.keys(buildingVariations));
-                        usageVariationGisids = new Set(
-                            polygons
-                            .filter(p => !variationGisids.has(p.gisid))
-                            .map(p => p.gisid)
-                        );
+                        usageVariationGisids = new Set(polygons.filter(p => !variationGisids.has(p.gisid)).map(p => p.gisid));
                     }
                 }
 
                 let areaVariationGisids = null;
                 if (!allAreaVariationSelected) {
                     if (areaVariation === 'match') {
-                        areaVariationGisids = new Set(
-                            Object.values(buildingVariations)
-                            .filter(v => v.area_status === 'MATCH')
-                            .map(v => v.gisid)
-                        );
+                        areaVariationGisids = new Set(Object.values(buildingVariations).filter(v => v.area_status === 'MATCH').map(v => v.gisid));
                     } else if (areaVariation === 'variation') {
-                        areaVariationGisids = new Set(
-                            Object.values(buildingVariations)
-                            .filter(v => v.area_status === 'VARIATION')
-                            .map(v => v.gisid)
-                        );
+                        areaVariationGisids = new Set(Object.values(buildingVariations).filter(v => v.area_status === 'VARIATION').map(v => v.gisid));
                     } else if (areaVariation === 'high_variation') {
-                        areaVariationGisids = new Set(
-                            Object.values(buildingVariations)
-                            .filter(v => parseFloat(v.variation_percentage) > 20)
-                            .map(v => v.gisid)
-                        );
+                        areaVariationGisids = new Set(Object.values(buildingVariations).filter(v => parseFloat(v.variation_percentage) > 20).map(v => v.gisid));
                     } else if (areaVariation === 'low_variation') {
-                        areaVariationGisids = new Set(
-                            Object.values(buildingVariations)
-                            .filter(v => parseFloat(v.variation_percentage) < 5 && parseFloat(v.variation_percentage) > 0)
-                            .map(v => v.gisid)
-                        );
+                        areaVariationGisids = new Set(Object.values(buildingVariations).filter(v => parseFloat(v.variation_percentage) < 5 && parseFloat(v.variation_percentage) > 0).map(v => v.gisid));
                     }
                 }
 
                 let zoneGisids = null;
                 if (!allZonesSelected) {
-                    zoneGisids = new Set(
-                        polygonDatas
-                        .filter(d => (d.zone || d.building_zone) === selectedZone)
-                        .map(d => d.gisid)
-                    );
+                    zoneGisids = new Set(polygonDatas.filter(d => (d.zone || d.building_zone) === selectedZone).map(d => d.gisid));
                 }
 
                 let constructionGisids = null;
                 if (!allConstructionSelected) {
-                    constructionGisids = new Set(
-                        polygonDatas
-                        .filter(d => d.construction_type === selectedConstruction)
-                        .map(d => d.gisid)
-                    );
+                    constructionGisids = new Set(polygonDatas.filter(d => d.construction_type === selectedConstruction).map(d => d.gisid));
                 }
 
                 let buildingTypeGisids = null;
                 if (!allBuildingTypesSelected) {
-                    buildingTypeGisids = new Set(
-                        polygonDatas
-                        .filter(d => d.building_type === selectedBuildingType)
-                        .map(d => d.gisid)
-                    );
+                    buildingTypeGisids = new Set(polygonDatas.filter(d => d.building_type === selectedBuildingType).map(d => d.gisid));
                 }
 
                 let amenitiesGisids = null;
                 if (!noAmenitiesSelected) {
                     amenitiesGisids = new Set(
-                        polygonDatas
-                        .filter(d => {
-                            return selectedAmenities.every(amenity => {
-                                const value = d[amenity];
-                                return value === 'Yes' || value === true || value === 1 ||
-                                    (typeof value === 'string' && value.toLowerCase() === 'yes');
-                            });
-                        })
-                        .map(d => d.gisid)
+                        polygonDatas.filter(d => selectedAmenities.every(amenity => {
+                            const value = d[amenity];
+                            return value === 'Yes' || value === true || value === 1 ||
+                                (typeof value === 'string' && value.toLowerCase() === 'yes');
+                        })).map(d => d.gisid)
                     );
                 }
 
                 let ugdGisids = null;
                 if (!allUgdSelected) {
-                    ugdGisids = new Set(
-                        polygonDatas
-                        .filter(d => d.ugd === selectedUgd)
-                        .map(d => d.gisid)
-                    );
+                    ugdGisids = new Set(polygonDatas.filter(d => d.ugd === selectedUgd).map(d => d.gisid));
                 }
 
                 let surveyStatusGisids = null;
@@ -3580,19 +3884,13 @@
                         surveyStatusGisids = new Set(polygonDatas.map(d => d.gisid));
                     } else if (selectedSurveyStatus === 'not_surveyed') {
                         const surveyedGisids = new Set(polygonDatas.map(d => d.gisid));
-                        surveyStatusGisids = new Set(
-                            polygons
-                            .filter(p => !surveyedGisids.has(p.gisid))
-                            .map(p => p.gisid)
-                        );
+                        surveyStatusGisids = new Set(polygons.filter(p => !surveyedGisids.has(p.gisid)).map(p => p.gisid));
                     } else if (selectedSurveyStatus === 'partially_surveyed') {
                         surveyStatusGisids = new Set(
-                            polygonDatas
-                            .filter(d => {
+                            polygonDatas.filter(d => {
                                 const pointCount = pointDatas.filter(pd => pd.point_gisid === d.gisid).length;
                                 return pointCount > 0 && pointCount < (d.number_bill || 0);
-                            })
-                            .map(d => d.gisid)
+                            }).map(d => d.gisid)
                         );
                     }
                 }
@@ -3603,26 +3901,22 @@
                     pointDatas.forEach(pd => {
                         gisidPointCount[pd.point_gisid] = (gisidPointCount[pd.point_gisid] || 0) + 1;
                     });
-
                     assessmentCountGisids = new Set(
-                        polygons
-                        .filter(p => {
+                        polygons.filter(p => {
                             const count = gisidPointCount[p.gisid] || 0;
                             if (selectedAssessmentCount === 'zero') return count === 0;
                             if (selectedAssessmentCount === 'one') return count === 1;
                             if (selectedAssessmentCount === 'two') return count === 2;
                             if (selectedAssessmentCount === 'three_plus') return count >= 3;
                             return false;
-                        })
-                        .map(p => p.gisid)
+                        }).map(p => p.gisid)
                     );
                 }
 
                 let floorGisids = null;
                 if (!allFloorSelected) {
                     floorGisids = new Set(
-                        polygonDatas
-                        .filter(d => {
+                        polygonDatas.filter(d => {
                             const floors = parseInt(d.number_floor) || 0;
                             if (selectedFloor === '0') return floors === 0;
                             if (selectedFloor === '1') return floors === 1;
@@ -3630,57 +3924,41 @@
                             if (selectedFloor === '3') return floors === 3;
                             if (selectedFloor === '4') return floors >= 4;
                             return false;
-                        })
-                        .map(d => d.gisid)
+                        }).map(d => d.gisid)
                     );
                 }
 
                 let shopGisids = null;
                 if (!allShopSelected) {
                     shopGisids = new Set(
-                        polygonDatas
-                        .filter(d => {
+                        polygonDatas.filter(d => {
                             const shops = parseInt(d.number_shop) || 0;
                             if (selectedShop === '0') return shops === 0;
                             if (selectedShop === '1') return shops === 1;
                             if (selectedShop === '2') return shops === 2;
                             if (selectedShop === '3') return shops >= 3;
                             return false;
-                        })
-                        .map(d => d.gisid)
+                        }).map(d => d.gisid)
                     );
                 }
 
                 let areaGisids = null;
                 if (!areaDefault) {
                     areaGisids = new Set(
-                        polygons
-                        .filter(p => {
+                        polygons.filter(p => {
                             const area = parseFloat(p.sqfeet) || 0;
                             return area >= minArea && area <= maxArea;
-                        })
-                        .map(p => p.gisid)
+                        }).map(p => p.gisid)
                     );
                 }
 
                 const allFilterSets = [
-                    usageGisids,
-                    usageVariationGisids,
-                    areaVariationGisids,
-                    zoneGisids,
-                    constructionGisids,
-                    buildingTypeGisids,
-                    amenitiesGisids,
-                    ugdGisids,
-                    surveyStatusGisids,
-                    assessmentCountGisids,
-                    floorGisids,
-                    shopGisids,
-                    areaGisids
+                    usageGisids, usageVariationGisids, areaVariationGisids, zoneGisids,
+                    constructionGisids, buildingTypeGisids, amenitiesGisids, ugdGisids,
+                    surveyStatusGisids, assessmentCountGisids, floorGisids, shopGisids, areaGisids
                 ].filter(set => set !== null);
 
                 let finalGisids = new Set(polygons.map(p => p.gisid));
-
                 allFilterSets.forEach(filterSet => {
                     if (filterSet.size > 0) {
                         finalGisids = new Set([...finalGisids].filter(gisid => filterSet.has(gisid)));
@@ -3691,39 +3969,10 @@
 
                 polygonSource.clear();
 
-                let totalBuildings = 0;
-                let surveyedCount = 0;
-                let variationCount = 0;
-
                 polygons.forEach(poly => {
                     if (finalGisids.has(poly.gisid)) {
-                        totalBuildings++;
-                        const buildingData = polygonDatas.find(d => d.gisid === poly.gisid);
-                        const variation = buildingVariations[poly.gisid];
-
-                        if (buildingData) surveyedCount++;
-                        if (variation && variation.usage_status === 'VARIATION') variationCount++;
-
-                        try {
-                            let coords = JSON.parse(poly.coordinates);
-                            const feature = new ol.Feature({
-                                geometry: new ol.geom.Polygon([coords]),
-                                gisid: poly.gisid,
-                                type: 'polygon',
-                                sqfeet: poly.sqfeet || '0',
-                                assessment: poly.assessment || '',
-                                old_assessment: poly.old_assessment || '',
-                                owner_name: poly.owner_name || '',
-                                phone_number: poly.phone_number || '',
-                                floors: buildingData?.number_floor || 0,
-                                originalData: poly
-                            });
-                            feature.setId(poly.gisid);
-                            feature.setStyle(createPolygonStyle(feature));
-                            polygonSource.addFeature(feature);
-                        } catch (e) {
-                            console.error('polygon parse error:', e);
-                        }
+                        const feature = buildPolygonFeature(poly);
+                        if (feature) polygonSource.addFeature(feature);
                     }
                 });
 
@@ -3734,7 +3983,6 @@
                 $('#totalCount').text(total);
                 $('#filterStats').html(`Showing: <strong>${visibleCount}</strong> of <strong>${total}</strong> features`);
                 $('#featureCountBadge').text(`Buildings: ${visibleCount}`);
-
                 $('#statTotal').text(total);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(total - polygonDatas.length);
@@ -3744,49 +3992,24 @@
                 polygonSource.changed();
 
                 const hiddenCount = total - visibleCount;
-                if (hiddenCount > 0) {
-                    showToast(`🔍 Filter applied: ${visibleCount} visible, ${hiddenCount} hidden`, 3000);
-                } else if (visibleCount === 0) {
-                    showToast(`⚠️ No features match the selected filters`, 3000);
-                } else {
-                    showToast(`✅ ${visibleCount} features match the selected filters`, 2000);
-                }
+                if (hiddenCount > 0) showToast(`🔍 Filter applied: ${visibleCount} visible, ${hiddenCount} hidden`, 3000);
+                else if (visibleCount === 0) showToast(`⚠️ No features match the selected filters`, 3000);
+                else showToast(`✅ ${visibleCount} features match the selected filters`, 2000);
 
                 if (is3DMode) buildCesiumBuildings();
             }
 
             function resetAllFilters(silent = false) {
-                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter, #assessmentinfoFilter')
-                    .val('all');
-                $('#usageVariationFilter, #areaVariationFilter, #assessmentCountFilter, #floorFilter, #shopFilter')
-                    .val('all');
+                $('#usageFilter, #zoneFilter, #constructionFilter, #buildingTypeFilter, #ugdFilter, #surveyStatusFilter, #assessmentinfoFilter').val('all');
+                $('#usageVariationFilter, #areaVariationFilter, #assessmentCountFilter, #floorFilter, #shopFilter').val('all');
                 $('#amenitiesFilter').val([]);
                 $('#minArea').val(0);
                 $('#maxArea').val(0);
 
                 polygonSource.clear();
                 polygons.forEach(poly => {
-                    try {
-                        let coords = JSON.parse(poly.coordinates);
-                        const buildingData = polygonDatas.find(d => d.gisid === poly.gisid);
-                        const feature = new ol.Feature({
-                            geometry: new ol.geom.Polygon([coords]),
-                            gisid: poly.gisid,
-                            type: 'polygon',
-                            sqfeet: poly.sqfeet || '0',
-                            assessment: poly.assessment || '',
-                            old_assessment: poly.old_assessment || '',
-                            owner_name: poly.owner_name || '',
-                            phone_number: poly.phone_number || '',
-                            floors: buildingData?.number_floor || 0,
-                            originalData: poly
-                        });
-                        feature.setId(poly.gisid);
-                        feature.setStyle(createPolygonStyle(feature));
-                        polygonSource.addFeature(feature);
-                    } catch (e) {
-                        console.error('polygon parse error:', e);
-                    }
+                    const feature = buildPolygonFeature(poly);
+                    if (feature) polygonSource.addFeature(feature);
                 });
 
                 const allFeatures = polygonSource.getFeatures();
@@ -3794,7 +4017,6 @@
                 $('#totalCount').text(allFeatures.length);
                 $('#filterStats').html(`Showing: <strong>${allFeatures.length}</strong> of <strong>${allFeatures.length}</strong> features`);
                 $('#featureCountBadge').text(`Buildings: ${allFeatures.length}`);
-
                 $('#statTotal').text(polygons.length);
                 $('#statSurveyed').text(polygonDatas.length);
                 $('#statUnsurveyed').text(polygons.length - polygonDatas.length);
@@ -3803,31 +4025,16 @@
                 polygonLayer.changed();
                 polygonSource.changed();
 
-                if (!silent) {
-                    showToast('🔄 All filters reset - all features visible', 2000);
-                }
-
+                if (!silent) showToast('🔄 All filters reset - all features visible', 2000);
                 if (is3DMode) buildCesiumBuildings();
             }
 
-            // --- FILTER EVENT HANDLERS ---
-            $('#applyFiltersBtn').on('click', function() {
-                applyFilters();
-            });
+            $('#applyFiltersBtn').on('click', function() { applyFilters(); });
+            $('#resetFiltersBtn').on('click', function() { resetAllFilters(false); });
 
-            $('#resetFiltersBtn').on('click', function() {
-                resetAllFilters(false);
-            });
-
-            // Quick filter stats update when dropdown opens
-            $(document).on('click', '#filterToggleBtn', function() {
-                if ($('#filterDropdown').hasClass('active')) {
-                    updateFilterStats();
-                }
-            });
-
-            // ─── FILTER SEARCH ───
-
+            // ═══════════════════════════════════════════════════════════
+            // FILTER SEARCH
+            // ═══════════════════════════════════════════════════════════
             $('#applyFilterBtn').on('click', function() {
                 const assessment = $('#filterAssessment').val().toLowerCase().trim();
                 const oldAssessment = $('#filterOldAssessment').val().toLowerCase().trim();
@@ -3841,29 +4048,14 @@
 
                 let matches = searchIndex.filter(item => {
                     let match = true;
-
-                    if (assessment) {
-                        const itemAssessment = (item.assessment || '').toString().toLowerCase();
-                        match = match && itemAssessment.includes(assessment);
-                    }
-                    if (oldAssessment) {
-                        const itemOldAssessment = (item.old_assessment || '').toString().toLowerCase();
-                        match = match && itemOldAssessment.includes(oldAssessment);
-                    }
-                    if (ownerName) {
-                        const itemOwner = (item.owner_name || '').toString().toLowerCase();
-                        match = match && itemOwner.includes(ownerName);
-                    }
-                    if (phoneNumber) {
-                        const itemPhone = (item.phone_number || '').toString().toLowerCase();
-                        match = match && itemPhone.includes(phoneNumber);
-                    }
-
+                    if (assessment) match = match && (item.assessment || '').toString().toLowerCase().includes(assessment);
+                    if (oldAssessment) match = match && (item.old_assessment || '').toString().toLowerCase().includes(oldAssessment);
+                    if (ownerName) match = match && (item.owner_name || '').toString().toLowerCase().includes(ownerName);
+                    if (phoneNumber) match = match && (item.phone_number || '').toString().toLowerCase().includes(phoneNumber);
                     return match;
                 });
 
                 const results = $('#filterResults');
-
                 if (matches.length === 0) {
                     results.html('<div class="p-3 text-center text-muted">No matching records found</div>');
                     showToast('❌ No results found', 2000);
@@ -3872,28 +4064,18 @@
 
                 let html = '<div class="dropdown-header">Results (' + matches.length + ' found)</div>';
                 matches.slice(0, 15).forEach(item => {
-                    const icon = item.geometryType === 'polygon' ? 'pentagon' :
-                        item.geometryType === 'line' ? 'vector-pen' : 'geo-alt';
+                    const icon = item.geometryType === 'polygon' ? 'pentagon'
+                        : item.geometryType === 'line' ? 'vector-pen' : 'geo-alt';
                     const details = [];
                     if (item.assessment) details.push('Assess: ' + item.assessment);
                     if (item.owner_name) details.push('Owner: ' + item.owner_name);
                     if (item.phone_number) details.push('Phone: ' + item.phone_number);
 
-                    let badgeClass = '';
-                    let badgeText = '';
-                    if (item.type === 'line') {
-                        badgeClass = 'road';
-                        badgeText = 'Road';
-                    } else if (item.type === 'polygon') {
-                        badgeClass = 'parcel';
-                        badgeText = 'Building';
-                    } else if (item.type === 'point') {
-                        badgeClass = 'point';
-                        badgeText = 'Point';
-                    } else if (item.type === 'pointdata') {
-                        badgeClass = 'assessment';
-                        badgeText = 'Assessment';
-                    }
+                    let badgeClass = '', badgeText = '';
+                    if (item.type === 'line') { badgeClass = 'road'; badgeText = 'Road'; }
+                    else if (item.type === 'polygon') { badgeClass = 'parcel'; badgeText = 'Building'; }
+                    else if (item.type === 'point') { badgeClass = 'point'; badgeText = 'Point'; }
+                    else if (item.type === 'pointdata') { badgeClass = 'assessment'; badgeText = 'Assessment'; }
 
                     html += `
                         <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
@@ -3915,9 +4097,7 @@
             });
 
             $('#filterAssessment, #filterOldAssessment, #filterOwnerName, #filterPhoneNumber').on('keypress', function(e) {
-                if (e.which === 13) {
-                    $('#applyFilterBtn').click();
-                }
+                if (e.which === 13) $('#applyFilterBtn').click();
             });
 
             $('#gisSearchInput').on('keypress', function(e) {
@@ -3925,19 +4105,18 @@
                     e.preventDefault();
                     $(this).trigger('keyup');
                     const firstResult = $('.search-result-item').first();
-                    if (firstResult.length) {
-                        firstResult.click();
-                    }
+                    if (firstResult.length) firstResult.click();
                 }
             });
 
-            // ─── FULLSCREEN ───
+            // ═══════════════════════════════════════════════════════════
+            // FULLSCREEN
+            // ═══════════════════════════════════════════════════════════
             let isFullscreen = false;
 
             $('#fullscreenBtn').on('click', function() {
                 const $card = $('#mapCard');
                 const $btn = $(this);
-
                 if (!isFullscreen) {
                     $card.addClass('fullscreen-mode');
                     $('#map').addClass('fullscreen');
@@ -3949,7 +4128,6 @@
                     $btn.html('<i class="bi bi-arrows-fullscreen"></i>');
                     isFullscreen = false;
                 }
-
                 setTimeout(function() {
                     map.updateSize();
                     if (cesiumViewer) cesiumViewer.resize();
@@ -3957,25 +4135,15 @@
             });
 
             $(document).on('keydown', function(e) {
-                if (e.key === 'Escape' && isFullscreen) {
-                    $('#fullscreenBtn').click();
-                }
+                if (e.key === 'Escape' && isFullscreen) $('#fullscreenBtn').click();
             });
 
-            // ─── UPDATE ROUTE LINE ───
             function updateRouteLine() {
                 if (routePoints.length < 2) return;
-
                 if (!routeLine) {
-                    routeLine = new ol.Feature({
-                        geometry: new ol.geom.LineString(routePoints)
-                    });
+                    routeLine = new ol.Feature({ geometry: new ol.geom.LineString(routePoints) });
                     routeLine.setStyle(new ol.style.Style({
-                        stroke: new ol.style.Stroke({
-                            color: '#FF3E5F',
-                            width: 4,
-                            lineDash: [8, 6]
-                        })
+                        stroke: new ol.style.Stroke({ color: '#FF3E5F', width: 4, lineDash: [8, 6] })
                     }));
                     routeLayer.getSource().addFeature(routeLine);
                 } else {
@@ -3983,7 +4151,6 @@
                 }
             }
 
-            // ─── SEARCH GIS ───
             function searchGIS(value) {
                 const v = value.toString().toLowerCase().trim();
                 if (!v) return [];
@@ -3999,7 +4166,9 @@
                 );
             }
 
-            // ─── INIT ───
+            // ═══════════════════════════════════════════════════════════
+            // INIT
+            // ═══════════════════════════════════════════════════════════
             setTimeout(updateFilterStats, 500);
 
             console.log('✅ GIS Dashboard initialized successfully!');
