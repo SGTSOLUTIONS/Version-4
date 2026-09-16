@@ -24,34 +24,9 @@ class VariationController extends Controller
         return $value;
     }
 
-    /**
-     * Fetch MIS data for a given corp + ward number.
-     * Tries strict match first, then falls back to fetching all corp MIS
-     * and filtering in PHP so type/formatting mismatches don't break it.
-     */
-    private function fetchMisData(string $misTableName, $wardNo)
+    private function fetchAllMisData(string $misTableName)
     {
-        // Try strict ward_no match (as string)
-        $misData = DB::table($misTableName)
-            ->where('ward_no', (string) $wardNo)
-            ->get();
-
-        if ($misData->isEmpty()) {
-            // Try integer match
-            $misData = DB::table($misTableName)
-                ->where('ward_no', (int) $wardNo)
-                ->get();
-        }
-
-        if ($misData->isEmpty()) {
-            // Fallback: pull all rows for the corp, filter in PHP
-            $all = DB::table($misTableName)->get();
-            $misData = $all->filter(function ($row) use ($wardNo) {
-                return (string) ($row->ward_no ?? '') === (string) $wardNo;
-            })->values();
-        }
-
-        return $misData;
+        return DB::table($misTableName)->get();
     }
 
     /**
@@ -149,7 +124,7 @@ class VariationController extends Controller
         foreach ($pointDatas as $pd) {
             $pointDataByGisid[$pd->point_gisid][] = $pd;
         }
-return $misByAssessment;
+        return $misByAssessment;
         $result = [];
 
         foreach ($polygons as $polygon) {
@@ -260,8 +235,12 @@ return $misByAssessment;
                         } elseif ($buildingUsageUpper === 'RESIDENTIAL') {
                             $isMatch = ($pointUsageUpper === 'RESIDENTIAL');
                         } elseif (in_array($buildingUsageUpper, [
-                            'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
-                            'GOVERNMENT', 'VACANT', 'OTHER',
+                            'COMMERCIAL',
+                            'INDUSTRIAL',
+                            'INSTITUTIONAL',
+                            'GOVERNMENT',
+                            'VACANT',
+                            'OTHER',
                         ])) {
                             $isMatch = ($pointUsageUpper === 'COMMERCIAL');
                         }
@@ -297,8 +276,12 @@ return $misByAssessment;
                 }
                 // COMMERCIAL family rule
                 elseif (in_array($buildingUsageUpper, [
-                    'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
-                    'GOVERNMENT', 'VACANT', 'OTHER',
+                    'COMMERCIAL',
+                    'INDUSTRIAL',
+                    'INSTITUTIONAL',
+                    'GOVERNMENT',
+                    'VACANT',
+                    'OTHER',
                 ])) {
                     if ($hasResidential) {
                         $forceVariation = true;
@@ -939,8 +922,12 @@ return $misByAssessment;
                     }
                     // 3) COMMERCIAL family
                     elseif (in_array($buildingUsageUpper, [
-                        'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
-                        'GOVERNMENT', 'VACANT', 'OTHER',
+                        'COMMERCIAL',
+                        'INDUSTRIAL',
+                        'INSTITUTIONAL',
+                        'GOVERNMENT',
+                        'VACANT',
+                        'OTHER',
                     ])) {
                         $hasResidentialBill = false;
                         foreach ($allAssessmentUsages as $u) {
@@ -988,8 +975,12 @@ return $misByAssessment;
                         $usageStatusLabel = 'Variation';
                         $usageBadgeClass  = 'badge-variation';
                     } elseif (in_array($buildingUsageUpper, [
-                        'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
-                        'GOVERNMENT', 'VACANT', 'OTHER',
+                        'COMMERCIAL',
+                        'INDUSTRIAL',
+                        'INSTITUTIONAL',
+                        'GOVERNMENT',
+                        'VACANT',
+                        'OTHER',
                     ])) {
                         $usageStatus      = 'VARIATION';
                         $usageStatusLabel = 'Variation';
@@ -1193,10 +1184,21 @@ return $misByAssessment;
         $sheet->setTitle('Data Variation');
 
         $headers = [
-            'S.No', 'GIS ID', 'Building Usage', 'Building Area (sqft)',
-            'Assessment Usage', 'Assessment Area (sqft)', 'Area Variation (sqft)',
-            'Variation %', 'Area Status', 'Usage Status', 'Floor Count',
-            'Basement', 'Percentage', 'Assessment Count', 'Assessment Type',
+            'S.No',
+            'GIS ID',
+            'Building Usage',
+            'Building Area (sqft)',
+            'Assessment Usage',
+            'Assessment Area (sqft)',
+            'Area Variation (sqft)',
+            'Variation %',
+            'Area Status',
+            'Usage Status',
+            'Floor Count',
+            'Basement',
+            'Percentage',
+            'Assessment Count',
+            'Assessment Type',
         ];
 
         $headerStyle = [
