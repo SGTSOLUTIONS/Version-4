@@ -1226,91 +1226,118 @@ class WardController extends Controller
         }
     }
 
-    /**
-     * Export ALL Point Data fields as GeoJSON for a ward.
-     * Reads from dynamic table: point_data_{ward_id}
-     */
-    public function exportPointData($ward_id)
-    {
-        try {
-            $table = "point_data_" . $ward_id;
+public function exportPointDataPdf($ward_id)
+{
+    try {
+        $pointTable   = "point_data_" . $ward_id;
+        $polygonTable = "polygon_data_" . $ward_id;
 
-            if (!Schema::hasTable($table)) {
-                return response()->json([
-                    "success" => false,
-                    "message" => "Point data table not found for ward #{$ward_id}"
-                ], 404);
-            }
-
-            $rows = DB::table($table)->get();
-
-            if ($rows->isEmpty()) {
-                return response()->json([
-                    "success" => false,
-                    "message" => "No point data found for ward #{$ward_id}"
-                ], 404);
-            }
-
-            // Get all columns dynamically
-            $columns = Schema::getColumnListing($table);
-
-            $features = [];
-
-            foreach ($rows as $row) {
-                $rowArray = (array) $row;
-
-                // Try to detect lat/lng columns from various common names
-                $lat = $this->firstExisting($rowArray, ['latitude', 'lat', 'y']);
-                $lng = $this->firstExisting($rowArray, ['longitude', 'lng', 'long', 'lon', 'x']);
-
-                // If no lat/lng columns found, skip (can't build geometry)
-                if ($lat === null || $lng === null) {
-                    continue;
-                }
-
-                // Build properties containing EVERY column
-                $properties = [];
-                foreach ($columns as $col) {
-                    $value = $rowArray[$col] ?? null;
-                    // Avoid huge objects breaking JSON
-                    if (is_string($value) && strlen($value) > 5000) {
-                        $value = substr($value, 0, 5000) . '...[truncated]';
-                    }
-                    $properties[$col] = $value;
-                }
-
-                $features[] = [
-                    "type" => "Feature",
-                    "properties" => $properties,
-                    "geometry" => [
-                        "type" => "Point",
-                        "coordinates" => [(float) $lng, (float) $lat]
-                    ]
-                ];
-            }
-
-            $geojson = [
-                "type" => "FeatureCollection",
-                "features" => $features
-            ];
-
-            $fileName = "point_data_ward_{$ward_id}.geojson";
-
-            return response()->streamDownload(function () use ($geojson) {
-                echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            }, $fileName, [
-                'Content-Type' => 'application/geo+json',
-                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-            ]);
-        } catch (\Throwable $e) {
+        if (!Schema::hasTable($pointTable)) {
             return response()->json([
                 "success" => false,
-                "message" => $e->getMessage(),
-                "line"    => $e->getLine(),
-                "file"    => $e->getFile(),
-            ], 500);
+                "message" => "Point data table not found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $rows = DB::table($pointTable)->get();
+
+        if ($rows->isEmpty()) {
+            return response()->json([
+                "success" => false,
+                "message" => "No point data found for ward #{$ward_id}"
+            ], 404);
+        }
+
+        $columns = Schema::getColumnListing($pointTable);
+
+        // ------------------------------------------------------------
+        // Fetch polygon asset image (image1)
+        // ------------------------------------------------------------
+        $polygonImageBase64 = null;
+        $polygonImagePath   = null;
+
+        if (Schema::hasTable($polygonTable)) {
+            $polygon = DB::table($polygonTable)->first();
+
+            if ($polygon && !empty($polygon->image1)) {
+                $polygonImagePath = $polygon->image1;
+
+                $absolute = $this->resolveAssetPath($polygonImagePath);
+
+                if ($absolute && file_exists($absolute)) {
+                    $mime = mime_content_type($absolute) ?: 'image/png';
+                    $polygonImageBase64 = 'data:' . $mime . ';base64,'
+                                        . base64_encode(file_get_contents($absolute));
+                }
+            }
+        }
+
+        // ------------------------------------------------------------
+        // Prepare rows (keep all columns, truncate huge strings)
+        // ------------------------------------------------------------
+        $preparedRows = [];
+        foreach ($rows as $row) {
+            $rowArray = (array) $row;
+            $clean = [];
+            foreach ($columns as $col) {
+                $value = $rowArray[$col] ?? null;
+                if (is_string($value) && strlen($value) > 5000) {
+                    $value = substr($value, 0, 5000) . '...[truncated]';
+                }
+                $clean[$col] = $value;
+            }
+            $preparedRows[] = $clean;
+        }
+
+        $pdf = Pdf::loadView('exports.point_data_pdf', [
+            'ward_id'            => $ward_id,
+            'columns'            => $columns,
+            'rows'               => $preparedRows,
+            'polygonImageBase64' => $polygonImageBase64,
+            'polygonImagePath'   => $polygonImagePath,
+        ])->setPaper('a4', 'landscape');
+
+        $fileName = "point_data_ward_{$ward_id}.pdf";
+
+        return $pdf->download($fileName);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            "success" => false,
+            "message" => $e->getMessage(),
+            "line"    => $e->getLine(),
+            "file"    => $e->getFile(),
+        ], 500);
+    }
+}
+
+/**
+ * Resolve an asset path stored in DB to an absolute filesystem path.
+ * Handles: "assets/foo.png", "/assets/foo.png",
+ *          "public/assets/foo.png", "storage/foo.png",
+ *          or already-absolute paths.
+ */
+private function resolveAssetPath(string $path): ?string
+{
+    $clean = ltrim($path, '/');
+
+    $candidates = [
+        $path,                                              // absolute path
+        public_path($clean),                                // public/assets/foo.png
+        base_path($clean),                                  // project root
+        base_path('public/' . $clean),                      // in case "assets/..." prefix missing
+        storage_path('app/public/' . $clean),
+        storage_path('app/' . $clean),
+    ];
+
+    foreach ($candidates as $candidate) {
+        if ($candidate && is_file($candidate)) {
+            return $candidate;
         }
     }
+
+    return null;
+}
 
     /**
      * Export ALL Point Data fields as CSV (Excel-compatible) for a ward.
