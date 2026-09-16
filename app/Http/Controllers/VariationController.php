@@ -86,6 +86,7 @@ class VariationController extends Controller
             $pointDatas,
             $misData
         );
+        return response()->json($buildingVariations);
 
         return view('variation.area_variation', compact(
             'ward',
@@ -148,7 +149,7 @@ class VariationController extends Controller
         foreach ($pointDatas as $pd) {
             $pointDataByGisid[$pd->point_gisid][] = $pd;
         }
-
+return $misByAssessment;
         $result = [];
 
         foreach ($polygons as $polygon) {
