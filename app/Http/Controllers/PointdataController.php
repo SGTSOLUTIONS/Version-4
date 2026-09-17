@@ -639,7 +639,7 @@ class PointdataController extends Controller
                                 'owner_name' => $professional['shop_owner'] ?? $request->owner_name ?? null,
                                 'phone_number' => $request->phone_number ?? null,
                                 'pt_number' => $professional['pt_number'],
-                                'zone' => $finalZone,
+
                                 'old_pt_number' => $professional['old_pt_number'] ?? null,
                                 'establishment_name' => $professional['establishment_name'] ?? null,
                                 'profession_type' => $professional['profession_type'] ?? null,
@@ -715,6 +715,7 @@ class PointdataController extends Controller
                     'present_owner_name' => $request->present_owner_name,
                     'old_door_no' => $request->old_door_no,
                     'aadhar_no' => $request->aadhar_no,
+                    'zone' => $finalZone,
                     'ration_no' => $request->ration_no,
                     'no_of_persons' => $request->number_persons,
                     'eb' => $request->eb,
