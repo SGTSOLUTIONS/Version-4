@@ -1225,83 +1225,124 @@ class WardController extends Controller
             ], 500);
         }
     }
-
 public function exportPointDataPdf($ward_id)
 {
+    // Prevent accidental output (BOM, whitespace) corrupting the PDF stream
+    if (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    ob_start();
+
     try {
         $pointTable   = "point_data_" . $ward_id;
         $polygonTable = "polygon_data_" . $ward_id;
 
         if (!Schema::hasTable($pointTable)) {
+            ob_end_clean();
             return response()->json([
                 "success" => false,
                 "message" => "Point data table not found for ward #{$ward_id}"
             ], 404);
         }
 
-        $rows = DB::table($pointTable)->get();
+        // ---- Fetch columns safely ----
+        $columns = $this->getTableColumns($pointTable);
+
+        if (empty($columns)) {
+            ob_end_clean();
+            return response()->json([
+                "success" => false,
+                "message" => "Could not read columns for ward #{$ward_id}"
+            ], 500);
+        }
+
+        // Limit rows to avoid memory/timeouts; adjust as needed
+        $rows = DB::table($pointTable)->limit(5000)->get();
 
         if ($rows->isEmpty()) {
+            ob_end_clean();
             return response()->json([
                 "success" => false,
                 "message" => "No point data found for ward #{$ward_id}"
             ], 404);
         }
 
-        $columns = Schema::getColumnListing($pointTable);
-
-        // ------------------------------------------------------------
-        // Fetch polygon asset image (image1)
-        // ------------------------------------------------------------
-        $polygonImageBase64 = null;
-        $polygonImagePath   = null;
-
-        if (Schema::hasTable($polygonTable)) {
-            $polygon = DB::table($polygonTable)->first();
-
-            if ($polygon && !empty($polygon->image1)) {
-                $polygonImagePath = $polygon->image1;
-
-                $absolute = $this->resolveAssetPath($polygonImagePath);
-
-                if ($absolute && file_exists($absolute)) {
-                    $mime = mime_content_type($absolute) ?: 'image/png';
-                    $polygonImageBase64 = 'data:' . $mime . ';base64,'
-                                        . base64_encode(file_get_contents($absolute));
-                }
-            }
-        }
-
-        // ------------------------------------------------------------
-        // Prepare rows (keep all columns, truncate huge strings)
-        // ------------------------------------------------------------
+        // ---- Prepare rows (truncate huge values) ----
         $preparedRows = [];
         foreach ($rows as $row) {
             $rowArray = (array) $row;
             $clean = [];
             foreach ($columns as $col) {
                 $value = $rowArray[$col] ?? null;
-                if (is_string($value) && strlen($value) > 5000) {
-                    $value = substr($value, 0, 5000) . '...[truncated]';
+
+                // Convert objects/arrays to JSON
+                if (is_array($value) || is_object($value)) {
+                    $value = json_encode($value);
+                }
+
+                // Truncate very long strings
+                if (is_string($value) && strlen($value) > 500) {
+                    $value = substr($value, 0, 500) . '…';
                 }
                 $clean[$col] = $value;
             }
             $preparedRows[] = $clean;
         }
 
+        // ---- Fetch polygon asset image (image1) ----
+        $polygonImageBase64 = null;
+        $polygonImagePath   = null;
+
+        if (Schema::hasTable($polygonTable)) {
+            $polygon = DB::table($polygonTable)
+                ->select('image1')
+                ->whereNotNull('image1')
+                ->where('image1', '!=', '')
+                ->first();
+
+            if ($polygon && !empty($polygon->image1)) {
+                $polygonImagePath = $polygon->image1;
+                $absolute = $this->resolveAssetPath($polygonImagePath);
+
+                if ($absolute && is_file($absolute)) {
+                    // Limit image size to 4 MB before base64 to protect DomPDF
+                    if (filesize($absolute) <= 4 * 1024 * 1024) {
+                        $mime = $this->safeMimeType($absolute);
+                        $polygonImageBase64 = 'data:' . $mime . ';base64,'
+                                            . base64_encode(file_get_contents($absolute));
+                    } else {
+                        // Skip oversized images rather than crash
+                        $polygonImageBase64 = null;
+                    }
+                }
+            }
+        }
+
+        // ---- Render PDF ----
         $pdf = Pdf::loadView('exports.point_data_pdf', [
             'ward_id'            => $ward_id,
             'columns'            => $columns,
             'rows'               => $preparedRows,
             'polygonImageBase64' => $polygonImageBase64,
             'polygonImagePath'   => $polygonImagePath,
-        ])->setPaper('a4', 'landscape');
+        ])
+            ->setPaper('a4', 'landscape')
+            ->set_option('isRemoteEnabled', true)
+            ->set_option('isHtml5ParserEnabled', true)
+            ->set_option('defaultFont', 'DejaVu Sans');
 
         $fileName = "point_data_ward_{$ward_id}.pdf";
+
+        ob_end_clean();
 
         return $pdf->download($fileName);
 
     } catch (\Throwable $e) {
+        // Ensure buffered output is discarded so we can return clean JSON
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
         return response()->json([
             "success" => false,
             "message" => $e->getMessage(),
@@ -1311,23 +1352,100 @@ public function exportPointDataPdf($ward_id)
     }
 }
 
+/**
+ * Safely get column list for a dynamic table on any DB driver.
+ */
+private function getTableColumns(string $table): array
+{
+    // 1) Try Laravel Schema
+    try {
+        $cols = Schema::getColumnListing($table);
+        if (!empty($cols)) {
+            return $cols;
+        }
+    } catch (\Throwable $e) {
+        // fall through
+    }
+
+    // 2) Fall back to raw DB / information_schema
+    try {
+        $connection = DB::connection()->getDatabaseName();
+
+        $result = DB::select(
+            "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
+            [$connection, $table]
+        );
+
+        if (!empty($result)) {
+            return array_map(fn($r) => $r->COLUMN_NAME, $result);
+        }
+    } catch (\Throwable $e) {
+        // fall through
+    }
+
+    // 3) Last resort — read first row and use its keys
+    try {
+        $first = DB::table($table)->first();
+        if ($first) {
+            return array_keys((array) $first);
+        }
+    } catch (\Throwable $e) {
+        // give up
+    }
+
+    return [];
+}
+
+/**
+ * Safe mime type lookup (no dependency on fileinfo extension).
+ */
+private function safeMimeType(string $file): string
+{
+    if (function_exists('mime_content_type')) {
+        $mime = @mime_content_type($file);
+        if ($mime) {
+            return $mime;
+        }
+    }
+
+    if (function_exists('getimagesize')) {
+        $info = @getimagesize($file);
+        if (!empty($info['mime'])) {
+            return $info['mime'];
+        }
+    }
+
+    // Fallback by extension
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    return match ($ext) {
+        'jpg', 'jpeg' => 'image/jpeg',
+        'png'         => 'image/png',
+        'gif'         => 'image/gif',
+        'webp'        => 'image/webp',
+        default       => 'application/octet-stream',
+    };
+}
 
 private function resolveAssetPath(string $path): ?string
 {
+    if (empty($path)) return null;
+
     $clean = ltrim($path, '/');
 
     $candidates = [
-        $path,                                              // absolute path
-        public_path($clean),                                // public/assets/foo.png
-        base_path($clean),                                  // project root
-        base_path('public/' . $clean),                      // in case "assets/..." prefix missing
+        $path,
+        public_path($clean),
+        base_path($clean),
+        base_path('public/' . $clean),
         storage_path('app/public/' . $clean),
         storage_path('app/' . $clean),
+        public_path('storage/' . $clean),
     ];
 
     foreach ($candidates as $candidate) {
-        if ($candidate && is_file($candidate)) {
-            return $candidate;
+        if ($candidate && is_file($candidate) && is_readable($candidate)) {
+            return realpath($candidate);
         }
     }
 
