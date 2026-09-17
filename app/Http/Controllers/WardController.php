@@ -1268,9 +1268,9 @@ public function exportPointDataPdf($ward_id)
 
         if (Schema::hasTable($polygonTable)) {
             $imagePath = DB::table($polygonTable)
-                ->whereNotNull('image1')
-                ->where('image1', '!=', '')
-                ->value('image1');
+                ->whereNotNull('image')
+                ->where('image', '!=', '')
+                ->value('image');
 
             if (!empty($imagePath)) {
                 $absolute = $this->resolveAssetPath($imagePath);
@@ -1309,6 +1309,64 @@ public function exportPointDataPdf($ward_id)
             "file"    => $e->getFile(),
         ], 500);
     }
+}/**
+ * Downscale + compress image to JPEG base64 (much faster for PDFs).
+ */
+private function buildBase64Image(string $absolutePath): ?string
+{
+    if (!is_file($absolutePath) || !is_readable($absolutePath)) {
+        return null;
+    }
+
+    $mime = $this->safeMimeType($absolutePath);
+
+    if (function_exists('imagecreatefromstring')) {
+        $raw = @file_get_contents($absolutePath);
+        if ($raw === false) {
+            return null;
+        }
+
+        $img = @imagecreatefromstring($raw);
+        if (!$img) {
+            // Not GD-supported → raw base64
+            return 'data:' . $mime . ';base64,' . base64_encode($raw);
+        }
+
+        $w = imagesx($img);
+        $h = imagesy($img);
+        $maxW = 1000;
+
+        if ($w > $maxW) {
+            $newW  = $maxW;
+            $newH  = (int) floor($h * ($maxW / $w));
+            $thumb = imagecreatetruecolor($newW, $newH);
+
+            $white = imagecolorallocate($thumb, 255, 255, 255);
+            imagefill($thumb, 0, 0, $white);
+
+            imagecopyresampled($thumb, $img, 0, 0, 0, 0, $newW, $newH, $w, $h);
+
+            ob_start();
+            imagejpeg($thumb, null, 70);
+            $compressed = ob_get_clean();
+
+            imagedestroy($thumb);
+            imagedestroy($img);
+
+            return 'data:image/jpeg;base64,' . base64_encode($compressed);
+        }
+
+        // Small image — re-encode to JPEG @ 80%
+        ob_start();
+        imagejpeg($img, null, 80);
+        $compressed = ob_get_clean();
+        imagedestroy($img);
+
+        return 'data:image/jpeg;base64,' . base64_encode($compressed);
+    }
+
+    // GD unavailable → raw base64
+    return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($absolutePath));
 }
 /**
  * Safely get column list for a dynamic table on any DB driver.
