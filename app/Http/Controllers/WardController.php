@@ -1233,6 +1233,9 @@ public function exportPointDataPdf($ward_id)
     ob_start();
 
     try {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(180);
+
         $pointTable   = "point_data_" . $ward_id;
         $polygonTable = "polygon_data_" . $ward_id;
 
@@ -1244,11 +1247,12 @@ public function exportPointDataPdf($ward_id)
             ], 404);
         }
 
-        // ---- Only fetch gisid (fast, indexed, small payload) ----
+        // ---- Fetch point_gisid from point_data ----
         $gisids = DB::table($pointTable)
-            ->select('gisid')
-            ->whereNotNull('gisid')
-            ->pluck('gisid')
+            ->select('point_gisid')
+            ->whereNotNull('point_gisid')
+            ->where('point_gisid', '!=', '')
+            ->pluck('point_gisid')
             ->toArray();
 
         if (empty($gisids)) {
@@ -1272,14 +1276,11 @@ public function exportPointDataPdf($ward_id)
                 $absolute = $this->resolveAssetPath($imagePath);
 
                 if ($absolute && is_file($absolute)) {
-                    $mime = $this->safeMimeType($absolute);
-                    $polygonImageBase64 = 'data:' . $mime . ';base64,'
-                                        . base64_encode(file_get_contents($absolute));
+                    $polygonImageBase64 = $this->buildBase64Image($absolute);
                 }
             }
         }
 
-        // ---- Render lean PDF ----
         $pdf = Pdf::loadView('exports.point_data_pdf', [
             'ward_id'            => $ward_id,
             'gisids'             => $gisids,
