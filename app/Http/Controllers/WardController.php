@@ -1311,12 +1311,7 @@ public function exportPointDataPdf($ward_id)
     }
 }
 
-/**
- * Resolve an asset path stored in DB to an absolute filesystem path.
- * Handles: "assets/foo.png", "/assets/foo.png",
- *          "public/assets/foo.png", "storage/foo.png",
- *          or already-absolute paths.
- */
+
 private function resolveAssetPath(string $path): ?string
 {
     $clean = ltrim($path, '/');
@@ -1415,7 +1410,7 @@ private function resolveAssetPath(string $path): ?string
     public function exportBuildingData($ward_id)
     {
         try {
-            $table = "polygons_" . $ward_id;
+            $table = "polygon_data_" . $ward_id;
 
             if (!Schema::hasTable($table)) {
                 return response()->json([
@@ -1514,7 +1509,7 @@ private function resolveAssetPath(string $path): ?string
     public function exportBuildingDataExcel($ward_id)
     {
         try {
-            $table = "polygons_" . $ward_id;
+            $table = "polygon_data_" . $ward_id;
 
             if (!Schema::hasTable($table)) {
                 return response()->json([
