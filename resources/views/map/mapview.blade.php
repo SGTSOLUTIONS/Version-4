@@ -2510,6 +2510,95 @@
                     label: 'Others (Shop)',
                     cat: 'Shop'
                 },
+                {
+                    value: 'Bank',
+                    label: 'Bank',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'Finance',
+                    label: 'Finance Company',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'NBFC',
+                    label: 'NBFC',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'Microfinance',
+                    label: 'Microfinance',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'Loan',
+                    label: 'Loan / Lending',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'Insurance',
+                    label: 'Insurance',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'Banking',
+                    label: 'Banking Services',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'ATM',
+                    label: 'ATM',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'MoneyTransfer',
+                    label: 'Money Transfer',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'ChitFund',
+                    label: 'Chit Fund',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'PawnBroker',
+                    label: 'Pawn Broker / Gold Loan',
+                    cat: 'Financial'
+                },
+                {
+                    value: 'OthersFinancial',
+                    label: 'Others (Financial)',
+                    cat: 'Financial'
+                }, {
+                    value: 'Drycleaning',
+                    label: 'Dry Cleaning',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Laundry',
+                    label: 'Laundry',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'CleaningService',
+                    label: 'Cleaning Service',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'CarWash',
+                    label: 'Car Wash',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'Salon',
+                    label: 'Salon / Beauty Parlour',
+                    cat: 'Shop'
+                },
+                {
+                    value: 'OthersShop',
+                    label: 'Others (Shop)',
+                    cat: 'Shop'
+                },
 
                 // ── Hotels / Food ──
                 {
@@ -2889,96 +2978,97 @@
                 $list.html(html);
             }
             // ═══════════════════════════════════════════════════════════
-// SEARCHABLE PROFESSION DROPDOWN — EVENT HANDLERS
-// ═══════════════════════════════════════════════════════════
+            // SEARCHABLE PROFESSION DROPDOWN — EVENT HANDLERS
+            // ═══════════════════════════════════════════════════════════
 
-// Open on click
-$(document).on('click', '.prof-search-input', function(e) {
-    e.stopPropagation();
-    const $wrap = $(this).closest('.prof-search-wrap');
-    const $list = $wrap.find('.prof-search-list');
+            // Open on click
+            $(document).on('click', '.prof-search-input', function(e) {
+                e.stopPropagation();
+                const $wrap = $(this).closest('.prof-search-wrap');
+                const $list = $wrap.find('.prof-search-list');
 
-    if ($list.hasClass('show')) {
-        $list.removeClass('show');
-        $(this).prop('readonly', true);
-    } else {
-        openProfessionDropdown($wrap);
-    }
-});
+                if ($list.hasClass('show')) {
+                    $list.removeClass('show');
+                    $(this).prop('readonly', true);
+                } else {
+                    openProfessionDropdown($wrap);
+                }
+            });
 
-// Filter as user types
-$(document).on('input', '.prof-search-input', function(e) {
-    const $wrap = $(this).closest('.prof-search-wrap');
-    buildProfessionOptions($wrap, $(this).val());
-});
+            // Filter as user types
+            $(document).on('input', '.prof-search-input', function(e) {
+                const $wrap = $(this).closest('.prof-search-wrap');
+                buildProfessionOptions($wrap, $(this).val());
+            });
 
-// Pick an option
-$(document).on('click', '.prof-option', function(e) {
-    e.stopPropagation();
-    const $wrap = $(this).closest('.prof-search-wrap');
-    const idx   = $wrap.data('idx');
-    const value = $(this).data('value');
-    const label = $(this).find('span').first().text().trim();
+            // Pick an option
+            $(document).on('click', '.prof-option', function(e) {
+                e.stopPropagation();
+                const $wrap = $(this).closest('.prof-search-wrap');
+                const idx = $wrap.data('idx');
+                const value = $(this).data('value');
+                const label = $(this).find('span').first().text().trim();
 
-    // Set hidden value + visible text
-    $wrap.find(`#profValue_${idx}`).val(value);
-    $wrap.find('.prof-search-input').val(label).prop('readonly', true);
+                // Set hidden value + visible text
+                $wrap.find(`#profValue_${idx}`).val(value);
+                $wrap.find('.prof-search-input').val(label).prop('readonly', true);
 
-    // Mark as selected
-    $wrap.find('.prof-option').removeClass('selected');
-    $(this).addClass('selected');
+                // Mark as selected
+                $wrap.find('.prof-option').removeClass('selected');
+                $(this).addClass('selected');
 
-    $wrap.find('.prof-search-list').removeClass('show');
-});
+                $wrap.find('.prof-search-list').removeClass('show');
+            });
 
-// Close when clicking outside
-$(document).on('click', function(e) {
-    if (!$(e.target).closest('.prof-search-wrap').length) {
-        $('.prof-search-list').removeClass('show');
-        $('.prof-search-input').prop('readonly', true);
-    }
-});
+            // Close when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.prof-search-wrap').length) {
+                    $('.prof-search-list').removeClass('show');
+                    $('.prof-search-input').prop('readonly', true);
+                }
+            });
 
-// Allow Enter to pick first match
-$(document).on('keydown', '.prof-search-input', function(e) {
-    const $wrap = $(this).closest('.prof-search-wrap');
-    const $list = $wrap.find('.prof-search-list');
+            // Allow Enter to pick first match
+            $(document).on('keydown', '.prof-search-input', function(e) {
+                const $wrap = $(this).closest('.prof-search-wrap');
+                const $list = $wrap.find('.prof-search-list');
 
-    if (! $list.hasClass('show')) return;
+                if (!$list.hasClass('show')) return;
 
-    const $opts = $list.find('.prof-option');
-    const $hl   = $list.find('.prof-option.highlight');
-    let $target = null;
+                const $opts = $list.find('.prof-option');
+                const $hl = $list.find('.prof-option.highlight');
+                let $target = null;
 
-    if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        $target = $hl.length ? $hl.next('.prof-option') : $opts.first();
-        if (!$target.length) $target = $opts.first();
-    } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        $target = $hl.length ? $hl.prev('.prof-option') : $opts.last();
-        if (!$target.length) $target = $opts.last();
-    } else if (e.key === 'Enter') {
-        e.preventDefault();
-        $target = $hl.length ? $hl : $opts.first();
-    } else if (e.key === 'Escape') {
-        $list.removeClass('show');
-        $(this).prop('readonly', true);
-        return;
-    }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    $target = $hl.length ? $hl.next('.prof-option') : $opts.first();
+                    if (!$target.length) $target = $opts.first();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    $target = $hl.length ? $hl.prev('.prof-option') : $opts.last();
+                    if (!$target.length) $target = $opts.last();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $target = $hl.length ? $hl : $opts.first();
+                } else if (e.key === 'Escape') {
+                    $list.removeClass('show');
+                    $(this).prop('readonly', true);
+                    return;
+                }
 
-    if ($target && $target.length) {
-        $opts.removeClass('highlight');
-        $target.addClass('highlight');
-        const $listEl = $list[0];
-        const $optEl  = $target[0];
-        if ($optEl.offsetTop < $listEl.scrollTop) {
-            $listEl.scrollTop = $optEl.offsetTop;
-        } else if ($optEl.offsetTop + $optEl.offsetHeight > $listEl.scrollTop + $listEl.clientHeight) {
-            $listEl.scrollTop = $optEl.offsetTop + $optEl.offsetHeight - $listEl.clientHeight;
-        }
-    }
-});
+                if ($target && $target.length) {
+                    $opts.removeClass('highlight');
+                    $target.addClass('highlight');
+                    const $listEl = $list[0];
+                    const $optEl = $target[0];
+                    if ($optEl.offsetTop < $listEl.scrollTop) {
+                        $listEl.scrollTop = $optEl.offsetTop;
+                    } else if ($optEl.offsetTop + $optEl.offsetHeight > $listEl.scrollTop + $listEl
+                        .clientHeight) {
+                        $listEl.scrollTop = $optEl.offsetTop + $optEl.offsetHeight - $listEl.clientHeight;
+                    }
+                }
+            });
             let searchIndex = [];
 
             // ✅ NEW: Utility — detect geometry type from raw coords
