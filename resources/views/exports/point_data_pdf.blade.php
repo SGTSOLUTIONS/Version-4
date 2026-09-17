@@ -4,36 +4,38 @@
     <meta charset="utf-8">
     <title>Point Data - Ward {{ $ward_id }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; }
-        h3 { margin: 0 0 8px 0; }
-        .img-wrap { text-align: center; margin-bottom: 12px; }
-        .img-wrap img { max-width: 100%; max-height: 300px; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 10px; }
+        h3 { margin: 0 0 10px 0; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
+        th, td { border: 1px solid #999; padding: 4px 6px; vertical-align: top; }
         th { background: #f0f0f0; }
+        .img-cell img { max-width: 260px; max-height: 200px; }
+        .no-img { color: #999; font-style: italic; }
     </style>
 </head>
 <body>
     <h3>Point Data — Ward {{ $ward_id }}</h3>
 
-    @if(!empty($polygonImageBase64))
-        <div class="img-wrap">
-            <img src="{{ $polygonImageBase64 }}" alt="Polygon Image">
-        </div>
-    @endif
-
     <table>
         <thead>
             <tr>
-                <th style="width: 60px;">#</th>
-                <th>GISID</th>
+                <th style="width: 40px;">#</th>
+                <th style="width: 130px;">POINT GISID</th>
+                <th>Building Image</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($gisids as $i => $gisid)
+            @foreach($items as $i => $item)
                 <tr>
                     <td>{{ $i + 1 }}</td>
-                    <td>{{ $gisid }}</td>
+                    <td>{{ $item['gisid'] }}</td>
+                    <td class="img-cell">
+                        @if(!empty($item['image']))
+                            <img src="{{ $item['image'] }}" alt="Building {{ $item['gisid'] }}">
+                        @else
+                            <span class="no-img">No image</span>
+                        @endif
+                    </td>
                 </tr>
             @endforeach
         </tbody>

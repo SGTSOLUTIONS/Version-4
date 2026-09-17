@@ -1225,7 +1225,7 @@ class WardController extends Controller
             ], 500);
         }
     }
-public function exportPointDataPdf($ward_id)
+    public function exportPointDataPdf($ward_id)
 {
     if (ob_get_level() > 0) {
         ob_end_clean();
@@ -1234,7 +1234,7 @@ public function exportPointDataPdf($ward_id)
 
     try {
         @ini_set('memory_limit', '512M');
-        @set_time_limit(180);
+        @set_time_limit(300);
 
         $pointTable   = "point_data_" . $ward_id;
         $polygonTable = "polygon_data_" . $ward_id;
@@ -1247,15 +1247,16 @@ public function exportPointDataPdf($ward_id)
             ], 404);
         }
 
-        // ---- Fetch point_gisid from point_data ----
-        $gisids = DB::table($pointTable)
+        // ---- 1. Point gisids ----
+        $pointGisids = DB::table($pointTable)
             ->select('point_gisid')
             ->whereNotNull('point_gisid')
             ->where('point_gisid', '!=', '')
+            ->distinct()
             ->pluck('point_gisid')
             ->toArray();
 
-        if (empty($gisids)) {
+        if (empty($pointGisids)) {
             ob_end_clean();
             return response()->json([
                 "success" => false,
@@ -1263,28 +1264,53 @@ public function exportPointDataPdf($ward_id)
             ], 404);
         }
 
-        // ---- Fetch polygon image (image1) ----
-        $polygonImageBase64 = null;
-
+        // ---- 2. Detect image column in polygon_data ----
+        $imageColumn = null;
         if (Schema::hasTable($polygonTable)) {
-            $imagePath = DB::table($polygonTable)
-                ->whereNotNull('image')
-                ->where('image', '!=', '')
-                ->value('image');
+            $imageColumn = $this->detectImageColumn($polygonTable);
+        }
 
-            if (!empty($imagePath)) {
+        // ---- 3. Fetch gisid → image map from polygon_data ----
+        //        Only fetch rows whose gisid is in pointGisids.
+        $imageMap = [];   // gisid => base64 data URL
+
+        if ($imageColumn) {
+            $rows = DB::table($polygonTable)
+                ->select('gisid', $imageColumn)
+                ->whereIn('gisid', $pointGisids)
+                ->whereNotNull($imageColumn)
+                ->where($imageColumn, '!=', '')
+                ->get();
+
+            foreach ($rows as $row) {
+                $gisid     = $row->gisid;
+                $imagePath = $row->{$imageColumn};
+
+                if (!$gisid || !$imagePath) {
+                    continue;
+                }
+
                 $absolute = $this->resolveAssetPath($imagePath);
 
                 if ($absolute && is_file($absolute)) {
-                    $polygonImageBase64 = $this->buildBase64Image($absolute);
+                    $imageMap[$gisid] = $this->buildBase64Image($absolute);
                 }
             }
         }
 
+        // ---- 4. Build ordered list: [gisid, imageBase64|null] ----
+        $items = [];
+        foreach ($pointGisids as $gisid) {
+            $items[] = [
+                'gisid' => $gisid,
+                'image' => $imageMap[$gisid] ?? null,
+            ];
+        }
+
+        // ---- 5. Render PDF ----
         $pdf = Pdf::loadView('exports.point_data_pdf', [
-            'ward_id'            => $ward_id,
-            'gisids'             => $gisids,
-            'polygonImageBase64' => $polygonImageBase64,
+            'ward_id' => $ward_id,
+            'items'   => $items,
         ])
             ->setPaper('a4', 'portrait')
             ->set_option('isRemoteEnabled', true)
@@ -1310,163 +1336,222 @@ public function exportPointDataPdf($ward_id)
         ], 500);
     }
 }/**
- * Downscale + compress image to JPEG base64 (much faster for PDFs).
+ * Auto-detect which column in polygon_data_{ward_id} holds the image path.
  */
-private function buildBase64Image(string $absolutePath): ?string
+private function detectImageColumn(string $table): ?string
 {
-    if (!is_file($absolutePath) || !is_readable($absolutePath)) {
-        return null;
+    static $cache = [];
+    if (array_key_exists($table, $cache)) {
+        return $cache[$table];
     }
 
-    $mime = $this->safeMimeType($absolutePath);
+    $columns = [];
+    try {
+        $columns = Schema::getColumnListing($table);
+    } catch (\Throwable $e) {
+        $columns = [];
+    }
 
-    if (function_exists('imagecreatefromstring')) {
-        $raw = @file_get_contents($absolutePath);
-        if ($raw === false) {
+    if (empty($columns)) {
+        try {
+            $db = DB::connection()->getDatabaseName();
+            $rows = DB::select(
+                "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
+                [$db, $table]
+            );
+            $columns = array_map(fn($r) => $r->COLUMN_NAME, $rows);
+        } catch (\Throwable $e) {
+            $columns = [];
+        }
+    }
+
+    if (empty($columns)) {
+        return $cache[$table] = null;
+    }
+
+    $priority = [
+        'image', 'image1', 'images', 'image_path', 'imagepath',
+        'photo', 'snapshot', 'drone_image', 'asset_image', 'img',
+    ];
+
+    $lowerMap = [];
+    foreach ($columns as $c) {
+        $lowerMap[strtolower($c)] = $c;
+    }
+
+    foreach ($priority as $p) {
+        if (isset($lowerMap[$p])) {
+            return $cache[$table] = $lowerMap[$p];
+        }
+    }
+
+    foreach ($lowerMap as $lower => $original) {
+        if (str_contains($lower, 'image')) {
+            return $cache[$table] = $original;
+        }
+    }
+
+    return $cache[$table] = null;
+}
+    /**
+     * Downscale + compress image to JPEG base64 (much faster for PDFs).
+     */
+    private function buildBase64Image(string $absolutePath): ?string
+    {
+        if (!is_file($absolutePath) || !is_readable($absolutePath)) {
             return null;
         }
 
-        $img = @imagecreatefromstring($raw);
-        if (!$img) {
-            // Not GD-supported → raw base64
-            return 'data:' . $mime . ';base64,' . base64_encode($raw);
-        }
+        $mime = $this->safeMimeType($absolutePath);
 
-        $w = imagesx($img);
-        $h = imagesy($img);
-        $maxW = 1000;
+        if (function_exists('imagecreatefromstring')) {
+            $raw = @file_get_contents($absolutePath);
+            if ($raw === false) {
+                return null;
+            }
 
-        if ($w > $maxW) {
-            $newW  = $maxW;
-            $newH  = (int) floor($h * ($maxW / $w));
-            $thumb = imagecreatetruecolor($newW, $newH);
+            $img = @imagecreatefromstring($raw);
+            if (!$img) {
+                // Not GD-supported → raw base64
+                return 'data:' . $mime . ';base64,' . base64_encode($raw);
+            }
 
-            $white = imagecolorallocate($thumb, 255, 255, 255);
-            imagefill($thumb, 0, 0, $white);
+            $w = imagesx($img);
+            $h = imagesy($img);
+            $maxW = 1000;
 
-            imagecopyresampled($thumb, $img, 0, 0, 0, 0, $newW, $newH, $w, $h);
+            if ($w > $maxW) {
+                $newW  = $maxW;
+                $newH  = (int) floor($h * ($maxW / $w));
+                $thumb = imagecreatetruecolor($newW, $newH);
 
+                $white = imagecolorallocate($thumb, 255, 255, 255);
+                imagefill($thumb, 0, 0, $white);
+
+                imagecopyresampled($thumb, $img, 0, 0, 0, 0, $newW, $newH, $w, $h);
+
+                ob_start();
+                imagejpeg($thumb, null, 70);
+                $compressed = ob_get_clean();
+
+                imagedestroy($thumb);
+                imagedestroy($img);
+
+                return 'data:image/jpeg;base64,' . base64_encode($compressed);
+            }
+
+            // Small image — re-encode to JPEG @ 80%
             ob_start();
-            imagejpeg($thumb, null, 70);
+            imagejpeg($img, null, 80);
             $compressed = ob_get_clean();
-
-            imagedestroy($thumb);
             imagedestroy($img);
 
             return 'data:image/jpeg;base64,' . base64_encode($compressed);
         }
 
-        // Small image — re-encode to JPEG @ 80%
-        ob_start();
-        imagejpeg($img, null, 80);
-        $compressed = ob_get_clean();
-        imagedestroy($img);
-
-        return 'data:image/jpeg;base64,' . base64_encode($compressed);
+        // GD unavailable → raw base64
+        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($absolutePath));
     }
-
-    // GD unavailable → raw base64
-    return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($absolutePath));
-}
-/**
- * Safely get column list for a dynamic table on any DB driver.
- */
-private function getTableColumns(string $table): array
-{
-    // 1) Try Laravel Schema
-    try {
-        $cols = Schema::getColumnListing($table);
-        if (!empty($cols)) {
-            return $cols;
+    /**
+     * Safely get column list for a dynamic table on any DB driver.
+     */
+    private function getTableColumns(string $table): array
+    {
+        // 1) Try Laravel Schema
+        try {
+            $cols = Schema::getColumnListing($table);
+            if (!empty($cols)) {
+                return $cols;
+            }
+        } catch (\Throwable $e) {
+            // fall through
         }
-    } catch (\Throwable $e) {
-        // fall through
-    }
 
-    // 2) Fall back to raw DB / information_schema
-    try {
-        $connection = DB::connection()->getDatabaseName();
+        // 2) Fall back to raw DB / information_schema
+        try {
+            $connection = DB::connection()->getDatabaseName();
 
-        $result = DB::select(
-            "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+            $result = DB::select(
+                "SELECT COLUMN_NAME FROM information_schema.COLUMNS
              WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
-            [$connection, $table]
-        );
+                [$connection, $table]
+            );
 
-        if (!empty($result)) {
-            return array_map(fn($r) => $r->COLUMN_NAME, $result);
+            if (!empty($result)) {
+                return array_map(fn($r) => $r->COLUMN_NAME, $result);
+            }
+        } catch (\Throwable $e) {
+            // fall through
         }
-    } catch (\Throwable $e) {
-        // fall through
+
+        // 3) Last resort — read first row and use its keys
+        try {
+            $first = DB::table($table)->first();
+            if ($first) {
+                return array_keys((array) $first);
+            }
+        } catch (\Throwable $e) {
+            // give up
+        }
+
+        return [];
     }
 
-    // 3) Last resort — read first row and use its keys
-    try {
-        $first = DB::table($table)->first();
-        if ($first) {
-            return array_keys((array) $first);
+    /**
+     * Safe mime type lookup (no dependency on fileinfo extension).
+     */
+    private function safeMimeType(string $file): string
+    {
+        if (function_exists('mime_content_type')) {
+            $mime = @mime_content_type($file);
+            if ($mime) {
+                return $mime;
+            }
         }
-    } catch (\Throwable $e) {
-        // give up
+
+        if (function_exists('getimagesize')) {
+            $info = @getimagesize($file);
+            if (!empty($info['mime'])) {
+                return $info['mime'];
+            }
+        }
+
+        // Fallback by extension
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        return match ($ext) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png'         => 'image/png',
+            'gif'         => 'image/gif',
+            'webp'        => 'image/webp',
+            default       => 'application/octet-stream',
+        };
     }
 
-    return [];
-}
+    private function resolveAssetPath(string $path): ?string
+    {
+        if (empty($path)) return null;
 
-/**
- * Safe mime type lookup (no dependency on fileinfo extension).
- */
-private function safeMimeType(string $file): string
-{
-    if (function_exists('mime_content_type')) {
-        $mime = @mime_content_type($file);
-        if ($mime) {
-            return $mime;
+        $clean = ltrim($path, '/');
+
+        $candidates = [
+            $path,
+            public_path($clean),
+            base_path($clean),
+            base_path('public/' . $clean),
+            storage_path('app/public/' . $clean),
+            storage_path('app/' . $clean),
+            public_path('storage/' . $clean),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if ($candidate && is_file($candidate) && is_readable($candidate)) {
+                return realpath($candidate);
+            }
         }
+
+        return null;
     }
-
-    if (function_exists('getimagesize')) {
-        $info = @getimagesize($file);
-        if (!empty($info['mime'])) {
-            return $info['mime'];
-        }
-    }
-
-    // Fallback by extension
-    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-    return match ($ext) {
-        'jpg', 'jpeg' => 'image/jpeg',
-        'png'         => 'image/png',
-        'gif'         => 'image/gif',
-        'webp'        => 'image/webp',
-        default       => 'application/octet-stream',
-    };
-}
-
-private function resolveAssetPath(string $path): ?string
-{
-    if (empty($path)) return null;
-
-    $clean = ltrim($path, '/');
-
-    $candidates = [
-        $path,
-        public_path($clean),
-        base_path($clean),
-        base_path('public/' . $clean),
-        storage_path('app/public/' . $clean),
-        storage_path('app/' . $clean),
-        public_path('storage/' . $clean),
-    ];
-
-    foreach ($candidates as $candidate) {
-        if ($candidate && is_file($candidate) && is_readable($candidate)) {
-            return realpath($candidate);
-        }
-    }
-
-    return null;
-}
 
     /**
      * Export ALL Point Data fields as CSV (Excel-compatible) for a ward.
