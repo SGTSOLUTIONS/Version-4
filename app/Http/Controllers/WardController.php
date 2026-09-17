@@ -1227,7 +1227,6 @@ class WardController extends Controller
     }
 public function exportPointDataPdf($ward_id)
 {
-    // Prevent accidental output (BOM, whitespace) corrupting the PDF stream
     if (ob_get_level() > 0) {
         ob_end_clean();
     }
@@ -1245,21 +1244,14 @@ public function exportPointDataPdf($ward_id)
             ], 404);
         }
 
-        // ---- Fetch columns safely ----
-        $columns = $this->getTableColumns($pointTable);
+        // ---- Only fetch gisid (fast, indexed, small payload) ----
+        $gisids = DB::table($pointTable)
+            ->select('gisid')
+            ->whereNotNull('gisid')
+            ->pluck('gisid')
+            ->toArray();
 
-        if (empty($columns)) {
-            ob_end_clean();
-            return response()->json([
-                "success" => false,
-                "message" => "Could not read columns for ward #{$ward_id}"
-            ], 500);
-        }
-
-        // Limit rows to avoid memory/timeouts; adjust as needed
-        $rows = DB::table($pointTable)->limit(5000)->get();
-
-        if ($rows->isEmpty()) {
+        if (empty($gisids)) {
             ob_end_clean();
             return response()->json([
                 "success" => false,
@@ -1267,66 +1259,33 @@ public function exportPointDataPdf($ward_id)
             ], 404);
         }
 
-        // ---- Prepare rows (truncate huge values) ----
-        $preparedRows = [];
-        foreach ($rows as $row) {
-            $rowArray = (array) $row;
-            $clean = [];
-            foreach ($columns as $col) {
-                $value = $rowArray[$col] ?? null;
-
-                // Convert objects/arrays to JSON
-                if (is_array($value) || is_object($value)) {
-                    $value = json_encode($value);
-                }
-
-                // Truncate very long strings
-                if (is_string($value) && strlen($value) > 500) {
-                    $value = substr($value, 0, 500) . '…';
-                }
-                $clean[$col] = $value;
-            }
-            $preparedRows[] = $clean;
-        }
-
-        // ---- Fetch polygon asset image (image1) ----
+        // ---- Fetch polygon image (image1) ----
         $polygonImageBase64 = null;
-        $polygonImagePath   = null;
 
         if (Schema::hasTable($polygonTable)) {
-            $polygon = DB::table($polygonTable)
-                ->select('image1')
+            $imagePath = DB::table($polygonTable)
                 ->whereNotNull('image1')
                 ->where('image1', '!=', '')
-                ->first();
+                ->value('image1');
 
-            if ($polygon && !empty($polygon->image1)) {
-                $polygonImagePath = $polygon->image1;
-                $absolute = $this->resolveAssetPath($polygonImagePath);
+            if (!empty($imagePath)) {
+                $absolute = $this->resolveAssetPath($imagePath);
 
                 if ($absolute && is_file($absolute)) {
-                    // Limit image size to 4 MB before base64 to protect DomPDF
-                    if (filesize($absolute) <= 4 * 1024 * 1024) {
-                        $mime = $this->safeMimeType($absolute);
-                        $polygonImageBase64 = 'data:' . $mime . ';base64,'
-                                            . base64_encode(file_get_contents($absolute));
-                    } else {
-                        // Skip oversized images rather than crash
-                        $polygonImageBase64 = null;
-                    }
+                    $mime = $this->safeMimeType($absolute);
+                    $polygonImageBase64 = 'data:' . $mime . ';base64,'
+                                        . base64_encode(file_get_contents($absolute));
                 }
             }
         }
 
-        // ---- Render PDF ----
+        // ---- Render lean PDF ----
         $pdf = Pdf::loadView('exports.point_data_pdf', [
             'ward_id'            => $ward_id,
-            'columns'            => $columns,
-            'rows'               => $preparedRows,
+            'gisids'             => $gisids,
             'polygonImageBase64' => $polygonImageBase64,
-            'polygonImagePath'   => $polygonImagePath,
         ])
-            ->setPaper('a4', 'landscape')
+            ->setPaper('a4', 'portrait')
             ->set_option('isRemoteEnabled', true)
             ->set_option('isHtml5ParserEnabled', true)
             ->set_option('defaultFont', 'DejaVu Sans');
@@ -1338,7 +1297,6 @@ public function exportPointDataPdf($ward_id)
         return $pdf->download($fileName);
 
     } catch (\Throwable $e) {
-        // Ensure buffered output is discarded so we can return clean JSON
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
@@ -1351,7 +1309,6 @@ public function exportPointDataPdf($ward_id)
         ], 500);
     }
 }
-
 /**
  * Safely get column list for a dynamic table on any DB driver.
  */

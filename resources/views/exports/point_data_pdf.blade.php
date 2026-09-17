@@ -4,12 +4,13 @@
     <meta charset="utf-8">
     <title>Point Data - Ward {{ $ward_id }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 9px; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { border: 1px solid #999; padding: 3px; word-wrap: break-word; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; }
+        h3 { margin: 0 0 8px 0; }
+        .img-wrap { text-align: center; margin-bottom: 12px; }
+        .img-wrap img { max-width: 100%; max-height: 300px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #999; padding: 4px 6px; text-align: left; }
         th { background: #f0f0f0; }
-        .img-wrap { text-align: center; margin-bottom: 10px; }
-        .img-wrap img { max-width: 100%; max-height: 250px; }
     </style>
 </head>
 <body>
@@ -24,17 +25,15 @@
     <table>
         <thead>
             <tr>
-                @foreach($columns as $col)
-                    <th>{{ $col }}</th>
-                @endforeach
+                <th style="width: 60px;">#</th>
+                <th>GISID</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($rows as $row)
+            @foreach($gisids as $i => $gisid)
                 <tr>
-                    @foreach($columns as $col)
-                        <td>{{ \Illuminate\Support\Str::limit((string)($row[$col] ?? ''), 200) }}</td>
-                    @endforeach
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $gisid }}</td>
                 </tr>
             @endforeach
         </tbody>
