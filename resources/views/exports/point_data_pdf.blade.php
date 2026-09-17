@@ -9,36 +9,40 @@
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #999; padding: 4px 6px; vertical-align: top; }
         th { background: #f0f0f0; }
-        .img-cell img { max-width: 260px; max-height: 200px; }
+        .img-cell img { max-width: 240px; max-height: 180px; }
         .no-img { color: #999; font-style: italic; }
     </style>
 </head>
 <body>
     <h3>Point Data — Ward {{ $ward_id }}</h3>
 
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 40px;">#</th>
-                <th style="width: 130px;">POINT GISID</th>
-                <th>Building Image</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($items as $i => $item)
+    @if(!empty($items) && count($items) > 0)
+        <table>
+            <thead>
                 <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>{{ $item['gisid'] }}</td>
-                    <td class="img-cell">
-                        @if(!empty($item['image']))
-                            <img src="{{ $item['image'] }}" alt="Building {{ $item['gisid'] }}">
-                        @else
-                            <span class="no-img">No image</span>
-                        @endif
-                    </td>
+                    <th style="width: 40px;">#</th>
+                    <th style="width: 130px;">POINT GISID</th>
+                    <th>Building Image</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach($items as $i => $item)
+                    <tr>
+                        <td>{{ $i + 1 }}</td>
+                        <td>{{ $item['gisid'] }}</td>
+                        <td class="img-cell">
+                            @if(!empty($item['image']))
+                                <img src="{{ $item['image'] }}" alt="Building">
+                            @else
+                                <span class="no-img">No image</span>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <p>No point data available.</p>
+    @endif
 </body>
 </html>

@@ -10,6 +10,7 @@ use App\Services\WardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -28,9 +29,10 @@ class WardController extends Controller
         $this->wardService = $wardService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
+    /* =========================================================
+     *  CRUD
+     * ========================================================= */
+
     public function index()
     {
         try {
@@ -64,9 +66,6 @@ class WardController extends Controller
         }
     }
 
-    /**
-     * Get list of wards for AJAX datatable.
-     */
     public function list(Request $request)
     {
         try {
@@ -112,15 +111,12 @@ class WardController extends Controller
             $wards->getCollection()->transform(function ($ward) {
                 $ward->road_names = [];
 
-                // IMPORTANT: Check the relationship, not the column
-                // Use relationLoaded to check if the relationship is loaded
-                // Use getRelation() to get the relationship object
                 $zoneRelation = $ward->getRelation('zone');
 
                 if (!$zoneRelation) {
                     $ward->table_error = 'Zone not found';
                     $ward->zone_id_debug = $ward->zone_id;
-                    $ward->zone_name_debug = $ward->zone; // The string column
+                    $ward->zone_name_debug = $ward->zone;
                     return $ward;
                 }
 
@@ -155,15 +151,11 @@ class WardController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         try {
             $user = Auth::user();
 
-            // Commissioner permission check
             if ($user->role == 'commissioner') {
                 $zone = Zone::find($request->zone_id);
                 if (!$zone || $zone->corp_id != $user->corporation_id) {
@@ -207,11 +199,9 @@ class WardController extends Controller
                 ], 422);
             }
 
-            // Start transaction
             DB::beginTransaction();
 
             try {
-                // Verify zone belongs to selected corporation
                 $zone = Zone::where('id', $request->zone_id)
                     ->where('corp_id', $request->corp_id)
                     ->first();
@@ -220,7 +210,6 @@ class WardController extends Controller
                     throw new \Exception('Selected zone does not belong to the chosen corporation');
                 }
 
-                // Handle drone image upload
                 $droneImagePath = null;
                 if ($request->hasFile('drone_image')) {
                     $droneImagePath = CommonHelper::uploadProfileImage(
@@ -229,7 +218,6 @@ class WardController extends Controller
                     );
                 }
 
-                // Handle GeoJSON boundary file upload
                 $boundary = null;
                 if ($request->hasFile('boundary_file')) {
                     $geojsonData = json_decode(
@@ -246,7 +234,6 @@ class WardController extends Controller
                     }
                 }
 
-                // Create ward
                 $ward = Ward::create([
                     'zone_id' => $request->zone_id,
                     'ward_no' => $request->ward_no,
@@ -265,28 +252,26 @@ class WardController extends Controller
                     'address' => $request->address,
                 ]);
 
-                // Create ward tables
                 $createTable = $this->wardService->createWardTables($ward->id);
                 if ($createTable) {
                     $polygonTable = $createTable['polygon'];
                     $pointTable = $createTable['point'];
                     $lineTable = $createTable['line'];
                     if ($request->hasFile('polygon_file')) {
-                        $result = $this->wardService->createPolygonUpdate(
+                        $this->wardService->createPolygonUpdate(
                             $polygonTable,
                             $pointTable,
                             $request->file('polygon_file')
                         );
                     }
                     if ($request->hasFile('road_file')) {
-                        $result = $this->wardService->storeSingleLine(
+                        $this->wardService->storeSingleLine(
                             $lineTable,
                             $request->file('road_file')
                         );
                     }
                 }
 
-                // Commit transaction
                 DB::commit();
 
                 return response()->json([
@@ -315,9 +300,6 @@ class WardController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Ward $ward)
     {
         try {
@@ -347,9 +329,6 @@ class WardController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Ward $ward)
     {
         try {
@@ -406,11 +385,9 @@ class WardController extends Controller
                 ], 422);
             }
 
-            // Start transaction
             DB::beginTransaction();
 
             try {
-                // Verify zone belongs to selected corporation
                 $zone = Zone::where('id', $request->zone_id)
                     ->where('corp_id', $request->corp_id)
                     ->first();
@@ -419,7 +396,6 @@ class WardController extends Controller
                     throw new \Exception('Selected zone does not belong to the chosen corporation');
                 }
 
-                // Handle drone image upload
                 if ($request->hasFile('drone_image')) {
                     if ($ward->drone_image && !str_starts_with($ward->drone_image, 'http')) {
                         Storage::disk('public')->delete($ward->drone_image);
@@ -431,7 +407,6 @@ class WardController extends Controller
                     );
                 }
 
-                // Handle GeoJSON boundary file upload
                 if ($request->hasFile('boundary_file')) {
                     $geojsonData = json_decode(
                         file_get_contents($request->file('boundary_file')->getRealPath()),
@@ -447,14 +422,13 @@ class WardController extends Controller
                     }
                 }
 
-                // Update ward details
                 $ward->zone_id = $request->zone_id;
                 $ward->ward_no = $request->ward_no;
                 $ward->extent_left = $request->extent_left;
                 $ward->extent_right = $request->extent_right;
                 $ward->extent_top = $request->extent_top;
                 $ward->extent_bottom = $request->extent_bottom;
-                $ward->zone_name     = $request->zone;
+                $ward->zone_name = $request->zone;
                 $ward->status = $request->status;
                 $ward->contact_person = $request->contact_person;
                 $ward->designation = $request->designation;
@@ -464,28 +438,26 @@ class WardController extends Controller
 
                 $ward->save();
 
-                // Create/update ward tables
                 $createTable = $this->wardService->createWardTables($ward->id);
                 if ($createTable) {
                     $polygonTable = $createTable['polygon'];
                     $pointTable = $createTable['point'];
                     $lineTable = $createTable['line'];
                     if ($request->hasFile('polygon_file')) {
-                        $result = $this->wardService->createPolygonUpdate(
+                        $this->wardService->createPolygonUpdate(
                             $polygonTable,
                             $pointTable,
                             $request->file('polygon_file')
                         );
                     }
                     if ($request->hasFile('road_file')) {
-                        $result = $this->wardService->storeSingleLine(
+                        $this->wardService->storeSingleLine(
                             $lineTable,
                             $request->file('road_file')
                         );
                     }
                 }
 
-                // Commit transaction
                 DB::commit();
 
                 return response()->json([
@@ -514,9 +486,6 @@ class WardController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Ward $ward)
     {
         try {
@@ -529,7 +498,6 @@ class WardController extends Controller
                 ], 403);
             }
 
-            // Start transaction
             DB::beginTransaction();
 
             try {
@@ -540,7 +508,6 @@ class WardController extends Controller
                 $this->wardService->dropWardTables($ward->id);
                 $ward->delete();
 
-                // Commit transaction
                 DB::commit();
 
                 return response()->json([
@@ -548,7 +515,6 @@ class WardController extends Controller
                     'message' => 'Ward deleted successfully'
                 ]);
             } catch (\Exception $e) {
-                // Rollback transaction on error
                 DB::rollBack();
                 throw $e;
             }
@@ -560,9 +526,6 @@ class WardController extends Controller
         }
     }
 
-    /**
-     * Get wards by zone for dropdown.
-     */
     public function getWardsByZone($zoneId)
     {
         try {
@@ -583,9 +546,6 @@ class WardController extends Controller
         }
     }
 
-    /**
-     * Update ward status (activate/deactivate).
-     */
     public function updateStatus(Request $request, $id)
     {
         try {
@@ -617,41 +577,33 @@ class WardController extends Controller
         }
     }
 
+    /* =========================================================
+     *  GEOJSON EXPORTS
+     * ========================================================= */
+
     public function missingBuiilding($ward_id)
     {
         try {
-
             $polygonDataTable = "polygon_data_" . $ward_id;
             $polygonTable     = "polygons_" . $ward_id;
 
             $missingBuildings = DB::table($polygonTable)
                 ->whereNotIn('gisid', function ($query) use ($polygonDataTable) {
-                    $query->select('gisid')
-                        ->from($polygonDataTable);
+                    $query->select('gisid')->from($polygonDataTable);
                 })
                 ->get();
 
             $features = [];
 
             foreach ($missingBuildings as $building) {
-
                 $coordinates = json_decode($building->coordinates, true);
+                if (!$coordinates) continue;
 
-                if (!$coordinates) {
-                    continue;
-                }
-
-                // Convert to valid GeoJSON Polygon
                 if ($building->type == 'Polygon') {
-
-                    // If coordinates are stored as [[x,y],[x,y],...]
                     if (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
                         $coordinates = [$coordinates];
                     }
-
-                    // Close polygon if not closed
                     $ring = &$coordinates[0];
-
                     if ($ring[0] != end($ring)) {
                         $ring[] = $ring[0];
                     }
@@ -681,7 +633,6 @@ class WardController extends Controller
                 'Content-Type' => 'application/geo+json',
             ]);
         } catch (\Throwable $e) {
-
             return response()->json([
                 "success" => false,
                 "message" => $e->getMessage(),
@@ -693,11 +644,9 @@ class WardController extends Controller
 
     public function exportAllPolygons($ward_id)
     {
-
         try {
             $polygonTable = "polygons_" . $ward_id;
 
-            // Check if table exists
             if (!Schema::hasTable($polygonTable)) {
                 return response()->json([
                     "success" => false,
@@ -717,41 +666,19 @@ class WardController extends Controller
             $features = [];
 
             foreach ($allBuildings as $building) {
-
-                // IMPORTANT:
-                // Read coordinates exactly as stored.
-                // DO NOT transform/reproject them.
                 $coordinates = json_decode($building->coordinates, true);
+                if (!$coordinates) continue;
 
-                if (!$coordinates) {
-                    continue;
-                }
-
-                // Convert to valid GeoJSON Polygon structure
-                // WITHOUT changing coordinate values.
                 if (($building->type ?? 'Polygon') === 'Polygon') {
-
-                    // Stored as:
-                    // [[x,y],[x,y],[x,y]]
-                    //
-                    // GeoJSON requires:
-                    // [[[x,y],[x,y],[x,y]]]
-                    if (
-                        isset($coordinates[0][0]) &&
-                        is_numeric($coordinates[0][0])
-                    ) {
+                    if (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
                         $coordinates = [$coordinates];
                     }
 
-                    // Close polygon ring if necessary.
                     if (isset($coordinates[0]) && is_array($coordinates[0])) {
-
                         $ring = &$coordinates[0];
-
                         if (!empty($ring)) {
                             $first = $ring[0];
                             $last  = $ring[count($ring) - 1];
-
                             if ($first !== $last) {
                                 $ring[] = $first;
                             }
@@ -761,18 +688,13 @@ class WardController extends Controller
 
                 $features[] = [
                     "type" => "Feature",
-
                     "properties" => [
                         "gisid"  => $building->gisid,
                         "sqfeet" => $building->sqfeet,
                         "type"   => $building->type ?? 'Polygon',
                     ],
-
                     "geometry" => [
                         "type" => $building->type ?? 'Polygon',
-
-                        // EXACT SAME COORDINATES.
-                        // No projection conversion.
                         "coordinates" => $coordinates
                     ]
                 ];
@@ -780,17 +702,12 @@ class WardController extends Controller
 
             $geojson = [
                 "type" => "FeatureCollection",
-
-                // IMPORTANT:
-                // Replace 32644 with YOUR actual stored EPSG code.
-                // This does NOT transform the coordinates.
                 "crs" => [
                     "type" => "name",
                     "properties" => [
                         "name" => "urn:ogc:def:crs:EPSG::32644"
                     ]
                 ],
-
                 "features" => $features
             ];
 
@@ -798,7 +715,6 @@ class WardController extends Controller
 
             return response()->streamDownload(
                 function () use ($geojson) {
-
                     echo json_encode(
                         $geojson,
                         JSON_PRETTY_PRINT |
@@ -814,7 +730,6 @@ class WardController extends Controller
                 ]
             );
         } catch (\Throwable $e) {
-
             return response()->json([
                 "success" => false,
                 "message" => $e->getMessage(),
@@ -824,13 +739,11 @@ class WardController extends Controller
         }
     }
 
-
     public function exportAllRoads($ward_id)
     {
         try {
             $lineTable = "lines_" . $ward_id;
 
-            // Check if table exists
             if (!Schema::hasTable($lineTable)) {
                 return response()->json([
                     "success" => false,
@@ -851,21 +764,12 @@ class WardController extends Controller
 
             foreach ($allLines as $line) {
                 $coordinates = json_decode($line->coordinates, true);
+                if (!$coordinates) continue;
 
-                if (!$coordinates) {
-                    continue;
-                }
-
-                // Convert to valid GeoJSON LineString format if needed
                 if ($line->type == 'LineString') {
-                    // If coordinates are stored as [[x,y],[x,y],...] (already correct format)
-                    // No conversion needed for LineString, but we ensure it's a valid array
                     if (!isset($coordinates[0][0]) || !is_numeric($coordinates[0][0])) {
-                        // If stored in a different format, attempt to fix
                         if (isset($coordinates[0]) && is_array($coordinates[0]) && isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
-                            // Already correct
                         } else {
-                            // Try to convert if it's a flat array
                             continue;
                         }
                     }
@@ -908,17 +812,20 @@ class WardController extends Controller
             ], 500);
         }
     }
+
+    /* =========================================================
+     *  CSV / EXCEL EXPORTS
+     * ========================================================= */
+
     public function missingBuiildingExcel($ward_id)
     {
         try {
-
             $polygonDataTable = "polygon_data_" . $ward_id;
             $polygonTable     = "polygons_" . $ward_id;
 
             $missingBuildings = DB::table($polygonTable)
                 ->whereNotIn('gisid', function ($query) use ($polygonDataTable) {
-                    $query->select('gisid')
-                        ->from($polygonDataTable);
+                    $query->select('gisid')->from($polygonDataTable);
                 })
                 ->get();
 
@@ -930,31 +837,16 @@ class WardController extends Controller
             ];
 
             $callback = function () use ($missingBuildings) {
-
                 $file = fopen('php://output', 'w');
-
-                // Header Row
-                fputcsv($file, [
-                    'GISID',
-                    'Type',
-                    'SqFeet',
-                ]);
-
+                fputcsv($file, ['GISID', 'Type', 'SqFeet']);
                 foreach ($missingBuildings as $building) {
-
-                    fputcsv($file, [
-                        $building->gisid,
-                        $building->type,
-                        $building->sqfeet,
-                    ]);
+                    fputcsv($file, [$building->gisid, $building->type, $building->sqfeet]);
                 }
-
                 fclose($file);
             };
 
             return response()->stream($callback, 200, $headers);
         } catch (\Throwable $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -963,59 +855,43 @@ class WardController extends Controller
             ], 500);
         }
     }
+
     public function missingBillExcel(Request $request, $ward_id)
     {
         try {
-
             $roadName = $request->query('road_name');
-
 
             $ward = Ward::findOrFail($ward_id);
             $zone = Zone::findOrFail($ward->zone_id);
 
-
             $misTable = 'mis_' . $zone->corp_id;
             $pointDataTable = 'point_data_' . $ward_id;
 
+            $query = DB::table($misTable)->where('ward_no', $ward->ward_no);
 
-            $query = DB::table($misTable)
-                ->where('ward_no', $ward->ward_no);
-
-            // Road filter
             if ($roadName && strtolower($roadName) != 'all') {
                 $query->where('road_name', $roadName);
             }
 
-
             $missingbill = $query
                 ->whereNotIn('assessment', function ($subQuery) use ($pointDataTable) {
-
-                    $subQuery->select('assessment')
-                        ->from($pointDataTable);
+                    $subQuery->select('assessment')->from($pointDataTable);
                 })
                 ->get();
 
-
             if ($missingbill->isEmpty()) {
-
                 return response()->json([
                     'success' => false,
                     'message' => 'No missing records found'
                 ], 404);
             }
 
-
-            // File name
             $fileName = (!empty($roadName) && strtolower($roadName) !== 'all')
                 ? "{$roadName}_missing_{$ward_id}.xlsx"
                 : "missing_bill_{$ward_id}.xlsx";
 
-            return Excel::download(
-                new MissingBillExport($missingbill),
-                $fileName
-            );
+            return Excel::download(new MissingBillExport($missingbill), $fileName);
         } catch (\Throwable $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -1023,6 +899,7 @@ class WardController extends Controller
             ], 500);
         }
     }
+
     public function misBillExcel(Request $request, $ward_id)
     {
         try {
@@ -1033,24 +910,18 @@ class WardController extends Controller
 
             $misTable = 'mis_' . $zone->corp_id;
 
-            $query = DB::table($misTable)
-                ->where('ward_no', $ward->ward_no);
+            $query = DB::table($misTable)->where('ward_no', $ward->ward_no);
 
-            // Filter by road name
             if (!empty($roadName) && strtolower($roadName) !== 'all') {
                 $query->where('road_name', $roadName);
             }
             $data = $query->get();
 
-            // File name
             $fileName = (!empty($roadName) && strtolower($roadName) !== 'all')
                 ? "{$roadName}_{$ward_id}.xlsx"
                 : "mis_bill_{$ward_id}.xlsx";
 
-            return Excel::download(
-                new MissingBillExport($data),
-                $fileName
-            );
+            return Excel::download(new MissingBillExport($data), $fileName);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -1059,6 +930,7 @@ class WardController extends Controller
             ], 500);
         }
     }
+
     public function ugdTaxExcel(Request $request, $ward_id)
     {
         try {
@@ -1069,8 +941,7 @@ class WardController extends Controller
 
             $ugdTable = 'ugd_tax_' . $zone->corp_id;
 
-            $query = DB::table($ugdTable)
-                ->where('ward_no', $ward->ward_no);
+            $query = DB::table($ugdTable)->where('ward_no', $ward->ward_no);
 
             if (!empty($roadName) && strtolower($roadName) !== 'all') {
                 $query->where('road_name', $roadName);
@@ -1080,10 +951,7 @@ class WardController extends Controller
                 ? "{$roadName}_{$ward_id}.xlsx"
                 : "ugd_tax_{$ward_id}.xlsx";
 
-            return Excel::download(
-                new MissingBillExport($data),
-                $fileName
-            );
+            return Excel::download(new MissingBillExport($data), $fileName);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -1092,6 +960,7 @@ class WardController extends Controller
             ], 500);
         }
     }
+
     public function professionalTaxExcel(Request $request, $ward_id)
     {
         try {
@@ -1102,8 +971,7 @@ class WardController extends Controller
 
             $professionalTable = 'professional_tax_' . $zone->corp_id;
 
-            $query = DB::table($professionalTable)
-                ->where('ward_no', $ward->ward_no);
+            $query = DB::table($professionalTable)->where('ward_no', $ward->ward_no);
 
             if (!empty($roadName) && strtolower($roadName) !== 'all') {
                 $query->where('road_name', $roadName);
@@ -1113,10 +981,7 @@ class WardController extends Controller
                 ? "{$roadName}_{$ward_id}.xlsx"
                 : "professional_tax_{$ward_id}.xlsx";
 
-            return Excel::download(
-                new MissingBillExport($data),
-                $fileName
-            );
+            return Excel::download(new MissingBillExport($data), $fileName);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -1125,6 +990,7 @@ class WardController extends Controller
             ], 500);
         }
     }
+
     public function waterTaxExcel(Request $request, $ward_id)
     {
         try {
@@ -1135,8 +1001,7 @@ class WardController extends Controller
 
             $waterTable = 'water_tax_' . $zone->corp_id;
 
-            $query = DB::table($waterTable)
-                ->where('ward_no', $ward->ward_no);
+            $query = DB::table($waterTable)->where('ward_no', $ward->ward_no);
 
             if (!empty($roadName) && strtolower($roadName) !== 'all') {
                 $query->where('road_name', $roadName);
@@ -1147,10 +1012,7 @@ class WardController extends Controller
                 ? "{$roadName}_{$ward_id}.xlsx"
                 : "water_tax_{$ward_id}.xlsx";
 
-            return Excel::download(
-                new MissingBillExport($data),
-                $fileName
-            );
+            return Excel::download(new MissingBillExport($data), $fileName);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -1159,64 +1021,53 @@ class WardController extends Controller
             ], 500);
         }
     }
+
+    /* =========================================================
+     *  PDF EXPORTS
+     * ========================================================= */
+
     public function missingBillPdf(Request $request, $ward_id)
     {
         try {
-
             $roadName = $request->query('road_name');
-
 
             $ward = Ward::findOrFail($ward_id);
             $zone = Zone::findOrFail($ward->zone_id);
 
-
             $misTable = 'mis_' . $zone->corp_id;
             $pointDataTable = 'point_data_' . $ward_id;
 
-            $query = DB::table($misTable)
-                ->where('ward_no', $ward->ward_no);
+            $query = DB::table($misTable)->where('ward_no', $ward->ward_no);
 
-
-            // Road filter
             if ($roadName && strtolower($roadName) != 'all') {
                 $query->where('road_name', $roadName);
             }
 
-
             $missingbill = $query
                 ->whereNotIn('assessment', function ($subQuery) use ($pointDataTable) {
-
-                    $subQuery->select('assessment')
-                        ->from($pointDataTable);
+                    $subQuery->select('assessment')->from($pointDataTable);
                 })
                 ->get();
 
-
             if ($missingbill->isEmpty()) {
-
                 return response()->json([
                     'success' => false,
                     'message' => 'No missing records found.',
                 ], 404);
             }
 
-
             $pdf = Pdf::loadView('exports.missing_bill_pdf', [
                 'missingbill' => $missingbill,
                 'ward'        => $ward,
                 'roadName'    => $roadName,
-            ])
-                ->setPaper('a4', 'landscape');
-
+            ])->setPaper('a4', 'landscape');
 
             $fileName = "missing_bill_{$ward_id}_" .
                 str_replace(['.', ' '], '_', $roadName ?? 'all') .
                 ".pdf";
 
-
             return $pdf->download($fileName);
         } catch (\Throwable $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -1225,337 +1076,179 @@ class WardController extends Controller
             ], 500);
         }
     }
-    public function exportPointDataPdf($ward_id)
-{
-    if (ob_get_level() > 0) {
-        ob_end_clean();
-    }
-    ob_start();
 
-    try {
+    /**
+     * Export point data PDF.
+     * One image per GISID (fetched from polygon_data_{ward_id}).
+     */
+    public function exportPointDataPdf($ward_id)
+    {
         @ini_set('memory_limit', '512M');
         @set_time_limit(300);
 
-        $pointTable   = "point_data_" . $ward_id;
-        $polygonTable = "polygon_data_" . $ward_id;
+        try {
+            $pointTable   = "point_data_" . $ward_id;
+            $polygonTable = "polygon_data_" . $ward_id;
 
-        if (!Schema::hasTable($pointTable)) {
-            ob_end_clean();
-            return response()->json([
-                "success" => false,
-                "message" => "Point data table not found for ward #{$ward_id}"
-            ], 404);
-        }
+            Log::info('[PDF] start', ['ward_id' => $ward_id]);
 
-        // ---- 1. Point gisids ----
-        $pointGisids = DB::table($pointTable)
-            ->select('point_gisid')
-            ->whereNotNull('point_gisid')
-            ->where('point_gisid', '!=', '')
-            ->distinct()
-            ->pluck('point_gisid')
-            ->toArray();
+            if (!Schema::hasTable($pointTable)) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Point data table not found for ward #{$ward_id}"
+                ], 404);
+            }
 
-        if (empty($pointGisids)) {
-            ob_end_clean();
-            return response()->json([
-                "success" => false,
-                "message" => "No point data found for ward #{$ward_id}"
-            ], 404);
-        }
+            // ---- 1. Detect gisid column in point table ----
+            $pointColumns = Schema::getColumnListing($pointTable);
+            $gisidColumn  = in_array('point_gisid', $pointColumns, true)
+                ? 'point_gisid'
+                : (in_array('gisid', $pointColumns, true) ? 'gisid' : null);
 
-        // ---- 2. Detect image column in polygon_data ----
-        $imageColumn = null;
-        if (Schema::hasTable($polygonTable)) {
-            $imageColumn = $this->detectImageColumn($polygonTable);
-        }
+            if (!$gisidColumn) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Neither point_gisid nor gisid column found in {$pointTable}",
+                    "columns" => $pointColumns,
+                ], 500);
+            }
 
-        // ---- 3. Fetch gisid → image map from polygon_data ----
-        //        Only fetch rows whose gisid is in pointGisids.
-        $imageMap = [];   // gisid => base64 data URL
+            $pointGisids = DB::table($pointTable)
+                ->select($gisidColumn)
+                ->whereNotNull($gisidColumn)
+                ->where($gisidColumn, '!=', '')
+                ->distinct()
+                ->pluck($gisidColumn)
+                ->toArray();
 
-        if ($imageColumn) {
-            $rows = DB::table($polygonTable)
-                ->select('gisid', $imageColumn)
-                ->whereIn('gisid', $pointGisids)
-                ->whereNotNull($imageColumn)
-                ->where($imageColumn, '!=', '')
-                ->get();
+            Log::info('[PDF] gisids fetched', [
+                'column' => $gisidColumn,
+                'count'  => count($pointGisids),
+            ]);
 
-            foreach ($rows as $row) {
-                $gisid     = $row->gisid;
-                $imagePath = $row->{$imageColumn};
+            if (empty($pointGisids)) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "No point data found for ward #{$ward_id}"
+                ], 404);
+            }
 
-                if (!$gisid || !$imagePath) {
-                    continue;
+            // ---- 2. Detect image column in polygon table ----
+            $imageColumn = null;
+            $polyColumns = [];
+
+            if (Schema::hasTable($polygonTable)) {
+                $polyColumns = Schema::getColumnListing($polygonTable);
+                $imageColumn = $this->detectImageColumnFromList($polyColumns);
+            }
+
+            Log::info('[PDF] polygon inspect', [
+                'table'        => $polygonTable,
+                'columns'      => $polyColumns,
+                'image_column' => $imageColumn,
+            ]);
+
+            // ---- 3. Build gisid -> base64 image map ----
+            $imageMap = [];
+
+            if ($imageColumn && in_array('gisid', $polyColumns, true)) {
+                $rows = DB::table($polygonTable)
+                    ->select('gisid', $imageColumn)
+                    ->whereIn('gisid', $pointGisids)
+                    ->whereNotNull($imageColumn)
+                    ->where($imageColumn, '!=', '')
+                    ->get();
+
+                Log::info('[PDF] polygon rows matched', ['count' => $rows->count()]);
+
+                $sample = [];
+
+                foreach ($rows as $row) {
+                    $gisid     = $row->gisid;
+                    $imagePath = $row->{$imageColumn};
+
+                    if (!$gisid || !$imagePath) continue;
+
+                    $absolute = $this->resolveAssetPath($imagePath);
+
+                    if (count($sample) < 3) {
+                        $sample[] = [
+                            'gisid'      => $gisid,
+                            'imagePath'  => $imagePath,
+                            'absolute'   => $absolute,
+                            'file_exist' => $absolute ? is_file($absolute) : false,
+                        ];
+                    }
+
+                    if ($absolute && is_file($absolute)) {
+                        try {
+                            $imageMap[$gisid] = $this->buildBase64Image($absolute);
+                        } catch (\Throwable $imgErr) {
+                            Log::warning('[PDF] image build failed', [
+                                'gisid' => $gisid,
+                                'error' => $imgErr->getMessage(),
+                            ]);
+                        }
+                    }
                 }
 
-                $absolute = $this->resolveAssetPath($imagePath);
-
-                if ($absolute && is_file($absolute)) {
-                    $imageMap[$gisid] = $this->buildBase64Image($absolute);
-                }
+                Log::info('[PDF] image map built', [
+                    'images_ok' => count($imageMap),
+                    'sample'    => $sample,
+                ]);
             }
-        }
 
-        // ---- 4. Build ordered list: [gisid, imageBase64|null] ----
-        $items = [];
-        foreach ($pointGisids as $gisid) {
-            $items[] = [
-                'gisid' => $gisid,
-                'image' => $imageMap[$gisid] ?? null,
-            ];
-        }
+            // ---- 4. Prepare items, cap count ----
+            $maxImages = 300;
+            $items = [];
+            foreach ($pointGisids as $gisid) {
+                $items[] = [
+                    'gisid' => $gisid,
+                    'image' => $imageMap[$gisid] ?? null,
+                ];
+            }
+            $items = array_slice($items, 0, $maxImages);
 
-        // ---- 5. Render PDF ----
-        $pdf = Pdf::loadView('exports.point_data_pdf', [
-            'ward_id' => $ward_id,
-            'items'   => $items,
-        ])
-            ->setPaper('a4', 'portrait')
-            ->set_option('isRemoteEnabled', true)
-            ->set_option('isHtml5ParserEnabled', true)
-            ->set_option('defaultFont', 'DejaVu Sans');
+            Log::info('[PDF] items prepared', ['count' => count($items)]);
 
-        $fileName = "point_data_ward_{$ward_id}.pdf";
+            // ---- 5. Render PDF ----
+            $pdf = Pdf::loadView('exports.point_data_pdf', [
+                'ward_id' => $ward_id,
+                'items'   => $items,
 
-        ob_end_clean();
+                // Backward-compat
+                'gisids'             => array_map(fn($i) => $i['gisid'], $items),
+                'polygonImageBase64' => $imageMap ? reset($imageMap) : null,
+            ])
+                ->setPaper('a4', 'portrait')
+                ->set_option('isRemoteEnabled', true)
+                ->set_option('isHtml5ParserEnabled', true)
+                ->set_option('defaultFont', 'DejaVu Sans');
 
-        return $pdf->download($fileName);
+            $fileName = "point_data_ward_{$ward_id}.pdf";
 
-    } catch (\Throwable $e) {
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
+            Log::info('[PDF] rendering done', ['ward_id' => $ward_id]);
 
-        return response()->json([
-            "success" => false,
-            "message" => $e->getMessage(),
-            "line"    => $e->getLine(),
-            "file"    => $e->getFile(),
-        ], 500);
-    }
-}/**
- * Auto-detect which column in polygon_data_{ward_id} holds the image path.
- */
-private function detectImageColumn(string $table): ?string
-{
-    static $cache = [];
-    if (array_key_exists($table, $cache)) {
-        return $cache[$table];
-    }
-
-    $columns = [];
-    try {
-        $columns = Schema::getColumnListing($table);
-    } catch (\Throwable $e) {
-        $columns = [];
-    }
-
-    if (empty($columns)) {
-        try {
-            $db = DB::connection()->getDatabaseName();
-            $rows = DB::select(
-                "SELECT COLUMN_NAME FROM information_schema.COLUMNS
-                 WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
-                [$db, $table]
-            );
-            $columns = array_map(fn($r) => $r->COLUMN_NAME, $rows);
+            return $pdf->download($fileName);
         } catch (\Throwable $e) {
-            $columns = [];
+            Log::error('[PDF] FAILED', [
+                'ward_id' => $ward_id,
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "line"    => $e->getLine(),
+                "file"    => $e->getFile(),
+            ], 500);
         }
-    }
-
-    if (empty($columns)) {
-        return $cache[$table] = null;
-    }
-
-    $priority = [
-        'image', 'image1', 'images', 'image_path', 'imagepath',
-        'photo', 'snapshot', 'drone_image', 'asset_image', 'img',
-    ];
-
-    $lowerMap = [];
-    foreach ($columns as $c) {
-        $lowerMap[strtolower($c)] = $c;
-    }
-
-    foreach ($priority as $p) {
-        if (isset($lowerMap[$p])) {
-            return $cache[$table] = $lowerMap[$p];
-        }
-    }
-
-    foreach ($lowerMap as $lower => $original) {
-        if (str_contains($lower, 'image')) {
-            return $cache[$table] = $original;
-        }
-    }
-
-    return $cache[$table] = null;
-}
-    /**
-     * Downscale + compress image to JPEG base64 (much faster for PDFs).
-     */
-    private function buildBase64Image(string $absolutePath): ?string
-    {
-        if (!is_file($absolutePath) || !is_readable($absolutePath)) {
-            return null;
-        }
-
-        $mime = $this->safeMimeType($absolutePath);
-
-        if (function_exists('imagecreatefromstring')) {
-            $raw = @file_get_contents($absolutePath);
-            if ($raw === false) {
-                return null;
-            }
-
-            $img = @imagecreatefromstring($raw);
-            if (!$img) {
-                // Not GD-supported → raw base64
-                return 'data:' . $mime . ';base64,' . base64_encode($raw);
-            }
-
-            $w = imagesx($img);
-            $h = imagesy($img);
-            $maxW = 1000;
-
-            if ($w > $maxW) {
-                $newW  = $maxW;
-                $newH  = (int) floor($h * ($maxW / $w));
-                $thumb = imagecreatetruecolor($newW, $newH);
-
-                $white = imagecolorallocate($thumb, 255, 255, 255);
-                imagefill($thumb, 0, 0, $white);
-
-                imagecopyresampled($thumb, $img, 0, 0, 0, 0, $newW, $newH, $w, $h);
-
-                ob_start();
-                imagejpeg($thumb, null, 70);
-                $compressed = ob_get_clean();
-
-                imagedestroy($thumb);
-                imagedestroy($img);
-
-                return 'data:image/jpeg;base64,' . base64_encode($compressed);
-            }
-
-            // Small image — re-encode to JPEG @ 80%
-            ob_start();
-            imagejpeg($img, null, 80);
-            $compressed = ob_get_clean();
-            imagedestroy($img);
-
-            return 'data:image/jpeg;base64,' . base64_encode($compressed);
-        }
-
-        // GD unavailable → raw base64
-        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($absolutePath));
-    }
-    /**
-     * Safely get column list for a dynamic table on any DB driver.
-     */
-    private function getTableColumns(string $table): array
-    {
-        // 1) Try Laravel Schema
-        try {
-            $cols = Schema::getColumnListing($table);
-            if (!empty($cols)) {
-                return $cols;
-            }
-        } catch (\Throwable $e) {
-            // fall through
-        }
-
-        // 2) Fall back to raw DB / information_schema
-        try {
-            $connection = DB::connection()->getDatabaseName();
-
-            $result = DB::select(
-                "SELECT COLUMN_NAME FROM information_schema.COLUMNS
-             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
-                [$connection, $table]
-            );
-
-            if (!empty($result)) {
-                return array_map(fn($r) => $r->COLUMN_NAME, $result);
-            }
-        } catch (\Throwable $e) {
-            // fall through
-        }
-
-        // 3) Last resort — read first row and use its keys
-        try {
-            $first = DB::table($table)->first();
-            if ($first) {
-                return array_keys((array) $first);
-            }
-        } catch (\Throwable $e) {
-            // give up
-        }
-
-        return [];
     }
 
     /**
-     * Safe mime type lookup (no dependency on fileinfo extension).
-     */
-    private function safeMimeType(string $file): string
-    {
-        if (function_exists('mime_content_type')) {
-            $mime = @mime_content_type($file);
-            if ($mime) {
-                return $mime;
-            }
-        }
-
-        if (function_exists('getimagesize')) {
-            $info = @getimagesize($file);
-            if (!empty($info['mime'])) {
-                return $info['mime'];
-            }
-        }
-
-        // Fallback by extension
-        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-        return match ($ext) {
-            'jpg', 'jpeg' => 'image/jpeg',
-            'png'         => 'image/png',
-            'gif'         => 'image/gif',
-            'webp'        => 'image/webp',
-            default       => 'application/octet-stream',
-        };
-    }
-
-    private function resolveAssetPath(string $path): ?string
-    {
-        if (empty($path)) return null;
-
-        $clean = ltrim($path, '/');
-
-        $candidates = [
-            $path,
-            public_path($clean),
-            base_path($clean),
-            base_path('public/' . $clean),
-            storage_path('app/public/' . $clean),
-            storage_path('app/' . $clean),
-            public_path('storage/' . $clean),
-        ];
-
-        foreach ($candidates as $candidate) {
-            if ($candidate && is_file($candidate) && is_readable($candidate)) {
-                return realpath($candidate);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Export ALL Point Data fields as CSV (Excel-compatible) for a ward.
-     * Reads from dynamic table: point_data_{ward_id}
+     * Export ALL Point Data fields as CSV.
      */
     public function exportPointDataExcel($ward_id)
     {
@@ -1579,7 +1272,6 @@ private function detectImageColumn(string $table): ?string
             }
 
             $columns = Schema::getColumnListing($table);
-
             $fileName = "point_data_ward_{$ward_id}.csv";
 
             $headers = [
@@ -1589,17 +1281,13 @@ private function detectImageColumn(string $table): ?string
 
             $callback = function () use ($rows, $columns) {
                 $file = fopen('php://output', 'w');
-
-                // Header row — ALL columns
                 fputcsv($file, $columns);
 
-                // Data rows — ALL columns
                 foreach ($rows as $row) {
                     $rowArray = (array) $row;
                     $line = [];
                     foreach ($columns as $col) {
                         $value = $rowArray[$col] ?? '';
-                        // Flatten arrays/objects to JSON strings for CSV safety
                         if (is_array($value) || is_object($value)) {
                             $value = json_encode($value);
                         }
@@ -1623,8 +1311,7 @@ private function detectImageColumn(string $table): ?string
     }
 
     /**
-     * Export ALL Building (Polygon) Data fields as GeoJSON for a ward.
-     * Reads from dynamic table: polygons_{ward_id}
+     * Export ALL Building (Polygon) Data as GeoJSON.
      */
     public function exportBuildingData($ward_id)
     {
@@ -1648,21 +1335,15 @@ private function detectImageColumn(string $table): ?string
             }
 
             $columns = Schema::getColumnListing($table);
-
             $features = [];
 
             foreach ($rows as $row) {
                 $rowArray = (array) $row;
-
                 $coordinates = json_decode($row->coordinates ?? '[]', true);
-
-                if (!$coordinates) {
-                    continue;
-                }
+                if (!$coordinates) continue;
 
                 $type = $row->type ?? 'Polygon';
 
-                // Handle Polygon — wrap and close ring if needed
                 if ($type === 'Polygon') {
                     if (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
                         $coordinates = [$coordinates];
@@ -1675,12 +1356,9 @@ private function detectImageColumn(string $table): ?string
                     }
                 }
 
-                // Build properties containing EVERY column
                 $properties = [];
                 foreach ($columns as $col) {
-                    if ($col === 'coordinates') {
-                        continue; // skip geometry column in properties
-                    }
+                    if ($col === 'coordinates') continue;
                     $value = $rowArray[$col] ?? null;
                     if (is_string($value) && strlen($value) > 5000) {
                         $value = substr($value, 0, 5000) . '...[truncated]';
@@ -1722,8 +1400,7 @@ private function detectImageColumn(string $table): ?string
     }
 
     /**
-     * Export ALL Building (Polygon) Data fields as CSV (Excel-compatible) for a ward.
-     * Reads from dynamic table: polygons_{ward_id}
+     * Export ALL Building (Polygon) Data as CSV.
      */
     public function exportBuildingDataExcel($ward_id)
     {
@@ -1747,7 +1424,6 @@ private function detectImageColumn(string $table): ?string
             }
 
             $columns = Schema::getColumnListing($table);
-
             $fileName = "building_data_ward_{$ward_id}.csv";
 
             $headers = [
@@ -1757,11 +1433,8 @@ private function detectImageColumn(string $table): ?string
 
             $callback = function () use ($rows, $columns) {
                 $file = fopen('php://output', 'w');
-
-                // Header row — ALL columns
                 fputcsv($file, $columns);
 
-                // Data rows — ALL columns
                 foreach ($rows as $row) {
                     $rowArray = (array) $row;
                     $line = [];
@@ -1789,8 +1462,241 @@ private function detectImageColumn(string $table): ?string
         }
     }
 
+    /* =========================================================
+     *  PRIVATE HELPERS
+     * ========================================================= */
+
     /**
-     * Helper: return first non-null value from a row for any of the given keys.
+     * Detect the image column from a list of column names.
+     */
+    private function detectImageColumnFromList(array $columns): ?string
+    {
+        if (empty($columns)) {
+            return null;
+        }
+
+        $priority = [
+            'image', 'image1', 'images', 'image_path', 'imagepath',
+            'photo', 'snapshot', 'drone_image', 'asset_image', 'img',
+            'building_image', 'buildingimage',
+        ];
+
+        $lowerMap = [];
+        foreach ($columns as $c) {
+            $lowerMap[strtolower($c)] = $c;
+        }
+
+        foreach ($priority as $p) {
+            if (isset($lowerMap[$p])) {
+                return $lowerMap[$p];
+            }
+        }
+
+        foreach ($lowerMap as $lower => $original) {
+            if (str_contains($lower, 'image')) {
+                return $original;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect image column directly from a table name (with caching).
+     */
+    private function detectImageColumn(string $table): ?string
+    {
+        static $cache = [];
+        if (array_key_exists($table, $cache)) {
+            return $cache[$table];
+        }
+
+        $columns = $this->getTableColumns($table);
+        return $cache[$table] = $this->detectImageColumnFromList($columns);
+    }
+
+    /**
+     * Build a base64-encoded JPEG (downscaled) from a local file.
+     */
+    private function buildBase64Image(string $absolutePath): ?string
+    {
+        if (!is_file($absolutePath) || !is_readable($absolutePath)) {
+            return null;
+        }
+
+        $mime = $this->safeMimeType($absolutePath);
+
+        // GD unavailable -> raw base64
+        if (!function_exists('imagecreatefromstring')) {
+            $raw = @file_get_contents($absolutePath);
+            if ($raw === false) return null;
+            return 'data:' . $mime . ';base64,' . base64_encode($raw);
+        }
+
+        $raw = @file_get_contents($absolutePath);
+        if ($raw === false) return null;
+
+        $img = @imagecreatefromstring($raw);
+        if (!$img) {
+            return 'data:' . $mime . ';base64,' . base64_encode($raw);
+        }
+
+        $w = imagesx($img);
+        $h = imagesy($img);
+
+        if ($w <= 0 || $h <= 0) {
+            imagedestroy($img);
+            return 'data:' . $mime . ';base64,' . base64_encode($raw);
+        }
+
+        $maxW = 800;
+
+        if ($w > $maxW) {
+            $newW  = $maxW;
+            $newH  = (int) max(1, floor($h * ($maxW / $w)));
+            $thumb = imagecreatetruecolor($newW, $newH);
+
+            $white = imagecolorallocate($thumb, 255, 255, 255);
+            imagefill($thumb, 0, 0, $white);
+
+            imagecopyresampled($thumb, $img, 0, 0, 0, 0, $newW, $newH, $w, $h);
+
+            $level = ob_get_level();
+            ob_start();
+            imagejpeg($thumb, null, 65);
+            $compressed = ob_get_clean();
+            while (ob_get_level() > $level) {
+                ob_end_clean();
+            }
+
+            imagedestroy($thumb);
+            imagedestroy($img);
+
+            if ($compressed === false || $compressed === '') {
+                return 'data:' . $mime . ';base64,' . base64_encode($raw);
+            }
+
+            return 'data:image/jpeg;base64,' . base64_encode($compressed);
+        }
+
+        $level = ob_get_level();
+        ob_start();
+        imagejpeg($img, null, 75);
+        $compressed = ob_get_clean();
+        while (ob_get_level() > $level) {
+            ob_end_clean();
+        }
+
+        imagedestroy($img);
+
+        if ($compressed === false || $compressed === '') {
+            return 'data:' . $mime . ';base64,' . base64_encode($raw);
+        }
+
+        return 'data:image/jpeg;base64,' . base64_encode($compressed);
+    }
+
+    /**
+     * Safely get column list for a dynamic table.
+     */
+    private function getTableColumns(string $table): array
+    {
+        try {
+            $cols = Schema::getColumnListing($table);
+            if (!empty($cols)) {
+                return $cols;
+            }
+        } catch (\Throwable $e) {
+            // fall through
+        }
+
+        try {
+            $connection = DB::connection()->getDatabaseName();
+
+            $result = DB::select(
+                "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?",
+                [$connection, $table]
+            );
+
+            if (!empty($result)) {
+                return array_map(fn($r) => $r->COLUMN_NAME, $result);
+            }
+        } catch (\Throwable $e) {
+            // fall through
+        }
+
+        try {
+            $first = DB::table($table)->first();
+            if ($first) {
+                return array_keys((array) $first);
+            }
+        } catch (\Throwable $e) {
+            // give up
+        }
+
+        return [];
+    }
+
+    /**
+     * Safe mime type lookup (no dependency on fileinfo extension).
+     */
+    private function safeMimeType(string $file): string
+    {
+        if (function_exists('mime_content_type')) {
+            $mime = @mime_content_type($file);
+            if ($mime) {
+                return $mime;
+            }
+        }
+
+        if (function_exists('getimagesize')) {
+            $info = @getimagesize($file);
+            if (!empty($info['mime'])) {
+                return $info['mime'];
+            }
+        }
+
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        return match ($ext) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png'         => 'image/png',
+            'gif'         => 'image/gif',
+            'webp'        => 'image/webp',
+            default       => 'application/octet-stream',
+        };
+    }
+
+    /**
+     * Resolve a stored image path to an absolute filesystem path.
+     */
+    private function resolveAssetPath(string $path): ?string
+    {
+        if (empty($path)) return null;
+
+        $clean = ltrim($path, '/');
+
+        $candidates = [
+            $path,
+            public_path($clean),
+            base_path($clean),
+            base_path('public/' . $clean),
+            storage_path('app/public/' . $clean),
+            storage_path('app/' . $clean),
+            public_path('storage/' . $clean),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if ($candidate && is_file($candidate) && is_readable($candidate)) {
+                return realpath($candidate);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Return first non-null value from a row for any of the given keys.
      */
     protected function firstExisting(array $row, array $keys)
     {
