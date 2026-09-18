@@ -11,12 +11,10 @@ class WardService
 {
     // ─────────────────────────────────────────────────────────────
     //  PUBLIC: Create all ward-specific tables
-    //  Returns an array of the actual table name strings.
     // ─────────────────────────────────────────────────────────────
 
     public function createWardTables($wardId): array
     {
-        // Don't use transactions here - table creation should be separate
         return [
             'polygon'      => $this->createPolygonTable($wardId),
             'line'         => $this->createLineTable($wardId),
@@ -34,7 +32,7 @@ class WardService
         string $polygonTable,
         string $pointTable,
         $file,
-        $useTransaction = true  // Add parameter to control transaction
+        $useTransaction = true
     ): array {
         set_time_limit(600);
 
@@ -50,7 +48,6 @@ class WardService
                 throw new \Exception('GeoJSON missing or empty "features" key.');
             }
 
-            // Only start transaction if not already in one
             if ($useTransaction && DB::transactionLevel() === 0) {
                 DB::beginTransaction();
                 $startedTransaction = true;
@@ -59,6 +56,7 @@ class WardService
             }
 
             foreach ($geoData['features'] as $feature) {
+                // ✅ Geometry-ல் இருந்து type-ஐ எடுங்கள் (properties-ல் இருந்து அல்ல)
                 $geometryType = $feature['geometry']['type']        ?? null;
                 $coords       = $feature['geometry']['coordinates'] ?? null;
 
@@ -66,29 +64,25 @@ class WardService
                     continue;
                 }
 
-                // Support common GIS_ID property key variations
-                $gisid = $feature['properties']['GIS_ID']
-                    ?? $feature['properties']['gisid']
-                    ?? $feature['properties']['GisId']
-                    ?? $feature['properties']['GISID'] ?? $this->checkGISID($polygonTable)
-                    ?? uniqid('GIS_');
-
-                // Only flatten / insert polygons; skip points / lines
                 if (!in_array($geometryType, ['Polygon', 'MultiPolygon'])) {
                     continue;
                 }
 
-                $flattened = $this->flattenCoordinates($geometryType, $coords);
+                // GIS ID variations
+                $gisid = $feature['properties']['GIS_ID']
+                    ?? $feature['properties']['gisid']
+                    ?? $feature['properties']['GisId']
+                    ?? $feature['properties']['GISID']
+                    ?? $this->checkGISID($polygonTable)
+                    ?? uniqid('GIS_');
 
-                if (empty($flattened)) {
-                    continue;
-                }
+                // ✅ Full coordinates-ஐ area calculation-க்கு pass செய்யுங்கள்
+                $sqfeet = $this->calculatePolygonAreaInSquareFeet($coords);
 
-                $sqfeet = $this->calculatePolygonAreaInSquareFeet($flattened, $geometryType);
-
+                // ✅ Full coordinates-ஐ store செய்யுங்கள் (flatten செய்யாதீர்கள்!)
                 $polygonData = [
-                    'type'        => 'Polygon',
-                    'coordinates' => json_encode($flattened, JSON_UNESCAPED_UNICODE),
+                    'type'        => $geometryType,  // "Polygon" அல்லது "MultiPolygon"
+                    'coordinates' => json_encode($coords, JSON_UNESCAPED_UNICODE),
                     'sqfeet'      => (string) $sqfeet,
                     'updated_at'  => now(),
                 ];
@@ -107,8 +101,9 @@ class WardService
                     );
                 }
 
-                // Derive a centroid point and upsert into the points table
-                $midpoint = $this->calculateMidpoint($flattened);
+                // Midpoint-க்கு மட்டும் representative ring use செய்யுங்கள்
+                $representativeRing = $this->flattenCoordinates($geometryType, $coords);
+                $midpoint = $this->calculateMidpoint($representativeRing);
 
                 if ($midpoint) {
                     $pointData = [
@@ -133,7 +128,6 @@ class WardService
                 }
             }
 
-            // Only commit if we started the transaction
             if ($startedTransaction) {
                 DB::commit();
             }
@@ -143,7 +137,6 @@ class WardService
                 'message' => 'Polygon and Point data updated successfully.',
             ];
         } catch (\Exception $e) {
-            // Only rollback if we started the transaction
             if (isset($startedTransaction) && $startedTransaction) {
                 DB::rollBack();
             }
@@ -177,8 +170,7 @@ class WardService
         }
 
         $newGisNumber = $maxNumber + 1;
-        $gisid = $prefix . $newGisNumber;
-        return $gisid;
+        return $prefix . $newGisNumber;
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -204,7 +196,6 @@ class WardService
                 throw new \Exception('GeoJSON missing or empty "features" key.');
             }
 
-            // Only start transaction if not already in one
             if ($useTransaction && DB::transactionLevel() === 0) {
                 DB::beginTransaction();
                 $startedTransaction = true;
@@ -234,17 +225,17 @@ class WardService
                     ?? $feature['properties']['ROAD_NAME']
                     ?? $feature['properties']['RoadName']
                     ?? null;
+
                 $pincode = $feature['properties']['pincode']
-                    ?? $feature['properties']['pincode']
-                    ?? $feature['properties']['pincode']
+                    ?? $feature['properties']['PINCODE']
+                    ?? $feature['properties']['Pincode']
                     ?? null;
 
-
                 $lineData = [
-                    'type'        => 'LineString',
+                    'type'        => $geometryType,
                     'coordinates' => json_encode($coords, JSON_UNESCAPED_UNICODE),
                     'road_name'   => $roadName,
-                    'pincode'   => $pincode,
+                    'pincode'     => $pincode,
                     'updated_at'  => now(),
                 ];
 
@@ -263,7 +254,6 @@ class WardService
                 }
             }
 
-            // Only commit if we started the transaction
             if ($startedTransaction) {
                 DB::commit();
             }
@@ -273,7 +263,6 @@ class WardService
                 'message' => 'Line data updated successfully.',
             ];
         } catch (\Exception $e) {
-            // Only rollback if we started the transaction
             if (isset($startedTransaction) && $startedTransaction) {
                 DB::rollBack();
             }
@@ -310,10 +299,6 @@ class WardService
         return true;
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  PUBLIC: Get all table name strings for a ward
-    // ─────────────────────────────────────────────────────────────
-
     public function getWardTables($wardId): array
     {
         return [
@@ -324,10 +309,6 @@ class WardService
             'point_data'   => 'point_data_'   . $wardId,
         ];
     }
-
-    // ─────────────────────────────────────────────────────────────
-    //  PUBLIC: Check if all ward tables exist
-    // ─────────────────────────────────────────────────────────────
 
     public function checkWardTablesExist($wardId): array
     {
@@ -340,13 +321,13 @@ class WardService
         }
 
         return [
-            'all_exist'     => empty($missingTables),
+            'all_exist'      => empty($missingTables),
             'missing_tables' => $missingTables,
         ];
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  PRIVATE: Create individual tables (each returns table name)
+    //  PRIVATE: Create individual tables
     // ─────────────────────────────────────────────────────────────
 
     private function createPolygonTable($wardId): string
@@ -389,98 +370,7 @@ class WardService
 
         return $table;
     }
-    public function exportAllRoads($ward_id)
-    {
-        try {
-            $lineTable = "lines_" . $ward_id;
 
-            // Check if table exists
-            if (!Schema::hasTable($lineTable)) {
-                return response()->json([
-                    "success" => false,
-                    "message" => "Line table not found for ward #{$ward_id}"
-                ], 404);
-            }
-
-            $allLines = DB::table($lineTable)->get();
-
-            if ($allLines->isEmpty()) {
-                return response()->json([
-                    "success" => false,
-                    "message" => "No lines found for ward #{$ward_id}"
-                ], 404);
-            }
-
-            $features = [];
-
-            foreach ($allLines as $line) {
-                $coordinates = json_decode($line->coordinates, true);
-
-                if (!$coordinates) {
-                    continue;
-                }
-
-                // Convert to valid GeoJSON LineString format if needed
-                if ($line->type == 'LineString') {
-                    // If coordinates are stored as [[x,y],[x,y],...] (already correct format)
-                    // No conversion needed for LineString, but we ensure it's a valid array
-                    if (!isset($coordinates[0][0]) || !is_numeric($coordinates[0][0])) {
-                        // If stored in a different format, attempt to fix
-                        if (isset($coordinates[0]) && is_array($coordinates[0]) && isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
-                            // Already correct
-                        } else {
-                            // Try to convert if it's a flat array
-                            continue;
-                        }
-                    }
-                }
-
-                $properties = [
-                    "gisid" => $line->gisid,
-                    "type" => $line->type ?? 'LineString',
-                ];
-
-                // Add optional fields if they exist
-                if (isset($line->road_name) && !is_null($line->road_name)) {
-                    $properties["road_name"] = $line->road_name;
-                }
-
-                if (isset($line->pincode) && !is_null($line->pincode)) {
-                    $properties["pincode"] = $line->pincode;
-                }
-
-                $features[] = [
-                    "type" => "Feature",
-                    "properties" => $properties,
-                    "geometry" => [
-                        "type" => $line->type ?? 'LineString',
-                        "coordinates" => $coordinates
-                    ]
-                ];
-            }
-
-            $geojson = [
-                "type" => "FeatureCollection",
-                "features" => $features
-            ];
-
-            $fileName = "all_lines_ward_{$ward_id}.geojson";
-
-            return response()->streamDownload(function () use ($geojson) {
-                echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-            }, $fileName, [
-                'Content-Type' => 'application/geo+json',
-                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-            ]);
-        } catch (\Throwable $e) {
-            return response()->json([
-                "success" => false,
-                "message" => $e->getMessage(),
-                "line"    => $e->getLine(),
-                "file"    => $e->getFile(),
-            ], 500);
-        }
-    }
     private function createPointTable($wardId): string
     {
         $table = 'points_' . $wardId;
@@ -595,10 +485,93 @@ class WardService
         return $table;
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  PUBLIC: Export all roads for a ward
+    // ─────────────────────────────────────────────────────────────
+
+    public function exportAllRoads($ward_id)
+    {
+        try {
+            $lineTable = "lines_" . $ward_id;
+
+            if (!Schema::hasTable($lineTable)) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Line table not found for ward #{$ward_id}"
+                ], 404);
+            }
+
+            $allLines = DB::table($lineTable)->get();
+
+            if ($allLines->isEmpty()) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "No lines found for ward #{$ward_id}"
+                ], 404);
+            }
+
+            $features = [];
+
+            foreach ($allLines as $line) {
+                $coordinates = json_decode($line->coordinates, true);
+
+                if (!$coordinates) {
+                    continue;
+                }
+
+                $properties = [
+                    "gisid" => $line->gisid,
+                    "type"  => $line->type ?? 'LineString',
+                ];
+
+                if (isset($line->road_name) && !is_null($line->road_name)) {
+                    $properties["road_name"] = $line->road_name;
+                }
+
+                if (isset($line->pincode) && !is_null($line->pincode)) {
+                    $properties["pincode"] = $line->pincode;
+                }
+
+                $features[] = [
+                    "type" => "Feature",
+                    "properties" => $properties,
+                    "geometry" => [
+                        "type" => $line->type ?? 'LineString',
+                        "coordinates" => $coordinates
+                    ]
+                ];
+            }
+
+            $geojson = [
+                "type" => "FeatureCollection",
+                "features" => $features
+            ];
+
+            $fileName = "all_lines_ward_{$ward_id}.geojson";
+
+            return response()->streamDownload(function () use ($geojson) {
+                echo json_encode($geojson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            }, $fileName, [
+                'Content-Type' => 'application/geo+json',
+                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                "success" => false,
+                "message" => $e->getMessage(),
+                "line"    => $e->getLine(),
+                "file"    => $e->getFile(),
+            ], 500);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  PUBLIC: Store single polygon
+    // ─────────────────────────────────────────────────────────────
+
     public function storeSinglePolygon($data, $useTransaction = true)
     {
         try {
-            // Only start transaction if requested and not already in one
             if ($useTransaction && DB::transactionLevel() === 0) {
                 DB::beginTransaction();
                 $startedTransaction = true;
@@ -606,55 +579,55 @@ class WardService
                 $startedTransaction = false;
             }
 
-            $tableName = 'polygons_' . $data['ward_id'];
-            $pointTableName = 'points_' . $data['ward_id'];
+            $tableName      = 'polygons_' . $data['ward_id'];
+            $pointTableName = 'points_'   . $data['ward_id'];
 
-            $feature = json_decode($data['feature'], true);
-            $sqfeet = $this->calculatePolygonAreaInSquareFeet($feature, $data['layer_type']);
+            $feature = is_string($data['feature'])
+                ? json_decode($data['feature'], true)
+                : $data['feature'];
 
-            $midpoint = $this->calculateMidpoint($feature[0]);
+            // ✅ Full coordinates-ஐ area calculation-க்கு pass செய்யுங்கள்
+            $sqfeet = $this->calculatePolygonAreaInSquareFeet($feature);
 
-            // Generate GIS ID
+            // Representative ring for midpoint
+            $layerType = $data['layer_type'] ?? 'Polygon';
+            $representativeRing = $this->flattenCoordinates($layerType, $feature);
+            $midpoint = $this->calculateMidpoint($representativeRing);
+
             $gisid = $this->checkGISID($tableName) ?? uniqid('GIS_');
 
-            // Store Polygon
+            // ✅ Full coordinates store
             DB::table($tableName)->insert([
                 'gisid'       => $gisid,
-                'type'  => $data['layer_type'],
-                'coordinates' => json_encode($feature[0]),
-                'sqfeet'      => $sqfeet,
+                'type'        => $layerType,
+                'coordinates' => json_encode($feature, JSON_UNESCAPED_UNICODE),
+                'sqfeet'      => (string) $sqfeet,
                 'created_at'  => now(),
                 'updated_at'  => now(),
             ]);
 
-            // Store Mid Point (only if midpoint exists)
             if ($midpoint) {
                 DB::table($pointTableName)->insert([
                     'gisid'       => $gisid,
-                    'type'  => 'point',
+                    'type'        => 'point',
                     'coordinates' => json_encode($midpoint),
                     'created_at'  => now(),
                     'updated_at'  => now(),
                 ]);
             }
 
-            // Only commit if we started the transaction
             if ($startedTransaction) {
                 DB::commit();
             }
 
-            $points = DB::table($pointTableName)->get();
-            $polygons =  DB::table($tableName)->get();
-
             return [
-                'status'  => true,
-                'gisid'   => $gisid,
-                'message' => 'Polygon stored successfully',
-                'polygons' => $polygons,
-                'points' => $points
+                'status'   => true,
+                'gisid'    => $gisid,
+                'message'  => 'Polygon stored successfully',
+                'polygons' => DB::table($tableName)->get(),
+                'points'   => DB::table($pointTableName)->get(),
             ];
         } catch (\Exception $e) {
-            // Only rollback if we started the transaction
             if (isset($startedTransaction) && $startedTransaction) {
                 DB::rollBack();
             }
@@ -668,10 +641,13 @@ class WardService
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  PUBLIC: Store single line
+    // ─────────────────────────────────────────────────────────────
+
     public function storeSingleLine($tableName, $file, $useTransaction = true)
     {
         try {
-            // Only start transaction if requested and not already in one
             if ($useTransaction && DB::transactionLevel() === 0) {
                 DB::beginTransaction();
                 $startedTransaction = true;
@@ -679,12 +655,9 @@ class WardService
                 $startedTransaction = false;
             }
 
-            // ─── READ AND PARSE GEOJSON FILE ───
             if (is_string($file)) {
-                // If file is a path string
                 $geoJsonContent = file_get_contents($file);
             } elseif (is_object($file) && method_exists($file, 'getRealPath')) {
-                // If file is uploaded file object (Illuminate\Http\UploadedFile)
                 $geoJsonContent = file_get_contents($file->getRealPath());
             } else {
                 throw new \Exception('Invalid file parameter');
@@ -696,21 +669,17 @@ class WardService
                 throw new \Exception('Invalid GeoJSON file format');
             }
 
-            // Check if table exists, if not create it
             if (!Schema::hasTable($tableName)) {
-                // Extract ward_id from table name (lines_1 -> 1)
                 $wardId = (int) str_replace('lines_', '', $tableName);
                 $this->createLineTable($wardId);
             }
 
-            // ─── PROCESS EACH FEATURE ───
             $processedCount = 0;
             $updatedCount = 0;
             $insertedCount = 0;
             $skippedCount = 0;
             $errors = [];
 
-            // Get features from GeoJSON
             if ($geoJson['type'] === 'FeatureCollection') {
                 $features = $geoJson['features'];
             } elseif ($geoJson['type'] === 'Feature') {
@@ -725,7 +694,6 @@ class WardService
 
             foreach ($features as $index => $feature) {
                 try {
-                    // Validate feature
                     if (!isset($feature['geometry']) || !isset($feature['geometry']['type'])) {
                         $skippedCount++;
                         continue;
@@ -733,25 +701,21 @@ class WardService
 
                     $geometryType = $feature['geometry']['type'];
 
-                    // Only process LineString and MultiLineString
                     if ($geometryType !== 'LineString' && $geometryType !== 'MultiLineString') {
                         $skippedCount++;
                         continue;
                     }
 
-                    // Get properties
                     $properties = $feature['properties'] ?? [];
 
-                    // Get GIS ID from properties or generate new
-                    $gisid = $properties['gisid'] ??
-                        $properties['GIS_ID'] ??
-                        $properties['id'] ??
-                        $properties['ID'] ??
-                        null;
+                    $gisid = $properties['gisid']
+                        ?? $properties['GIS_ID']
+                        ?? $properties['id']
+                        ?? $properties['ID']
+                        ?? null;
 
                     $isUpdate = false;
 
-                    // If GIS ID exists, check if it exists in database
                     if ($gisid) {
                         $existing = DB::table($tableName)->where('gisid', $gisid)->first();
                         if ($existing) {
@@ -759,20 +723,17 @@ class WardService
                         }
                     }
 
-                    // Prepare coordinates
                     $coordinates = $feature['geometry']['coordinates'];
 
-                    // Prepare road_name - check various possible field names
-                    $roadName = $properties['road_name'] ??
-                        $properties['name'] ??
-                        $properties['ROAD_NAME'] ??
-                        $properties['road'] ??
-                        $properties['RoadName'] ??
-                        $properties['ROAD'] ??
-                        null;
+                    $roadName = $properties['road_name']
+                        ?? $properties['name']
+                        ?? $properties['ROAD_NAME']
+                        ?? $properties['road']
+                        ?? $properties['RoadName']
+                        ?? $properties['ROAD']
+                        ?? null;
 
                     if ($isUpdate) {
-                        // ─── UPDATE EXISTING LINE ───
                         DB::table($tableName)
                             ->where('gisid', $gisid)
                             ->update([
@@ -784,8 +745,6 @@ class WardService
 
                         $updatedCount++;
                     } else {
-                        // ─── INSERT NEW LINE ───
-                        // Generate new GIS ID if not provided
                         if (!$gisid) {
                             $gisid = $this->generateLineGISID($tableName);
                         }
@@ -809,27 +768,22 @@ class WardService
                 }
             }
 
-            // Only commit if we started the transaction
             if ($startedTransaction) {
                 DB::commit();
             }
 
-            // Get all lines for return
-            $lines = DB::table($tableName)->get();
-
             return [
-                'status'         => true,
-                'message'        => "Processed $processedCount features successfully",
-                'processed'      => $processedCount,
-                'inserted'       => $insertedCount,
-                'updated'        => $updatedCount,
-                'skipped'        => $skippedCount,
-                'errors'         => $errors,
-                'lines'          => $lines,
-                'table'          => $tableName
+                'status'    => true,
+                'message'   => "Processed $processedCount features successfully",
+                'processed' => $processedCount,
+                'inserted'  => $insertedCount,
+                'updated'   => $updatedCount,
+                'skipped'   => $skippedCount,
+                'errors'    => $errors,
+                'lines'     => DB::table($tableName)->get(),
+                'table'     => $tableName
             ];
         } catch (\Exception $e) {
-            // Only rollback if we started the transaction
             if (isset($startedTransaction) && $startedTransaction) {
                 DB::rollBack();
             }
@@ -842,10 +796,10 @@ class WardService
             ];
         }
     }
+
     public function createSingleLine(array $data)
     {
         try {
-
             $wardId      = $data['ward_id'];
             $layerType   = $data['layer_type'];
             $coordinates = $data['feature'];
@@ -858,12 +812,10 @@ class WardService
 
             $gisid = $this->generateLineGISID($tableName);
 
-            // If feature comes as JSON string, convert to array
             if (is_string($coordinates)) {
                 $coordinates = json_decode($coordinates, true);
             }
 
-            // Wrap one more level
             $coordinates = [$coordinates];
 
             DB::table($tableName)->insert([
@@ -875,16 +827,13 @@ class WardService
                 'updated_at'  => now(),
             ]);
 
-            $lines = DB::table($tableName)->get();
-
             return [
                 'status'  => true,
                 'gisid'   => $gisid,
-                'message' => 'Polygon stored successfully',
-                'lines' => $lines
+                'message' => 'Line stored successfully',
+                'lines'   => DB::table($tableName)->get()
             ];
         } catch (\Exception $e) {
-
             Log::error($e->getMessage());
 
             return [
@@ -893,9 +842,7 @@ class WardService
             ];
         }
     }
-    /**
-     * Generate unique GIS ID for line
-     */
+
     private function generateLineGISID($tableName): string
     {
         $prefix = 'LINE_';
@@ -903,7 +850,6 @@ class WardService
         $random = substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6);
         $gisid = $prefix . $timestamp . '_' . $random;
 
-        // Check if exists
         $exists = DB::table($tableName)->where('gisid', $gisid)->exists();
 
         if ($exists) {
@@ -919,17 +865,16 @@ class WardService
 
     public function storeSplitPolygon(array $data, $useTransaction = true): array
     {
+        $startedTransaction = false;
+
         try {
-
-            $startedTransaction = false;
-
             if ($useTransaction && DB::transactionLevel() === 0) {
                 DB::beginTransaction();
                 $startedTransaction = true;
             }
 
             $tableName      = 'polygons_' . $data['ward_id'];
-            $pointTableName = 'points_' . $data['ward_id'];
+            $pointTableName = 'points_'   . $data['ward_id'];
 
             $features = is_string($data['feature'])
                 ? json_decode($data['feature'], true)
@@ -950,7 +895,6 @@ class WardService
             }
 
             foreach ($features as $index => $coords) {
-
                 // Remove one extra array level if exists
                 if (
                     isset($coords[0]) &&
@@ -961,16 +905,16 @@ class WardService
                     $coords = $coords[0];
                 }
 
-                $sqfeet   = $this->calculatePolygonAreaInSquareFeet([$coords]);
+                // ✅ Full ring coordinates for area
+                $sqfeet = $this->calculatePolygonAreaInSquareFeet([$coords]);
                 $midpoint = $this->calculateMidpoint($coords);
 
                 if ($index == 0) {
-
                     DB::table($tableName)
                         ->where('gisid', $originalGisid)
                         ->update([
                             'coordinates' => json_encode($coords),
-                            'sqfeet'      => $sqfeet,
+                            'sqfeet'      => (string) $sqfeet,
                             'updated_at'  => now(),
                         ]);
 
@@ -984,14 +928,13 @@ class WardService
                         ]
                     );
                 } else {
-
                     $newGisid = $this->checkGISID($tableName);
 
                     DB::table($tableName)->insert([
                         'gisid'       => $newGisid,
                         'type'        => $originalPolygon->type,
                         'coordinates' => json_encode($coords),
-                        'sqfeet'      => $sqfeet,
+                        'sqfeet'      => (string) $sqfeet,
                         'created_at'  => now(),
                         'updated_at'  => now(),
                     ]);
@@ -1017,7 +960,6 @@ class WardService
                 'points'   => DB::table($pointTableName)->get(),
             ];
         } catch (\Exception $e) {
-
             if ($startedTransaction) {
                 DB::rollBack();
             }
@@ -1031,10 +973,13 @@ class WardService
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  PUBLIC: Store / Update polygon
+    // ─────────────────────────────────────────────────────────────
+
     public function storeUpdatePolygon($data, $useTransaction = true)
     {
         try {
-            // Only start transaction if requested and not already in one
             if ($useTransaction && DB::transactionLevel() === 0) {
                 DB::beginTransaction();
                 $startedTransaction = true;
@@ -1042,46 +987,50 @@ class WardService
                 $startedTransaction = false;
             }
 
-            $tableName = 'polygons_' . $data['ward_id'];
-            $pointTableName = 'points_' . $data['ward_id'];
+            $tableName      = 'polygons_' . $data['ward_id'];
+            $pointTableName = 'points_'   . $data['ward_id'];
 
-            $feature = json_decode($data['feature'], true);
+            $feature = is_string($data['feature'])
+                ? json_decode($data['feature'], true)
+                : $data['feature'];
+
+            $layerType = $data['layer_type'] ?? 'Polygon';
+
+            // ✅ Full coordinates for area
             $sqfeet = $this->calculatePolygonAreaInSquareFeet($feature);
 
-            $midpoint = $this->calculateMidpoint($feature[0]);
+            // Representative ring for midpoint
+            $representativeRing = $this->flattenCoordinates($layerType, $feature);
+            $midpoint = $this->calculateMidpoint($representativeRing);
 
-            // Generate GIS ID
             $gisid = $data['gisid'];
 
-            // Check if polygon already exists
             $existingPolygon = DB::table($tableName)->where('gisid', $gisid)->first();
 
             if ($existingPolygon) {
-                // Update existing polygon
                 DB::table($tableName)
                     ->where('gisid', $gisid)
                     ->update([
-                        'type'  => $data['layer_type'],
-                        'coordinates' => json_encode($feature[0]),
-                        'sqfeet'      => $sqfeet,
+                        'type'        => $layerType,
+                        'coordinates' => json_encode($feature, JSON_UNESCAPED_UNICODE),
+                        'sqfeet'      => (string) $sqfeet,
                         'updated_at'  => now(),
                     ]);
 
-                // Update or insert midpoint
                 $existingPoint = DB::table($pointTableName)->where('gisid', $gisid)->first();
                 if ($midpoint) {
                     if ($existingPoint) {
                         DB::table($pointTableName)
                             ->where('gisid', $gisid)
                             ->update([
-                                'type'  => 'point',
+                                'type'        => 'point',
                                 'coordinates' => json_encode($midpoint),
                                 'updated_at'  => now(),
                             ]);
                     } else {
                         DB::table($pointTableName)->insert([
                             'gisid'       => $gisid,
-                            'type'  => 'point',
+                            'type'        => 'point',
                             'coordinates' => json_encode($midpoint),
                             'created_at'  => now(),
                             'updated_at'  => now(),
@@ -1089,21 +1038,19 @@ class WardService
                     }
                 }
             } else {
-                // Insert new polygon
                 DB::table($tableName)->insert([
                     'gisid'       => $gisid,
-                    'type'  => $data['layer_type'],
-                    'coordinates' => json_encode($feature[0]),
-                    'sqfeet'      => $sqfeet,
+                    'type'        => $layerType,
+                    'coordinates' => json_encode($feature, JSON_UNESCAPED_UNICODE),
+                    'sqfeet'      => (string) $sqfeet,
                     'created_at'  => now(),
                     'updated_at'  => now(),
                 ]);
 
-                // Insert midpoint
                 if ($midpoint) {
                     DB::table($pointTableName)->insert([
                         'gisid'       => $gisid,
-                        'type'  => 'point',
+                        'type'        => 'point',
                         'coordinates' => json_encode($midpoint),
                         'created_at'  => now(),
                         'updated_at'  => now(),
@@ -1111,24 +1058,18 @@ class WardService
                 }
             }
 
-            // Only commit if we started the transaction
             if ($startedTransaction) {
                 DB::commit();
             }
 
-            // Fetch updated data
-            $points = DB::table($pointTableName)->get();
-            $polygons = DB::table($tableName)->get();
-
             return [
-                'status'  => true,
-                'gisid'   => $gisid,
-                'message' => 'Polygon stored successfully',
-                'polygons' => $polygons,
-                'points' => $points
+                'status'   => true,
+                'gisid'    => $gisid,
+                'message'  => 'Polygon stored successfully',
+                'polygons' => DB::table($tableName)->get(),
+                'points'   => DB::table($pointTableName)->get()
             ];
         } catch (\Exception $e) {
-            // Only rollback if we started the transaction
             if (isset($startedTransaction) && $startedTransaction) {
                 DB::rollBack();
             }
@@ -1142,23 +1083,26 @@ class WardService
         }
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  PUBLIC: Delete polygon / line
+    // ─────────────────────────────────────────────────────────────
+
     public function deletePolygon(array $data): array
     {
         try {
             $wardId = $data['ward_id'];
             $gisid  = $data['gisid'];
 
-            $polygonTable   = 'polygons_' . $wardId;
-            $pointTable     = 'points_' . $wardId;
-            $lineTable      = 'lines_' . $wardId;
-            $pointDataTable = 'point_data_' . $wardId;
+            $polygonTable     = 'polygons_'     . $wardId;
+            $pointTable       = 'points_'       . $wardId;
+            $lineTable        = 'lines_'        . $wardId;
+            $pointDataTable   = 'point_data_'   . $wardId;
             $polygonDataTable = 'polygon_data_' . $wardId;
 
             if (!Schema::hasTable($polygonTable)) {
                 throw new \Exception("Polygon table not found: {$polygonTable}");
             }
 
-            // Check if polygon exists
             $exists = DB::table($polygonTable)->where('gisid', $gisid)->exists();
             if (!$exists) {
                 throw new \Exception("Polygon not found with GIS ID: {$gisid}");
@@ -1166,26 +1110,22 @@ class WardService
 
             DB::beginTransaction();
 
-            // Delete polygon + related point
             DB::table($polygonTable)->where('gisid', $gisid)->delete();
 
             if (Schema::hasTable($pointTable)) {
                 DB::table($pointTable)->where('gisid', $gisid)->delete();
             }
 
-            // Delete related point_data (optional but recommended)
             if (Schema::hasTable($pointDataTable)) {
                 DB::table($pointDataTable)->where('point_gisid', $gisid)->delete();
             }
 
-            // Delete related polygon_data (optional)
             if (Schema::hasTable($polygonDataTable)) {
                 DB::table($polygonDataTable)->where('gisid', $gisid)->delete();
             }
 
             DB::commit();
 
-            // ✅ Return refreshed arrays
             $allPolygons = DB::table($polygonTable)->get()->toArray();
             $allPoints   = Schema::hasTable($pointTable)
                 ? DB::table($pointTable)->get()->toArray()
@@ -1224,16 +1164,17 @@ class WardService
             ];
         }
     }
+
     public function deleteLine(array $data): array
     {
         try {
             $wardId = $data['ward_id'];
             $gisid  = $data['gisid'];
 
-            $lineTable    = 'lines_' . $wardId;
-            $polygonTable = 'polygons_' . $wardId;
-            $pointTable   = 'points_' . $wardId;
-            $pointDataTable = 'point_data_' . $wardId;
+            $lineTable        = 'lines_'        . $wardId;
+            $polygonTable     = 'polygons_'     . $wardId;
+            $pointTable       = 'points_'       . $wardId;
+            $pointDataTable   = 'point_data_'   . $wardId;
             $polygonDataTable = 'polygon_data_' . $wardId;
 
             if (!Schema::hasTable($lineTable)) {
@@ -1279,134 +1220,240 @@ class WardService
             ];
         }
     }
+
     // ─────────────────────────────────────────────────────────────
-    //  PRIVATE: Geometry helpers (unchanged)
+    //  PRIVATE: Flatten coordinates to a single representative ring
+    //  (used ONLY for midpoint calculation, NOT for area or storage)
     // ─────────────────────────────────────────────────────────────
 
-    /**
-     * Normalise Polygon / MultiPolygon coordinates into a single
-     * flat outer ring (array of [lng, lat] pairs).
-     *
-     * Polygon coords:      [ [ [lng,lat], ... ] ]
-     * MultiPolygon coords: [ [ [ [lng,lat], ... ] ] ]
-     */
     private function flattenCoordinates(string $geometryType, array $coords): array
     {
         if ($geometryType === 'Polygon') {
-            // coords[0] is the outer ring
+            // coords = [ outerRing, hole1, hole2, ... ]
             return $coords[0] ?? [];
         }
 
         if ($geometryType === 'MultiPolygon') {
-            return $coords;
+            // Take the largest polygon's outer ring (by vertex count)
+            $largest = [];
+            foreach ($coords as $polygon) {
+                $outerRing = $polygon[0] ?? [];
+                if (is_array($outerRing) && count($outerRing) > count($largest)) {
+                    $largest = $outerRing;
+                }
+            }
+            return $largest;
         }
 
         return [];
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  PRIVATE: Area calculation (FIXED — sums ALL polygons,
+    //           subtracts holes)
+    // ─────────────────────────────────────────────────────────────
+
     /**
-     * Shoelace formula → area in square feet.
-     * Coordinates are assumed to be geographic [lng, lat].
-     * We convert degrees → metres using an equirectangular approximation
-     * then metres² → ft².
+     * Calculate total area (in square feet) for ANY polygon structure.
      *
-     * @param  array  $ring          Outer ring: [ [lng, lat], ... ]
-     * @param  string $geometryType  'Polygon' | 'MultiPolygon'
+     * Accepts:
+     *   - Polygon:       [ ring1, ring2, ... ]
+     *   - MultiPolygon:  [ polygon1, polygon2, ... ]
+     *   - Flattened:     [ [x,y], [x,y], ... ]
+     *
+     * Sums all outer rings and subtracts all inner rings (holes).
+     * Supports both EPSG:3857 (Web Mercator) and WGS84 (degrees).
      */
-    private function calculatePolygonAreaInSquareFeet($coordinates)
+    private function calculatePolygonAreaInSquareFeet($coordinates): float
     {
         try {
             if (!is_array($coordinates) || empty($coordinates)) {
                 Log::warning("Invalid coordinates array");
-                return 0;
+                return 0.0;
             }
 
-            // Extract the outer ring (first ring of first polygon)
-            $ring = null;
+            $polygons = $this->normalizeToPolygonList($coordinates);
 
-            // Check structure and extract appropriate ring
-            if (isset($coordinates[0]) && is_array($coordinates[0])) {
-                // Check if it's a Polygon (array of rings)
-                if (isset($coordinates[0][0]) && is_array($coordinates[0][0])) {
-                    // Polygon structure: [[[x,y],[x,y]], [[x,y],[x,y]]]
-                    $ring = $coordinates[0]; // First ring (outer boundary)
+            if (empty($polygons)) {
+                Log::warning("Could not normalize coordinates to polygon list");
+                return 0.0;
+            }
+
+            $totalAreaInSqMeters = 0.0;
+
+            foreach ($polygons as $polygon) {
+                if (!is_array($polygon) || empty($polygon)) {
+                    continue;
                 }
-                // Check if it's a MultiPolygon
-                elseif (isset($coordinates[0][0][0]) && is_array($coordinates[0][0][0])) {
-                    // MultiPolygon structure: [[[[x,y],[x,y]]], [[[x,y],[x,y]]]]
-                    $ring = $coordinates[0][0]; // First polygon's first ring
+
+                // polygon = [ outerRing, hole1, hole2, ... ]
+                $outerRing = $polygon[0] ?? null;
+
+                if (!$outerRing || !is_array($outerRing) || count($outerRing) < 3) {
+                    continue;
                 }
-                // Check if already flattened points
-                elseif (isset($coordinates[0][0]) && is_numeric($coordinates[0][0])) {
-                    // Flattened structure: [[x,y],[x,y]]
-                    $ring = $coordinates;
-                } else {
-                    Log::warning("Unsupported coordinate structure");
-                    return 0;
+
+                if (!$this->isValidRing($outerRing)) {
+                    Log::warning("Invalid outer ring in polygon");
+                    continue;
                 }
-            } else {
-                Log::warning("Invalid coordinate structure - missing first level array");
-                return 0;
-            }
 
-            if (!$ring || !is_array($ring) || count($ring) < 3) {
-                Log::warning("Invalid polygon ring - need at least 3 points");
-                return 0;
-            }
+                // Add outer ring area
+                $totalAreaInSqMeters += $this->calculateRingAreaInMeters($outerRing);
 
-            // Validate ring points
-            foreach ($ring as $point) {
-                if (!isset($point[0], $point[1]) || !is_numeric($point[0]) || !is_numeric($point[1])) {
-                    Log::warning("Invalid point in ring: " . json_encode($point));
-                    return 0;
+                // Subtract holes
+                for ($i = 1; $i < count($polygon); $i++) {
+                    $hole = $polygon[$i];
+
+                    if (!$hole || !is_array($hole) || count($hole) < 3) {
+                        continue;
+                    }
+
+                    if (!$this->isValidRing($hole)) {
+                        continue;
+                    }
+
+                    $totalAreaInSqMeters -= $this->calculateRingAreaInMeters($hole);
                 }
             }
 
-            $areaInSqMeters = $this->calculate3857AreaInMeters($ring);
+            $totalAreaInSqMeters = max(0, $totalAreaInSqMeters);
 
-            if ($areaInSqMeters > 0 && $areaInSqMeters < 1000000) {
-                $areaInSqFeet = $areaInSqMeters * 10.7639;
-                $result = round($areaInSqFeet, 0);
-                Log::info("Calculated area: {$result} sq ft");
-                return $result;
+            if ($totalAreaInSqMeters <= 0) {
+                Log::warning("Total area calculation returned 0 or negative");
+                return 0.0;
             }
 
-            // Try spherical calculation if coordinates appear to be in degrees
-            $samplePoint = $ring[0];
-            if (
-                isset($samplePoint[0], $samplePoint[1]) &&
-                abs($samplePoint[0]) <= 180 &&
-                abs($samplePoint[1]) <= 90
-            ) {
+            $areaInSqFeet = $totalAreaInSqMeters * 10.7639;
+            $result = round($areaInSqFeet, 0);
 
-                $areaInSqMeters = $this->calculateSphericalAreaInMeters($ring);
-                $areaInSqFeet = $areaInSqMeters * 10.7639;
-                $result = round($areaInSqFeet, 0);
-                Log::info("Calculated spherical area: {$result} sq ft");
-                return $result;
-            }
+            Log::info("Calculated total area: {$result} sq ft");
 
-            Log::warning("Area calculation returned unreasonable value");
-            return 0;
+            return (float) $result;
         } catch (\Exception $e) {
             Log::error("Area calculation failed: " . $e->getMessage());
             Log::error("Coordinates structure: " . json_encode(array_slice($coordinates, 0, 2)));
-            return 0;
+            return 0.0;
         }
     }
 
     /**
-     * Calculate area for EPSG:3857 (Web Mercator) coordinates
-     * Web Mercator has significant distortion, so we need to correct for latitude
+     * Normalize ANY polygon coordinate structure into a list of polygons.
      *
-     * @param array $ring - Polygon ring in EPSG:3857 coordinates (meters)
-     * @return float - Area in square meters (corrected)
+     * Accepts:
+     *   - Polygon:       [ ring1, ring2, ... ]              (ring = [ [x,y], ... ])
+     *   - MultiPolygon:  [ polygon1, polygon2, ... ]        (polygon = [ ring1, ... ])
+     *   - Flattened:     [ [x,y], [x,y], ... ]              (single ring)
+     *
+     * Always returns:
+     *   [ [ ring1, ring2, ... ], [ ring1, ... ], ... ]
+     */
+    private function normalizeToPolygonList(array $coordinates): array
+    {
+        if (empty($coordinates)) {
+            return [];
+        }
+
+        $first = $coordinates[0] ?? null;
+
+        if (!is_array($first)) {
+            return [];
+        }
+
+        // Case 1: Flattened ring — [ [x,y], [x,y], ... ]
+        if (isset($first[0]) && is_numeric($first[0])) {
+            return [ [$coordinates] ];
+        }
+
+        $second = $first[0] ?? null;
+
+        if (!is_array($second)) {
+            return [];
+        }
+
+        // Case 2: Polygon — [ ring1, ring2, ... ]
+        if (isset($second[0]) && is_numeric($second[0])) {
+            return [ $coordinates ];
+        }
+
+        $third = $second[0] ?? null;
+
+        if (!is_array($third)) {
+            return [];
+        }
+
+        // Case 3: MultiPolygon — [ polygon1, polygon2, ... ]
+        if (isset($third[0]) && is_numeric($third[0])) {
+            return $coordinates;
+        }
+
+        Log::warning("Unknown coordinate structure in normalizeToPolygonList");
+        return [];
+    }
+
+    /**
+     * Validate a ring: must be an array of [x, y] numeric pairs with >= 3 points.
+     */
+    private function isValidRing(array $ring): bool
+    {
+        if (count($ring) < 3) {
+            return false;
+        }
+
+        foreach ($ring as $point) {
+            if (
+                !is_array($point) ||
+                !isset($point[0], $point[1]) ||
+                !is_numeric($point[0]) ||
+                !is_numeric($point[1])
+            ) {
+                Log::warning("Invalid point in ring: " . json_encode($point));
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Calculate a single ring's area in square meters.
+     * Auto-detects EPSG:3857 (Web Mercator) vs WGS84 (degrees).
+     */
+    private function calculateRingAreaInMeters(array $ring): float
+    {
+        $samplePoint = $ring[0] ?? null;
+
+        if (!$samplePoint) {
+            return 0.0;
+        }
+
+        // Web Mercator (large coordinates in meters)
+        if (abs($samplePoint[0]) > 180 || abs($samplePoint[1]) > 90) {
+            $area = $this->calculate3857AreaInMeters($ring);
+
+            if ($area > 0 && $area < 1000000000) {
+                return $area;
+            }
+        }
+
+        // WGS84 (degrees)
+        if (
+            abs($samplePoint[0]) <= 180 &&
+            abs($samplePoint[1]) <= 90
+        ) {
+            return $this->calculateSphericalAreaInMeters($ring);
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Area for EPSG:3857 (Web Mercator) coordinates, with latitude correction.
      */
     private function calculate3857AreaInMeters($ring)
     {
         $count = count($ring);
 
-        // First, calculate the raw planar area (this will be distorted)
         $rawArea = 0;
         for ($i = 0; $i < $count; $i++) {
             $p1 = $ring[$i];
@@ -1415,36 +1462,28 @@ class WardService
         }
         $rawArea = abs($rawArea) / 2;
 
-        // Calculate the centroid latitude to get the scale factor
         $centerY = 0;
         foreach ($ring as $point) {
             $centerY += $point[1];
         }
         $centerY = $centerY / $count;
 
-        // Convert Web Mercator Y coordinate to latitude in radians
-        // Formula: lat = atan(sinh(y / R)) where R = 6378137
-        $R = 6378137; // Earth radius in meters
+        $R = 6378137;
         $latitudeRad = atan(sinh($centerY / $R));
 
-        // The scale factor for area in Web Mercator is 1 / cos(latitude)^2
-        // Because distortion is proportional to sec(latitude)^2
         $scaleFactor = 1 / (pow(cos($latitudeRad), 2));
 
-        // Apply correction
         $correctedArea = $rawArea / $scaleFactor;
 
-        // Ensure we return a positive number
         return abs($correctedArea);
     }
 
     /**
-     * Calculate area using spherical formula (for WGS84 degrees)
-     * Returns area in square meters
+     * Spherical area for WGS84 (degrees) coordinates.
      */
     private function calculateSphericalAreaInMeters($ring)
     {
-        $earthRadius = 6378137; // Earth radius in meters
+        $earthRadius = 6378137;
         $area = 0;
         $count = count($ring);
 
@@ -1464,10 +1503,7 @@ class WardService
     }
 
     /**
-     * Return the arithmetic centroid [lng, lat] of a ring.
-     *
-     * @param  array $ring  [ [lng, lat], ... ]
-     * @return array|null
+     * Arithmetic centroid of a ring.
      */
     private function calculateMidpoint(array $ring): ?array
     {
@@ -1497,16 +1533,16 @@ class WardService
             round($latSum / $count, 8),
         ];
     }
+
+    // ─────────────────────────────────────────────────────────────
+    //  PUBLIC: Merge two polygons into one MultiPolygon
+    // ─────────────────────────────────────────────────────────────
+
     public function mergePolygons(array $data, $useTransaction = true): array
     {
         $startedTransaction = false;
 
         try {
-
-            // ---------------------------------------------------------
-            // INPUT
-            // ---------------------------------------------------------
-
             $wardId         = $data['ward_id'] ?? null;
             $primaryGisid   = $data['primary_gisid'] ?? null;
             $secondaryGisid = $data['secondary_gisid'] ?? null;
@@ -1514,24 +1550,15 @@ class WardService
             if (empty($wardId)) {
                 throw new \Exception('Ward ID is required.');
             }
-
             if (empty($primaryGisid)) {
                 throw new \Exception('Primary GIS ID is required.');
             }
-
             if (empty($secondaryGisid)) {
                 throw new \Exception('Secondary GIS ID is required.');
             }
-
             if ((string) $primaryGisid === (string) $secondaryGisid) {
-                throw new \Exception(
-                    'Primary and secondary GIS IDs cannot be the same.'
-                );
+                throw new \Exception('Primary and secondary GIS IDs cannot be the same.');
             }
-
-            // ---------------------------------------------------------
-            // TABLES
-            // ---------------------------------------------------------
 
             $polygonTable     = 'polygons_'     . $wardId;
             $pointTable       = 'points_'       . $wardId;
@@ -1539,71 +1566,41 @@ class WardService
             $polygonDataTable = 'polygon_data_' . $wardId;
             $lineTable        = 'lines_'        . $wardId;
 
-            // ---------------------------------------------------------
-            // CHECK TABLES
-            // ---------------------------------------------------------
-
             if (!Schema::hasTable($polygonTable)) {
-                throw new \Exception(
-                    "Polygon table not found: {$polygonTable}"
-                );
+                throw new \Exception("Polygon table not found: {$polygonTable}");
             }
-
             if (!Schema::hasTable($pointTable)) {
-                throw new \Exception(
-                    "Point table not found: {$pointTable}"
-                );
+                throw new \Exception("Point table not found: {$pointTable}");
             }
-
-            // ---------------------------------------------------------
-            // TRANSACTION
-            // ---------------------------------------------------------
 
             if ($useTransaction && DB::transactionLevel() === 0) {
                 DB::beginTransaction();
                 $startedTransaction = true;
             }
 
-            // ---------------------------------------------------------
-            // GET PRIMARY
-            // ---------------------------------------------------------
-
             $primaryPolygon = DB::table($polygonTable)
                 ->where('gisid', $primaryGisid)
                 ->first();
 
             if (!$primaryPolygon) {
-                throw new \Exception(
-                    "Primary polygon not found: {$primaryGisid}"
-                );
+                throw new \Exception("Primary polygon not found: {$primaryGisid}");
             }
-
-            // ---------------------------------------------------------
-            // GET SECONDARY
-            // ---------------------------------------------------------
 
             $secondaryPolygon = DB::table($polygonTable)
                 ->where('gisid', $secondaryGisid)
                 ->first();
 
             if (!$secondaryPolygon) {
-                throw new \Exception(
-                    "Secondary polygon not found: {$secondaryGisid}"
-                );
+                throw new \Exception("Secondary polygon not found: {$secondaryGisid}");
             }
 
-            // ---------------------------------------------------------
-            // CHECK SECONDARY POINT DATA
-            // ---------------------------------------------------------
-
+            // Block merge if secondary has point data
             if (Schema::hasTable($pointDataTable)) {
-
                 $hasPointData = DB::table($pointDataTable)
                     ->where('point_gisid', $secondaryGisid)
                     ->exists();
 
                 if ($hasPointData) {
-
                     if ($startedTransaction) {
                         DB::rollBack();
                         $startedTransaction = false;
@@ -1612,195 +1609,90 @@ class WardService
                     return [
                         'status'          => false,
                         'merge_allowed'   => false,
-                        'message'         =>
-                        "GISID {$secondaryGisid} contains point data. Merge cancelled.",
+                        'message'         => "GISID {$secondaryGisid} contains point data. Merge cancelled.",
                         'primary_gisid'   => $primaryGisid,
                         'secondary_gisid' => $secondaryGisid,
                     ];
                 }
             }
 
-            // ---------------------------------------------------------
-            // DECODE COORDINATES
-            // ---------------------------------------------------------
+            $primaryCoordinates = json_decode($primaryPolygon->coordinates, true);
+            $secondaryCoordinates = json_decode($secondaryPolygon->coordinates, true);
 
-            $primaryCoordinates = json_decode(
-                $primaryPolygon->coordinates,
-                true
-            );
-
-            $secondaryCoordinates = json_decode(
-                $secondaryPolygon->coordinates,
-                true
-            );
-
-            if (
-                !is_array($primaryCoordinates) ||
-                empty($primaryCoordinates)
-            ) {
-                throw new \Exception(
-                    "Invalid coordinates for primary GISID: {$primaryGisid}"
-                );
+            if (!is_array($primaryCoordinates) || empty($primaryCoordinates)) {
+                throw new \Exception("Invalid coordinates for primary GISID: {$primaryGisid}");
+            }
+            if (!is_array($secondaryCoordinates) || empty($secondaryCoordinates)) {
+                throw new \Exception("Invalid coordinates for secondary GISID: {$secondaryGisid}");
             }
 
-            if (
-                !is_array($secondaryCoordinates) ||
-                empty($secondaryCoordinates)
-            ) {
-                throw new \Exception(
-                    "Invalid coordinates for secondary GISID: {$secondaryGisid}"
-                );
-            }
-
-            $primaryMultiPolygon = $this->toMultiPolygonCoordinates(
-                $primaryCoordinates
-            );
-
-            $secondaryMultiPolygon = $this->toMultiPolygonCoordinates(
-                $secondaryCoordinates
-            );
+            $primaryMultiPolygon   = $this->toMultiPolygonCoordinates($primaryCoordinates);
+            $secondaryMultiPolygon = $this->toMultiPolygonCoordinates($secondaryCoordinates);
 
             $mergedCoordinates = array_merge(
                 $primaryMultiPolygon,
                 $secondaryMultiPolygon
             );
 
-            // ---------------------------------------------------------
-            // VALIDATE
-            // ---------------------------------------------------------
-
             if (empty($mergedCoordinates)) {
-                throw new \Exception(
-                    'Merged MultiPolygon coordinates are empty.'
-                );
+                throw new \Exception('Merged MultiPolygon coordinates are empty.');
             }
 
-            // ---------------------------------------------------------
-            // CALCULATE AREA  ✅ FIXED
-            //
-            // Priority:
-            //   1. User-provided sqfeet  (manual override)
-            //   2. primary.sqfeet + secondary.sqfeet  (FAST PATH)
-            //   3. Re-calculate from geometry  (FALLBACK)
-            // ---------------------------------------------------------
-
+            // ── Area calculation ──
+            // Priority: user override → sum of stored sqfeet → recalculate
             $sqfeet = $data['sqfeet'] ?? null;
 
-            if (
-                $sqfeet !== null &&
-                $sqfeet !== '' &&
-                (float) $sqfeet > 0
-            ) {
-                // 1️⃣ User override
+            if ($sqfeet !== null && $sqfeet !== '' && (float) $sqfeet > 0) {
                 $sqfeet = (float) $sqfeet;
             } else {
-
                 $primarySqfeet   = (float) ($primaryPolygon->sqfeet   ?? 0);
                 $secondarySqfeet = (float) ($secondaryPolygon->sqfeet ?? 0);
-
                 $simpleSum = $primarySqfeet + $secondarySqfeet;
 
                 if ($simpleSum > 0) {
-                    // 2️⃣ Fast path — simple addition
                     $sqfeet = $simpleSum;
                 } else {
-                    // 3️⃣ Fallback — re-calculate from geometry
-                    $sqfeet = 0;
-
-                    foreach ($mergedCoordinates as $polygon) {
-
-                        if (
-                            isset($polygon[0]) &&
-                            is_array($polygon[0])
-                        ) {
-
-                            $outerRing = $polygon[0];
-
-                            if (!empty($outerRing)) {
-
-                                $sqfeet += (float)
-                                $this->calculatePolygonAreaInSquareFeet(
-                                    $outerRing
-                                );
-                            }
-                        }
-                    }
+                    // Recalculate from merged geometry
+                    $sqfeet = $this->calculatePolygonAreaInSquareFeet($mergedCoordinates);
                 }
             }
 
             $sqfeet = (float) $sqfeet;
 
-            $primaryPoint = DB::table($pointTable)
-                ->where('gisid', $primaryGisid)
-                ->first();
-
-            // ---------------------------------------------------------
-            // UPDATE PRIMARY POLYGON
-            // ---------------------------------------------------------
-
+            // Update primary polygon
             DB::table($polygonTable)
                 ->where('gisid', $primaryGisid)
                 ->update([
-                    'type' => 'MultiPolygon',
-
-                    'coordinates' => json_encode(
-                        $mergedCoordinates,
-                        JSON_UNESCAPED_UNICODE
-                    ),
-
-                    'sqfeet' => (string) $sqfeet,
-
-                    'updated_at' => now(),
+                    'type'        => 'MultiPolygon',
+                    'coordinates' => json_encode($mergedCoordinates, JSON_UNESCAPED_UNICODE),
+                    'sqfeet'      => (string) $sqfeet,
+                    'updated_at'  => now(),
                 ]);
 
-            // ---------------------------------------------------------
-            // DELETE SECONDARY POINT
-            // ---------------------------------------------------------
-
+            // Delete secondary point + polygon
             DB::table($pointTable)
                 ->where('gisid', $secondaryGisid)
                 ->delete();
 
-            // ---------------------------------------------------------
-            // DELETE SECONDARY POLYGON
-            // ---------------------------------------------------------
-
             DB::table($polygonTable)
                 ->where('gisid', $secondaryGisid)
                 ->delete();
-
-            // ---------------------------------------------------------
-            // COMMIT
-            // ---------------------------------------------------------
 
             if ($startedTransaction) {
                 DB::commit();
                 $startedTransaction = false;
             }
 
-            // ---------------------------------------------------------
-            // GET UPDATED PRIMARY POLYGON
-            // ---------------------------------------------------------
-
             $mergedPolygon = DB::table($polygonTable)
                 ->where('gisid', $primaryGisid)
                 ->first();
-
-            // ---------------------------------------------------------
-            // GET PRIMARY POINT
-            // ---------------------------------------------------------
 
             $mergedPoint = DB::table($pointTable)
                 ->where('gisid', $primaryGisid)
                 ->first();
 
-            // ---------------------------------------------------------
-            // ✅ FULL REFRESHED LISTS
-            // ---------------------------------------------------------
-
             $allPolygons = DB::table($polygonTable)->get()->toArray();
-
-            $allPoints = DB::table($pointTable)->get()->toArray();
+            $allPoints   = DB::table($pointTable)->get()->toArray();
 
             $allLines = Schema::hasTable($lineTable)
                 ? DB::table($lineTable)->get()->toArray()
@@ -1814,56 +1706,31 @@ class WardService
                 ? DB::table($pointDataTable)->get()->toArray()
                 : [];
 
-            // ---------------------------------------------------------
-            // SUCCESS
-            // ---------------------------------------------------------
-
             return [
                 'status'          => true,
                 'merge_allowed'   => true,
-
-                'message' =>
-                "Polygon {$secondaryGisid} merged into {$primaryGisid} successfully.",
-
+                'message'         => "Polygon {$secondaryGisid} merged into {$primaryGisid} successfully.",
                 'primary_gisid'   => $primaryGisid,
                 'secondary_gisid' => $secondaryGisid,
-
-                'type'   => 'MultiPolygon',
-                'sqfeet' => $sqfeet,
-
-                'polygon' => $mergedPolygon,
-                'point'   => $mergedPoint,
-
-                'polygons'     => $allPolygons,
-                'points'       => $allPoints,
-                'lines'        => $allLines,
-                'polygonDatas' => $allPolygonDatas,
-                'pointDatas'   => $allPointDatas,
+                'type'            => 'MultiPolygon',
+                'sqfeet'          => $sqfeet,
+                'polygon'         => $mergedPolygon,
+                'point'           => $mergedPoint,
+                'polygons'        => $allPolygons,
+                'points'          => $allPoints,
+                'lines'           => $allLines,
+                'polygonDatas'    => $allPolygonDatas,
+                'pointDatas'      => $allPointDatas,
             ];
         } catch (\Throwable $e) {
-
-            // ---------------------------------------------------------
-            // ROLLBACK
-            // ---------------------------------------------------------
-
             if ($startedTransaction) {
-
                 try {
                     DB::rollBack();
                 } catch (\Throwable $rollbackException) {
-
-                    Log::error(
-                        'Merge Polygon Rollback Error: ' .
-                            $rollbackException->getMessage()
-                    );
+                    Log::error('Merge Polygon Rollback Error: ' . $rollbackException->getMessage());
                 }
-
                 $startedTransaction = false;
             }
-
-            // ---------------------------------------------------------
-            // LOG
-            // ---------------------------------------------------------
 
             Log::error(
                 'Merge Polygon Error: ' . $e->getMessage(),
@@ -1873,10 +1740,6 @@ class WardService
                     'secondary_gisid' => $data['secondary_gisid'] ?? null,
                 ]
             );
-
-            // ---------------------------------------------------------
-            // ERROR
-            // ---------------------------------------------------------
 
             return [
                 'status'          => false,
@@ -1888,49 +1751,49 @@ class WardService
         }
     }
 
+    /**
+     * Convert any polygon coordinate structure into MultiPolygon format:
+     *   [ [ [ [x,y], ... ] ], [ [ [x,y], ... ] ], ... ]
+     */
     private function toMultiPolygonCoordinates(array $coordinates): array
     {
-        if (
-            isset($coordinates[0]) &&
-            is_array($coordinates[0]) &&
-            isset($coordinates[0][0]) &&
-            is_numeric($coordinates[0][0])
-        ) {
-            return [
-                [
-                    $coordinates
-                ]
-            ];
+        if (empty($coordinates)) {
+            return [];
         }
 
-        if (
-            isset($coordinates[0]) &&
-            is_array($coordinates[0]) &&
-            isset($coordinates[0][0]) &&
-            is_array($coordinates[0][0]) &&
-            isset($coordinates[0][0][0]) &&
-            is_numeric($coordinates[0][0][0])
-        ) {
-            return [
-                $coordinates
-            ];
+        $first = $coordinates[0] ?? null;
+
+        if (!is_array($first)) {
+            return [];
         }
 
-        if (
-            isset($coordinates[0]) &&
-            is_array($coordinates[0]) &&
-            isset($coordinates[0][0]) &&
-            is_array($coordinates[0][0]) &&
-            isset($coordinates[0][0][0]) &&
-            is_array($coordinates[0][0][0]) &&
-            isset($coordinates[0][0][0][0]) &&
-            is_numeric($coordinates[0][0][0][0])
-        ) {
+        // Case A: Flattened ring — [ [x,y], [x,y], ... ]
+        if (isset($first[0]) && is_numeric($first[0])) {
+            return [ [ $coordinates ] ];
+        }
+
+        $second = $first[0] ?? null;
+
+        if (!is_array($second)) {
+            return [];
+        }
+
+        // Case B: Polygon — [ ring1, ring2, ... ]
+        if (isset($second[0]) && is_numeric($second[0])) {
+            return [ $coordinates ];
+        }
+
+        $third = $second[0] ?? null;
+
+        if (!is_array($third)) {
+            return [];
+        }
+
+        // Case C: MultiPolygon — already correct
+        if (isset($third[0]) && is_numeric($third[0])) {
             return $coordinates;
         }
 
-        throw new \Exception(
-            'Unsupported polygon coordinate structure.'
-        );
+        throw new \Exception('Unsupported polygon coordinate structure.');
     }
 }
