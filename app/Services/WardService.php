@@ -978,111 +978,274 @@ class WardService
     // ─────────────────────────────────────────────────────────────
 
     public function storeUpdatePolygon($data, $useTransaction = true)
-    {
-        try {
-            if ($useTransaction && DB::transactionLevel() === 0) {
-                DB::beginTransaction();
-                $startedTransaction = true;
-            } else {
-                $startedTransaction = false;
-            }
+{
+    $startedTransaction = false;
 
-            $tableName      = 'polygons_' . $data['ward_id'];
-            $pointTableName = 'points_'   . $data['ward_id'];
+    try {
 
-            $feature = is_string($data['feature'])
-                ? json_decode($data['feature'], true)
-                : $data['feature'];
+        if ($useTransaction && DB::transactionLevel() === 0) {
+            DB::beginTransaction();
+            $startedTransaction = true;
+        }
 
-            $layerType = $data['layer_type'] ?? 'Polygon';
+        $tableName      = 'polygons_' . $data['ward_id'];
+        $pointTableName = 'points_' . $data['ward_id'];
+        $pointDataTable = 'point_data_' . $data['ward_id'];
 
-            // ✅ Full coordinates for area
-            $sqfeet = $this->calculatePolygonAreaInSquareFeet($feature);
+        $feature = is_string($data['feature'])
+            ? json_decode($data['feature'], true)
+            : $data['feature'];
 
-            // Representative ring for midpoint
-            $representativeRing = $this->flattenCoordinates($layerType, $feature);
-            $midpoint = $this->calculateMidpoint($representativeRing);
+        if (!is_array($feature) || empty($feature)) {
+            throw new \Exception('Invalid polygon coordinates.');
+        }
 
-            $gisid = $data['gisid'];
+        $layerType = $data['layer_type'] ?? 'Polygon';
+        $gisid     = $data['gisid'];
 
-            $existingPolygon = DB::table($tableName)->where('gisid', $gisid)->first();
+        /*
+        |--------------------------------------------------------------------------
+        | If feature is GeoJSON Geometry object
+        |--------------------------------------------------------------------------
+        */
 
-            if ($existingPolygon) {
-                DB::table($tableName)
-                    ->where('gisid', $gisid)
-                    ->update([
-                        'type'        => $layerType,
-                        'coordinates' => json_encode($feature, JSON_UNESCAPED_UNICODE),
-                        'sqfeet'      => (string) $sqfeet,
-                        'updated_at'  => now(),
-                    ]);
+        if (
+            isset($feature['type']) &&
+            isset($feature['coordinates'])
+        ) {
+            $layerType = $feature['type'];
+            $coordinates = $feature['coordinates'];
+        } else {
+            $coordinates = $feature;
+        }
 
-                $existingPoint = DB::table($pointTableName)->where('gisid', $gisid)->first();
-                if ($midpoint) {
-                    if ($existingPoint) {
-                        DB::table($pointTableName)
-                            ->where('gisid', $gisid)
-                            ->update([
-                                'type'        => 'point',
-                                'coordinates' => json_encode($midpoint),
-                                'updated_at'  => now(),
-                            ]);
-                    } else {
-                        DB::table($pointTableName)->insert([
-                            'gisid'       => $gisid,
-                            'type'        => 'point',
-                            'coordinates' => json_encode($midpoint),
-                            'created_at'  => now(),
-                            'updated_at'  => now(),
-                        ]);
-                    }
-                }
-            } else {
-                DB::table($tableName)->insert([
-                    'gisid'       => $gisid,
+        /*
+        |--------------------------------------------------------------------------
+        | Validate polygon coordinates
+        |--------------------------------------------------------------------------
+        */
+
+        if (!in_array($layerType, ['Polygon', 'MultiPolygon'])) {
+            throw new \Exception("Unsupported polygon type: {$layerType}");
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Calculate area using FULL coordinates
+        |--------------------------------------------------------------------------
+        */
+
+        $sqfeet = $this->calculatePolygonAreaInSquareFeet($coordinates);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get representative outer ring ONLY for midpoint
+        |--------------------------------------------------------------------------
+        */
+
+        $representativeRing = $this->flattenCoordinates(
+            $layerType,
+            $coordinates
+        );
+
+        if (
+            !is_array($representativeRing) ||
+            count($representativeRing) < 3
+        ) {
+            throw new \Exception('Invalid polygon ring for midpoint.');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Calculate midpoint
+        |--------------------------------------------------------------------------
+        */
+
+        $midpoint = $this->calculateMidpoint($representativeRing);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate midpoint
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !$midpoint ||
+            !isset($midpoint[0], $midpoint[1]) ||
+            !is_numeric($midpoint[0]) ||
+            !is_numeric($midpoint[1])
+        ) {
+            throw new \Exception(
+                'Invalid midpoint generated: ' .
+                json_encode($midpoint)
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Find polygon
+        |--------------------------------------------------------------------------
+        */
+
+        $existingPolygon = DB::table($tableName)
+            ->where('gisid', $gisid)
+            ->first();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Check point data
+        |--------------------------------------------------------------------------
+        */
+
+        $hasPointData = false;
+
+        if (Schema::hasTable($pointDataTable)) {
+            $hasPointData = DB::table($pointDataTable)
+                ->where('point_gisid', $gisid)
+                ->exists();
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE EXISTING POLYGON
+        |--------------------------------------------------------------------------
+        */
+
+        if ($existingPolygon) {
+
+            DB::table($tableName)
+                ->where('gisid', $gisid)
+                ->update([
                     'type'        => $layerType,
-                    'coordinates' => json_encode($feature, JSON_UNESCAPED_UNICODE),
+                    'coordinates' => json_encode(
+                        $coordinates,
+                        JSON_UNESCAPED_UNICODE
+                    ),
                     'sqfeet'      => (string) $sqfeet,
-                    'created_at'  => now(),
                     'updated_at'  => now(),
                 ]);
 
-                if ($midpoint) {
-                    DB::table($pointTableName)->insert([
-                        'gisid'       => $gisid,
+            /*
+            |--------------------------------------------------------------------------
+            | Existing point
+            |--------------------------------------------------------------------------
+            */
+
+            $existingPoint = null;
+
+            if (Schema::hasTable($pointTableName)) {
+
+                $existingPoint = DB::table($pointTableName)
+                    ->where('gisid', $gisid)
+                    ->first();
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | IMPORTANT:
+            | point_data exists -> keep point record
+            | but update ONLY its coordinate
+            |--------------------------------------------------------------------------
+            */
+
+            if ($existingPoint) {
+
+                DB::table($pointTableName)
+                    ->where('gisid', $gisid)
+                    ->update([
                         'type'        => 'point',
-                        'coordinates' => json_encode($midpoint),
-                        'created_at'  => now(),
+                        'coordinates' => json_encode(
+                            $midpoint,
+                            JSON_UNESCAPED_UNICODE
+                        ),
                         'updated_at'  => now(),
                     ]);
-                }
+
+            } else {
+
+                DB::table($pointTableName)->insert([
+                    'gisid'       => $gisid,
+                    'type'        => 'point',
+                    'coordinates' => json_encode(
+                        $midpoint,
+                        JSON_UNESCAPED_UNICODE
+                    ),
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
             }
 
-            if ($startedTransaction) {
-                DB::commit();
-            }
+        } else {
 
-            return [
-                'status'   => true,
-                'gisid'    => $gisid,
-                'message'  => 'Polygon stored successfully',
-                'polygons' => DB::table($tableName)->get(),
-                'points'   => DB::table($pointTableName)->get()
-            ];
-        } catch (\Exception $e) {
-            if (isset($startedTransaction) && $startedTransaction) {
-                DB::rollBack();
-            }
-            Log::error('storeUpdatePolygon error: ' . $e->getMessage());
+            /*
+            |--------------------------------------------------------------------------
+            | INSERT NEW POLYGON
+            |--------------------------------------------------------------------------
+            */
 
-            return [
-                'status'  => false,
-                'message' => $e->getMessage(),
-                'trace'   => $e->getTraceAsString()
-            ];
+            DB::table($tableName)->insert([
+                'gisid'       => $gisid,
+                'type'        => $layerType,
+                'coordinates' => json_encode(
+                    $coordinates,
+                    JSON_UNESCAPED_UNICODE
+                ),
+                'sqfeet'      => (string) $sqfeet,
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | INSERT POINT
+            |--------------------------------------------------------------------------
+            */
+
+            DB::table($pointTableName)->insert([
+                'gisid'       => $gisid,
+                'type'        => 'point',
+                'coordinates' => json_encode(
+                    $midpoint,
+                    JSON_UNESCAPED_UNICODE
+                ),
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
         }
-    }
 
+        if ($startedTransaction) {
+            DB::commit();
+        }
+
+        return [
+            'status'   => true,
+            'gisid'    => $gisid,
+            'message'  => 'Polygon updated successfully.',
+            'point_data_exists' => $hasPointData,
+            'sqfeet'   => $sqfeet,
+            'midpoint' => $midpoint,
+            'polygons' => DB::table($tableName)->get(),
+            'points'   => DB::table($pointTableName)->get(),
+        ];
+
+    } catch (\Throwable $e) {
+
+        if ($startedTransaction) {
+            DB::rollBack();
+        }
+
+        Log::error('storeUpdatePolygon error', [
+            'message' => $e->getMessage(),
+            'gisid'   => $data['gisid'] ?? null,
+            'feature' => $data['feature'] ?? null,
+        ]);
+
+        return [
+            'status'  => false,
+            'message' => $e->getMessage(),
+        ];
+    }
+}
     // ─────────────────────────────────────────────────────────────
     //  PUBLIC: Delete polygon / line
     // ─────────────────────────────────────────────────────────────
