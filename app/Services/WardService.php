@@ -1206,6 +1206,51 @@ class WardService
     }
     return $depth + 1; // +1 because the last value is numeric, not array
 }
+private function getRepresentativeRing(string $layerType, array $coordinates): array
+{
+    // ---------- Polygon ----------
+    if ($layerType === 'Polygon') {
+        // Bare ring: [ [x,y], [x,y], ... ]
+        $first = $coordinates[0] ?? null;
+
+        if (is_array($first) && isset($first[0]) && is_numeric($first[0])) {
+            return $coordinates;   // it's already a ring
+        }
+
+        // Normal polygon: [ outerRing, hole1, hole2, ... ]
+        return $coordinates[0] ?? [];
+    }
+
+    // ---------- MultiPolygon ----------
+    if ($layerType === 'MultiPolygon') {
+        if (empty($coordinates) || !is_array($coordinates[0])) {
+            return [];
+        }
+
+        // ✅ OPTION A — FIRST polygon's outer ring (your requirement)
+        $firstPolygon = $coordinates[0];
+        $firstOuterRing = $firstPolygon[0] ?? [];
+        if (is_array($firstOuterRing) && count($firstOuterRing) >= 3) {
+            return $firstOuterRing;
+        }
+
+        // OPTION B — LARGEST polygon's outer ring (uncomment if you prefer)
+        /*
+        $largest = [];
+        foreach ($coordinates as $polygon) {
+            $outerRing = $polygon[0] ?? [];
+            if (is_array($outerRing) && count($outerRing) > count($largest)) {
+                $largest = $outerRing;
+            }
+        }
+        return $largest;
+        */
+
+        return [];
+    }
+
+    return [];
+}
 
     public function deletePolygon(array $data): array
     {
@@ -1622,37 +1667,37 @@ class WardService
         return abs($area * $earthRadius * $earthRadius / 2);
     }
 
-    /**
-     * Arithmetic centroid of a ring.
-     */
-    private function calculateMidpoint(array $ring): ?array
-    {
-        if (empty($ring)) {
-            return null;
-        }
-
-        $lngSum = 0.0;
-        $latSum = 0.0;
-        $count  = 0;
-
-        foreach ($ring as $point) {
-            if (!isset($point[0], $point[1])) {
-                continue;
-            }
-            $lngSum += (float) $point[0];
-            $latSum += (float) $point[1];
-            $count++;
-        }
-
-        if ($count === 0) {
-            return null;
-        }
-
-        return [
-            round($lngSum / $count, 8),
-            round($latSum / $count, 8),
-        ];
+   private function calculateMidpoint(array $ring): ?array
+{
+    if (empty($ring) || count($ring) < 3) {
+        return null;
     }
+
+    $lngSum = 0.0;
+    $latSum = 0.0;
+    $count  = 0;
+
+    foreach ($ring as $point) {
+        if (!is_array($point) || !isset($point[0], $point[1])) {
+            continue;
+        }
+        if (!is_numeric($point[0]) || !is_numeric($point[1])) {
+            continue;
+        }
+        $lngSum += (float) $point[0];
+        $latSum += (float) $point[1];
+        $count++;
+    }
+
+    if ($count === 0) {
+        return null;
+    }
+
+    return [
+        round($lngSum / $count, 8),
+        round($latSum / $count, 8),
+    ];
+}
 
     // ─────────────────────────────────────────────────────────────
     //  PUBLIC: Merge two polygons into one MultiPolygon
