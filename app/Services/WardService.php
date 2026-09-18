@@ -1298,15 +1298,7 @@ class WardService
         }
 
         if ($geometryType === 'MultiPolygon') {
-            // Take the largest polygon ring (by vertex count) as the representative shape
-            $largest = [];
-            foreach ($coords as $polygon) {
-                $outerRing = $polygon[0] ?? [];
-                if (count($outerRing) > count($largest)) {
-                    $largest = $outerRing;
-                }
-            }
-            return $largest;
+            return $coords;
         }
 
         return [];
@@ -1941,5 +1933,4 @@ class WardService
             'Unsupported polygon coordinate structure.'
         );
     }
-
 }
