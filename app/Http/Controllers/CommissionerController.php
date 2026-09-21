@@ -68,9 +68,10 @@ class CommissionerController extends Controller
         ],
     ];
 
-    /**
-     * Get accessible wards based on user role
-     */
+    // ════════════════════════════════════════════════════════════════
+    // ACCESS CONTROL HELPERS
+    // ════════════════════════════════════════════════════════════════
+
     private function getAccessibleWardsQuery($corporationId = null)
     {
         try {
@@ -85,7 +86,6 @@ class CommissionerController extends Controller
                 return collect();
             }
 
-            // Check if user has role methods
             if (method_exists($user, 'isCommissioner') && ($user->isCommissioner() || $user->isDC())) {
                 $zoneIds = Zone::where('corp_id', $corporationId)->pluck('id');
                 return Ward::whereIn('zone_id', $zoneIds)->get();
@@ -105,7 +105,6 @@ class CommissionerController extends Controller
                 return Ward::where('id', $user->ward_id)->get();
             }
 
-            // Default: return all wards for the corporation
             $zoneIds = Zone::where('corp_id', $corporationId)->pluck('id');
             return Ward::whereIn('zone_id', $zoneIds)->get();
         } catch (\Exception $e) {
@@ -148,6 +147,10 @@ class CommissionerController extends Controller
         }
         return null;
     }
+
+    // ════════════════════════════════════════════════════════════════
+    // TAX TABLE HELPERS
+    // ════════════════════════════════════════════════════════════════
 
     private function taxTable(string $type, $corporationId): string
     {
@@ -236,7 +239,6 @@ class CommissionerController extends Controller
                 return 0;
             }
 
-            // MIS la irukkura assessment numbers
             $assessments = DB::table($misTable)
                 ->pluck('assessment')
                 ->filter()
@@ -251,7 +253,6 @@ class CommissionerController extends Controller
             foreach ($wardIds as $wardId) {
                 $table = "point_data_{$wardId}";
                 if (Schema::hasTable($table) && Schema::hasColumn($table, 'assessment')) {
-                    // point_data.assessment match aagura count
                     $total += DB::table($table)
                         ->whereIn('assessment', $assessments)
                         ->count();
@@ -339,6 +340,67 @@ class CommissionerController extends Controller
     }
 
     // ════════════════════════════════════════════════════════════════
+    // VARIATION HELPERS (aligned with VariationController)
+    // ════════════════════════════════════════════════════════════════
+
+    /**
+     * Normalize an assessment number for reliable matching.
+     * Removes ALL whitespace, uppercases.
+     */
+    private function normalizeAssessment($value): string
+    {
+        $value = (string) $value;
+        $value = preg_replace('/\s+/', '', $value);
+        return strtoupper(trim($value));
+    }
+
+    /**
+     * Fetch MIS rows for a specific ward (tries string, then int, then PHP filter).
+     */
+    private function fetchMisData(string $misTableName, $wardNo)
+    {
+        try {
+            if (!Schema::hasTable($misTableName)) {
+                return collect();
+            }
+
+            $misData = DB::table($misTableName)->where('ward_no', (string) $wardNo)->get();
+
+            if ($misData->isEmpty()) {
+                $misData = DB::table($misTableName)->where('ward_no', (int) $wardNo)->get();
+            }
+
+            if ($misData->isEmpty()) {
+                $all = DB::table($misTableName)->get();
+                $misData = $all->filter(function ($row) use ($wardNo) {
+                    return (string) ($row->ward_no ?? '') === (string) $wardNo;
+                })->values();
+            }
+
+            return $misData;
+        } catch (\Exception $e) {
+            Log::error('fetchMisData error: ' . $e->getMessage());
+            return collect();
+        }
+    }
+
+    /**
+     * Fetch ALL MIS rows for the corp (no ward filter).
+     */
+    private function fetchAllMisData(string $misTableName)
+    {
+        try {
+            if (!Schema::hasTable($misTableName)) {
+                return collect();
+            }
+            return DB::table($misTableName)->get();
+        } catch (\Exception $e) {
+            Log::error('fetchAllMisData error: ' . $e->getMessage());
+            return collect();
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
     // DASHBOARD
     // ════════════════════════════════════════════════════════════════
 
@@ -394,11 +456,9 @@ class CommissionerController extends Controller
                 ]);
             }
 
-            // Get zones based on role
             $zones = $this->getZonesForUser($user, $corporation);
             $allWardIds = $zones->flatMap(fn($zone) => $zone->wards->pluck('id'))->toArray();
 
-            // If no wards found, return empty state
             if (empty($allWardIds)) {
                 return view('main.Commissioner.dashboard', [
                     'error' => 'No wards accessible for your role.',
@@ -477,9 +537,6 @@ class CommissionerController extends Controller
                 'total_credits' => $totalHalfYearTax,
                 'half_year_balance' => $totalBalance,
                 'year_collection' => $totalHalfYearTax * 2,
-                // FIX: was `$totalBalance - $totalHalfYearTax` which produces a
-                // negative "total paid" figure in normal cases. Paid = tax billed
-                // minus what's still outstanding.
                 'total_collection' => $totalHalfYearTax - $totalBalance,
                 'surveyed' => $surveyedAssessments,
                 'connected' => $connectedAssessments,
@@ -683,9 +740,6 @@ class CommissionerController extends Controller
         }
     }
 
-    /**
-     * Get zones based on user role
-     */
     private function getZonesForUser($user, $corporation)
     {
         try {
@@ -714,7 +768,6 @@ class CommissionerController extends Controller
                 return collect();
             }
 
-            // Default: return all zones for the corporation
             return $corporation->zones()->with(['wards'])->get();
         } catch (\Exception $e) {
             Log::error('Error in getZonesForUser: ' . $e->getMessage());
@@ -722,9 +775,6 @@ class CommissionerController extends Controller
         }
     }
 
-    /**
-     * Get all ward boundaries with role-based access
-     */
     private function getAllwardBoundary($corporationId, $accessibleWardIds = null)
     {
         try {
@@ -849,47 +899,36 @@ class CommissionerController extends Controller
             $polygonDatas = Schema::hasTable($polygonDataTableName) ? DB::table($polygonDataTableName)->get() : collect();
             $pointDatas = Schema::hasTable($pointDataTableName) ? DB::table($pointDataTableName)->get() : collect();
 
-            // ✅ FIXED: Get this ward's MIS + any MIS matching point_data assessments (all wards)
-            $misData = collect();
+            // ─── MIS DATA (ward-filtered + all-ward fallback) ───
+            $misData    = collect();
+            $allMisData = collect();
 
             if (Schema::hasTable($misTableName)) {
-                // 1. Get assessment numbers from this ward's point_data
-                $pointDataAssessments = collect();
-                if (Schema::hasTable($pointDataTableName)) {
-                    $pointDataAssessments = DB::table($pointDataTableName)
-                        ->whereNotNull('assessment')
-                        ->where('assessment', '!=', '')
-                        ->pluck('assessment')
-                        ->unique()
-                        ->filter()
-                        ->values();
-                }
-
-                // 2. Build query: this ward's MIS OR MIS matching point_data assessments
-                $misQuery = DB::table($misTableName . ' as mis')
-                    ->leftJoin($waterTaxTableName . ' as wt', 'mis.assessment', '=', 'wt.assessment')
-                    ->leftJoin($ugdtable . ' as ugd', 'mis.assessment', '=', 'ugd.assessment')
-                    ->leftJoin($prefessionaltax . ' as pt', 'mis.assessment', '=', 'pt.assessment')
-                    ->select(
-                        'mis.*',
-                        'wt.watertax_no',
-                        'wt.old_watertax_no',
-                        'ugd.ugd_no',
-                        'ugd.old_ugd_no',
-                        'pt.pt_number',
-                        'pt.old_pt_number'
-                    );
-
-                // Condition: (ward_no = current ward) OR (assessment IN point_data assessments)
-                $misQuery->where(function ($q) use ($wardNo, $pointDataAssessments) {
-                    $q->where('mis.ward_no', $wardNo);
-                    if ($pointDataAssessments->isNotEmpty()) {
-                        $q->orWhereIn('mis.assessment', $pointDataAssessments->toArray());
-                    }
-                });
-
-                $misData = $misQuery->get();
+                $misData    = $this->fetchMisData($misTableName, $wardNo);
+                $allMisData = $this->fetchAllMisData($misTableName);
             }
+
+            // If ward MIS is empty, fall back to all corp MIS
+            if ($misData->isEmpty() && $allMisData->isNotEmpty()) {
+                $misData = $allMisData;
+            }
+
+            // ─── MAIN MIS DATA WITH JOINS (for modal display) ───
+            $misDataJoins = Schema::hasTable($misTableName) ? DB::table($misTableName . ' as mis')
+                ->leftJoin($waterTaxTableName . ' as wt', 'mis.assessment', '=', 'wt.assessment')
+                ->leftJoin($ugdtable . ' as ugd', 'mis.assessment', '=', 'ugd.assessment')
+                ->leftJoin($prefessionaltax . ' as pt', 'mis.assessment', '=', 'pt.assessment')
+                ->where('mis.ward_no', $wardNo)
+                ->select(
+                    'mis.*',
+                    'wt.watertax_no',
+                    'wt.old_watertax_no',
+                    'ugd.ugd_no',
+                    'ugd.old_ugd_no',
+                    'pt.pt_number',
+                    'pt.old_pt_number'
+                )
+                ->get() : collect();
 
             $uniqueRoadNames = Schema::hasTable($misTableName) ? DB::table($misTableName)
                 ->select('road_name')
@@ -899,16 +938,30 @@ class CommissionerController extends Controller
                 ->orderBy('road_name')
                 ->pluck('road_name') : collect();
 
-            // ─── Analytics ───
+            // ─── Analytics (uses dual MIS lookup) ───
             $boundary = $this->getWardBoundary($corp, $id);
-            $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
-            $buildingVariations = $this->buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData);
+
+            $analytics = $this->buildWardAnalytics(
+                $polygons,
+                $polygonDatas,
+                $pointDatas,
+                $misData,
+                $allMisData
+            );
+
+            $buildingVariations = $this->buildBuildingVariations(
+                $polygons,
+                $polygonDatas,
+                $pointDatas,
+                $misData,
+                $allMisData
+            );
+
             $buildingData = $this->getBuildingsWithUsageColors($id);
             $availableUsages = array_keys($buildingData['usage_counts']);
             sort($availableUsages);
             $areaStats = $this->getAreaVariationStats($id, $buildingData['buildings']);
 
-            // Navigation among accessible wards
             $accessibleWardIds = $this->getAccessibleWardIds();
             $accessibleWards = Ward::whereIn('id', $accessibleWardIds)->orderBy('ward_no')->get();
             $currentIndex = array_search($id, $accessibleWardIds);
@@ -916,9 +969,8 @@ class CommissionerController extends Controller
                 ? $accessibleWardIds[$currentIndex + 1]
                 : null;
 
-            // Calculate total square feet for each polygon using NEW formula
+            // Calculate total square feet using formula
             foreach ($polygons as $polygon) {
-                // Get ground square feet from polygon table
                 $groundSqfeet = (float) ($polygon->sqfeet ?? 0);
                 $polyData = $polygonDatas->firstWhere('gisid', $polygon->gisid);
 
@@ -927,14 +979,11 @@ class CommissionerController extends Controller
                     $basement    = (float) ($polyData->basement ?? 0);
                     $percentage  = (float) ($polyData->percentage ?? 100);
 
-                    // If groundSqfeet is 0, check if polygon_data has sqfeet field
                     if ($groundSqfeet == 0 && isset($polyData->sqfeet) && $polyData->sqfeet > 0) {
                         $groundSqfeet = (float) $polyData->sqfeet;
                     }
 
-                    // NEW FORMULA: (number of floors + basement + (percentage/100)) * ground sq feet
                     $totalSqfeet = ($numberFloor + $basement + ($percentage / 100)) * $groundSqfeet;
-
                     $polygon->sqfeet = round($totalSqfeet, 2);
                 } else {
                     $polygon->sqfeet = round($groundSqfeet, 2);
@@ -966,7 +1015,9 @@ class CommissionerController extends Controller
         }
     }
 
-    // ─── API METHODS ───
+    // ════════════════════════════════════════════════════════════════
+    // API METHODS
+    // ════════════════════════════════════════════════════════════════
 
     public function getWardData($wardId)
     {
@@ -1249,7 +1300,9 @@ class CommissionerController extends Controller
         }
     }
 
-    // ─── WARD ANALYTICS HELPERS ───
+    // ════════════════════════════════════════════════════════════════
+    // WARD ANALYTICS HELPERS (aligned with VariationController)
+    // ════════════════════════════════════════════════════════════════
 
     private function getWardVariationStats($corporationId, $zones)
     {
@@ -1275,12 +1328,17 @@ class CommissionerController extends Controller
                         $polygonDatas = Schema::hasTable($polygonDataTable) ? DB::table($polygonDataTable)->get() : collect();
                         $pointDatas = Schema::hasTable($pointDataTable) ? DB::table($pointDataTable)->get() : collect();
 
-                        $misData = collect();
-                        if (Schema::hasTable($misTable)) {
-                            $misData = DB::table($misTable)->where('ward_no', $wardNo)->get();
-                        }
+                        // Dual MIS lookup
+                        $misData = $this->fetchMisData($misTable, $wardNo);
+                        $allMisData = $this->fetchAllMisData($misTable);
 
-                        $analytics = $this->buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData);
+                        $analytics = $this->buildWardAnalytics(
+                            $polygons,
+                            $polygonDatas,
+                            $pointDatas,
+                            $misData,
+                            $allMisData
+                        );
 
                         $wardStats[] = [
                             'ward_id' => $wardId,
@@ -1308,78 +1366,252 @@ class CommissionerController extends Controller
 
             return $wardStats;
         } catch (\Exception $e) {
+            Log::error('getWardVariationStats error: ' . $e->getMessage());
             return [];
         }
     }
-    private function computeBuildingComparison($polygon, $polygonDataByGisid, $pointDataByGisid, $misByAssessment): array
+
+    /**
+     * Compute building vs assessment comparison.
+     * Uses VariationController-style rules: MIXED, COMMERCIAL family, RESIDENTIAL.
+     */
+    private function computeBuildingComparison($polygon, $polygonDataByGisid, $pointDataByGisid, $misByAssessment, $allMisByAssessment = null): array
     {
         try {
-            $gisid = $polygon->gisid;
-            $groundSqfeet = floatval($polygon->sqfeet ?? 0);
+            $gisid         = $polygon->gisid;
+            $groundSqfeet  = floatval($polygon->sqfeet ?? 0);
+
+            // ─── BUILDING AREA & USAGE ───
+            $buildingUsage = null;
+            $buildingArea  = $groundSqfeet;
 
             $polyData = $polygonDataByGisid->get($gisid);
             if ($polyData) {
                 $numberFloor = floatval($polyData->number_floor ?? 0);
-                $basement = floatval($polyData->basement ?? 0);
-                $percentage = floatval($polyData->percentage ?? 100);
+                $basement    = floatval($polyData->basement ?? 0);
+                $percentage  = floatval($polyData->percentage ?? 0) / 100;
 
-                // NEW FORMULA: (number of floors + basement + (percentage/100)) * ground sq feet
-                $buildingArea = ($numberFloor + $basement + ($percentage / 100)) * $groundSqfeet;
+                $buildingArea = ($numberFloor > 0 ? $numberFloor + $percentage : 1) * $groundSqfeet;
+
+                if ($basement > 0) {
+                    $buildingArea += ($groundSqfeet * $basement);
+                }
+
                 $buildingUsage = $polyData->building_usage ?? null;
-            } else {
-                $buildingArea = $groundSqfeet;
-                $buildingUsage = null;
             }
 
-            $assessmentArea = 0;
-            $assessmentCount = 0;
+            // ─── ASSESSMENT DATA ───
+            $assessmentArea      = 0;
+            $assessmentCount     = 0;
+            $assessmentUsage     = null;
+            $allAssessmentUsages = [];
+            $matchedCount        = 0;
+            $mismatchedCount     = 0;
+
+            $hasResidential   = false;
+            $hasCommercial    = false;
+            $commercialIsNew  = false;
             $hasUsageMismatch = false;
+            $hasPartialMatch  = false;
 
             if (isset($pointDataByGisid[$gisid])) {
                 foreach ($pointDataByGisid[$gisid] as $pd) {
                     $assessmentCount++;
-                    $mis = $misByAssessment->get($pd->assessment);
 
+                    // ─── NORMALIZED MIS LOOKUP (ward first, then any ward) ───
+                    $assessmentKey = $this->normalizeAssessment($pd->assessment ?? '');
+                    $mis = $misByAssessment->get($assessmentKey);
+
+                    if (!$mis && $allMisByAssessment) {
+                        $mis = $allMisByAssessment->get($assessmentKey);
+                    }
+
+                    // ─── POINT AREA (qcsqfeet → MIS plot_area → 0) ───
                     $pointArea = 0;
-                    if (!empty($pd->qcsqfeet) && $pd->qcsqfeet > 0) {
-                        $pointArea = floatval($pd->qcsqfeet);
-                    } elseif ($mis && !empty($mis->plot_area) && $mis->plot_area > 0) {
+                    $qcArea    = floatval($pd->qcsqfeet ?? 0);
+
+                    if ($qcArea > 0) {
+                        $pointArea = $qcArea;
+                    } elseif ($mis && floatval($mis->plot_area ?? 0) > 0) {
                         $pointArea = floatval($mis->plot_area);
                     }
                     $assessmentArea += $pointArea;
 
-                    $pointUsage = $pd->qcusage ?? $pd->bill_usage ?? null;
-                    if (
-                        $buildingUsage && $pointUsage
-                        && strtoupper(trim($buildingUsage)) != strtoupper(trim($pointUsage))
-                    ) {
-                        $hasUsageMismatch = true;
+                    // ─── POINT USAGE ───
+                    $pointUsage      = $pd->qcusage ?? $pd->bill_usage ?? null;
+                    $pointUsageUpper = $pointUsage ? strtoupper(trim($pointUsage)) : null;
+                    $pointAssessmentType = strtoupper(trim($pd->assessment_type ?? ''));
+
+                    if ($pointUsage) {
+                        $allAssessmentUsages[] = $pointUsage;
+
+                        if (!$assessmentUsage) {
+                            $assessmentUsage = $pointUsage;
+                        }
+
+                        if ($pointUsageUpper === 'RESIDENTIAL') {
+                            $hasResidential = true;
+                        }
+                        if ($pointUsageUpper === 'COMMERCIAL') {
+                            $hasCommercial = true;
+                            if ($pointAssessmentType === 'NEW') {
+                                $commercialIsNew = true;
+                            }
+                        }
+                    }
+
+                    // ─── MATCH / MISMATCH PER POINT ───
+                    if ($buildingUsage && $pointUsage) {
+                        $buildingUsageUpper = strtoupper(trim($buildingUsage));
+                        $isMatch = false;
+
+                        if (str_contains($buildingUsageUpper, 'MIX')) {
+                            if (in_array($pointUsageUpper, ['RESIDENTIAL', 'COMMERCIAL', 'MIXED'])) {
+                                $isMatch = true;
+                            }
+                        } elseif ($buildingUsageUpper === 'RESIDENTIAL') {
+                            $isMatch = ($pointUsageUpper === 'RESIDENTIAL');
+                        } elseif (in_array($buildingUsageUpper, [
+                            'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
+                            'GOVERNMENT', 'VACANT', 'OTHER',
+                        ])) {
+                            $isMatch = ($pointUsageUpper === 'COMMERCIAL');
+                        }
+
+                        if ($isMatch) {
+                            $matchedCount++;
+                        } else {
+                            $mismatchedCount++;
+                        }
                     }
                 }
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // BUILDING-LEVEL USAGE RULES (same as VariationController)
+            // ═══════════════════════════════════════════════════════════
+            if ($buildingUsage && $assessmentUsage) {
+                $buildingUsageUpper = strtoupper(trim($buildingUsage));
+
+                // MIXED rule
+                if (str_contains($buildingUsageUpper, 'MIX')) {
+                    if (!$hasResidential || !$hasCommercial) {
+                        $hasUsageMismatch = true;
+                    } elseif ($commercialIsNew) {
+                        $hasUsageMismatch = true;
+                    } else {
+                        $hasPartialMatch = true;
+                    }
+                }
+                // COMMERCIAL family rule
+                elseif (in_array($buildingUsageUpper, [
+                    'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
+                    'GOVERNMENT', 'VACANT', 'OTHER',
+                ])) {
+                    if ($hasResidential) {
+                        $hasUsageMismatch = true;
+                    } else {
+                        $hasPartialMatch = true;
+                    }
+                }
+                // RESIDENTIAL rule
+                elseif ($buildingUsageUpper === 'RESIDENTIAL') {
+                    if ($hasCommercial) {
+                        $hasUsageMismatch = true;
+                    } else {
+                        $hasPartialMatch = true;
+                    }
+                }
+                // Unknown
+                else {
+                    $hasUsageMismatch = true;
+                }
+            }
+
+            // ─── FINAL USAGE STATUS ───
+            $usageStatus      = 'NO_DATA';
+            $usageStatusLabel = 'No Data';
+            $usageBadgeClass  = 'badge-secondary';
+
+            if ($buildingUsage && $assessmentUsage) {
+                if ($hasUsageMismatch) {
+                    if ($hasPartialMatch && count($allAssessmentUsages) > 1) {
+                        $usageStatus      = 'PARTIAL_MATCH';
+                        $usageStatusLabel = 'Partial Match';
+                        $usageBadgeClass  = 'badge-warning';
+                    } else {
+                        $usageStatus      = 'VARIATION';
+                        $usageStatusLabel = 'Variation';
+                        $usageBadgeClass  = 'badge-variation';
+                    }
+                } else {
+                    $usageStatus      = 'MATCH';
+                    $usageStatusLabel = 'Match';
+                    $usageBadgeClass  = 'badge-match';
+                }
+            } elseif ($buildingUsage && !$assessmentUsage) {
+                $usageStatus      = 'BUILDING_ONLY';
+                $usageStatusLabel = 'Building Only';
+                $usageBadgeClass  = 'badge-partial';
+            } elseif (!$buildingUsage && $assessmentUsage) {
+                $usageStatus      = 'ASSESSMENT_ONLY';
+                $usageStatusLabel = 'Assessment Only';
+                $usageBadgeClass  = 'badge-partial';
+            }
+
             return [
-                'gisid' => $gisid,
-                'building_area' => $buildingArea,
-                'assessment_area' => $assessmentArea,
-                'assessment_count' => $assessmentCount,
-                'usage_mismatch' => $hasUsageMismatch,
+                'gisid'              => $gisid,
+                'building_area'      => round($buildingArea, 2),
+                'assessment_area'    => round($assessmentArea, 2),
+                'assessment_count'   => $assessmentCount,
+
+                'building_usage'     => $buildingUsage,
+                'assessment_usage'   => $assessmentUsage,
+                'all_assessment_usages' => $allAssessmentUsages,
+
+                'usage_matched_count'    => $matchedCount,
+                'usage_mismatched_count' => $mismatchedCount,
+
+                'usage_status'       => $usageStatus,
+                'usage_status_label' => $usageStatusLabel,
+                'usage_badge_class'  => $usageBadgeClass,
+
+                'area_status'        => abs($buildingArea - $assessmentArea) > 1 ? 'VARIATION' : 'MATCH',
+                'usage_mismatch'     => $hasUsageMismatch,
+
+                'has_residential'    => $hasResidential,
+                'has_commercial'     => $hasCommercial,
+                'commercial_is_new'  => $commercialIsNew,
             ];
         } catch (\Exception $e) {
+            Log::error('computeBuildingComparison error: ' . $e->getMessage());
             return [
-                'gisid' => $polygon->gisid ?? null,
-                'building_area' => 0,
-                'assessment_area' => 0,
-                'assessment_count' => 0,
-                'usage_mismatch' => false,
+                'gisid'              => $polygon->gisid ?? null,
+                'building_area'      => 0,
+                'assessment_area'    => 0,
+                'assessment_count'   => 0,
+                'building_usage'     => null,
+                'assessment_usage'   => null,
+                'all_assessment_usages' => [],
+                'usage_matched_count'    => 0,
+                'usage_mismatched_count' => 0,
+                'usage_status'       => 'NO_DATA',
+                'usage_status_label' => 'No Data',
+                'usage_badge_class'  => 'badge-secondary',
+                'area_status'        => 'MATCH',
+                'usage_mismatch'     => false,
+                'has_residential'    => false,
+                'has_commercial'     => false,
+                'commercial_is_new'  => false,
             ];
         }
     }
-    private function buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData)
+
+    private function buildWardAnalytics($polygons, $polygonDatas, $pointDatas, $misData, $allMisData = null)
     {
         try {
-            $totalBuildings = count($polygons);
-            $surveyedBuildings = collect($polygonDatas)->pluck('gisid')->unique()->count();
+            $totalBuildings          = count($polygons);
+            $surveyedBuildings       = collect($polygonDatas)->pluck('gisid')->unique()->count();
             $totalSurveyedAssessments = count($pointDatas);
 
             $surveyPercentage = $totalBuildings > 0
@@ -1387,26 +1619,38 @@ class CommissionerController extends Controller
                 : 0;
 
             $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
-            $misByAssessment = collect($misData)->keyBy('assessment');
+
+            // Primary: ward-filtered MIS
+            $misByAssessment = collect($misData)->keyBy(function ($item) {
+                return $this->normalizeAssessment($item->assessment ?? '');
+            });
+
+            // Fallback: all corp MIS
+            $allMisByAssessment = collect($allMisData ?? $misData)->keyBy(function ($item) {
+                return $this->normalizeAssessment($item->assessment ?? '');
+            });
 
             $pointDataByGisid = [];
             foreach ($pointDatas as $pd) {
-                if (!isset($pointDataByGisid[$pd->point_gisid])) {
-                    $pointDataByGisid[$pd->point_gisid] = [];
-                }
                 $pointDataByGisid[$pd->point_gisid][] = $pd;
             }
 
-            $areaVariationCount = 0;
+            $areaVariationCount  = 0;
             $usageVariationCount = 0;
             $validBuildingsCount = 0;
-            $totalBuildingArea = 0;
+            $totalBuildingArea   = 0;
             $totalAssessmentArea = 0;
 
             foreach ($polygons as $polygon) {
-                $c = $this->computeBuildingComparison($polygon, $polygonDataByGisid, $pointDataByGisid, $misByAssessment);
+                $c = $this->computeBuildingComparison(
+                    $polygon,
+                    $polygonDataByGisid,
+                    $pointDataByGisid,
+                    $misByAssessment,
+                    $allMisByAssessment
+                );
 
-                $totalBuildingArea += $c['building_area'];
+                $totalBuildingArea   += $c['building_area'];
                 $totalAssessmentArea += $c['assessment_area'];
 
                 if ($c['building_area'] > 0 && $c['assessment_area'] > 0) {
@@ -1421,72 +1665,97 @@ class CommissionerController extends Controller
             }
 
             return [
-                'total_buildings' => $totalBuildings,
-                'surveyed_buildings' => $surveyedBuildings,
-                'total_surveyed_assessments' => $totalSurveyedAssessments,
-                'survey_percentage' => $surveyPercentage,
-                'area_variation_count' => $areaVariationCount,
-                'usage_variation_count' => $usageVariationCount,
-                'area_variation_percentage' => $validBuildingsCount > 0
+                'total_buildings'             => $totalBuildings,
+                'surveyed_buildings'          => $surveyedBuildings,
+                'total_surveyed_assessments'  => $totalSurveyedAssessments,
+                'survey_percentage'           => $surveyPercentage,
+                'area_variation_count'        => $areaVariationCount,
+                'usage_variation_count'       => $usageVariationCount,
+                'area_variation_percentage'   => $validBuildingsCount > 0
                     ? round(($areaVariationCount / $validBuildingsCount) * 100, 1) : 0,
-                'usage_variation_percentage' => $validBuildingsCount > 0
+                'usage_variation_percentage'  => $validBuildingsCount > 0
                     ? round(($usageVariationCount / $validBuildingsCount) * 100, 1) : 0,
-                'total_building_area' => round($totalBuildingArea, 2),
-                'total_assessment_area' => round($totalAssessmentArea, 2),
+                'total_building_area'         => round($totalBuildingArea, 2),
+                'total_assessment_area'       => round($totalAssessmentArea, 2),
             ];
         } catch (\Exception $e) {
+            Log::error('buildWardAnalytics error: ' . $e->getMessage());
             return [
-                'total_buildings' => 0,
-                'surveyed_buildings' => 0,
-                'total_surveyed_assessments' => 0,
-                'survey_percentage' => 0,
-                'area_variation_count' => 0,
-                'usage_variation_count' => 0,
-                'area_variation_percentage' => 0,
-                'usage_variation_percentage' => 0,
-                'total_building_area' => 0,
-                'total_assessment_area' => 0,
+                'total_buildings' => 0, 'surveyed_buildings' => 0,
+                'total_surveyed_assessments' => 0, 'survey_percentage' => 0,
+                'area_variation_count' => 0, 'usage_variation_count' => 0,
+                'area_variation_percentage' => 0, 'usage_variation_percentage' => 0,
+                'total_building_area' => 0, 'total_assessment_area' => 0,
             ];
         }
     }
 
-    private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData)
+    private function buildBuildingVariations($polygons, $polygonDatas, $pointDatas, $misData, $allMisData = null)
     {
         try {
             $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
-            $misByAssessment = collect($misData)->keyBy('assessment');
+
+            // Primary: ward-filtered MIS
+            $misByAssessment = collect($misData)->keyBy(function ($item) {
+                return $this->normalizeAssessment($item->assessment ?? '');
+            });
+
+            // Fallback: all corp MIS
+            $allMisByAssessment = collect($allMisData ?? $misData)->keyBy(function ($item) {
+                return $this->normalizeAssessment($item->assessment ?? '');
+            });
 
             $pointDataByGisid = [];
             foreach ($pointDatas as $pd) {
-                if (!isset($pointDataByGisid[$pd->point_gisid])) {
-                    $pointDataByGisid[$pd->point_gisid] = [];
-                }
                 $pointDataByGisid[$pd->point_gisid][] = $pd;
             }
 
             $result = [];
 
             foreach ($polygons as $polygon) {
-                $c = $this->computeBuildingComparison($polygon, $polygonDataByGisid, $pointDataByGisid, $misByAssessment);
+                $c = $this->computeBuildingComparison(
+                    $polygon,
+                    $polygonDataByGisid,
+                    $pointDataByGisid,
+                    $misByAssessment,
+                    $allMisByAssessment
+                );
 
                 $areaVariation = $c['building_area'] - $c['assessment_area'];
                 $variationPercentage = $c['building_area'] > 0
-                    ? round((abs($areaVariation) / $c['building_area']) * 100, 1) : 0;
+                    ? round((abs($areaVariation) / $c['building_area']) * 100, 1)
+                    : 0;
 
                 $result[$c['gisid']] = [
-                    'gisid' => $c['gisid'],
-                    'building_area' => round($c['building_area'], 2),
-                    'assessment_area' => round($c['assessment_area'], 2),
-                    'area_variation' => round($areaVariation, 2),
+                    'gisid'              => $c['gisid'],
+                    'building_area'      => $c['building_area'],
+                    'assessment_area'    => $c['assessment_area'],
+                    'area_variation'     => round($areaVariation, 2),
                     'variation_percentage' => $variationPercentage,
-                    'area_status' => (abs($areaVariation) > 1) ? 'VARIATION' : 'MATCH',
-                    'usage_status' => $c['usage_mismatch'] ? 'VARIATION' : 'MATCH',
-                    'assessment_count' => $c['assessment_count'],
+                    'area_status'        => $c['area_status'],
+
+                    'building_usage'     => $c['building_usage'],
+                    'assessment_usage'   => $c['assessment_usage'],
+                    'all_assessment_usages' => $c['all_assessment_usages'],
+
+                    'usage_status'       => $c['usage_status'],
+                    'usage_status_label' => $c['usage_status_label'],
+                    'usage_badge_class'  => $c['usage_badge_class'],
+                    'usage_mismatch'     => $c['usage_mismatch'],
+
+                    'usage_matched_count'    => $c['usage_matched_count'],
+                    'usage_mismatched_count' => $c['usage_mismatched_count'],
+
+                    'assessment_count'   => $c['assessment_count'],
+                    'has_residential'    => $c['has_residential'],
+                    'has_commercial'     => $c['has_commercial'],
+                    'commercial_is_new'  => $c['commercial_is_new'],
                 ];
             }
 
             return $result;
         } catch (\Exception $e) {
+            Log::error('buildBuildingVariations error: ' . $e->getMessage());
             return [];
         }
     }
@@ -1633,7 +1902,6 @@ class CommissionerController extends Controller
                 }
             }
 
-            // Recent survey entries for accessible wards
             foreach ($accessibleWardIds as $wardId) {
                 $table = 'point_data_' . $wardId;
                 if (!Schema::hasTable($table)) {
