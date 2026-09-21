@@ -228,41 +228,41 @@ class CommissionerController extends Controller
         }
     }
 
-   private function getConnectedByWards($corporationId, array $wardIds): int
-{
-    try {
-        $misTable = $this->taxTable('mis', $corporationId);
-        if (!Schema::hasTable($misTable) || !Schema::hasColumn($misTable, 'assessment')) {
-            return 0;
-        }
-
-        // MIS la irukkura assessment numbers
-        $assessments = DB::table($misTable)
-            ->pluck('assessment')
-            ->filter()
-            ->unique()
-            ->toArray();
-
-        if (empty($assessments)) {
-            return 0;
-        }
-
-        $total = 0;
-        foreach ($wardIds as $wardId) {
-            $table = "point_data_{$wardId}";
-            if (Schema::hasTable($table) && Schema::hasColumn($table, 'assessment')) {
-                // point_data.assessment match aagura count
-                $total += DB::table($table)
-                    ->whereIn('assessment', $assessments)
-                    ->count();
+    private function getConnectedByWards($corporationId, array $wardIds): int
+    {
+        try {
+            $misTable = $this->taxTable('mis', $corporationId);
+            if (!Schema::hasTable($misTable) || !Schema::hasColumn($misTable, 'assessment')) {
+                return 0;
             }
+
+            // MIS la irukkura assessment numbers
+            $assessments = DB::table($misTable)
+                ->pluck('assessment')
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            if (empty($assessments)) {
+                return 0;
+            }
+
+            $total = 0;
+            foreach ($wardIds as $wardId) {
+                $table = "point_data_{$wardId}";
+                if (Schema::hasTable($table) && Schema::hasColumn($table, 'assessment')) {
+                    // point_data.assessment match aagura count
+                    $total += DB::table($table)
+                        ->whereIn('assessment', $assessments)
+                        ->count();
+                }
+            }
+            return $total;
+        } catch (\Exception $e) {
+            Log::error('getConnectedByWards error: ' . $e->getMessage());
+            return 0;
         }
-        return $total;
-    } catch (\Exception $e) {
-        Log::error('getConnectedByWards error: ' . $e->getMessage());
-        return 0;
     }
-}
 
     private function getTaxCount(string $type, $corporationId): int
     {
@@ -849,21 +849,47 @@ class CommissionerController extends Controller
             $polygonDatas = Schema::hasTable($polygonDataTableName) ? DB::table($polygonDataTableName)->get() : collect();
             $pointDatas = Schema::hasTable($pointDataTableName) ? DB::table($pointDataTableName)->get() : collect();
 
-            $misData = Schema::hasTable($misTableName) ? DB::table($misTableName . ' as mis')
-                ->leftJoin($waterTaxTableName . ' as wt', 'mis.assessment', '=', 'wt.assessment')
-                ->leftJoin($ugdtable . ' as ugd', 'mis.assessment', '=', 'ugd.assessment')
-                ->leftJoin($prefessionaltax . ' as pt', 'mis.assessment', '=', 'pt.assessment')
-                ->where('mis.ward_no', $wardNo)
-                ->select(
-                    'mis.*',
-                    'wt.watertax_no',
-                    'wt.old_watertax_no',
-                    'ugd.ugd_no',
-                    'ugd.old_ugd_no',
-                    'pt.pt_number',
-                    'pt.old_pt_number'
-                )
-                ->get() : collect();
+            // ✅ FIXED: Get this ward's MIS + any MIS matching point_data assessments (all wards)
+            $misData = collect();
+
+            if (Schema::hasTable($misTableName)) {
+                // 1. Get assessment numbers from this ward's point_data
+                $pointDataAssessments = collect();
+                if (Schema::hasTable($pointDataTableName)) {
+                    $pointDataAssessments = DB::table($pointDataTableName)
+                        ->whereNotNull('assessment')
+                        ->where('assessment', '!=', '')
+                        ->pluck('assessment')
+                        ->unique()
+                        ->filter()
+                        ->values();
+                }
+
+                // 2. Build query: this ward's MIS OR MIS matching point_data assessments
+                $misQuery = DB::table($misTableName . ' as mis')
+                    ->leftJoin($waterTaxTableName . ' as wt', 'mis.assessment', '=', 'wt.assessment')
+                    ->leftJoin($ugdtable . ' as ugd', 'mis.assessment', '=', 'ugd.assessment')
+                    ->leftJoin($prefessionaltax . ' as pt', 'mis.assessment', '=', 'pt.assessment')
+                    ->select(
+                        'mis.*',
+                        'wt.watertax_no',
+                        'wt.old_watertax_no',
+                        'ugd.ugd_no',
+                        'ugd.old_ugd_no',
+                        'pt.pt_number',
+                        'pt.old_pt_number'
+                    );
+
+                // Condition: (ward_no = current ward) OR (assessment IN point_data assessments)
+                $misQuery->where(function ($q) use ($wardNo, $pointDataAssessments) {
+                    $q->where('mis.ward_no', $wardNo);
+                    if ($pointDataAssessments->isNotEmpty()) {
+                        $q->orWhereIn('mis.assessment', $pointDataAssessments->toArray());
+                    }
+                });
+
+                $misData = $misQuery->get();
+            }
 
             $uniqueRoadNames = Schema::hasTable($misTableName) ? DB::table($misTableName)
                 ->select('road_name')
