@@ -4,134 +4,31 @@
     <meta charset="utf-8">
     <title>All Assessments PDF</title>
     <style>
-        body {
-            font-family: DejaVu Sans, sans-serif;
-            font-size: 9px;
-            color: #000;
-            padding: 15px;
-        }
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-        .header h1 {
-            font-size: 16px;
-            margin: 0;
-        }
-        .header .subtitle {
-            font-size: 11px;
-            color: #666;
-        }
-        .section-title {
-            background: #4472C4;
-            color: #fff;
-            padding: 4px 10px;
-            font-weight: bold;
-            font-size: 10px;
-            margin-top: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 5px;
-        }
-        td, th {
-            border: 1px solid #ccc;
-            padding: 3px 5px;
-            font-size: 8px;
-            text-align: left;
-        }
-        th {
-            background: #f0f0f0;
-            font-weight: bold;
-        }
-        .badge {
-            display: inline-block;
-            padding: 1px 6px;
-            border-radius: 10px;
-            font-size: 7px;
-            font-weight: bold;
-        }
-        .badge-success {
-            background: #d4edda;
-            color: #155724;
-        }
-        .badge-danger {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .badge-warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .badge-info {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        .badge-secondary {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-        .footer {
-            margin-top: 15px;
-            border-top: 1px solid #ccc;
-            padding-top: 8px;
-            font-size: 7px;
-            color: #666;
-            text-align: center;
-        }
-        .signature-block {
-            margin-top: 20px;
-            border-top: 2px solid #333;
-            padding-top: 12px;
-        }
-        .sig-row {
-            display: table;
-            width: 100%;
-        }
-        .sig-col {
-            display: table-cell;
-            text-align: center;
-            padding: 0 5px;
-            width: 25%;
-        }
-        .sig-col .sig-line {
-            border-bottom: 1px solid #000;
-            height: 25px;
-            margin-bottom: 3px;
-        }
-        .sig-col .sig-label {
-            font-size: 7px;
-            font-weight: bold;
-        }
-        .sig-col .sig-sub {
-            font-size: 6px;
-            color: #666;
-        }
-        .summary-box {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 8px 12px;
-            margin: 10px 0;
-        }
-        .summary-box .stat {
-            display: inline-block;
-            margin-right: 20px;
-        }
-        .summary-box .stat .num {
-            font-weight: bold;
-            font-size: 12px;
-        }
-        .summary-box .stat .lbl {
-            font-size: 8px;
-            color: #666;
-        }
-        .page-break {
-            page-break-after: always;
-        }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 9px; color: #000; padding: 15px; }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+        .header h1 { font-size: 16px; margin: 0; }
+        .header .subtitle { font-size: 11px; color: #666; }
+        .section-title { background: #4472C4; color: #fff; padding: 4px 10px; font-weight: bold; font-size: 10px; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+        td, th { border: 1px solid #ccc; padding: 3px 5px; font-size: 8px; text-align: left; }
+        th { background: #f0f0f0; font-weight: bold; }
+        .badge { display: inline-block; padding: 1px 6px; border-radius: 10px; font-size: 7px; font-weight: bold; }
+        .badge-success   { background: #d4edda; color: #155724; }
+        .badge-danger    { background: #f8d7da; color: #721c24; }
+        .badge-warning   { background: #fff3cd; color: #856404; }
+        .badge-info      { background: #d1ecf1; color: #0c5460; }
+        .badge-secondary { background: #e2e3e5; color: #383d41; }
+        .footer { margin-top: 15px; border-top: 1px solid #ccc; padding-top: 8px; font-size: 7px; color: #666; text-align: center; }
+        .signature-block { margin-top: 20px; border-top: 2px solid #333; padding-top: 12px; }
+        .sig-row { display: table; width: 100%; }
+        .sig-col { display: table-cell; text-align: center; padding: 0 5px; width: 25%; }
+        .sig-col .sig-line { border-bottom: 1px solid #000; height: 25px; margin-bottom: 3px; }
+        .sig-col .sig-label { font-size: 7px; font-weight: bold; }
+        .sig-col .sig-sub { font-size: 6px; color: #666; }
+        .summary-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 8px 12px; margin: 10px 0; }
+        .summary-box .stat { display: inline-block; margin-right: 20px; }
+        .summary-box .stat .num { font-weight: bold; font-size: 12px; }
+        .summary-box .stat .lbl { font-size: 8px; color: #666; }
     </style>
 </head>
 <body>
@@ -152,9 +49,7 @@
         <div style="text-align: center; margin-bottom: 12px;">
             <img src="{{ $buildingImage }}"
                  style="max-width: 100%; max-height: 320px; border: 1px solid #ccc; padding: 3px;" />
-            <div style="font-size: 7px; color: #666; margin-top: 3px;">
-                GIS ID: {{ $gisid }}
-            </div>
+            <div style="font-size: 7px; color: #666; margin-top: 3px;">GIS ID: {{ $gisid }}</div>
         </div>
     @endif
 
@@ -206,20 +101,22 @@
             @php $points = $buildingData['assessment']['details']['points'] ?? []; @endphp
             @forelse($points as $idx => $point)
                 @php
-                    $mis = $point['mis_data'] ?? [];
+                    // Safe MIS array (never null)
+                    $mis = $point['mis_data'] ?? null;
+                    if (!is_array($mis)) { $mis = []; }
 
-                    // ── Door no: new_door_no / old_door_no from point_data ──
+                    // Door no from point_data
                     $doorParts = array_filter([
                         $point['new_door_no'] ?? null,
                         $point['old_door_no'] ?? null,
                     ]);
                     $door = $doorParts ? implode(' / ', $doorParts) : null;
 
-                    // ── Half Year Tax: MIS only (matched via assessment) ──
-                    $halfYearTax = $mis['halfyeartax'] ?? null;
-
-                    // ── Balance: MIS only ──
-                    $balance = $mis['balance'] ?? null;
+                    // MIS-derived values (safe)
+                    $misAssessment = $mis['assessment']  ?? null;
+                    $misPlotArea   = $mis['plot_area']   ?? null;
+                    $halfYearTax   = $mis['halfyeartax'] ?? null;
+                    $balance       = $mis['balance']     ?? null;
                 @endphp
                 <tr>
                     <td>{{ $idx + 1 }}</td>
@@ -231,13 +128,13 @@
                         </span>
                     </td>
                     <td>{{ number_format((float)($point['point_area'] ?? 0), 2) }}</td>
-                    <td>{{ $point['qcusage']    ?? 'N/A' }}</td>
-                    <td>{{ $point['bill_usage'] ?? 'N/A' }}</td>
+                    <td>{{ $point['qcusage']      ?? 'N/A' }}</td>
+                    <td>{{ $point['bill_usage']   ?? 'N/A' }}</td>
                     <td>{{ $point['owner_name']   ?? 'N/A' }}</td>
                     <td>{{ $point['phone_number'] ?? 'N/A' }}</td>
                     <td>{{ $door ?: 'N/A' }}</td>
-                    <td>{{ $mis['assessment'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['plot_area'] !== null ? number_format((float)$mis['plot_area'], 2) : 'N/A' }}</td>
+                    <td>{{ $misAssessment ?: 'N/A' }}</td>
+                    <td>{{ $misPlotArea !== null ? number_format((float)$misPlotArea, 2) : 'N/A' }}</td>
                     <td>{{ $halfYearTax !== null ? number_format((float)$halfYearTax, 2) : 'N/A' }}</td>
                     <td>{{ $balance     !== null ? number_format((float)$balance,     2) : 'N/A' }}</td>
                 </tr>

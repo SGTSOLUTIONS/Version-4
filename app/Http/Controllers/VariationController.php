@@ -17,11 +17,13 @@ class VariationController extends Controller
      * Removes ALL whitespace, uppercases.
      */
     private function normalizeAssessment($value): string
-    {
-        $value = (string) $value;
-        $value = preg_replace('/\s+/', '', $value);
-        return strtoupper(trim($value));
-    }
+{
+    $value = (string) $value;
+    $value = preg_replace('/\s+/', '', $value);   // remove ALL whitespace
+    $value = str_replace('\\', '/', $value);      // backslash → forward slash
+    $value = trim($value);
+    return strtoupper($value);
+}
 
     /**
      * Fetch MIS rows for a specific ward (tries string, then int, then PHP filter).
@@ -1453,16 +1455,14 @@ public function exportAllAssessmentsPdf($wardId, $gisid)
         $imageValue = $pd->image ?? null;
 
         if ($imageValue) {
-            // Case 1: already base64 data URI
             if (str_starts_with($imageValue, 'data:image')) {
+                // Already base64 data URI
                 $buildingImage = $imageValue;
-            }
-            // Case 2: full URL
-            elseif (filter_var($imageValue, FILTER_VALIDATE_URL)) {
+            } elseif (filter_var($imageValue, FILTER_VALIDATE_URL)) {
+                // Full URL
                 $buildingImage = $imageValue;
-            }
-            // Case 3: file path — try common locations
-            else {
+            } else {
+                // File path — try common locations
                 $paths = [
                     storage_path("app/public/{$imageValue}"),
                     public_path($imageValue),
