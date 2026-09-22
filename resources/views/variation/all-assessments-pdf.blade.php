@@ -145,17 +145,19 @@
         </div>
         <div class="subtitle">Generated: {{ $date }}</div>
     </div>
-{{-- BUILDING IMAGE FROM POLYGON_DATA --}}
-@if(!empty($buildingImage))
-    <div class="section-title">BUILDING IMAGE</div>
-    <div style="text-align: center; margin-bottom: 12px;">
-        <img src="{{ $buildingImage }}"
-             style="max-width: 100%; max-height: 320px; border: 1px solid #ccc; padding: 3px;" />
-        <div style="font-size: 7px; color: #666; margin-top: 3px;">
-            GIS ID: {{ $gisid }}
+
+    {{-- BUILDING IMAGE FROM POLYGON_DATA --}}
+    @if(!empty($buildingImage))
+        <div class="section-title">BUILDING IMAGE</div>
+        <div style="text-align: center; margin-bottom: 12px;">
+            <img src="{{ $buildingImage }}"
+                 style="max-width: 100%; max-height: 320px; border: 1px solid #ccc; padding: 3px;" />
+            <div style="font-size: 7px; color: #666; margin-top: 3px;">
+                GIS ID: {{ $gisid }}
+            </div>
         </div>
-    </div>
-@endif
+    @endif
+
     <!-- BUILDING SUMMARY -->
     <div class="summary-box">
         <div class="stat">
@@ -187,41 +189,57 @@
             <tr>
                 <th>#</th>
                 <th>Assessment No</th>
-                <th>Assessment Type</th>
+                <th>Type</th>
                 <th>Area (sqft)</th>
                 <th>QC Usage</th>
                 <th>Bill Usage</th>
                 <th>Owner Name</th>
                 <th>Phone</th>
                 <th>Door No</th>
-                <th>Street</th>
                 <th>MIS Assessment</th>
                 <th>MIS Area</th>
-                <th>MIS Tax</th>
+                <th>Half Year Tax</th>
+                <th>Balance</th>
             </tr>
         </thead>
         <tbody>
             @php $points = $buildingData['assessment']['details']['points'] ?? []; @endphp
             @forelse($points as $idx => $point)
+                @php
+                    $mis = $point['mis_data'] ?? [];
+
+                    // ── Door no: new_door_no / old_door_no from point_data ──
+                    $doorParts = array_filter([
+                        $point['new_door_no'] ?? null,
+                        $point['old_door_no'] ?? null,
+                    ]);
+                    $door = $doorParts ? implode(' / ', $doorParts) : null;
+
+                    // ── Half Year Tax: MIS only (matched via assessment) ──
+                    $halfYearTax = $mis['halfyeartax'] ?? null;
+
+                    // ── Balance: MIS only ──
+                    $balance = $mis['balance'] ?? null;
+                @endphp
                 <tr>
                     <td>{{ $idx + 1 }}</td>
                     <td><strong>{{ $point['assessment'] ?? 'N/A' }}</strong></td>
                     <td>
-                        <span class="badge badge-{{ strtolower($point['assessment_type'] ?? 'secondary') === 'old' ? 'warning' : (strtolower($point['assessment_type'] ?? '') === 'new' ? 'success' : 'info') }}">
+                        @php $type = strtolower($point['assessment_type'] ?? ''); @endphp
+                        <span class="badge badge-{{ $type === 'old' ? 'warning' : ($type === 'new' ? 'success' : 'info') }}">
                             {{ $point['assessment_type'] ?? 'N/A' }}
                         </span>
                     </td>
-                    <td>{{ number_format($point['point_area'] ?? 0, 2) }}</td>
-                    <td>{{ $point['qcusage'] ?? 'N/A' }}</td>
+                    <td>{{ number_format((float)($point['point_area'] ?? 0), 2) }}</td>
+                    <td>{{ $point['qcusage']    ?? 'N/A' }}</td>
                     <td>{{ $point['bill_usage'] ?? 'N/A' }}</td>
-                    <td>{{ $point['owner_name'] ?? 'N/A' }}</td>
+                    <td>{{ $point['owner_name']   ?? 'N/A' }}</td>
                     <td>{{ $point['phone_number'] ?? 'N/A' }}</td>
-                    <td>{{ $point['door_no'] ?? 'N/A' }}</td>
-                    <td>{{ $point['street_name'] ?? 'N/A' }}</td>
-                    @php $mis = $point['mis_data'] ?? []; @endphp
+                    <td>{{ $door ?: 'N/A' }}</td>
                     <td>{{ $mis['assessment'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['plot_area'] ?? 'N/A' }}</td>
-                    <td>{{ $mis['half_year_tax'] ?? 'N/A' }}</td>
+                    <td>{{ $mis['plot_area'] !== null ? number_format((float)$mis['plot_area'], 2) : 'N/A' }}</td>
+                    <td>{{ $halfYearTax !== null ? number_format((float)$halfYearTax, 2) : 'N/A' }}</td>
+                    <td>{{ $balance     !== null ? number_format((float)$balance,     2) : 'N/A' }}</td>
                 </tr>
             @empty
                 <tr>
@@ -245,7 +263,7 @@
             </tr>
             <tr>
                 <td><strong>Area Variation</strong></td>
-                <td class="{{ ($buildingData['area_comparison']['area_variation'] ?? 0) > 0 ? 'status-variation' : 'status-match' }}">
+                <td>
                     {{ ($buildingData['area_comparison']['area_variation'] ?? 0) > 0 ? '+' : '' }}{{ number_format($buildingData['area_comparison']['area_variation'] ?? 0, 2) }} sqft
                     ({{ $buildingData['area_comparison']['variation_percentage'] ?? 0 }}%)
                 </td>

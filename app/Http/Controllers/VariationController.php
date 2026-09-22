@@ -1412,12 +1412,11 @@ class VariationController extends Controller
 
         return $pdf->download($filename);
     }
-
-   public function exportAllAssessmentsPdf($wardId, $gisid)
+public function exportAllAssessmentsPdf($wardId, $gisid)
 {
-    $ward = Ward::findOrFail($wardId);
-    $zone = Zone::findOrFail($ward->zone_id);
-    $corp = $zone->corp_id;
+    $ward   = Ward::findOrFail($wardId);
+    $zone   = Zone::findOrFail($ward->zone_id);
+    $corp   = $zone->corp_id;
     $wardNo = $ward->ward_no;
 
     $polygons     = DB::table("polygons_{$wardId}")->where('gisid', $gisid)->get();
@@ -1428,24 +1427,33 @@ class VariationController extends Controller
     $misData      = $this->fetchMisData($misTableName, $wardNo);
     $allMisData   = $this->fetchAllMisData($misTableName);
 
-    $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
+    $buildingVariations = $this->buildBuildingData(
+        $polygons,
+        $polygonDatas,
+        $pointDatas,
+        $misData,
+        $allMisData
+    );
+
     $buildingData = $buildingVariations[$gisid] ?? null;
 
     if (!$buildingData) {
         return redirect()->back()->with('error', 'Building not found');
     }
 
-    // ─── Get image from polygon_data ───
+    // ─────────────────────────────────────────────────────────────
+    // BUILDING IMAGE from polygon_data
+    // ─────────────────────────────────────────────────────────────
     $buildingImage = null;
 
     if ($polygonDatas->isNotEmpty()) {
         $pd = $polygonDatas->first();
 
-        // ⚠️ CHANGE 'image' to your actual column name
+        // ⚠️ Change 'image' to your real column name if different
         $imageValue = $pd->image ?? null;
 
         if ($imageValue) {
-            // Case 1: already base64 / data URI
+            // Case 1: already base64 data URI
             if (str_starts_with($imageValue, 'data:image')) {
                 $buildingImage = $imageValue;
             }
@@ -1466,7 +1474,8 @@ class VariationController extends Controller
                 foreach ($paths as $path) {
                     if (file_exists($path)) {
                         $mime = mime_content_type($path) ?: 'image/jpeg';
-                        $buildingImage = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($path));
+                        $buildingImage = 'data:' . $mime . ';base64,'
+                                       . base64_encode(file_get_contents($path));
                         break;
                     }
                 }
@@ -1479,7 +1488,7 @@ class VariationController extends Controller
         'zone'          => $zone,
         'gisid'         => $gisid,
         'buildingData'  => $buildingData,
-        'buildingImage' => $buildingImage,   // ← new
+        'buildingImage' => $buildingImage,
         'date'          => now()->format('d-m-Y'),
         'time'          => now()->format('h-i-A'),
     ]);
@@ -1492,7 +1501,7 @@ class VariationController extends Controller
     ]);
 
     $safeGisid = preg_replace('/[\/\\\:]/', '-', $gisid);
-    $filename = "All_Assessments_GIS_{$safeGisid}_" . date('Y-m-d') . ".pdf";
+    $filename  = "All_Assessments_GIS_{$safeGisid}_" . date('Y-m-d') . ".pdf";
 
     return $pdf->download($filename);
 }
