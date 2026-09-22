@@ -105,18 +105,24 @@
                     $mis = $point['mis_data'] ?? null;
                     if (!is_array($mis)) { $mis = []; }
 
-                    // Door no from point_data
+                    // ── Owner / Phone: point_data first, MIS fallback ──
+                    $owner = $point['owner_name']   ?? $mis['owner_name']   ?? null;
+                    $phone = $point['phone_number'] ?? $mis['phone_number'] ?? null;
+
+                    // ── Door No: point_data first, MIS fallback ──
                     $doorParts = array_filter([
-                        $point['new_door_no'] ?? null,
-                        $point['old_door_no'] ?? null,
+                        $point['new_door_no'] ?? $mis['new_door_no'] ?? null,
+                        $point['old_door_no'] ?? $mis['old_door_no'] ?? null,
                     ]);
                     $door = $doorParts ? implode(' / ', $doorParts) : null;
 
-                    // MIS-derived values (safe)
-                    $misAssessment = $mis['assessment']  ?? null;
-                    $misPlotArea   = $mis['plot_area']   ?? null;
-                    $halfYearTax   = $mis['halfyeartax'] ?? null;
-                    $balance       = $mis['balance']     ?? null;
+                    // ── Half Year Tax & Balance — from MIS (correct column) ──
+                    $halfYearTax = $mis['half_year_tax'] ?? null;
+                    $balance     = $mis['balance']       ?? null;
+
+                    // ── MIS Assessment / MIS Area ──
+                    $misAssessment = $mis['assessment'] ?? null;
+                    $misPlotArea   = $mis['plot_area']  ?? null;
                 @endphp
                 <tr>
                     <td>{{ $idx + 1 }}</td>
@@ -130,10 +136,10 @@
                     <td>{{ number_format((float)($point['point_area'] ?? 0), 2) }}</td>
                     <td>{{ $point['qcusage']      ?? 'N/A' }}</td>
                     <td>{{ $point['bill_usage']   ?? 'N/A' }}</td>
-                    <td>{{ $point['owner_name']   ?? 'N/A' }}</td>
-                    <td>{{ $point['phone_number'] ?? 'N/A' }}</td>
-                    <td>{{ $door ?: 'N/A' }}</td>
-                    <td>{{ $misAssessment ?: 'N/A' }}</td>
+                    <td>{{ $owner                 ?: 'N/A' }}</td>
+                    <td>{{ $phone                 ?: 'N/A' }}</td>
+                    <td>{{ $door                  ?: 'N/A' }}</td>
+                    <td>{{ $misAssessment         ?: 'N/A' }}</td>
                     <td>{{ $misPlotArea !== null ? number_format((float)$misPlotArea, 2) : 'N/A' }}</td>
                     <td>{{ $halfYearTax !== null ? number_format((float)$halfYearTax, 2) : 'N/A' }}</td>
                     <td>{{ $balance     !== null ? number_format((float)$balance,     2) : 'N/A' }}</td>
