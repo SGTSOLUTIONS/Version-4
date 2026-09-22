@@ -145,7 +145,17 @@
         </div>
         <div class="subtitle">Generated: {{ $date }}</div>
     </div>
-
+{{-- BUILDING IMAGE FROM POLYGON_DATA --}}
+@if(!empty($buildingImage))
+    <div class="section-title">BUILDING IMAGE</div>
+    <div style="text-align: center; margin-bottom: 12px;">
+        <img src="{{ $buildingImage }}"
+             style="max-width: 100%; max-height: 320px; border: 1px solid #ccc; padding: 3px;" />
+        <div style="font-size: 7px; color: #666; margin-top: 3px;">
+            GIS ID: {{ $gisid }}
+        </div>
+    </div>
+@endif
     <!-- BUILDING SUMMARY -->
     <div class="summary-box">
         <div class="stat">

@@ -1413,47 +1413,87 @@ class VariationController extends Controller
         return $pdf->download($filename);
     }
 
-    public function exportAllAssessmentsPdf($wardId, $gisid)
-    {
-        $ward = Ward::findOrFail($wardId);
-        $zone = Zone::findOrFail($ward->zone_id);
-        $corp = $zone->corp_id;
-        $wardNo = $ward->ward_no;
+   public function exportAllAssessmentsPdf($wardId, $gisid)
+{
+    $ward = Ward::findOrFail($wardId);
+    $zone = Zone::findOrFail($ward->zone_id);
+    $corp = $zone->corp_id;
+    $wardNo = $ward->ward_no;
 
-        $polygons     = DB::table("polygons_{$wardId}")->where('gisid', $gisid)->get();
-        $polygonDatas = DB::table("polygon_data_{$wardId}")->where('gisid', $gisid)->get();
-        $pointDatas   = DB::table("point_data_{$wardId}")->where('point_gisid', $gisid)->get();
+    $polygons     = DB::table("polygons_{$wardId}")->where('gisid', $gisid)->get();
+    $polygonDatas = DB::table("polygon_data_{$wardId}")->where('gisid', $gisid)->get();
+    $pointDatas   = DB::table("point_data_{$wardId}")->where('point_gisid', $gisid)->get();
 
-        $misTableName = "mis_{$corp}";
-        $misData      = $this->fetchMisData($misTableName, $wardNo);
-        $allMisData   = $this->fetchAllMisData($misTableName);
+    $misTableName = "mis_{$corp}";
+    $misData      = $this->fetchMisData($misTableName, $wardNo);
+    $allMisData   = $this->fetchAllMisData($misTableName);
 
-        $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
-        $buildingData = $buildingVariations[$gisid] ?? null;
+    $buildingVariations = $this->buildBuildingData($polygons, $polygonDatas, $pointDatas, $misData, $allMisData);
+    $buildingData = $buildingVariations[$gisid] ?? null;
 
-        if (!$buildingData) {
-            return redirect()->back()->with('error', 'Building not found');
-        }
-
-        $pdf = Pdf::loadView('variation.all-assessments-pdf', [
-            'ward' => $ward,
-            'zone' => $zone,
-            'gisid' => $gisid,
-            'buildingData' => $buildingData,
-            'date' => now()->format('d-m-Y'),
-            'time' => now()->format('h-i-A'),
-        ]);
-
-        $pdf->setPaper('A4', 'portrait');
-        $pdf->setOptions([
-            'defaultFont' => 'DejaVu Sans',
-            'isHtml5ParserEnabled' => true,
-            'isRemoteEnabled' => true,
-        ]);
-
-        $safeGisid = preg_replace('/[\/\\\:]/', '-', $gisid);
-        $filename = "All_Assessments_GIS_{$safeGisid}_" . date('Y-m-d') . ".pdf";
-
-        return $pdf->download($filename);
+    if (!$buildingData) {
+        return redirect()->back()->with('error', 'Building not found');
     }
+
+    // ─── Get image from polygon_data ───
+    $buildingImage = null;
+
+    if ($polygonDatas->isNotEmpty()) {
+        $pd = $polygonDatas->first();
+
+        // ⚠️ CHANGE 'image' to your actual column name
+        $imageValue = $pd->image ?? null;
+
+        if ($imageValue) {
+            // Case 1: already base64 / data URI
+            if (str_starts_with($imageValue, 'data:image')) {
+                $buildingImage = $imageValue;
+            }
+            // Case 2: full URL
+            elseif (filter_var($imageValue, FILTER_VALIDATE_URL)) {
+                $buildingImage = $imageValue;
+            }
+            // Case 3: file path — try common locations
+            else {
+                $paths = [
+                    storage_path("app/public/{$imageValue}"),
+                    public_path($imageValue),
+                    public_path("storage/{$imageValue}"),
+                    storage_path("app/{$imageValue}"),
+                    base_path($imageValue),
+                ];
+
+                foreach ($paths as $path) {
+                    if (file_exists($path)) {
+                        $mime = mime_content_type($path) ?: 'image/jpeg';
+                        $buildingImage = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($path));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    $pdf = Pdf::loadView('variation.all-assessments-pdf', [
+        'ward'          => $ward,
+        'zone'          => $zone,
+        'gisid'         => $gisid,
+        'buildingData'  => $buildingData,
+        'buildingImage' => $buildingImage,   // ← new
+        'date'          => now()->format('d-m-Y'),
+        'time'          => now()->format('h-i-A'),
+    ]);
+
+    $pdf->setPaper('A4', 'portrait');
+    $pdf->setOptions([
+        'defaultFont'          => 'DejaVu Sans',
+        'isHtml5ParserEnabled' => true,
+        'isRemoteEnabled'      => true,
+    ]);
+
+    $safeGisid = preg_replace('/[\/\\\:]/', '-', $gisid);
+    $filename = "All_Assessments_GIS_{$safeGisid}_" . date('Y-m-d') . ".pdf";
+
+    return $pdf->download($filename);
+}
 }
