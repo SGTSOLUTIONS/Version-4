@@ -3670,19 +3670,26 @@
                 $('#searchResults').html(html);
             });
 
-            $(document).on('click', '.zoom-btn', function(e) {
-                e.stopPropagation();
-                const id = $(this).data('id');
-                const type = $(this).data('type');
-                let item = searchIndex.find(i => i.id == id && i.type === type)
-                    || searchIndex.find(i => i.point_gisid == id)
-                    || searchIndex.find(i => i.id == id);
-                if (item) zoomToFeature(item);
-                else showToast(`❌ Could not find feature with ID: ${id}`, 3000);
-                $('.search-dropdown').removeClass('active');
-                $('#gisSearchInput').val('');
-                $('#searchResults').html('');
-            });
+           $(document).on('click', '.zoom-btn', function(e) {
+    e.stopPropagation();
+    const id = $(this).data('id');
+    const type = $(this).data('type');
+
+    // For pointdata, zoom to the parent polygon/point using point_gisid
+    let item = searchIndex.find(i => i.id == id && i.type === type);
+    if (!item) item = searchIndex.find(i => i.point_gisid == id);
+    if (!item) item = searchIndex.find(i => i.id == id);
+
+    if (item) {
+        zoomToFeature(item);
+    } else {
+        showToast(`❌ Could not find feature with ID: ${id}`, 3000);
+    }
+
+    $('.search-dropdown').removeClass('active');
+    $('#gisSearchInput').val('');
+    $('#searchResults').html('');
+});
 
             $(document).on('click', '.view-btn', function(e) {
                 e.stopPropagation();
@@ -4077,20 +4084,19 @@
                     else if (item.type === 'point') { badgeClass = 'point'; badgeText = 'Point'; }
                     else if (item.type === 'pointdata') { badgeClass = 'assessment'; badgeText = 'Assessment'; }
 
-                    html += `
-                        <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-                            <div class="search-result-title">
-                                <i class="bi bi-${icon} me-2"></i>${item.title}
-                                <span class="type-badge ${badgeClass}">${badgeText}</span>
-                            </div>
-                            <div class="search-result-subtitle">${item.subtitle}</div>
-                            ${details.length ? '<div class="search-result-subtitle" style="color:#5f7d70;">' + details.join(' | ') + '</div>' : ''}
-                            <div class="search-result-actions">
-                                <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-                                <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">View</button>
-                            </div>
-                        </div>
-                    `;
+                   html += `
+    <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
+        <div class="search-result-title">
+            <i class="bi bi-${icon} me-2"></i>${displayTitle}
+            <span class="type-badge ${badgeClass}">${badgeText}</span>
+        </div>
+        <div class="search-result-subtitle">${displaySubtitle}</div>
+        <div class="search-result-actions">
+            <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
+            <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
+            <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">View</button>
+        </div>
+    </div>`;
                 });
                 results.html(html);
                 showToast('✅ Found ' + matches.length + ' results', 2000);
@@ -4165,7 +4171,307 @@
                     (item.point_gisid && item.point_gisid.toString().toLowerCase().includes(v))
                 );
             }
+            // ═══════════════════════════════════════════════════════════
+            // LOCATION & ROUTING — DIRECTION BUTTON
+            // ═══════════════════════════════════════════════════════════
 
+            /**
+             * Get the user's current location (cached or fresh)
+             */
+            function getCurrentLocation(callback) {
+                if (!navigator.geolocation) {
+                    Swal.fire('Error', 'Geolocation is not supported by your browser', 'error');
+                    callback(null);
+                    return false;
+                }
+
+                showToast('📍 Getting your location...', 2000);
+
+                if (currentLocation) {
+                    callback(currentLocation);
+                    return true;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    function(pos) {
+                        const loc = {
+                            lon: pos.coords.longitude,
+                            lat: pos.coords.latitude
+                        };
+                        currentLocation = loc;
+                        callback(loc);
+                    },
+                    function(error) {
+                        let msg = 'Unable to get your location. ';
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                msg += 'Please enable location permissions in your browser.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                msg += 'GPS signal is weak. Try moving to an open area.';
+                                break;
+                            case error.TIMEOUT:
+                                msg += 'Request timed out. Please try again.';
+                                break;
+                            default:
+                                msg += 'An unknown error occurred.';
+                        }
+                        Swal.fire('Location Error', msg, 'error');
+                        callback(null);
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
+                    }
+                );
+                return true;
+            }
+
+            /**
+             * Fetch driving route via OSRM and draw on map
+             */
+            function getRoute(startLon, startLat, endLon, endLat) {
+                const url = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
+
+                showToast('🗺️ Calculating route...', 2000);
+
+                fetch(url)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.routes || !data.routes.length) {
+                            Swal.fire('Error', 'No route found between these points', 'error');
+                            return;
+                        }
+
+                        const routeCoords = data.routes[0].geometry.coordinates.map(c => ol.proj.fromLonLat(c));
+                        const routeFeature = new ol.Feature({
+                            geometry: new ol.geom.LineString(routeCoords)
+                        });
+
+                        // Remove old route layer
+                        if (routeLayer) {
+                            map.removeLayer(routeLayer);
+                            routeLayer = null;
+                        }
+
+                        routeLayer = new ol.layer.Vector({
+                            source: new ol.source.Vector({
+                                features: [routeFeature]
+                            }),
+                            style: new ol.style.Style({
+                                stroke: new ol.style.Stroke({
+                                    color: '#0066ff',
+                                    width: 5,
+                                    lineDash: [10, 5]
+                                })
+                            }),
+                            zIndex: 999
+                        });
+                        map.addLayer(routeLayer);
+
+                        const ext = routeFeature.getGeometry().getExtent();
+                        if (ext && ext[0] !== ext[2]) {
+                            map.getView().fit(ext, {
+                                padding: [80, 80, 80, 80],
+                                duration: 1200
+                            });
+                        }
+
+                        const dist = (data.routes[0].distance / 1000).toFixed(2);
+                        const dur = Math.round(data.routes[0].duration / 60);
+                        showToast(`✅ Route found! Distance: ${dist} km, Time: ${dur} min`, 4000);
+                    })
+                    .catch(err => {
+                        console.error('Route error:', err);
+                        Swal.fire('Error', 'Failed to calculate route. Please check your internet connection.', 'error');
+                    });
+            }
+
+            /**
+             * Entry point — get user location then calculate route to feature
+             */
+            function getDirectionToFeature(feature) {
+                getCurrentLocation(function(loc) {
+                    if (!loc) {
+                        // Retry once
+                        if (navigator.geolocation) {
+                            showToast('🔄 Retrying location...', 2000);
+                            navigator.geolocation.getCurrentPosition(
+                                function(pos) {
+                                    const newLoc = {
+                                        lon: pos.coords.longitude,
+                                        lat: pos.coords.latitude
+                                    };
+                                    currentLocation = newLoc;
+                                    calculateDirection(newLoc, feature);
+                                },
+                                function() {
+                                    Swal.fire('Location Error',
+                                        'Could not get your location. Please enable GPS and try again.',
+                                        'error');
+                                }, {
+                                    enableHighAccuracy: true,
+                                    timeout: 10000
+                                }
+                            );
+                        }
+                        return;
+                    }
+                    calculateDirection(loc, feature);
+                });
+            }
+
+            /**
+             * Convert feature → lon/lat and trigger route fetch
+             */
+            function calculateDirection(loc, feature) {
+                if (!loc) return;
+
+                const coords = getCoordsByGisId(feature.id || feature.point_gisid);
+                if (!coords) {
+                    Swal.fire('Error', `No point coordinates found for GIS ID: ${feature.id || feature.point_gisid}`, 'error');
+                    return;
+                }
+
+                const lonLat = ol.proj.toLonLat(coords);
+                const destLon = lonLat[0];
+                const destLat = lonLat[1];
+
+                if (destLon < -180 || destLon > 180 || destLat < -90 || destLat > 90) {
+                    Swal.fire('Error', 'Converted coordinates are out of valid range. Check your data projection.', 'error');
+                    return;
+                }
+
+                getRoute(loc.lon, loc.lat, destLon, destLat);
+            }
+
+            /**
+             * Remove the route line from the map
+             */
+            function clearRoute() {
+                if (routeLayer) {
+                    map.removeLayer(routeLayer);
+                    routeLayer = null;
+                    showToast('🗑️ Route cleared', 2000);
+                } else {
+                    showToast('ℹ️ No route to clear', 2000);
+                }
+            }
+
+            /**
+             * Resolve coords for any GIS ID — polygon, line, or point
+             * (Works with MultiPolygon too)
+             */
+            function getCoordsByGisId(gisid) {
+                if (!gisid) return null;
+
+                // 1️⃣ Try polygon (Polygon or MultiPolygon)
+                const polyFeature = polygonSource.getFeatures().find(
+                    f => f.get('gisid') && f.get('gisid').toString() === gisid.toString()
+                );
+                if (polyFeature) {
+                    try {
+                        return ol.extent.getCenter(polyFeature.getGeometry().getExtent());
+                    } catch (e) {
+                        console.warn('Polygon center failed:', e);
+                    }
+                }
+
+                // 2️⃣ Try line
+                const lineFeature = lineSource.getFeatures().find(
+                    f => f.get('gisid') && f.get('gisid').toString() === gisid.toString()
+                );
+                if (lineFeature) {
+                    try {
+                        return ol.extent.getCenter(lineFeature.getGeometry().getExtent());
+                    } catch (e) {
+                        console.warn('Line center failed:', e);
+                    }
+                }
+
+                // 3️⃣ Try point from `points` array
+                const point = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
+                if (point) {
+                    try {
+                        let coords = typeof point.coordinates === 'string' ?
+                            JSON.parse(point.coordinates) :
+                            point.coordinates;
+
+                        // Handle [lat, lon] vs [lon, lat]
+                        if (Array.isArray(coords) && coords.length === 2) {
+                            let lon = coords[0],
+                                lat = coords[1];
+                            if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
+                                lon = coords[1];
+                                lat = coords[0];
+                            }
+                            return ol.proj.fromLonLat([lon, lat]);
+                        }
+                    } catch (e) {
+                        console.warn('Point parse failed:', e);
+                    }
+                }
+
+                // 4️⃣ Try pointDatas (assessment records)
+                const pd = pointDatas.find(p => p.point_gisid && p.point_gisid.toString() === gisid.toString());
+                if (pd) {
+                    const parentPoint = points.find(p => p.gisid && p.gisid.toString() === pd.point_gisid.toString());
+                    if (parentPoint) {
+                        try {
+                            let coords = typeof parentPoint.coordinates === 'string' ?
+                                JSON.parse(parentPoint.coordinates) :
+                                parentPoint.coordinates;
+                            if (Array.isArray(coords) && coords.length === 2) {
+                                let lon = coords[0],
+                                    lat = coords[1];
+                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
+                                    lon = coords[1];
+                                    lat = coords[0];
+                                }
+                                return ol.proj.fromLonLat([lon, lat]);
+                            }
+                        } catch (e) {
+                            console.warn('Parent point parse failed:', e);
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            // ═══════════════════════════════════════════════════════════
+            // DIRECTION BUTTON CLICK HANDLER
+            // ═══════════════════════════════════════════════════════════
+            $(document).on('click', '.direction-btn', function(e) {
+                e.stopPropagation();
+                const id = $(this).data('id');
+                const type = $(this).data('type');
+
+                // Look up the item in search index
+                let item = searchIndex.find(i => i.id == id && i.type === type);
+                if (!item) item = searchIndex.find(i => i.point_gisid == id);
+                if (!item) item = searchIndex.find(i => i.id == id);
+
+                if (!item) {
+                    showToast(`❌ Could not find feature with ID: ${id}`, 3000);
+                    return;
+                }
+
+                getDirectionToFeature(item);
+
+                // Close the search dropdown
+                $('.search-dropdown').removeClass('active');
+                $('#gisSearchInput').val('');
+                $('#searchResults').html('');
+            });
+
+            // ═══════════════════════════════════════════════════════════
+            // BIND clearRoute to the Clear Route button in location dropdown
+            // ═══════════════════════════════════════════════════════════
+            $(document).on('click', '#clearRouteItem', function() {
+                clearRoute();
+                $('.location-dropdown').removeClass('active');
+            });
             // ═══════════════════════════════════════════════════════════
             // INIT
             // ═══════════════════════════════════════════════════════════
