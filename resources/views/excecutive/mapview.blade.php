@@ -1515,15 +1515,15 @@
             // ═══════════════════════════════════════════════════════════
             // DATA
             // ═══════════════════════════════════════════════════════════
-            let polygons        = @json($polygons ?? [], JSON_HEX_TAG);
-            let lines           = @json($lines ?? [], JSON_HEX_TAG);
-            let points          = @json($points ?? [], JSON_HEX_TAG);
-            let pointDatas      = @json($pointDatas ?? [], JSON_HEX_TAG);
-            let boundary        = @json($boundary ?? [], JSON_HEX_TAG);
-            let polygonDatas    = @json($polygonDatas ?? [], JSON_HEX_TAG);
+            let polygons           = @json($polygons ?? [], JSON_HEX_TAG);
+            let lines              = @json($lines ?? [], JSON_HEX_TAG);
+            let points             = @json($points ?? [], JSON_HEX_TAG);
+            let pointDatas         = @json($pointDatas ?? [], JSON_HEX_TAG);
+            let boundary           = @json($boundary ?? [], JSON_HEX_TAG);
+            let polygonDatas       = @json($polygonDatas ?? [], JSON_HEX_TAG);
             let buildingVariations = @json($buildingVariations ?? [], JSON_HEX_TAG);
-            let ward            = @json($ward ?? [], JSON_HEX_TAG);
-            let currentPointGisid   = null;
+            let ward               = @json($ward ?? [], JSON_HEX_TAG);
+            let currentPointGisid  = null;
             let currentPointRecords = [];
 
             const wardId = {{ $ward->id ?? 0 }};
@@ -1541,14 +1541,14 @@
             // USAGE PALETTE
             // ═══════════════════════════════════════════════════════════
             const usageColors = {
-                'RESIDENTIAL':  '#00D26A',
-                'COMMERCIAL':   '#00B4FF',
-                'INDUSTRIAL':   '#FF9F1C',
-                'INSTITUTIONAL':'#B84DFF',
-                'MIXED':        '#FF3E5F',
-                'GOVERNMENT':   '#6C5CE7',
-                'VACANT':       '#FFD93D',
-                'OTHER':        '#FF6FB5'
+                'RESIDENTIAL':   '#00D26A',
+                'COMMERCIAL':    '#00B4FF',
+                'INDUSTRIAL':    '#FF9F1C',
+                'INSTITUTIONAL': '#B84DFF',
+                'MIXED':         '#FF3E5F',
+                'GOVERNMENT':    '#6C5CE7',
+                'VACANT':        '#FFD93D',
+                'OTHER':         '#FF6FB5'
             };
 
             // ═══════════════════════════════════════════════════════════
@@ -1629,30 +1629,30 @@
             // ═══════════════════════════════════════════════════════════
             // LOCATION TRACKING VARIABLES
             // ═══════════════════════════════════════════════════════════
-            let watchId          = null;
-            let isTracking       = false;
-            let isLiveLocation   = false;
-            let currentPosition  = null;
-            let currentLocation  = null;
-            let positionFeature  = null;
-            let positionLayer    = null;
-            let routeLine        = null;
-            let routeLayer       = null;
-            let routePoints      = [];
-            let destinationMarker= null;
-            let destinationLayer = null;
-            let trackInterval    = null;
+            let watchId           = null;
+            let isTracking        = false;
+            let isLiveLocation    = false;
+            let currentPosition   = null;
+            let currentLocation   = null;
+            let positionFeature   = null;
+            let positionLayer     = null;
+            let routeLine         = null;
+            let routeLayer        = null;
+            let routePoints       = [];
+            let destinationMarker = null;
+            let destinationLayer  = null;
+            let trackInterval     = null;
 
             // ═══════════════════════════════════════════════════════════
             // 3D MODE VARIABLES
             // ═══════════════════════════════════════════════════════════
-            let is3DMode            = false;
-            let cesiumViewer        = null;
+            let is3DMode              = false;
+            let cesiumViewer          = null;
             let cesiumBuildingEntities = [];
-            let cesiumClickHandler  = null;
+            let cesiumClickHandler    = null;
 
             // ═══════════════════════════════════════════════════════════
-            // ✅ COORD TYPE DETECTOR (Polygon / MultiPolygon / Ring)
+            // COORD TYPE DETECTOR (Polygon / MultiPolygon / Ring)
             // ═══════════════════════════════════════════════════════════
             function detectCoordType(coords) {
                 if (!Array.isArray(coords) || coords.length === 0) return 'unknown';
@@ -1662,29 +1662,22 @@
                     Array.isArray(coords[0][0]) &&
                     Array.isArray(coords[0][0][0]) &&
                     typeof coords[0][0][0][0] === 'number'
-                ) {
-                    return 'MultiPolygon';
-                }
+                ) return 'MultiPolygon';
 
                 if (
                     Array.isArray(coords[0]) &&
                     Array.isArray(coords[0][0]) &&
                     typeof coords[0][0][0] === 'number'
-                ) {
-                    return 'Polygon';
-                }
+                ) return 'Polygon';
 
                 if (
                     Array.isArray(coords[0]) &&
                     typeof coords[0][0] === 'number'
-                ) {
-                    return 'Ring';
-                }
+                ) return 'Ring';
 
                 return 'unknown';
             }
 
-            // ✅ Reusable polygon feature check
             function isPolygonFeature(feature) {
                 const g = feature.getGeometry();
                 if (!g) return false;
@@ -1692,7 +1685,6 @@
                 return t === 'Polygon' || t === 'MultiPolygon';
             }
 
-            // ✅ Safe geometry builder from raw coords
             function buildGeometryFromCoords(coords) {
                 const detectedType = detectCoordType(coords);
                 if (detectedType === 'MultiPolygon') return new ol.geom.MultiPolygon(coords);
@@ -1701,7 +1693,6 @@
                 return null;
             }
 
-            // ✅ Safe interior point (Polygon & MultiPolygon)
             function getInteriorPointSafe(geometry) {
                 if (!geometry) return null;
                 try {
@@ -1725,9 +1716,7 @@
                     if (ext && isFinite(ext[0]) && isFinite(ext[2])) {
                         return new ol.geom.Point(ol.extent.getCenter(ext));
                     }
-                } catch (e2) {
-                    console.warn('extent-center fallback failed:', e2);
-                }
+                } catch (e2) {}
                 return null;
             }
 
@@ -1934,7 +1923,7 @@
             }
 
             // ═══════════════════════════════════════════════════════════
-            // ✅ LOAD POLYGON SOURCE (MultiPolygon-safe)
+            // LOAD POLYGON SOURCE (MultiPolygon-safe)
             // ═══════════════════════════════════════════════════════════
             function loadPolygonSource() {
                 polygonSource.clear();
@@ -2051,7 +2040,6 @@
 
                     let geometry = buildGeometryFromCoords(boundaryCoords);
 
-                    // GeoJSON fallback
                     if (!geometry && (boundaryCoords.type === 'MultiPolygon' || boundaryCoords.type === 'Polygon')) {
                         const format = new ol.format.GeoJSON();
                         const feature = format.readFeature(boundaryCoords);
@@ -2132,7 +2120,14 @@
             routeLayer = new ol.layer.Vector({
                 source: new ol.source.Vector(),
                 visible: true,
-                zIndex: 99
+                zIndex: 99,
+                style: new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#FF3E5F',
+                        width: 4,
+                        lineDash: [8, 6]
+                    })
+                })
             });
 
             destinationLayer = new ol.layer.Vector({
@@ -2578,29 +2573,81 @@
                 return visible;
             }
 
-            function getCoordsByGisId(gisid, type = null) {
+            /**
+             * ✅ Single source of truth — resolve coords for any GIS ID
+             * Handles Polygon / MultiPolygon / Line / Point / pointData
+             */
+            function getCoordsByGisId(gisid) {
                 if (!gisid) return null;
-                const polyFeatures = polygonSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                if (polyFeatures.length > 0) {
-                    try { return ol.extent.getCenter(polyFeatures[0].getGeometry().getExtent()); } catch (e) {}
+
+                // 1️⃣ Polygon / MultiPolygon
+                const polyFeature = polygonSource.getFeatures().find(
+                    f => f.get('gisid') && f.get('gisid').toString() === gisid.toString()
+                );
+                if (polyFeature) {
+                    try {
+                        return ol.extent.getCenter(polyFeature.getGeometry().getExtent());
+                    } catch (e) {
+                        console.warn('Polygon center failed:', e);
+                    }
                 }
-                const lineFeatures = lineSource.getFeatures().filter(f => f.get('gisid') == gisid);
-                if (lineFeatures.length > 0) {
-                    try { return ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent()); } catch (e) {}
+
+                // 2️⃣ Line
+                const lineFeature = lineSource.getFeatures().find(
+                    f => f.get('gisid') && f.get('gisid').toString() === gisid.toString()
+                );
+                if (lineFeature) {
+                    try {
+                        return ol.extent.getCenter(lineFeature.getGeometry().getExtent());
+                    } catch (e) {
+                        console.warn('Line center failed:', e);
+                    }
                 }
-                const point = points.find(p => p.gisid == gisid);
+
+                // 3️⃣ Point (from `points` array)
+                const point = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
                 if (point) {
                     try {
-                        const coords = typeof point.coordinates === 'string' ? JSON.parse(point.coordinates) : point.coordinates;
+                        let coords = typeof point.coordinates === 'string' ?
+                            JSON.parse(point.coordinates) :
+                            point.coordinates;
+
                         if (Array.isArray(coords) && coords.length === 2) {
                             let lon = coords[0], lat = coords[1];
                             if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
-                                lon = coords[1]; lat = coords[0];
+                                lon = coords[1];
+                                lat = coords[0];
                             }
                             return ol.proj.fromLonLat([lon, lat]);
                         }
-                    } catch (e) {}
+                    } catch (e) {
+                        console.warn('Point parse failed:', e);
+                    }
                 }
+
+                // 4️⃣ Point data (assessment records)
+                const pd = pointDatas.find(p => p.point_gisid && p.point_gisid.toString() === gisid.toString());
+                if (pd) {
+                    const parentPoint = points.find(p => p.gisid && p.gisid.toString() === pd.point_gisid.toString());
+                    if (parentPoint) {
+                        try {
+                            let coords = typeof parentPoint.coordinates === 'string' ?
+                                JSON.parse(parentPoint.coordinates) :
+                                parentPoint.coordinates;
+                            if (Array.isArray(coords) && coords.length === 2) {
+                                let lon = coords[0], lat = coords[1];
+                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
+                                    lon = coords[1];
+                                    lat = coords[0];
+                                }
+                                return ol.proj.fromLonLat([lon, lat]);
+                            }
+                        } catch (e) {
+                            console.warn('Parent point parse failed:', e);
+                        }
+                    }
+                }
+
                 return null;
             }
 
@@ -2615,13 +2662,7 @@
                     if (lineFeatures.length > 0) coords = ol.extent.getCenter(lineFeatures[0].getGeometry().getExtent());
                 }
                 if (!coords) {
-                    const point = points.find(p => p.gisid == gisid);
-                    if (point) {
-                        try {
-                            const c = typeof point.coordinates === 'string' ? JSON.parse(point.coordinates) : point.coordinates;
-                            coords = ol.proj.fromLonLat(c);
-                        } catch (e) {}
-                    }
+                    coords = getCoordsByGisId(gisid);
                 }
                 if (!coords) { showToast(`⚠️ No location found for GIS ID: ${gisid}`, 3000); return; }
                 map.getView().animate({ center: coords, zoom: 20, duration: 1000 });
@@ -2777,7 +2818,6 @@
                 }
             }
 
-            // ✅ FIXED: MultiPolygon-safe Cesium extruder
             function buildCesiumBuildings() {
                 if (!cesiumViewer) return;
 
@@ -3362,7 +3402,7 @@
             map.addInteraction(selectInteraction);
 
             // ═══════════════════════════════════════════════════════════
-            // EVENT HANDLERS
+            // UI EVENT HANDLERS
             // ═══════════════════════════════════════════════════════════
             $(document).on('click', '.layer-toggle-btn', function(e) {
                 e.stopPropagation();
@@ -3474,7 +3514,7 @@
             });
 
             // ═══════════════════════════════════════════════════════════
-            // LOCATION HANDLERS
+            // LOCATION HANDLERS (single #clearRouteItem handler)
             // ═══════════════════════════════════════════════════════════
             $('#zoomToExtentItem').on('click', function() {
                 zoomToExtent();
@@ -3611,9 +3651,10 @@
                 $('.location-dropdown').removeClass('active');
             });
 
+            // ✅ SINGLE #clearRouteItem handler — clears BOTH tracking and OSRM route
             $('#clearRouteItem').on('click', function() {
                 if (routeLine) { routeLayer.getSource().removeFeature(routeLine); routeLine = null; }
-                routeLayer.getSource().clear();
+                if (routeLayer) { routeLayer.getSource().clear(); }
                 routePoints = [];
                 if (destinationMarker) { destinationLayer.getSource().removeFeature(destinationMarker); destinationMarker = null; }
                 if (positionFeature) { positionLayer.getSource().removeFeature(positionFeature); positionFeature = null; }
@@ -3628,7 +3669,7 @@
             });
 
             // ═══════════════════════════════════════════════════════════
-            // SEARCH HANDLERS
+            // QUICK SEARCH HANDLER
             // ═══════════════════════════════════════════════════════════
             $('#gisSearchInput').on('keyup', function() {
                 const value = $(this).val();
@@ -3662,6 +3703,7 @@
                                 <div class="search-result-subtitle">${displaySubtitle}</div>
                                 <div class="search-result-actions">
                                     <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
+                                    <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
                                     <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">View</button>
                                 </div>
                             </div>`;
@@ -3670,27 +3712,50 @@
                 $('#searchResults').html(html);
             });
 
-           $(document).on('click', '.zoom-btn', function(e) {
-    e.stopPropagation();
-    const id = $(this).data('id');
-    const type = $(this).data('type');
+            // Zoom button (Quick Search + Filter tab)
+            $(document).on('click', '.zoom-btn', function(e) {
+                e.stopPropagation();
+                const id = $(this).data('id');
+                const type = $(this).data('type');
 
-    // For pointdata, zoom to the parent polygon/point using point_gisid
-    let item = searchIndex.find(i => i.id == id && i.type === type);
-    if (!item) item = searchIndex.find(i => i.point_gisid == id);
-    if (!item) item = searchIndex.find(i => i.id == id);
+                let item = searchIndex.find(i => i.id == id && i.type === type);
+                if (!item) item = searchIndex.find(i => i.point_gisid == id);
+                if (!item) item = searchIndex.find(i => i.id == id);
 
-    if (item) {
-        zoomToFeature(item);
-    } else {
-        showToast(`❌ Could not find feature with ID: ${id}`, 3000);
-    }
+                if (item) {
+                    zoomToFeature(item);
+                } else {
+                    showToast(`❌ Could not find feature with ID: ${id}`, 3000);
+                }
 
-    $('.search-dropdown').removeClass('active');
-    $('#gisSearchInput').val('');
-    $('#searchResults').html('');
-});
+                $('.search-dropdown').removeClass('active');
+                $('#gisSearchInput').val('');
+                $('#searchResults').html('');
+            });
 
+            // Direction button (Quick Search + Filter tab)
+            $(document).on('click', '.direction-btn', function(e) {
+                e.stopPropagation();
+                const id = $(this).data('id');
+                const type = $(this).data('type');
+
+                let item = searchIndex.find(i => i.id == id && i.type === type);
+                if (!item) item = searchIndex.find(i => i.point_gisid == id);
+                if (!item) item = searchIndex.find(i => i.id == id);
+
+                if (!item) {
+                    showToast(`❌ Could not find feature with ID: ${id}`, 3000);
+                    return;
+                }
+
+                getDirectionToFeature(item);
+
+                $('.search-dropdown').removeClass('active');
+                $('#gisSearchInput').val('');
+                $('#searchResults').html('');
+            });
+
+            // View button (Quick Search + Filter tab)
             $(document).on('click', '.view-btn', function(e) {
                 e.stopPropagation();
                 const id = $(this).data('id');
@@ -3742,7 +3807,7 @@
             });
 
             // ═══════════════════════════════════════════════════════════
-            // ✅ FILTER FUNCTIONS (MultiPolygon-safe)
+            // FILTER FUNCTIONS (MultiPolygon-safe)
             // ═══════════════════════════════════════════════════════════
             function updateFilterStats() {
                 const total = polygonSource.getFeatures().length;
@@ -3753,7 +3818,6 @@
                 updateQuickStats();
             }
 
-            // ✅ Shared polygon-feature builder (used in applyFilters & reset)
             function buildPolygonFeature(poly) {
                 let coords = typeof poly.coordinates === 'string'
                     ? JSON.parse(poly.coordinates)
@@ -4040,7 +4104,7 @@
             $('#resetFiltersBtn').on('click', function() { resetAllFilters(false); });
 
             // ═══════════════════════════════════════════════════════════
-            // FILTER SEARCH
+            // FILTER SEARCH TAB
             // ═══════════════════════════════════════════════════════════
             $('#applyFilterBtn').on('click', function() {
                 const assessment = $('#filterAssessment').val().toLowerCase().trim();
@@ -4073,10 +4137,18 @@
                 matches.slice(0, 15).forEach(item => {
                     const icon = item.geometryType === 'polygon' ? 'pentagon'
                         : item.geometryType === 'line' ? 'vector-pen' : 'geo-alt';
+
                     const details = [];
                     if (item.assessment) details.push('Assess: ' + item.assessment);
                     if (item.owner_name) details.push('Owner: ' + item.owner_name);
                     if (item.phone_number) details.push('Phone: ' + item.phone_number);
+
+                    // ✅ FIX: define displayTitle & displaySubtitle here too
+                    const displayTitle = item.type === 'pointdata'
+                        ? `${item.title} | Assessment: ${item.assessment}` : item.title;
+                    const displaySubtitle = item.type === 'pointdata'
+                        ? `Point GIS ID: ${item.point_gisid || 'N/A'}${item.owner_name ? ' | Owner: ' + item.owner_name : ''}`
+                        : item.subtitle;
 
                     let badgeClass = '', badgeText = '';
                     if (item.type === 'line') { badgeClass = 'road'; badgeText = 'Road'; }
@@ -4084,19 +4156,21 @@
                     else if (item.type === 'point') { badgeClass = 'point'; badgeText = 'Point'; }
                     else if (item.type === 'pointdata') { badgeClass = 'assessment'; badgeText = 'Assessment'; }
 
-                   html += `
-    <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
-        <div class="search-result-title">
-            <i class="bi bi-${icon} me-2"></i>${displayTitle}
-            <span class="type-badge ${badgeClass}">${badgeText}</span>
-        </div>
-        <div class="search-result-subtitle">${displaySubtitle}</div>
-        <div class="search-result-actions">
-            <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
-            <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
-            <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">View</button>
-        </div>
-    </div>`;
+                    html += `
+                        <div class="search-result-item" data-id="${item.id}" data-type="${item.type}">
+                            <div class="search-result-title">
+                                <i class="bi bi-${icon} me-2"></i>${displayTitle}
+                                <span class="type-badge ${badgeClass}">${badgeText}</span>
+                            </div>
+                            <div class="search-result-subtitle">${displaySubtitle}</div>
+                            ${details.length ? '<div class="search-result-subtitle" style="color:#5f7d70;">' + details.join(' | ') + '</div>' : ''}
+                            <div class="search-result-actions">
+                                <button class="btn btn-sm btn-success zoom-btn" data-id="${item.id}" data-type="${item.type}">Zoom</button>
+                                <button class="btn btn-sm btn-primary direction-btn" data-id="${item.id}" data-type="${item.type}">Direction</button>
+                                <button class="btn btn-sm btn-primary view-btn" data-id="${item.id}" data-type="${item.type}" style="background: linear-gradient(135deg,#0f6b47,#1a8a5a); border: none;">View</button>
+                            </div>
+                        </div>
+                    `;
                 });
                 results.html(html);
                 showToast('✅ Found ' + matches.length + ' results', 2000);
@@ -4144,6 +4218,9 @@
                 if (e.key === 'Escape' && isFullscreen) $('#fullscreenBtn').click();
             });
 
+            // ═══════════════════════════════════════════════════════════
+            // ROUTE LINE (used while "Track Me" is on)
+            // ═══════════════════════════════════════════════════════════
             function updateRouteLine() {
                 if (routePoints.length < 2) return;
                 if (!routeLine) {
@@ -4157,6 +4234,9 @@
                 }
             }
 
+            // ═══════════════════════════════════════════════════════════
+            // SEARCH INDEX LOOKUP
+            // ═══════════════════════════════════════════════════════════
             function searchGIS(value) {
                 const v = value.toString().toLowerCase().trim();
                 if (!v) return [];
@@ -4171,6 +4251,7 @@
                     (item.point_gisid && item.point_gisid.toString().toLowerCase().includes(v))
                 );
             }
+
             // ═══════════════════════════════════════════════════════════
             // LOCATION & ROUTING — DIRECTION BUTTON
             // ═══════════════════════════════════════════════════════════
@@ -4228,7 +4309,8 @@
             }
 
             /**
-             * Fetch driving route via OSRM and draw on map
+             * ✅ Fetch driving route via OSRM and draw on map
+             * Reuses the existing routeLayer (never recreates it)
              */
             function getRoute(startLon, startLat, endLon, endLat) {
                 const url = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
@@ -4248,26 +4330,27 @@
                             geometry: new ol.geom.LineString(routeCoords)
                         });
 
-                        // Remove old route layer
-                        if (routeLayer) {
-                            map.removeLayer(routeLayer);
-                            routeLayer = null;
+                        // ✅ Blue solid route style
+                        routeFeature.setStyle(new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                                color: '#0066ff',
+                                width: 5
+                            })
+                        }));
+
+                        // ✅ Ensure routeLayer exists (should already)
+                        if (!routeLayer) {
+                            routeLayer = new ol.layer.Vector({
+                                source: new ol.source.Vector(),
+                                visible: true,
+                                zIndex: 999
+                            });
+                            map.addLayer(routeLayer);
                         }
 
-                        routeLayer = new ol.layer.Vector({
-                            source: new ol.source.Vector({
-                                features: [routeFeature]
-                            }),
-                            style: new ol.style.Style({
-                                stroke: new ol.style.Stroke({
-                                    color: '#0066ff',
-                                    width: 5,
-                                    lineDash: [10, 5]
-                                })
-                            }),
-                            zIndex: 999
-                        });
-                        map.addLayer(routeLayer);
+                        // ✅ Clear old route (but keep layer attached)
+                        routeLayer.getSource().clear();
+                        routeLayer.getSource().addFeature(routeFeature);
 
                         const ext = routeFeature.getGeometry().getExtent();
                         if (ext && ext[0] !== ext[2]) {
@@ -4293,7 +4376,6 @@
             function getDirectionToFeature(feature) {
                 getCurrentLocation(function(loc) {
                     if (!loc) {
-                        // Retry once
                         if (navigator.geolocation) {
                             showToast('🔄 Retrying location...', 2000);
                             navigator.geolocation.getCurrentPosition(
@@ -4345,133 +4427,6 @@
                 getRoute(loc.lon, loc.lat, destLon, destLat);
             }
 
-            /**
-             * Remove the route line from the map
-             */
-            function clearRoute() {
-                if (routeLayer) {
-                    map.removeLayer(routeLayer);
-                    routeLayer = null;
-                    showToast('🗑️ Route cleared', 2000);
-                } else {
-                    showToast('ℹ️ No route to clear', 2000);
-                }
-            }
-
-            /**
-             * Resolve coords for any GIS ID — polygon, line, or point
-             * (Works with MultiPolygon too)
-             */
-            function getCoordsByGisId(gisid) {
-                if (!gisid) return null;
-
-                // 1️⃣ Try polygon (Polygon or MultiPolygon)
-                const polyFeature = polygonSource.getFeatures().find(
-                    f => f.get('gisid') && f.get('gisid').toString() === gisid.toString()
-                );
-                if (polyFeature) {
-                    try {
-                        return ol.extent.getCenter(polyFeature.getGeometry().getExtent());
-                    } catch (e) {
-                        console.warn('Polygon center failed:', e);
-                    }
-                }
-
-                // 2️⃣ Try line
-                const lineFeature = lineSource.getFeatures().find(
-                    f => f.get('gisid') && f.get('gisid').toString() === gisid.toString()
-                );
-                if (lineFeature) {
-                    try {
-                        return ol.extent.getCenter(lineFeature.getGeometry().getExtent());
-                    } catch (e) {
-                        console.warn('Line center failed:', e);
-                    }
-                }
-
-                // 3️⃣ Try point from `points` array
-                const point = points.find(p => p.gisid && p.gisid.toString() === gisid.toString());
-                if (point) {
-                    try {
-                        let coords = typeof point.coordinates === 'string' ?
-                            JSON.parse(point.coordinates) :
-                            point.coordinates;
-
-                        // Handle [lat, lon] vs [lon, lat]
-                        if (Array.isArray(coords) && coords.length === 2) {
-                            let lon = coords[0],
-                                lat = coords[1];
-                            if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
-                                lon = coords[1];
-                                lat = coords[0];
-                            }
-                            return ol.proj.fromLonLat([lon, lat]);
-                        }
-                    } catch (e) {
-                        console.warn('Point parse failed:', e);
-                    }
-                }
-
-                // 4️⃣ Try pointDatas (assessment records)
-                const pd = pointDatas.find(p => p.point_gisid && p.point_gisid.toString() === gisid.toString());
-                if (pd) {
-                    const parentPoint = points.find(p => p.gisid && p.gisid.toString() === pd.point_gisid.toString());
-                    if (parentPoint) {
-                        try {
-                            let coords = typeof parentPoint.coordinates === 'string' ?
-                                JSON.parse(parentPoint.coordinates) :
-                                parentPoint.coordinates;
-                            if (Array.isArray(coords) && coords.length === 2) {
-                                let lon = coords[0],
-                                    lat = coords[1];
-                                if (coords[0] >= -90 && coords[0] <= 90 && coords[1] >= -180 && coords[1] <= 180) {
-                                    lon = coords[1];
-                                    lat = coords[0];
-                                }
-                                return ol.proj.fromLonLat([lon, lat]);
-                            }
-                        } catch (e) {
-                            console.warn('Parent point parse failed:', e);
-                        }
-                    }
-                }
-
-                return null;
-            }
-
-            // ═══════════════════════════════════════════════════════════
-            // DIRECTION BUTTON CLICK HANDLER
-            // ═══════════════════════════════════════════════════════════
-            $(document).on('click', '.direction-btn', function(e) {
-                e.stopPropagation();
-                const id = $(this).data('id');
-                const type = $(this).data('type');
-
-                // Look up the item in search index
-                let item = searchIndex.find(i => i.id == id && i.type === type);
-                if (!item) item = searchIndex.find(i => i.point_gisid == id);
-                if (!item) item = searchIndex.find(i => i.id == id);
-
-                if (!item) {
-                    showToast(`❌ Could not find feature with ID: ${id}`, 3000);
-                    return;
-                }
-
-                getDirectionToFeature(item);
-
-                // Close the search dropdown
-                $('.search-dropdown').removeClass('active');
-                $('#gisSearchInput').val('');
-                $('#searchResults').html('');
-            });
-
-            // ═══════════════════════════════════════════════════════════
-            // BIND clearRoute to the Clear Route button in location dropdown
-            // ═══════════════════════════════════════════════════════════
-            $(document).on('click', '#clearRouteItem', function() {
-                clearRoute();
-                $('.location-dropdown').removeClass('active');
-            });
             // ═══════════════════════════════════════════════════════════
             // INIT
             // ═══════════════════════════════════════════════════════════
