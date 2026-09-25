@@ -603,7 +603,7 @@
         .bld-image-strip {
             display: flex;
             gap: 0;
-            height: 220px;
+            height: 500px;
             background: #0f172a;
         }
 
@@ -622,7 +622,7 @@
         }
 
         .bld-img-wrap img {
-            width: 100%;
+            /* width: 100%; */
             height: 100%;
             object-fit: cover;
             transition: transform .4s ease;
