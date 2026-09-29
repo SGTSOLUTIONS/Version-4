@@ -1904,50 +1904,112 @@
                 }, 2000);
             });
 
-            // ─── NEW: EXPORT ALL BUILDINGS WITH AREA VARIATION ≥ 500 sqft ───
-            $('#exportAllBuildingsBtn').on('click', function() {
-                Swal.fire({
-                    title: 'Export All Buildings?',
-                    html: `
-                        <div style="text-align:left; font-size:0.9rem;">
-                            This will export <strong>all buildings</strong> that meet:
-                            <ul style="margin-top:8px; padding-left:20px;">
-                                <li>Assessment Area <strong>&gt; 0</strong> (has point data attached)</li>
-                                <li>Area Variation <strong>≥ 500 sqft</strong></li>
-                            </ul>
-                            <div style="margin-top:10px; padding:8px; background:#fef3c7; border-radius:6px; font-size:0.8rem;">
-                                <i class="bi bi-info-circle"></i>
-                                File will also be saved to <code>storage/app/public/exports/</code>
-                            </div>
-                        </div>
-                    `,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: '<i class="bi bi-download"></i> Yes, Export PDF',
-                    cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#b91c1c',
-                    cancelButtonColor: '#6b7280',
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Generating PDF...',
-                            html: 'Processing all buildings with area variation<br><small class="text-muted">This may take a few moments</small>',
-                            allowOutsideClick: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-
-                        const url = "{{ route('data-variation.export-all-buildings-pdf', $ward->id) }}?min_variation=500";
-                        window.location.href = url;
-
-                        setTimeout(() => {
-                            Swal.close();
-                        }, 5000);
-                    }
-                });
+          $('#exportAllBuildingsBtn').on('click', function() {
+    Swal.fire({
+        title: 'Export All Buildings (Separate PDFs)?',
+        html: `
+            <div style="text-align:left; font-size:0.9rem;">
+                <strong>Each building → separate PDF</strong>
+                <ul style="margin-top:8px; padding-left:20px;">
+                    <li>Assessment Area <strong>&gt; 0</strong></li>
+                    <li>Area Variation <strong>≥ 500 sqft</strong></li>
+                    <li><strong>Filename = GIS ID</strong> (e.g. <code>57-123-456.pdf</code>)</li>
+                </ul>
+                <div style="margin-top:10px; padding:8px; background:#dbeafe; border-radius:6px; font-size:0.8rem;">
+                    <i class="bi bi-folder-fill"></i>
+                    Saved to: <code>storage/app/public/exports/</code>
+                </div>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-save"></i> Yes, Generate',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#b91c1c',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Generating PDFs...',
+                html: 'Creating one PDF per building<br><small class="text-muted">Please wait... this may take a few minutes</small>',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
             });
 
+            $.ajax({
+                url: "{{ route('data-variation.export-all-buildings-pdf', $ward->id) }}?min_variation=500",
+                method: 'GET',
+                dataType: 'json',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                timeout: 900000,  // 15 min
+                success: function(response) {
+                    if (response.success) {
+                        let filesList = '';
+                        if (response.files && response.files.length > 0) {
+                            filesList = `
+                                <details style="text-align:left; margin-top:10px;">
+                                    <summary style="cursor:pointer; font-weight:600;">
+                                        View all ${response.saved_count} files
+                                    </summary>
+                                    <div style="max-height:250px; overflow-y:auto; margin-top:8px;
+                                                background:#f8fafc; padding:8px; border-radius:6px; font-size:0.75rem;">
+                                        ${response.files.map(f => `
+                                            <div style="padding:3px 0; border-bottom:1px solid #eee;">
+                                                <a href="${f.public_url}" target="_blank" style="text-decoration:none;">
+                                                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                                    ${f.filename}
+                                                </a>
+                                                <span style="color:#888; float:right;">
+                                                    ${(f.size/1024).toFixed(1)} KB
+                                                </span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </details>
+                            `;
+                        }
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'PDFs Generated!',
+                            html: `
+                                <div style="text-align:left; font-size:0.9rem;">
+                                    <p><strong>Buildings:</strong> ${response.saved_count}</p>
+                                    <p><strong>Total Size:</strong> ${response.total_size_mb} MB</p>
+                                    <p><strong>Folder:</strong>
+                                        <a href="${response.folder_url}" target="_blank">
+                                            ${response.folder_name}
+                                        </a>
+                                    </p>
+                                    ${response.zip_url ? `
+                                        <a href="${response.zip_url}" target="_blank"
+                                           class="btn btn-sm btn-primary mt-2">
+                                            <i class="bi bi-download"></i> Download ZIP
+                                        </a>
+                                    ` : ''}
+                                    ${response.warning ? `<p class="text-warning small mt-2">${response.warning}</p>` : ''}
+                                    ${filesList}
+                                </div>
+                            `,
+                            width: 600,
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        Swal.fire('Error', response.message || 'Failed', 'error');
+                    }
+                },
+                error: function(xhr) {
+                    let msg = 'Server error';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    } else if (xhr.status === 0) {
+                        msg = 'Request timed out. Try with fewer buildings (?max=50)';
+                    }
+                    Swal.fire('Error', msg, 'error');
+                }
+            });
+        }
+    });
+});
             console.log('✅ Data Variation page ready with pagination');
             console.log(`📊 Total buildings: {{ $pagination['total'] ?? 0 }}`);
         });
