@@ -1938,12 +1938,12 @@
             });
 
 
-$('#exportAllBuildingsBtn').on('click', function () {
+            $('#exportAllBuildingsBtn').on('click', function() {
 
-    Swal.fire({
-        title: 'Export Area Variation Buildings',
-        width: 560,
-        html: `
+                Swal.fire({
+                    title: 'Export Area Variation Buildings',
+                    width: 560,
+                    html: `
             <div style="text-align:left; font-size:0.9rem;">
                 <p style="margin-bottom:10px;">
                     Each building → <strong>separate PDF</strong> (image + assessments),
@@ -1976,60 +1976,73 @@ $('#exportAllBuildingsBtn').on('click', function () {
                 </div>
             </div>
         `,
-        showCancelButton: true,
-        confirmButtonText: '<i class="bi bi-save"></i> Generate',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#b91c1c',
-        focusConfirm: false,
-        preConfirm: () => {
-            const min = document.getElementById('swalMin').value.trim();
-            const max = document.getElementById('swalMax').value.trim();
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="bi bi-save"></i> Generate',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#b91c1c',
+                    focusConfirm: false,
+                    preConfirm: () => {
+                        const min = document.getElementById('swalMin').value.trim();
+                        const max = document.getElementById('swalMax').value.trim();
 
-            if (min === '' || isNaN(min) || parseFloat(min) < 0) {
-                Swal.showValidationMessage('Min value kudunga (0 or more)');
-                return false;
-            }
-            if (max !== '' && (isNaN(max) || parseFloat(max) < parseFloat(min))) {
-                Swal.showValidationMessage('Max value, Min-ai vida periya-ah irukkanum');
-                return false;
-            }
-            return { min, max };
-        }
-    }).then((result) => {
-        if (!result.isConfirmed) return;
+                        if (min === '' || isNaN(min) || parseFloat(min) < 0) {
+                            Swal.showValidationMessage('Min value kudunga (0 or more)');
+                            return false;
+                        }
+                        if (max !== '' && (isNaN(max) || parseFloat(max) < parseFloat(min))) {
+                            Swal.showValidationMessage(
+                                'Max value, Min-ai vida periya-ah irukkanum');
+                            return false;
+                        }
+                        return {
+                            min,
+                            max
+                        };
+                    }
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
 
-        const { min, max } = result.value;
+                    const {
+                        min,
+                        max
+                    } = result.value;
 
-        const params = new URLSearchParams({ min_variation: min });
-        if (max !== '') params.append('max_variation', max);
+                    const params = new URLSearchParams({
+                        min_variation: min
+                    });
+                    if (max !== '') params.append('max_variation', max);
 
-        const rangeText = max !== '' ? `${min} – ${max} sqft` : `${min} sqft and above`;
+                    const rangeText = max !== '' ? `${min} – ${max} sqft` : `${min} sqft and above`;
 
-        Swal.fire({
-            title: 'Generating PDFs...',
-            html: `Range: <strong>${rangeText}</strong><br>
+                    Swal.fire({
+                        title: 'Generating PDFs...',
+                        html: `Range: <strong>${rangeText}</strong><br>
                    Creating one PDF per building<br>
                    <small class="text-muted">Please wait... this may take a few minutes</small>`,
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
 
-        $.ajax({
-            url: "{{ route('data-variation.export-all-buildings-pdf', $ward->id) }}?" + params.toString(),
-            method: 'GET',
-            dataType: 'json',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            timeout: 900000, // 15 min
+                    $.ajax({
+                        url: "{{ route('data-variation.export-all-buildings-pdf', $ward->id) }}?" +
+                            params.toString(),
+                        method: 'GET',
+                        dataType: 'json',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        timeout: 900000, // 15 min
 
-            success: function (response) {
-                if (!response.success) {
-                    Swal.fire('Error', response.message || 'Failed', 'error');
-                    return;
-                }
+                        success: function(response) {
+                            if (!response.success) {
+                                Swal.fire('Error', response.message || 'Failed',
+                                    'error');
+                                return;
+                            }
 
-                let failedHtml = '';
-                if (response.failed_count > 0) {
-                    failedHtml = `
+                            let failedHtml = '';
+                            if (response.failed_count > 0) {
+                                failedHtml = `
                         <details style="margin-top:8px;">
                             <summary style="cursor:pointer; color:#dc2626; font-weight:600;">
                                 ${response.failed_count} failed
@@ -2038,13 +2051,13 @@ $('#exportAllBuildingsBtn').on('click', function () {
                                 ${response.failed.map(f => `<div>${f.gisid} — ${f.message}</div>`).join('')}
                             </div>
                         </details>`;
-                }
+                            }
 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'PDFs Generated!',
-                    width: 600,
-                    html: `
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'PDFs Generated!',
+                                width: 600,
+                                html: `
                         <div style="text-align:left; font-size:0.9rem;">
                             <p><strong>Range:</strong> ${rangeText}</p>
                             <p><strong>Buildings Saved:</strong> ${response.saved_count}</p>
@@ -2059,22 +2072,22 @@ $('#exportAllBuildingsBtn').on('click', function () {
                             ${failedHtml}
                         </div>
                     `,
-                    confirmButtonText: 'OK'
-                });
-            },
+                                confirmButtonText: 'OK'
+                            });
+                        },
 
-            error: function (xhr) {
-                let msg = 'Server error';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    msg = xhr.responseJSON.message;
-                } else if (xhr.status === 0) {
-                    msg = 'Request timed out. Range kuraichu try pannunga.';
-                }
-                Swal.fire('Error', msg, 'error');
-            }
-        });
-    });
-});
+                        error: function(xhr) {
+                            let msg = 'Server error';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                msg = xhr.responseJSON.message;
+                            } else if (xhr.status === 0) {
+                                msg = 'Request timed out. Range kuraichu try pannunga.';
+                            }
+                            Swal.fire('Error', msg, 'error');
+                        }
+                    });
+                });
+            });
 
             console.log('✅ Data Variation page ready with pagination');
             console.log(`📊 Total buildings: {{ $pagination['total'] ?? 0 }}`);
@@ -2248,28 +2261,28 @@ $('#exportAllBuildingsBtn').on('click', function () {
                                         <tbody>
                                             ${data.assessment.details?.points && data.assessment.details.points.length > 0 ?
                                                 data.assessment.details.points.map((p, idx) => `
-                                                        <tr>
-                                                            <td>${idx + 1}</td>
-                                                            <td><code>${p.assessment || 'N/A'}</code></td>
-                                                            <td>${p.point_area ? p.point_area.toFixed(2) : 'N/A'}</td>
-                                                            <td>${p.qcusage || p.bill_usage || 'N/A'}</td>
-                                                            <td>${p.assessment_type || 'N/A'}</td>
-                                                            <td>${p.owner_name || 'N/A'}</td>
-                                                            <td>
-                                                                <button type="button" class="btn-export-assessment-pdf"
-                                                                    onclick="exportSingleAssessmentPdf('${data.gisid}', '${p.assessment}', '${p.assessment_type || 'N/A'}')"
-                                                                    title="Export this assessment to PDF">
-                                                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
-                                                                </button>
-                                                                ${p.mis_data ? `<span class="badge bg-info ms-1">MIS: ${p.mis_data.plot_area || 'N/A'}</span>` : ''}
-                                                            </td>
-                                                        </tr>
-                                                    `).join('')
+                                                            <tr>
+                                                                <td>${idx + 1}</td>
+                                                                <td><code>${p.assessment || 'N/A'}</code></td>
+                                                                <td>${p.point_area ? p.point_area.toFixed(2) : 'N/A'}</td>
+                                                                <td>${p.qcusage || p.bill_usage || 'N/A'}</td>
+                                                                <td>${p.assessment_type || 'N/A'}</td>
+                                                                <td>${p.owner_name || 'N/A'}</td>
+                                                                <td>
+                                                                    <button type="button" class="btn-export-assessment-pdf"
+                                                                        onclick="exportSingleAssessmentPdf('${data.gisid}', '${p.assessment}', '${p.assessment_type || 'N/A'}')"
+                                                                        title="Export this assessment to PDF">
+                                                                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                                                    </button>
+                                                                    ${p.mis_data ? `<span class="badge bg-info ms-1">MIS: ${p.mis_data.plot_area || 'N/A'}</span>` : ''}
+                                                                </td>
+                                                            </tr>
+                                                        `).join('')
                                             : `
-                                                    <tr>
-                                                        <td colspan="7" class="text-muted text-center">No assessment points available</td>
-                                                    </tr>
-                                                `}
+                                                        <tr>
+                                                            <td colspan="7" class="text-muted text-center">No assessment points available</td>
+                                                        </tr>
+                                                    `}
                                         </tbody>
                                     </table>
                                 </div>
