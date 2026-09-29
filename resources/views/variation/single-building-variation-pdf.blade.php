@@ -188,9 +188,9 @@
     <div class="building-id-box">
         <div class="gis-label">GIS ID</div>
         <div class="gis-value">{{ $gisid }}</div>
-        <div class="gis-label" style="margin-top:4px;">
+        {{-- <div class="gis-label" style="margin-top:4px;">
             Building {{ $buildingNumber }} of {{ $totalBuildings }}
-        </div>
+        </div> --}}
     </div>
 
     {{-- ═════ BUILDING IMAGE ═════ --}}
