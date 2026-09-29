@@ -1550,73 +1550,97 @@ public function exportAllAssessmentsPdf($wardId, $gisid)
 
     return $pdf->download($filename);
 }
-/**
- * Export ALL buildings with area variation ≥ threshold (default 500 sqft)
- * into ONE PDF — each building on its own page, with image.
- * Also saves a copy to storage/app/public/exports/
- */
 public function exportAllBuildingsPdf(Request $request, $wardId)
 {
+    // ── Bump limits (safety for large runs) ──
+    @ini_set('memory_limit', '1024M');
+    @set_time_limit(300);
+
     $ward   = Ward::findOrFail($wardId);
     $zone   = Zone::findOrFail($ward->zone_id);
     $corp   = $zone->corp_id;
     $wardNo = $ward->ward_no;
 
-    // ── Threshold ──
     $minVariation = (float) $request->get('min_variation', 500);
+    $maxBuildings = (int)   $request->get('max', 500);   // safety cap
 
-    // ── Load data ──
+    // ── Load core data ──
     $polygons     = DB::table("polygons_{$wardId}")->get();
     $polygonDatas = DB::table("polygon_data_{$wardId}")->get();
     $pointDatas   = DB::table("point_data_{$wardId}")->get();
 
     $misTableName = "mis_{$corp}";
     $misData      = $this->fetchMisData($misTableName, $wardNo);
-    $allMisData   = $this->fetchAllMisData($misTableName);
+
+    // ⚠️ NO full-corp MIS load — saves hundreds of MB
+    $allMisData = collect();
 
     $allBuildings = $this->buildBuildingData(
-        $polygons,
-        $polygonDatas,
-        $pointDatas,
-        $misData,
-        $allMisData
+        $polygons, $polygonDatas, $pointDatas, $misData, $allMisData
     );
 
-    // ── Filter: Assessment Area > 0 AND Area Variation >= threshold ──
+    // Free big source arrays
+    unset($polygons, $pointDatas, $misData, $allMisData);
+    gc_collect_cycles();
+
+    // ── Filter ──
     $filtered = [];
     foreach ($allBuildings as $gisid => $b) {
         $assessmentArea = (float) ($b['area_comparison']['assessment_area'] ?? 0);
-        $areaVariation  = (float) ($b['area_comparison']['area_variation'] ?? 0);
+        $areaVariation  = (float) ($b['area_comparison']['area_variation']  ?? 0);
 
-        if ($assessmentArea <= 0)   continue;   // must have point data attached
+        if ($assessmentArea <= 0)         continue;
         if ($areaVariation < $minVariation) continue;
+
+        // STRIP raw_data — this is one of the biggest memory hogs
+        unset(
+            $b['raw_data'],
+            $b['building']['raw_data'],
+            $b['assessment']['raw_data']
+        );
 
         $filtered[$gisid] = $b;
     }
+    unset($allBuildings);
+    gc_collect_cycles();
 
     if (empty($filtered)) {
         return redirect()->back()->with('error',
             "No buildings found with area variation above {$minVariation} sqft.");
     }
 
-    // ── Pre-load building images for each filtered GIS ID ──
+    // ── Cap ──
+    $cappedMessage = null;
+    if (count($filtered) > $maxBuildings) {
+        $filtered = array_slice($filtered, 0, $maxBuildings, true);
+        $cappedMessage = "Only first {$maxBuildings} buildings exported. Increase ?max= for more.";
+    }
+
+    // ── Pre-load & compress images ──
     $buildingImages = [];
     $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
+    unset($polygonDatas);
 
     foreach (array_keys($filtered) as $gisid) {
         $pd = $polygonDataByGisid->get($gisid);
         if (!$pd) continue;
 
-        // ⚠️ Change 'image' to your actual image column name if different
         $imageValue = $pd->image ?? null;
         if (!$imageValue) continue;
 
         if (str_starts_with($imageValue, 'data:image')) {
-            $buildingImages[$gisid] = $imageValue;
+            $parts = explode(',', $imageValue, 2);
+            $rawBin = base64_decode($parts[1] ?? '', true);
+            if ($rawBin !== false) {
+                $tmp = tempnam(sys_get_temp_dir(), 'img_');
+                file_put_contents($tmp, $rawBin);
+                $compressed = $this->imageToCompressedDataUri($tmp);
+                if ($compressed) $buildingImages[$gisid] = $compressed;
+                @unlink($tmp);
+            }
         } elseif (filter_var($imageValue, FILTER_VALIDATE_URL)) {
             $buildingImages[$gisid] = $imageValue;
         } else {
-            // Try common storage locations
             $paths = [
                 storage_path("app/public/{$imageValue}"),
                 public_path($imageValue),
@@ -1626,16 +1650,17 @@ public function exportAllBuildingsPdf(Request $request, $wardId)
             ];
             foreach ($paths as $path) {
                 if (file_exists($path)) {
-                    $mime = mime_content_type($path) ?: 'image/jpeg';
-                    $buildingImages[$gisid] = 'data:' . $mime . ';base64,'
-                                            . base64_encode(file_get_contents($path));
+                    $compressed = $this->imageToCompressedDataUri($path);
+                    if ($compressed) $buildingImages[$gisid] = $compressed;
                     break;
                 }
             }
         }
     }
+    unset($polygonDataByGisid);
+    gc_collect_cycles();
 
-    // ── Build summary ──
+    // ── Summary ──
     $summary = [
         'total_buildings'       => count($filtered),
         'total_building_area'   => array_sum(array_map(fn($b) => $b['area_comparison']['building_area'],   $filtered)),
@@ -1646,15 +1671,15 @@ public function exportAllBuildingsPdf(Request $request, $wardId)
         'zone_name'             => $zone->zone_name,
     ];
 
-    // ── Render PDF ──
+    // ── Render ──
     $pdf = Pdf::loadView('variation.all-buildings-variation-pdf', [
-        'ward'          => $ward,
-        'zone'          => $zone,
-        'buildings'     => $filtered,
-        'buildingImages'=> $buildingImages,
-        'summary'       => $summary,
-        'date'          => now()->format('d-m-Y'),
-        'time'          => now()->format('h-i-A'),
+        'ward'           => $ward,
+        'zone'           => $zone,
+        'buildings'      => $filtered,
+        'buildingImages' => $buildingImages,
+        'summary'        => $summary,
+        'date'           => now()->format('d-m-Y'),
+        'time'           => now()->format('h-i-A'),
     ]);
 
     $pdf->setPaper('A4', 'portrait');
@@ -1665,31 +1690,81 @@ public function exportAllBuildingsPdf(Request $request, $wardId)
         'isPhpEnabled'         => true,
     ]);
 
-    // ── Filename: include GIS IDs when few, else ward+count ──
+    // ── Filename ──
     $safeWard = preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $wardNo);
 
     if (count($filtered) === 1) {
-        // Single building → use its GIS ID as filename
         $singleGisid = array_key_first($filtered);
         $safeGisid   = preg_replace('/[\/\\\\:]/', '-', $singleGisid);
         $filename    = "Building_{$safeGisid}_Ward_{$safeWard}_" . date('Y-m-d_H-i-s') . ".pdf";
     } else {
-        // Multiple buildings → ward + count + timestamp
         $count    = count($filtered);
         $filename = "All_Buildings_Variation_Ward_{$safeWard}_{$count}buildings_"
                   . date('Y-m-d_H-i-s') . ".pdf";
     }
 
-    // ── Save copy to storage/app/public/exports/ ──
+    // ── Save copy ──
     $storageDir  = storage_path('app/public/exports');
-    if (!is_dir($storageDir)) {
-        mkdir($storageDir, 0755, true);
+    if (!is_dir($storageDir)) mkdir($storageDir, 0755, true);
+
+    $pdf->save($storageDir . DIRECTORY_SEPARATOR . $filename);
+
+    // ── Optional: flash the cap warning ──
+    if ($cappedMessage) {
+        session()->flash('warning', $cappedMessage);
     }
-    $storagePath = $storageDir . DIRECTORY_SEPARATOR . $filename;
 
-    $pdf->save($storagePath);
-
-    // ── Also stream to browser ──
     return $pdf->download($filename);
+}
+/**
+ * Resize + compress an image file and return a base64 data URI.
+ * Keeps memory tiny compared to raw base64 of a full-size photo.
+ */
+private function imageToCompressedDataUri(string $path, int $maxWidth = 600, int $quality = 60): ?string
+{
+    if (!file_exists($path)) return null;
+
+    $info = @getimagesize($path);
+    if (!$info) return null;
+
+    [$origW, $origH] = $info;
+    $mime = $info['mime'] ?? 'image/jpeg';
+
+    // Load source
+    switch ($mime) {
+        case 'image/jpeg': $src = @imagecreatefromjpeg($path); break;
+        case 'image/png':  $src = @imagecreatefrompng($path);  break;
+        case 'image/webp': $src = @imagecreatefromwebp($path); break;
+        case 'image/gif':  $src = @imagecreatefromgif($path);  break;
+        default: return null;
+    }
+    if (!$src) return null;
+
+    // Compute new dimensions
+    $ratio = $origH > 0 ? $origW / $origH : 1;
+    $newW  = min($origW, $maxWidth);
+    $newH  = (int) round($newW / max($ratio, 0.0001));
+
+    $dst = imagecreatetruecolor($newW, $newH);
+
+    // Preserve transparency for PNG
+    if ($mime === 'image/png') {
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+        $transparent = imagecolorallocatealpha($dst, 255, 255, 255, 127);
+        imagefilledrectangle($dst, 0, 0, $newW, $newH, $transparent);
+    }
+
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+
+    // Output JPEG to buffer (small)
+    ob_start();
+    imagejpeg($dst, null, $quality);
+    $jpegData = ob_get_clean();
+
+    imagedestroy($src);
+    imagedestroy($dst);
+
+    return 'data:image/jpeg;base64,' . base64_encode($jpegData);
 }
 }
