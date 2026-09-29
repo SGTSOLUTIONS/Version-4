@@ -1204,7 +1204,8 @@
                         <i class="bi bi-file-earmark-spreadsheet me-1"></i> Filtered
                     </button>
                     {{-- NEW: Export All Buildings with Area Variation > 500 --}}
-                    <button type="button" class="btn btn-export btn-export-all-buildings btn-sm" id="exportAllBuildingsBtn">
+                    <button type="button" class="btn btn-export btn-export-all-buildings btn-sm"
+                        id="exportAllBuildingsBtn">
                         <i class="bi bi-buildings me-1"></i> All Buildings
                     </button>
                 </div>
@@ -1362,38 +1363,59 @@
                     <div class="col-xl-2 col-lg-3 col-md-4">
                         <label class="form-label"><i class="bi bi-tags me-1"></i>Usage Status</label>
                         <select name="usage_status" id="filterUsageStatus" class="form-select form-select-sm">
-                            <option value="all" {{ request('usage_status') == 'all' ? 'selected' : '' }}>All Status</option>
-                            <option value="MATCH" {{ request('usage_status') == 'MATCH' ? 'selected' : '' }}>✅ Match</option>
-                            <option value="VARIATION" {{ request('usage_status') == 'VARIATION' ? 'selected' : '' }}>❌ Variation</option>
-                            <option value="PARTIAL_MATCH" {{ request('usage_status') == 'PARTIAL_MATCH' ? 'selected' : '' }}>⚠️ Partial Match</option>
-                            <option value="BUILDING_ONLY" {{ request('usage_status') == 'BUILDING_ONLY' ? 'selected' : '' }}>🏢 Building Only</option>
-                            <option value="ASSESSMENT_ONLY" {{ request('usage_status') == 'ASSESSMENT_ONLY' ? 'selected' : '' }}>📄 Assessment Only</option>
-                            <option value="NO_DATA" {{ request('usage_status') == 'NO_DATA' ? 'selected' : '' }}>⬜ No Data</option>
+                            <option value="all" {{ request('usage_status') == 'all' ? 'selected' : '' }}>All Status
+                            </option>
+                            <option value="MATCH" {{ request('usage_status') == 'MATCH' ? 'selected' : '' }}>✅ Match
+                            </option>
+                            <option value="VARIATION" {{ request('usage_status') == 'VARIATION' ? 'selected' : '' }}>❌
+                                Variation</option>
+                            <option value="PARTIAL_MATCH"
+                                {{ request('usage_status') == 'PARTIAL_MATCH' ? 'selected' : '' }}>⚠️ Partial Match
+                            </option>
+                            <option value="BUILDING_ONLY"
+                                {{ request('usage_status') == 'BUILDING_ONLY' ? 'selected' : '' }}>🏢 Building Only
+                            </option>
+                            <option value="ASSESSMENT_ONLY"
+                                {{ request('usage_status') == 'ASSESSMENT_ONLY' ? 'selected' : '' }}>📄 Assessment Only
+                            </option>
+                            <option value="NO_DATA" {{ request('usage_status') == 'NO_DATA' ? 'selected' : '' }}>⬜ No Data
+                            </option>
                         </select>
                     </div>
                     <div class="col-xl-2 col-lg-3 col-md-4">
                         <label class="form-label"><i class="bi bi-rulers me-1"></i>Area Status</label>
                         <select name="area_status" id="filterAreaStatus" class="form-select form-select-sm">
-                            <option value="all" {{ request('area_status') == 'all' ? 'selected' : '' }}>All Status</option>
-                            <option value="MATCH" {{ request('area_status') == 'MATCH' ? 'selected' : '' }}>Match</option>
-                            <option value="VARIATION" {{ request('area_status') == 'VARIATION' ? 'selected' : '' }}>Variation</option>
+                            <option value="all" {{ request('area_status') == 'all' ? 'selected' : '' }}>All Status
+                            </option>
+                            <option value="MATCH" {{ request('area_status') == 'MATCH' ? 'selected' : '' }}>Match
+                            </option>
+                            <option value="VARIATION" {{ request('area_status') == 'VARIATION' ? 'selected' : '' }}>
+                                Variation</option>
                         </select>
                     </div>
                     <div class="col-xl-2 col-lg-3 col-md-4">
                         <label class="form-label"><i class="bi bi-tag me-1"></i>Assessment Type</label>
                         <select name="assessment_type" id="filterAssessmentType" class="form-select form-select-sm">
-                            <option value="all" {{ request('assessment_type') == 'all' ? 'selected' : '' }}>All Types</option>
-                            <option value="OLD ASSESSMENT" {{ request('assessment_type') == 'OLD ASSESSMENT' ? 'selected' : '' }}>🕐 OLD Assessment</option>
-                            <option value="NEW ASSESSMENT" {{ request('assessment_type') == 'NEW ASSESSMENT' ? 'selected' : '' }}>🆕 NEW Assessment</option>
-                            <option value="OTHER" {{ request('assessment_type') == 'OTHER' ? 'selected' : '' }}>📋 OTHER</option>
+                            <option value="all" {{ request('assessment_type') == 'all' ? 'selected' : '' }}>All Types
+                            </option>
+                            <option value="OLD ASSESSMENT"
+                                {{ request('assessment_type') == 'OLD ASSESSMENT' ? 'selected' : '' }}>🕐 OLD Assessment
+                            </option>
+                            <option value="NEW ASSESSMENT"
+                                {{ request('assessment_type') == 'NEW ASSESSMENT' ? 'selected' : '' }}>🆕 NEW Assessment
+                            </option>
+                            <option value="OTHER" {{ request('assessment_type') == 'OTHER' ? 'selected' : '' }}>📋 OTHER
+                            </option>
                         </select>
                     </div>
                     <div class="col-xl-2 col-lg-3 col-md-4">
                         <label class="form-label"><i class="bi bi-building me-1"></i>Building Usage</label>
                         <select name="building_usage" id="filterBuildingUsage" class="form-select form-select-sm">
-                            <option value="all" {{ request('building_usage') == 'all' ? 'selected' : '' }}>All Usages</option>
-                            @foreach($filterOptions['building_usage'] ?? [] as $usage)
-                                <option value="{{ $usage }}" {{ request('building_usage') == $usage ? 'selected' : '' }}>
+                            <option value="all" {{ request('building_usage') == 'all' ? 'selected' : '' }}>All Usages
+                            </option>
+                            @foreach ($filterOptions['building_usage'] ?? [] as $usage)
+                                <option value="{{ $usage }}"
+                                    {{ request('building_usage') == $usage ? 'selected' : '' }}>
                                     {{ $usage }}
                                 </option>
                             @endforeach
@@ -1402,9 +1424,11 @@
                     <div class="col-xl-2 col-lg-3 col-md-4">
                         <label class="form-label"><i class="bi bi-file-text me-1"></i>Assessment Usage</label>
                         <select name="assessment_usage" id="filterAssessmentUsage" class="form-select form-select-sm">
-                            <option value="all" {{ request('assessment_usage') == 'all' ? 'selected' : '' }}>All Usages</option>
-                            @foreach($filterOptions['assessment_usage'] ?? [] as $usage)
-                                <option value="{{ $usage }}" {{ request('assessment_usage') == $usage ? 'selected' : '' }}>
+                            <option value="all" {{ request('assessment_usage') == 'all' ? 'selected' : '' }}>All Usages
+                            </option>
+                            @foreach ($filterOptions['assessment_usage'] ?? [] as $usage)
+                                <option value="{{ $usage }}"
+                                    {{ request('assessment_usage') == $usage ? 'selected' : '' }}>
                                     {{ $usage }}
                                 </option>
                             @endforeach
@@ -1505,7 +1529,8 @@
                                 $hasMultiple = $variation['assessment']['has_multiple'] ?? false;
                                 $floorCount = $variation['building']['details']['number_floor'] ?? 'N/A';
                                 $basementCount = $variation['building']['details']['basement'] ?? 'N/A';
-                                $assessmentTypeStatus = $variation['assessment']['details']['assessment_type_status'] ?? 'N/A';
+                                $assessmentTypeStatus =
+                                    $variation['assessment']['details']['assessment_type_status'] ?? 'N/A';
                                 $assessmentPoints = $variation['assessment']['details']['points'] ?? [];
 
                                 $badgeClass = '';
@@ -1572,7 +1597,8 @@
                                 $assessmentTypeBadgeClass = strtolower(str_replace(' ', '', $assessmentTypeStatus));
                             @endphp
                             <tr class="clickable-row" data-gisid="{{ $gisid }}" data-ward="{{ $ward->id }}">
-                                <td>{{ $loop->iteration + ($pagination['current_page'] - 1) * $pagination['per_page'] }}</td>
+                                <td>{{ $loop->iteration + ($pagination['current_page'] - 1) * $pagination['per_page'] }}
+                                </td>
                                 <td>
                                     <code>{{ $gisid }}</code>
                                     @if ($hasMultiple)
@@ -1603,7 +1629,9 @@
                                     @if (!empty($allAssessmentUsages) && count($allAssessmentUsages) > 1)
                                         <div class="small text-muted mt-1">
                                             <i class="bi bi-list-ul"></i>
-                                            <span title="All usages: {{ $usageTooltip }}">{{ count($allAssessmentUsages) }} usages</span>
+                                            <span
+                                                title="All usages: {{ $usageTooltip }}">{{ count($allAssessmentUsages) }}
+                                                usages</span>
                                         </div>
                                     @endif
                                     @if ($assessmentTypeStatus != 'N/A' && $assessmentTypeStatus != 'OTHER')
@@ -1626,13 +1654,15 @@
                                     <span class="fw-bold">{{ number_format($assessmentArea, 2) }}</span>
                                     <span class="text-muted small">sqft</span>
                                 </td>
-                                <td class="{{ $areaVariation > 0 ? 'text-danger' : ($areaVariation < 0 ? 'text-success' : 'text-muted') }}">
+                                <td
+                                    class="{{ $areaVariation > 0 ? 'text-danger' : ($areaVariation < 0 ? 'text-success' : 'text-muted') }}">
                                     {{ $areaVariation > 0 ? '+' : '' }}{{ number_format($areaVariation, 2) }}
                                     <br>
                                     <small class="text-muted">{{ number_format($variationPercentage, 1) }}%</small>
                                 </td>
                                 <td>
-                                    <span class="badge badge-area {{ $areaStatus == 'VARIATION' ? 'variation' : 'match' }}">
+                                    <span
+                                        class="badge badge-area {{ $areaStatus == 'VARIATION' ? 'variation' : 'match' }}">
                                         {{ $areaStatus }}
                                     </span>
                                 </td>
@@ -1652,7 +1682,8 @@
                                             <i class="bi bi-eye"></i>
                                         </button>
                                         <a href="/data-variation/single-pdf/{{ $ward->id }}/{{ $gisid }}"
-                                            class="btn btn-sm btn-outline-danger" title="Download PDF (FORM 2)" target="_blank">
+                                            class="btn btn-sm btn-outline-danger" title="Download PDF (FORM 2)"
+                                            target="_blank">
                                             <i class="bi bi-file-earmark-pdf"></i>
                                         </a>
                                     </div>
@@ -1730,7 +1761,8 @@
                                         </a>
                                     </li>
                                 @endif
-                                <li class="page-item {{ ($pagination['current_page'] ?? 1) >= ($pagination['last_page'] ?? 1) ? 'disabled' : '' }}">
+                                <li
+                                    class="page-item {{ ($pagination['current_page'] ?? 1) >= ($pagination['last_page'] ?? 1) ? 'disabled' : '' }}">
                                     <a class="page-link"
                                         href="?page={{ ($pagination['current_page'] ?? 1) + 1 }}&per_page={{ $pagination['per_page'] ?? 20 }}&{{ http_build_query(request()->except(['page', 'per_page'])) }}">
                                         <i class="bi bi-chevron-right"></i>
@@ -1764,7 +1796,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success" onclick="exportAllAssessments()" id="exportAllAssessmentsBtn">
+                    <button type="button" class="btn btn-success" onclick="exportAllAssessments()"
+                        id="exportAllAssessmentsBtn">
                         <i class="bi bi-file-earmark-pdf me-1"></i> Export All Assessments PDF
                     </button>
                     <a href="#" class="btn btn-export btn-export-pdf" id="exportSinglePdfBtn">
@@ -1904,112 +1937,145 @@
                 }, 2000);
             });
 
-          $('#exportAllBuildingsBtn').on('click', function() {
+
+$('#exportAllBuildingsBtn').on('click', function () {
+
     Swal.fire({
-        title: 'Export All Buildings (Separate PDFs)?',
+        title: 'Export Area Variation Buildings',
+        width: 560,
         html: `
             <div style="text-align:left; font-size:0.9rem;">
-                <strong>Each building → separate PDF</strong>
-                <ul style="margin-top:8px; padding-left:20px;">
-                    <li>Assessment Area <strong>&gt; 0</strong></li>
-                    <li>Area Variation <strong>≥ 500 sqft</strong></li>
-                    <li><strong>Filename = GIS ID</strong> (e.g. <code>57-123-456.pdf</code>)</li>
-                </ul>
+                <p style="margin-bottom:10px;">
+                    Each building → <strong>separate PDF</strong> (image + assessments),
+                    filename = <strong>GIS ID</strong>.
+                </p>
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label style="font-size:0.75rem; font-weight:700;">Min Variation (sqft)</label>
+                        <input type="number" id="swalMin" class="swal2-input"
+                               style="margin:4px 0 0 0; width:100%;"
+                               value="500" min="0">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:0.75rem; font-weight:700;">Max Variation (sqft)</label>
+                        <input type="number" id="swalMax" class="swal2-input"
+                               style="margin:4px 0 0 0; width:100%;"
+                               value="1000" min="0" placeholder="Empty = no limit">
+                    </div>
+                </div>
+
+                <small style="display:block; margin-top:8px; color:#64748b;">
+                    Max empty-ah vittaa, Min-ku mela ulla ellaa buildings-um export aagum.
+                </small>
+
                 <div style="margin-top:10px; padding:8px; background:#dbeafe; border-radius:6px; font-size:0.8rem;">
                     <i class="bi bi-folder-fill"></i>
                     Saved to: <code>storage/app/public/exports/</code>
+                    (browser-la download aagaadhu)
                 </div>
             </div>
         `,
-        icon: 'question',
         showCancelButton: true,
-        confirmButtonText: '<i class="bi bi-save"></i> Yes, Generate',
+        confirmButtonText: '<i class="bi bi-save"></i> Generate',
         cancelButtonText: 'Cancel',
         confirmButtonColor: '#b91c1c',
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({
-                title: 'Generating PDFs...',
-                html: 'Creating one PDF per building<br><small class="text-muted">Please wait... this may take a few minutes</small>',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
+        focusConfirm: false,
+        preConfirm: () => {
+            const min = document.getElementById('swalMin').value.trim();
+            const max = document.getElementById('swalMax').value.trim();
 
-            $.ajax({
-                url: "{{ route('data-variation.export-all-buildings-pdf', $ward->id) }}?min_variation=500",
-                method: 'GET',
-                dataType: 'json',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                timeout: 900000,  // 15 min
-                success: function(response) {
-                    if (response.success) {
-                        let filesList = '';
-                        if (response.files && response.files.length > 0) {
-                            filesList = `
-                                <details style="text-align:left; margin-top:10px;">
-                                    <summary style="cursor:pointer; font-weight:600;">
-                                        View all ${response.saved_count} files
-                                    </summary>
-                                    <div style="max-height:250px; overflow-y:auto; margin-top:8px;
-                                                background:#f8fafc; padding:8px; border-radius:6px; font-size:0.75rem;">
-                                        ${response.files.map(f => `
-                                            <div style="padding:3px 0; border-bottom:1px solid #eee;">
-                                                <a href="${f.public_url}" target="_blank" style="text-decoration:none;">
-                                                    <i class="bi bi-file-earmark-pdf text-danger"></i>
-                                                    ${f.filename}
-                                                </a>
-                                                <span style="color:#888; float:right;">
-                                                    ${(f.size/1024).toFixed(1)} KB
-                                                </span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </details>
-                            `;
-                        }
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'PDFs Generated!',
-                            html: `
-                                <div style="text-align:left; font-size:0.9rem;">
-                                    <p><strong>Buildings:</strong> ${response.saved_count}</p>
-                                    <p><strong>Total Size:</strong> ${response.total_size_mb} MB</p>
-                                    <p><strong>Folder:</strong>
-                                        <a href="${response.folder_url}" target="_blank">
-                                            ${response.folder_name}
-                                        </a>
-                                    </p>
-                                    ${response.zip_url ? `
-                                        <a href="${response.zip_url}" target="_blank"
-                                           class="btn btn-sm btn-primary mt-2">
-                                            <i class="bi bi-download"></i> Download ZIP
-                                        </a>
-                                    ` : ''}
-                                    ${response.warning ? `<p class="text-warning small mt-2">${response.warning}</p>` : ''}
-                                    ${filesList}
-                                </div>
-                            `,
-                            width: 600,
-                            confirmButtonText: 'OK'
-                        });
-                    } else {
-                        Swal.fire('Error', response.message || 'Failed', 'error');
-                    }
-                },
-                error: function(xhr) {
-                    let msg = 'Server error';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        msg = xhr.responseJSON.message;
-                    } else if (xhr.status === 0) {
-                        msg = 'Request timed out. Try with fewer buildings (?max=50)';
-                    }
-                    Swal.fire('Error', msg, 'error');
-                }
-            });
+            if (min === '' || isNaN(min) || parseFloat(min) < 0) {
+                Swal.showValidationMessage('Min value kudunga (0 or more)');
+                return false;
+            }
+            if (max !== '' && (isNaN(max) || parseFloat(max) < parseFloat(min))) {
+                Swal.showValidationMessage('Max value, Min-ai vida periya-ah irukkanum');
+                return false;
+            }
+            return { min, max };
         }
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        const { min, max } = result.value;
+
+        const params = new URLSearchParams({ min_variation: min });
+        if (max !== '') params.append('max_variation', max);
+
+        const rangeText = max !== '' ? `${min} – ${max} sqft` : `${min} sqft and above`;
+
+        Swal.fire({
+            title: 'Generating PDFs...',
+            html: `Range: <strong>${rangeText}</strong><br>
+                   Creating one PDF per building<br>
+                   <small class="text-muted">Please wait... this may take a few minutes</small>`,
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        $.ajax({
+            url: "{{ route('data-variation.export-all-buildings-pdf', $ward->id) }}?" + params.toString(),
+            method: 'GET',
+            dataType: 'json',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            timeout: 900000, // 15 min
+
+            success: function (response) {
+                if (!response.success) {
+                    Swal.fire('Error', response.message || 'Failed', 'error');
+                    return;
+                }
+
+                let failedHtml = '';
+                if (response.failed_count > 0) {
+                    failedHtml = `
+                        <details style="margin-top:8px;">
+                            <summary style="cursor:pointer; color:#dc2626; font-weight:600;">
+                                ${response.failed_count} failed
+                            </summary>
+                            <div style="max-height:150px; overflow-y:auto; font-size:0.75rem; margin-top:6px;">
+                                ${response.failed.map(f => `<div>${f.gisid} — ${f.message}</div>`).join('')}
+                            </div>
+                        </details>`;
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'PDFs Generated!',
+                    width: 600,
+                    html: `
+                        <div style="text-align:left; font-size:0.9rem;">
+                            <p><strong>Range:</strong> ${rangeText}</p>
+                            <p><strong>Buildings Saved:</strong> ${response.saved_count}</p>
+                            <p><strong>Failed:</strong> ${response.failed_count}</p>
+                            <p><strong>Total Size:</strong> ${response.total_size_mb} MB</p>
+                            <p><strong>Folder:</strong><br>
+                               <code style="font-size:0.75rem; word-break:break-all;">
+                                   storage/app/public/exports/${response.folder_name}
+                               </code>
+                            </p>
+                            ${response.warning ? `<p class="text-warning small">${response.warning}</p>` : ''}
+                            ${failedHtml}
+                        </div>
+                    `,
+                    confirmButtonText: 'OK'
+                });
+            },
+
+            error: function (xhr) {
+                let msg = 'Server error';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg = xhr.responseJSON.message;
+                } else if (xhr.status === 0) {
+                    msg = 'Request timed out. Range kuraichu try pannunga.';
+                }
+                Swal.fire('Error', msg, 'error');
+            }
+        });
     });
 });
+
             console.log('✅ Data Variation page ready with pagination');
             console.log(`📊 Total buildings: {{ $pagination['total'] ?? 0 }}`);
         });
@@ -2182,28 +2248,28 @@
                                         <tbody>
                                             ${data.assessment.details?.points && data.assessment.details.points.length > 0 ?
                                                 data.assessment.details.points.map((p, idx) => `
-                                                    <tr>
-                                                        <td>${idx + 1}</td>
-                                                        <td><code>${p.assessment || 'N/A'}</code></td>
-                                                        <td>${p.point_area ? p.point_area.toFixed(2) : 'N/A'}</td>
-                                                        <td>${p.qcusage || p.bill_usage || 'N/A'}</td>
-                                                        <td>${p.assessment_type || 'N/A'}</td>
-                                                        <td>${p.owner_name || 'N/A'}</td>
-                                                        <td>
-                                                            <button type="button" class="btn-export-assessment-pdf"
-                                                                onclick="exportSingleAssessmentPdf('${data.gisid}', '${p.assessment}', '${p.assessment_type || 'N/A'}')"
-                                                                title="Export this assessment to PDF">
-                                                                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
-                                                            </button>
-                                                            ${p.mis_data ? `<span class="badge bg-info ms-1">MIS: ${p.mis_data.plot_area || 'N/A'}</span>` : ''}
-                                                        </td>
-                                                    </tr>
-                                                `).join('')
+                                                        <tr>
+                                                            <td>${idx + 1}</td>
+                                                            <td><code>${p.assessment || 'N/A'}</code></td>
+                                                            <td>${p.point_area ? p.point_area.toFixed(2) : 'N/A'}</td>
+                                                            <td>${p.qcusage || p.bill_usage || 'N/A'}</td>
+                                                            <td>${p.assessment_type || 'N/A'}</td>
+                                                            <td>${p.owner_name || 'N/A'}</td>
+                                                            <td>
+                                                                <button type="button" class="btn-export-assessment-pdf"
+                                                                    onclick="exportSingleAssessmentPdf('${data.gisid}', '${p.assessment}', '${p.assessment_type || 'N/A'}')"
+                                                                    title="Export this assessment to PDF">
+                                                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                                                </button>
+                                                                ${p.mis_data ? `<span class="badge bg-info ms-1">MIS: ${p.mis_data.plot_area || 'N/A'}</span>` : ''}
+                                                            </td>
+                                                        </tr>
+                                                    `).join('')
                                             : `
-                                                <tr>
-                                                    <td colspan="7" class="text-muted text-center">No assessment points available</td>
-                                                </tr>
-                                            `}
+                                                    <tr>
+                                                        <td colspan="7" class="text-muted text-center">No assessment points available</td>
+                                                    </tr>
+                                                `}
                                         </tbody>
                                     </table>
                                 </div>

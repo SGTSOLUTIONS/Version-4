@@ -1468,286 +1468,312 @@ class VariationController extends Controller
     }
 
   /**
- * ══════════════════════════════════════════════════════════════
- * EXPORT EACH BUILDING AS SEPARATE PDF
- * ✅ Filename = GIS ID (e.g. 57-123-456.pdf)
- * ✅ All PDFs saved to one timestamped folder
- * ✅ Also creates a ZIP for easy download
- * ══════════════════════════════════════════════════════════════
- */
-public function exportAllBuildingsPdf(Request $request, $wardId)
-{
-    @ini_set('memory_limit', '1024M');
-    @set_time_limit(900);
+     * ══════════════════════════════════════════════════════════════
+     * EXPORT EACH BUILDING AS SEPARATE PDF (Area Variation Range)
+     *
+     * Params (GET):
+     *   min_variation  = default 500
+     *   max_variation  = optional (empty = no upper limit)
+     *   limit          = optional (0 / empty = no cap)
+     *
+     * ✅ Filename = GIS ID (e.g. 57-123-456.pdf)
+     * ✅ All PDFs saved in one timestamped folder (NO browser download)
+     * ✅ Also creates a ZIP inside the same exports folder
+     * ══════════════════════════════════════════════════════════════
+     */
+    public function exportAllBuildingsPdf(Request $request, $wardId)
+    {
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(900);
 
-    try {
-        $ward   = Ward::findOrFail($wardId);
-        $zone   = Zone::findOrFail($ward->zone_id);
-        $corp   = $zone->corp_id;
-        $wardNo = $ward->ward_no;
+        try {
+            $ward   = Ward::findOrFail($wardId);
+            $zone   = Zone::findOrFail($ward->zone_id);
+            $corp   = $zone->corp_id;
+            $wardNo = $ward->ward_no;
 
-        $minVariation = (float) $request->get('min_variation', 500);
-        $maxBuildings = (int)   $request->get('max', 500);
+            // ── Range params ──
+            $minVariation = (float) $request->get('min_variation', 500);
+            $maxVariation = $request->filled('max_variation')
+                ? (float) $request->get('max_variation')
+                : null;                                   // empty = no upper limit
+            $limit = (int) $request->get('limit', 0);     // 0 = no cap
 
-        // ── Load core data ──
-        $polygons     = DB::table("polygons_{$wardId}")->get();
-        $polygonDatas = DB::table("polygon_data_{$wardId}")->get();
-        $pointDatas   = DB::table("point_data_{$wardId}")->get();
+            if ($maxVariation !== null && $maxVariation < $minVariation) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Max variation must be greater than or equal to Min variation.',
+                ], 422);
+            }
 
-        $misTableName = "mis_{$corp}";
-        $misData      = $this->fetchMisData($misTableName, $wardNo);
-        $allMisData   = collect();
+            // ── Load core data ──
+            $polygons     = DB::table("polygons_{$wardId}")->get();
+            $polygonDatas = DB::table("polygon_data_{$wardId}")->get();
+            $pointDatas   = DB::table("point_data_{$wardId}")->get();
 
-        $allBuildings = $this->buildBuildingData(
-            $polygons, $polygonDatas, $pointDatas, $misData, $allMisData
-        );
+            $misTableName = "mis_{$corp}";
+            $misData      = $this->fetchMisData($misTableName, $wardNo);
+            $allMisData   = collect();
 
-        unset($polygons, $pointDatas, $misData, $allMisData);
-        gc_collect_cycles();
-
-        // ── Filter ──
-        $filtered = [];
-        foreach ($allBuildings as $gisid => $b) {
-            $assessmentArea = (float) ($b['area_comparison']['assessment_area'] ?? 0);
-            $areaVariation  = (float) ($b['area_comparison']['area_variation']  ?? 0);
-
-            if ($assessmentArea <= 0)           continue;
-            if ($areaVariation < $minVariation) continue;
-
-            unset(
-                $b['raw_data'],
-                $b['building']['raw_data'],
-                $b['assessment']['raw_data']
+            $allBuildings = $this->buildBuildingData(
+                $polygons, $polygonDatas, $pointDatas, $misData, $allMisData
             );
 
-            $filtered[$gisid] = $b;
-        }
-        unset($allBuildings);
-        gc_collect_cycles();
+            unset($polygons, $pointDatas, $misData, $allMisData);
+            gc_collect_cycles();
 
-        if (empty($filtered)) {
-            return response()->json([
-                'success' => false,
-                'message' => "No buildings found with area variation above {$minVariation} sqft.",
-            ], 404);
-        }
+            // ── Filter by range ──
+            $filtered = [];
+            foreach ($allBuildings as $gisid => $b) {
+                $assessmentArea = (float) ($b['area_comparison']['assessment_area'] ?? 0);
+                $areaVariation  = (float) ($b['area_comparison']['area_variation']  ?? 0);
 
-        // ── Cap ──
-        $cappedMessage = null;
-        if (count($filtered) > $maxBuildings) {
-            $filtered = array_slice($filtered, 0, $maxBuildings, true);
-            $cappedMessage = "Only first {$maxBuildings} buildings exported.";
-        }
+                if ($assessmentArea <= 0)           continue;
+                if ($areaVariation < $minVariation) continue;
+                if ($maxVariation !== null && $areaVariation > $maxVariation) continue;
 
-        // ── Pre-load & compress images ──
-        $buildingImages = [];
-        $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
-        unset($polygonDatas);
+                // free memory: raw data not needed in PDF
+                unset(
+                    $b['raw_data'],
+                    $b['building']['raw_data'],
+                    $b['assessment']['raw_data']
+                );
 
-        foreach (array_keys($filtered) as $gisid) {
-            $pd = $polygonDataByGisid->get($gisid);
-            if (!$pd) continue;
+                $filtered[$gisid] = $b;
+            }
+            unset($allBuildings);
+            gc_collect_cycles();
 
-            $imageValue = $pd->image ?? null;
-            if (!$imageValue) continue;
+            if (empty($filtered)) {
+                $rangeText = $maxVariation !== null
+                    ? "{$minVariation} to {$maxVariation}"
+                    : "above {$minVariation}";
 
-            if (str_starts_with($imageValue, 'data:image')) {
-                $parts  = explode(',', $imageValue, 2);
-                $rawBin = base64_decode($parts[1] ?? '', true);
-                if ($rawBin !== false) {
-                    $tmp = tempnam(sys_get_temp_dir(), 'img_');
-                    file_put_contents($tmp, $rawBin);
-                    $compressed = $this->imageToCompressedDataUri($tmp);
-                    if ($compressed) $buildingImages[$gisid] = $compressed;
-                    @unlink($tmp);
-                }
-            } elseif (filter_var($imageValue, FILTER_VALIDATE_URL)) {
-                $buildingImages[$gisid] = $imageValue;
-            } else {
-                $paths = [
-                    storage_path("app/public/{$imageValue}"),
-                    public_path($imageValue),
-                    public_path("storage/{$imageValue}"),
-                    storage_path("app/{$imageValue}"),
-                    base_path($imageValue),
-                ];
-                foreach ($paths as $path) {
-                    if (file_exists($path)) {
-                        $compressed = $this->imageToCompressedDataUri($path);
+                return response()->json([
+                    'success' => false,
+                    'message' => "No buildings found with area variation {$rangeText} sqft.",
+                ], 404);
+            }
+
+            // ── Optional cap ──
+            $cappedMessage = null;
+            if ($limit > 0 && count($filtered) > $limit) {
+                $filtered = array_slice($filtered, 0, $limit, true);
+                $cappedMessage = "Only first {$limit} buildings exported.";
+            }
+
+            // ── Pre-load & compress images (only for filtered buildings) ──
+            $buildingImages     = [];
+            $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
+            unset($polygonDatas);
+
+            foreach (array_keys($filtered) as $gisid) {
+                $pd = $polygonDataByGisid->get($gisid);
+                if (!$pd) continue;
+
+                $imageValue = $pd->image ?? null;
+                if (!$imageValue) continue;
+
+                if (str_starts_with($imageValue, 'data:image')) {
+                    $parts  = explode(',', $imageValue, 2);
+                    $rawBin = base64_decode($parts[1] ?? '', true);
+                    if ($rawBin !== false) {
+                        $tmp = tempnam(sys_get_temp_dir(), 'img_');
+                        file_put_contents($tmp, $rawBin);
+                        $compressed = $this->imageToCompressedDataUri($tmp);
                         if ($compressed) $buildingImages[$gisid] = $compressed;
-                        break;
+                        @unlink($tmp);
+                    }
+                } elseif (filter_var($imageValue, FILTER_VALIDATE_URL)) {
+                    $buildingImages[$gisid] = $imageValue;
+                } else {
+                    $paths = [
+                        storage_path("app/public/{$imageValue}"),
+                        public_path($imageValue),
+                        public_path("storage/{$imageValue}"),
+                        storage_path("app/{$imageValue}"),
+                        base_path($imageValue),
+                    ];
+                    foreach ($paths as $path) {
+                        if (file_exists($path)) {
+                            $compressed = $this->imageToCompressedDataUri($path);
+                            if ($compressed) $buildingImages[$gisid] = $compressed;
+                            break;
+                        }
                     }
                 }
             }
-        }
-        unset($polygonDataByGisid);
-        gc_collect_cycles();
+            unset($polygonDataByGisid);
+            gc_collect_cycles();
 
-        // ══════════════════════════════════════════════════════════
-        // CREATE FOLDER
-        // ══════════════════════════════════════════════════════════
-        $safeWard   = preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $wardNo);
-        $timestamp  = date('Y-m-d_H-i-s');
-        $folderName = "Ward_{$safeWard}_Area_Variation_{$timestamp}";
-        $folderPath = storage_path("app/public/exports/{$folderName}");
+            // ══════════════════════════════════════════════════════════
+            // CREATE FOLDER
+            // ══════════════════════════════════════════════════════════
+            $safeWard   = preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $wardNo);
+            $timestamp  = date('Y-m-d_H-i-s');
+            $rangeLabel = $maxVariation !== null
+                ? "{$minVariation}-{$maxVariation}"
+                : "{$minVariation}plus";
+            $folderName = "Ward_{$safeWard}_Var_{$rangeLabel}_{$timestamp}";
+            $folderPath = storage_path("app/public/exports/{$folderName}");
 
-        if (!is_dir($folderPath)) {
-            mkdir($folderPath, 0755, true);
-        }
-
-        // ══════════════════════════════════════════════════════════
-        // GENERATE ONE PDF PER BUILDING — FILENAME = GIS ID
-        // ══════════════════════════════════════════════════════════
-        $totalBuildings = count($filtered);
-        $savedFiles     = [];
-        $failedGisids   = [];
-        $pageNo         = 1;
-
-        foreach ($filtered as $gisid => $buildingData) {
-            try {
-                $buildingImage = $buildingImages[$gisid] ?? null;
-
-                $pdf = Pdf::loadView('variation.single-building-variation-pdf', [
-                    'ward'           => $ward,
-                    'zone'           => $zone,
-                    'gisid'          => $gisid,
-                    'buildingData'   => $buildingData,
-                    'buildingImage'  => $buildingImage,
-                    'buildingNumber' => $pageNo,
-                    'totalBuildings' => $totalBuildings,
-                    'summary'        => [
-                        'min_variation' => $minVariation,
-                        'ward_no'       => $wardNo,
-                        'zone_name'     => $zone->zone_name,
-                    ],
-                    'date'           => now()->format('d-m-Y'),
-                    'time'           => now()->format('h-i-A'),
-                ]);
-
-                $pdf->setPaper('A4', 'portrait');
-                $pdf->setOptions([
-                    'defaultFont'          => 'DejaVu Sans',
-                    'isHtml5ParserEnabled' => true,
-                    'isRemoteEnabled'      => true,
-                    'isPhpEnabled'         => false,
-                ]);
-
-                // ═══════════════════════════════════════════════════
-                // FILENAME = GIS ID
-                // e.g. "57/123/456"  →  "57-123-456.pdf"
-                // e.g. "57/123/456/1" →  "57-123-456-1.pdf"
-                // ═══════════════════════════════════════════════════
-                $safeGisid = preg_replace('/[\/\\\\:*?"<>|]/', '-', $gisid);
-                $safeGisid = preg_replace('/-+/', '-', $safeGisid);  // collapse multiple dashes
-                $safeGisid = trim($safeGisid, '-');
-                $fileName  = "{$safeGisid}.pdf";
-                $filePath  = $folderPath . DIRECTORY_SEPARATOR . $fileName;
-
-                $pdf->save($filePath);
-
-                $savedFiles[] = [
-                    'gisid'        => $gisid,
-                    'filename'     => $fileName,
-                    'storage_path' => $filePath,
-                    'public_url'   => asset("storage/exports/{$folderName}/{$fileName}"),
-                    'size'         => file_exists($filePath) ? filesize($filePath) : 0,
-                ];
-
-                unset($pdf, $buildingData);
-                gc_collect_cycles();
-
-                $pageNo++;
-
-            } catch (\Throwable $e) {
-                $failedGisids[] = [
-                    'gisid'   => $gisid,
-                    'message' => $e->getMessage(),
-                ];
-                \Log::error('Building PDF failed', [
-                    'ward_id' => $wardId,
-                    'gisid'   => $gisid,
-                    'message' => $e->getMessage(),
-                ]);
+            if (!is_dir($folderPath)) {
+                mkdir($folderPath, 0755, true);
             }
-        }
 
-        unset($filtered, $buildingImages);
-        gc_collect_cycles();
+            // ══════════════════════════════════════════════════════════
+            // GENERATE ONE PDF PER BUILDING — FILENAME = GIS ID
+            // ══════════════════════════════════════════════════════════
+            $totalBuildings = count($filtered);
+            $savedFiles     = [];
+            $failedGisids   = [];
+            $pageNo         = 1;
 
-        if (empty($savedFiles)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No PDFs were generated. Check logs.',
-                'failed'  => $failedGisids,
-            ], 500);
-        }
+            foreach ($filtered as $gisid => $buildingData) {
+                try {
+                    $buildingImage = $buildingImages[$gisid] ?? null;
 
-        // ══════════════════════════════════════════════════════════
-        // CREATE ZIP OF ALL PDFs (so user can download once)
-        // ══════════════════════════════════════════════════════════
-        $zipFileName = "{$folderName}.zip";
-        $zipPath     = storage_path("app/public/exports/{$zipFileName}");
-        $zipCreated  = false;
+                    $pdf = Pdf::loadView('variation.single-building-variation-pdf', [
+                        'ward'           => $ward,
+                        'zone'           => $zone,
+                        'gisid'          => $gisid,
+                        'buildingData'   => $buildingData,
+                        'buildingImage'  => $buildingImage,
+                        'buildingNumber' => $pageNo,
+                        'totalBuildings' => $totalBuildings,
+                        'summary'        => [
+                            'min_variation' => $minVariation,
+                            'max_variation' => $maxVariation,
+                            'ward_no'       => $wardNo,
+                            'zone_name'     => $zone->zone_name,
+                        ],
+                        'date' => now()->format('d-m-Y'),
+                        'time' => now()->format('h-i-A'),
+                    ]);
 
-        if (class_exists('\ZipArchive')) {
-            $zip = new \ZipArchive();
-            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
-                foreach ($savedFiles as $file) {
-                    $zip->addFile($file['storage_path'], $file['filename']);
+                    $pdf->setPaper('A4', 'portrait');
+                    $pdf->setOptions([
+                        'defaultFont'          => 'DejaVu Sans',
+                        'isHtml5ParserEnabled' => true,
+                        'isRemoteEnabled'      => true,
+                        'isPhpEnabled'         => false,
+                    ]);
+
+                    // "57/123/456" → "57-123-456.pdf"
+                    $safeGisid = preg_replace('/[\/\\\\:*?"<>|]/', '-', $gisid);
+                    $safeGisid = preg_replace('/-+/', '-', $safeGisid);
+                    $safeGisid = trim($safeGisid, '-');
+                    $fileName  = "{$safeGisid}.pdf";
+                    $filePath  = $folderPath . DIRECTORY_SEPARATOR . $fileName;
+
+                    $pdf->save($filePath);
+
+                    $savedFiles[] = [
+                        'gisid'        => $gisid,
+                        'filename'     => $fileName,
+                        'storage_path' => $filePath,
+                        'public_url'   => asset("storage/exports/{$folderName}/{$fileName}"),
+                        'size'         => file_exists($filePath) ? filesize($filePath) : 0,
+                    ];
+
+                    unset($pdf, $buildingData);
+                    gc_collect_cycles();
+
+                    $pageNo++;
+                } catch (\Throwable $e) {
+                    $failedGisids[] = [
+                        'gisid'   => $gisid,
+                        'message' => $e->getMessage(),
+                    ];
+                    \Log::error('Building PDF failed', [
+                        'ward_id' => $wardId,
+                        'gisid'   => $gisid,
+                        'message' => $e->getMessage(),
+                    ]);
                 }
-                $zip->close();
-                $zipCreated = file_exists($zipPath);
             }
+
+            unset($filtered, $buildingImages);
+            gc_collect_cycles();
+
+            if (empty($savedFiles)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No PDFs were generated. Check logs.',
+                    'failed'  => $failedGisids,
+                ], 500);
+            }
+
+            // ══════════════════════════════════════════════════════════
+            // ZIP (kept in storage, optional)
+            // ══════════════════════════════════════════════════════════
+            $zipFileName = "{$folderName}.zip";
+            $zipPath     = storage_path("app/public/exports/{$zipFileName}");
+            $zipCreated  = false;
+
+            if (class_exists('\ZipArchive')) {
+                $zip = new \ZipArchive();
+                if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                    foreach ($savedFiles as $file) {
+                        $zip->addFile($file['storage_path'], $file['filename']);
+                    }
+                    $zip->close();
+                    $zipCreated = file_exists($zipPath);
+                }
+            }
+
+            // ── Summary ──
+            $totalSize = array_sum(array_column($savedFiles, 'size'));
+
+            $result = [
+                'success'         => true,
+                'message'         => "✅ Generated " . count($savedFiles) . " separate PDFs (filename = GIS ID).",
+                'range'           => [
+                    'min' => $minVariation,
+                    'max' => $maxVariation,
+                ],
+                'folder_name'     => $folderName,
+                'folder_path'     => $folderPath,
+                'folder_url'      => asset("storage/exports/{$folderName}"),
+                'zip_name'        => $zipCreated ? $zipFileName : null,
+                'zip_path'        => $zipCreated ? $zipPath : null,
+                'zip_url'         => $zipCreated ? asset("storage/exports/{$zipFileName}") : null,
+                'total_buildings' => $totalBuildings,
+                'saved_count'     => count($savedFiles),
+                'failed_count'    => count($failedGisids),
+                'total_size'      => $totalSize,
+                'total_size_mb'   => round($totalSize / 1048576, 2),
+                'files'           => $savedFiles,
+                'failed'          => $failedGisids,
+                'warning'         => $cappedMessage,
+            ];
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json($result);
+            }
+
+            return redirect()->back()
+                ->with('success', $result['message'])
+                ->with('folder_url', $result['folder_url']);
+        } catch (\Throwable $e) {
+            \Log::error('exportAllBuildingsPdf failed', [
+                'ward_id' => $wardId,
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'PDF generation failed: ' . $e->getMessage(),
+                ], 500);
+            }
+
+            return redirect()->back()->with('error',
+                'PDF generation failed: ' . $e->getMessage());
         }
-
-        // ── Summary ──
-        $totalSize = array_sum(array_column($savedFiles, 'size'));
-
-        $result = [
-            'success'         => true,
-            'message'         => "✅ Generated {$totalBuildings} separate PDFs (filename = GIS ID).",
-            'folder_name'     => $folderName,
-            'folder_path'     => $folderPath,
-            'folder_url'      => asset("storage/exports/{$folderName}"),
-            'zip_name'        => $zipCreated ? $zipFileName : null,
-            'zip_path'        => $zipCreated ? $zipPath : null,
-            'zip_url'         => $zipCreated ? asset("storage/exports/{$zipFileName}") : null,
-            'total_buildings' => $totalBuildings,
-            'saved_count'     => count($savedFiles),
-            'failed_count'    => count($failedGisids),
-            'total_size'      => $totalSize,
-            'total_size_mb'   => round($totalSize / 1048576, 2),
-            'files'           => $savedFiles,
-            'failed'          => $failedGisids,
-            'warning'         => $cappedMessage,
-        ];
-
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json($result);
-        }
-
-        return redirect()->back()
-            ->with('success', $result['message'])
-            ->with('folder_url', $result['folder_url']);
-    } catch (\Throwable $e) {
-        \Log::error('exportAllBuildingsPdf failed', [
-            'ward_id' => $wardId,
-            'message' => $e->getMessage(),
-            'file'    => $e->getFile(),
-            'line'    => $e->getLine(),
-        ]);
-
-        if ($request->expectsJson() || $request->ajax()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'PDF generation failed: ' . $e->getMessage(),
-            ], 500);
-        }
-
-        return redirect()->back()->with('error',
-            'PDF generation failed: ' . $e->getMessage());
     }
-}
 
     /**
      * Resize + compress an image file and return a base64 data URI.
