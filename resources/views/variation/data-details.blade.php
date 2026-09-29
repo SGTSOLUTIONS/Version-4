@@ -230,6 +230,36 @@
             box-shadow: 0 4px 12px rgba(108, 92, 231, 0.4);
         }
 
+        /* ─── NEW: EXPORT ALL BUILDINGS BUTTON ─── */
+        .btn-export-all-buildings {
+            background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-export-all-buildings:hover {
+            background: linear-gradient(135deg, #991b1b 0%, #6b1a1a 100%);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(185, 28, 28, 0.5);
+        }
+
+        .btn-export-all-buildings::after {
+            content: '500+';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #fbbf24;
+            color: #7f1d1d;
+            font-size: 0.55rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 8px;
+            border: 1px solid #fff;
+            letter-spacing: 0.3px;
+        }
+
         .btn-export-assessment-pdf {
             background: #e11d48;
             color: #fff;
@@ -1173,6 +1203,10 @@
                     <button type="button" class="btn btn-export btn-export-csv btn-sm" id="exportFilteredBtn">
                         <i class="bi bi-file-earmark-spreadsheet me-1"></i> Filtered
                     </button>
+                    {{-- NEW: Export All Buildings with Area Variation > 500 --}}
+                    <button type="button" class="btn btn-export btn-export-all-buildings btn-sm" id="exportAllBuildingsBtn">
+                        <i class="bi bi-buildings me-1"></i> All Buildings
+                    </button>
                 </div>
             </div>
         </div>
@@ -1868,6 +1902,50 @@
                 setTimeout(() => {
                     Swal.close();
                 }, 2000);
+            });
+
+            // ─── NEW: EXPORT ALL BUILDINGS WITH AREA VARIATION ≥ 500 sqft ───
+            $('#exportAllBuildingsBtn').on('click', function() {
+                Swal.fire({
+                    title: 'Export All Buildings?',
+                    html: `
+                        <div style="text-align:left; font-size:0.9rem;">
+                            This will export <strong>all buildings</strong> that meet:
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li>Assessment Area <strong>&gt; 0</strong> (has point data attached)</li>
+                                <li>Area Variation <strong>≥ 500 sqft</strong></li>
+                            </ul>
+                            <div style="margin-top:10px; padding:8px; background:#fef3c7; border-radius:6px; font-size:0.8rem;">
+                                <i class="bi bi-info-circle"></i>
+                                File will also be saved to <code>storage/app/public/exports/</code>
+                            </div>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="bi bi-download"></i> Yes, Export PDF',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#b91c1c',
+                    cancelButtonColor: '#6b7280',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Generating PDF...',
+                            html: 'Processing all buildings with area variation<br><small class="text-muted">This may take a few moments</small>',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        const url = "{{ route('data-variation.export-all-buildings-pdf', $ward->id) }}?min_variation=500";
+                        window.location.href = url;
+
+                        setTimeout(() => {
+                            Swal.close();
+                        }, 5000);
+                    }
+                });
             });
 
             console.log('✅ Data Variation page ready with pagination');

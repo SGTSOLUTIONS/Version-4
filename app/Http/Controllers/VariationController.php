@@ -1550,4 +1550,103 @@ public function exportAllAssessmentsPdf($wardId, $gisid)
 
     return $pdf->download($filename);
 }
+/**
+ * Export ALL buildings that have AREA VARIATION above a threshold (default 500 sqft)
+ * into a single PDF, and also save a copy to storage/app/public/exports/
+ */
+public function exportAllBuildingsPdf(Request $request, $wardId)
+{
+    $ward   = Ward::findOrFail($wardId);
+    $zone   = Zone::findOrFail($ward->zone_id);
+    $corp   = $zone->corp_id;
+    $wardNo = $ward->ward_no;
+
+    // ── Threshold (default 500 sqft) ──
+    $minVariation = (float) $request->get('min_variation', 500);
+
+    // ── Load data ──
+    $polygons     = DB::table("polygons_{$wardId}")->get();
+    $polygonDatas = DB::table("polygon_data_{$wardId}")->get();
+    $pointDatas   = DB::table("point_data_{$wardId}")->get();
+
+    $misTableName = "mis_{$corp}";
+    $misData      = $this->fetchMisData($misTableName, $wardNo);
+    $allMisData   = $this->fetchAllMisData($misTableName);
+
+    $allBuildings = $this->buildBuildingData(
+        $polygons,
+        $polygonDatas,
+        $pointDatas,
+        $misData,
+        $allMisData
+    );
+
+    // ── FILTER: only buildings with area variation > threshold ──
+    $filtered = [];
+    foreach ($allBuildings as $gisid => $b) {
+        $buildingArea   = (float) ($b['area_comparison']['building_area'] ?? 0);
+        $assessmentArea = (float) ($b['area_comparison']['assessment_area'] ?? 0);
+        $areaVariation  = (float) ($b['area_comparison']['area_variation'] ?? 0);
+
+        // Condition 1: assessment area must be > 0 (has point data attached)
+        if ($assessmentArea <= 0) {
+            continue;
+        }
+
+        // Condition 2: area variation must be above threshold
+        if ($areaVariation < $minVariation) {
+            continue;
+        }
+
+        $filtered[$gisid] = $b;
+    }
+
+    if (empty($filtered)) {
+        return redirect()->back()->with('error', "No buildings found with area variation above {$minVariation} sqft.");
+    }
+
+    // ── Build summary stats ──
+    $summary = [
+        'total_buildings'   => count($filtered),
+        'total_building_area' => array_sum(array_map(fn($b) => $b['area_comparison']['building_area'], $filtered)),
+        'total_assessment_area' => array_sum(array_map(fn($b) => $b['area_comparison']['assessment_area'], $filtered)),
+        'total_variation'   => array_sum(array_map(fn($b) => $b['area_comparison']['area_variation'], $filtered)),
+        'min_variation'     => $minVariation,
+        'ward_no'           => $wardNo,
+        'zone_name'         => $zone->zone_name,
+    ];
+
+    // ── Generate PDF ──
+    $pdf = Pdf::loadView('variation.all-buildings-variation-pdf', [
+        'ward'      => $ward,
+        'zone'      => $zone,
+        'buildings' => $filtered,
+        'summary'   => $summary,
+        'date'      => now()->format('d-m-Y'),
+        'time'      => now()->format('h-i-A'),
+    ]);
+
+    $pdf->setPaper('A4', 'landscape');
+    $pdf->setOptions([
+        'defaultFont'          => 'DejaVu Sans',
+        'isHtml5ParserEnabled' => true,
+        'isRemoteEnabled'      => true,
+    ]);
+
+    // ── Save a copy to storage/app/public/exports/ ──
+    $safeWard  = preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $wardNo);
+    $filename  = "Area_Variation_Ward_{$safeWard}_" . date('Y-m-d_H-i-s') . ".pdf";
+    $storagePath = storage_path("app/public/exports/{$filename}");
+
+    // Make sure folder exists
+    if (!is_dir(dirname($storagePath))) {
+        mkdir(dirname($storagePath), 0755, true);
+    }
+
+    // Save to storage
+    $pdf->save($storagePath);
+
+    // ── Also stream to browser for download ──
+    return $pdf->download($filename);
+}
 }

@@ -71,7 +71,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/data-variation/export-all-assessment-pdf/{wardId}/{gisid}', [VariationController::class, 'exportAllAssessmentsPdf'])
         ->name('data-variation.export-all-assessment-pdf');
-
+// Export ALL buildings with area variation (> 500 sqft) as a single PDF
+Route::get('/data-variation/export-all-buildings-pdf/{wardId}', [VariationController::class, 'exportAllBuildingsPdf'])
+    ->name('data-variation.export-all-buildings-pdf');
 
     Route::post('/variation/filter', [VariationController::class, 'filterVariations'])->name('variation.filter');
     Route::post('/variation/export', [VariationController::class, 'exportVariations'])->name('variation.export');
