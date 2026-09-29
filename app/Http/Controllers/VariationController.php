@@ -1551,8 +1551,9 @@ public function exportAllAssessmentsPdf($wardId, $gisid)
     return $pdf->download($filename);
 }
 /**
- * Export ALL buildings that have AREA VARIATION above a threshold (default 500 sqft)
- * into a single PDF, and also save a copy to storage/app/public/exports/
+ * Export ALL buildings with area variation ≥ threshold (default 500 sqft)
+ * into ONE PDF — each building on its own page, with image.
+ * Also saves a copy to storage/app/public/exports/
  */
 public function exportAllBuildingsPdf(Request $request, $wardId)
 {
@@ -1561,7 +1562,7 @@ public function exportAllBuildingsPdf(Request $request, $wardId)
     $corp   = $zone->corp_id;
     $wardNo = $ward->ward_no;
 
-    // ── Threshold (default 500 sqft) ──
+    // ── Threshold ──
     $minVariation = (float) $request->get('min_variation', 500);
 
     // ── Load data ──
@@ -1581,72 +1582,114 @@ public function exportAllBuildingsPdf(Request $request, $wardId)
         $allMisData
     );
 
-    // ── FILTER: only buildings with area variation > threshold ──
+    // ── Filter: Assessment Area > 0 AND Area Variation >= threshold ──
     $filtered = [];
     foreach ($allBuildings as $gisid => $b) {
-        $buildingArea   = (float) ($b['area_comparison']['building_area'] ?? 0);
         $assessmentArea = (float) ($b['area_comparison']['assessment_area'] ?? 0);
         $areaVariation  = (float) ($b['area_comparison']['area_variation'] ?? 0);
 
-        // Condition 1: assessment area must be > 0 (has point data attached)
-        if ($assessmentArea <= 0) {
-            continue;
-        }
-
-        // Condition 2: area variation must be above threshold
-        if ($areaVariation < $minVariation) {
-            continue;
-        }
+        if ($assessmentArea <= 0)   continue;   // must have point data attached
+        if ($areaVariation < $minVariation) continue;
 
         $filtered[$gisid] = $b;
     }
 
     if (empty($filtered)) {
-        return redirect()->back()->with('error', "No buildings found with area variation above {$minVariation} sqft.");
+        return redirect()->back()->with('error',
+            "No buildings found with area variation above {$minVariation} sqft.");
     }
 
-    // ── Build summary stats ──
+    // ── Pre-load building images for each filtered GIS ID ──
+    $buildingImages = [];
+    $polygonDataByGisid = collect($polygonDatas)->keyBy('gisid');
+
+    foreach (array_keys($filtered) as $gisid) {
+        $pd = $polygonDataByGisid->get($gisid);
+        if (!$pd) continue;
+
+        // ⚠️ Change 'image' to your actual image column name if different
+        $imageValue = $pd->image ?? null;
+        if (!$imageValue) continue;
+
+        if (str_starts_with($imageValue, 'data:image')) {
+            $buildingImages[$gisid] = $imageValue;
+        } elseif (filter_var($imageValue, FILTER_VALIDATE_URL)) {
+            $buildingImages[$gisid] = $imageValue;
+        } else {
+            // Try common storage locations
+            $paths = [
+                storage_path("app/public/{$imageValue}"),
+                public_path($imageValue),
+                public_path("storage/{$imageValue}"),
+                storage_path("app/{$imageValue}"),
+                base_path($imageValue),
+            ];
+            foreach ($paths as $path) {
+                if (file_exists($path)) {
+                    $mime = mime_content_type($path) ?: 'image/jpeg';
+                    $buildingImages[$gisid] = 'data:' . $mime . ';base64,'
+                                            . base64_encode(file_get_contents($path));
+                    break;
+                }
+            }
+        }
+    }
+
+    // ── Build summary ──
     $summary = [
-        'total_buildings'   => count($filtered),
-        'total_building_area' => array_sum(array_map(fn($b) => $b['area_comparison']['building_area'], $filtered)),
+        'total_buildings'       => count($filtered),
+        'total_building_area'   => array_sum(array_map(fn($b) => $b['area_comparison']['building_area'],   $filtered)),
         'total_assessment_area' => array_sum(array_map(fn($b) => $b['area_comparison']['assessment_area'], $filtered)),
-        'total_variation'   => array_sum(array_map(fn($b) => $b['area_comparison']['area_variation'], $filtered)),
-        'min_variation'     => $minVariation,
-        'ward_no'           => $wardNo,
-        'zone_name'         => $zone->zone_name,
+        'total_variation'       => array_sum(array_map(fn($b) => $b['area_comparison']['area_variation'],  $filtered)),
+        'min_variation'         => $minVariation,
+        'ward_no'               => $wardNo,
+        'zone_name'             => $zone->zone_name,
     ];
 
-    // ── Generate PDF ──
+    // ── Render PDF ──
     $pdf = Pdf::loadView('variation.all-buildings-variation-pdf', [
-        'ward'      => $ward,
-        'zone'      => $zone,
-        'buildings' => $filtered,
-        'summary'   => $summary,
-        'date'      => now()->format('d-m-Y'),
-        'time'      => now()->format('h-i-A'),
+        'ward'          => $ward,
+        'zone'          => $zone,
+        'buildings'     => $filtered,
+        'buildingImages'=> $buildingImages,
+        'summary'       => $summary,
+        'date'          => now()->format('d-m-Y'),
+        'time'          => now()->format('h-i-A'),
     ]);
 
-    $pdf->setPaper('A4', 'landscape');
+    $pdf->setPaper('A4', 'portrait');
     $pdf->setOptions([
         'defaultFont'          => 'DejaVu Sans',
         'isHtml5ParserEnabled' => true,
         'isRemoteEnabled'      => true,
+        'isPhpEnabled'         => true,
     ]);
 
-    // ── Save a copy to storage/app/public/exports/ ──
-    $safeWard  = preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $wardNo);
-    $filename  = "Area_Variation_Ward_{$safeWard}_" . date('Y-m-d_H-i-s') . ".pdf";
-    $storagePath = storage_path("app/public/exports/{$filename}");
+    // ── Filename: include GIS IDs when few, else ward+count ──
+    $safeWard = preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $wardNo);
 
-    // Make sure folder exists
-    if (!is_dir(dirname($storagePath))) {
-        mkdir(dirname($storagePath), 0755, true);
+    if (count($filtered) === 1) {
+        // Single building → use its GIS ID as filename
+        $singleGisid = array_key_first($filtered);
+        $safeGisid   = preg_replace('/[\/\\\\:]/', '-', $singleGisid);
+        $filename    = "Building_{$safeGisid}_Ward_{$safeWard}_" . date('Y-m-d_H-i-s') . ".pdf";
+    } else {
+        // Multiple buildings → ward + count + timestamp
+        $count    = count($filtered);
+        $filename = "All_Buildings_Variation_Ward_{$safeWard}_{$count}buildings_"
+                  . date('Y-m-d_H-i-s') . ".pdf";
     }
 
-    // Save to storage
+    // ── Save copy to storage/app/public/exports/ ──
+    $storageDir  = storage_path('app/public/exports');
+    if (!is_dir($storageDir)) {
+        mkdir($storageDir, 0755, true);
+    }
+    $storagePath = $storageDir . DIRECTORY_SEPARATOR . $filename;
+
     $pdf->save($storagePath);
 
-    // ── Also stream to browser for download ──
+    // ── Also stream to browser ──
     return $pdf->download($filename);
 }
 }
