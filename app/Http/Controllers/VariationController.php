@@ -261,8 +261,12 @@ class VariationController extends Controller
                         } elseif ($buildingUsageUpper === 'RESIDENTIAL') {
                             $isMatch = ($pointUsageUpper === 'RESIDENTIAL');
                         } elseif (in_array($buildingUsageUpper, [
-                            'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
-                            'GOVERNMENT', 'VACANT', 'OTHER',
+                            'COMMERCIAL',
+                            'INDUSTRIAL',
+                            'INSTITUTIONAL',
+                            'GOVERNMENT',
+                            'VACANT',
+                            'OTHER',
                         ])) {
                             $isMatch = ($pointUsageUpper === 'COMMERCIAL');
                         }
@@ -292,8 +296,12 @@ class VariationController extends Controller
                         $forceVariation = true;
                     }
                 } elseif (in_array($buildingUsageUpper, [
-                    'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
-                    'GOVERNMENT', 'VACANT', 'OTHER',
+                    'COMMERCIAL',
+                    'INDUSTRIAL',
+                    'INSTITUTIONAL',
+                    'GOVERNMENT',
+                    'VACANT',
+                    'OTHER',
                 ])) {
                     if ($hasResidential) {
                         $forceVariation = true;
@@ -803,6 +811,7 @@ class VariationController extends Controller
                     'building_usage'           => $buildingUsage,
                     'sqfeet'                   => $polygonSqfeet,
                     'building_area_calculated' => round($buildingArea, 2),
+                    'road_name'                => $polygon->road_name ?? null,   // ✅ ADD THIS LINE
                 ];
             }
 
@@ -954,8 +963,12 @@ class VariationController extends Controller
                             $hasUsageMismatch = true;
                         }
                     } elseif (in_array($buildingUsageUpper, [
-                        'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
-                        'GOVERNMENT', 'VACANT', 'OTHER',
+                        'COMMERCIAL',
+                        'INDUSTRIAL',
+                        'INSTITUTIONAL',
+                        'GOVERNMENT',
+                        'VACANT',
+                        'OTHER',
                     ])) {
                         $hasResidentialBill = false;
                         foreach ($allAssessmentUsages as $u) {
@@ -992,8 +1005,12 @@ class VariationController extends Controller
                         $usageStatusLabel = 'Variation';
                         $usageBadgeClass  = 'badge-variation';
                     } elseif (in_array($buildingUsageUpper, [
-                        'COMMERCIAL', 'INDUSTRIAL', 'INSTITUTIONAL',
-                        'GOVERNMENT', 'VACANT', 'OTHER',
+                        'COMMERCIAL',
+                        'INDUSTRIAL',
+                        'INSTITUTIONAL',
+                        'GOVERNMENT',
+                        'VACANT',
+                        'OTHER',
                     ])) {
                         $usageStatus      = 'VARIATION';
                         $usageStatusLabel = 'Variation';
@@ -1038,10 +1055,11 @@ class VariationController extends Controller
                     'geometry'    => $polygon->geometry    ?? null,
                 ],
                 'building' => [
-                    'area'     => round($buildingArea, 2),
-                    'usage'    => $buildingUsage,
-                    'details'  => $buildingDetails,
-                    'raw_data' => $polyData ? (array) $polyData : null,
+                    'area'      => round($buildingArea, 2),
+                    'usage'     => $buildingUsage,
+                    'road_name' => $polygon->road_name ?? null,   // ✅ ADD THIS LINE
+                    'details'   => $buildingDetails,
+                    'raw_data'  => $polyData ? (array) $polyData : null,
                 ],
                 'assessment' => [
                     'area'         => round($assessmentArea, 2),
@@ -1200,10 +1218,21 @@ class VariationController extends Controller
         $sheet->setTitle('Data Variation');
 
         $headers = [
-            'S.No', 'GIS ID', 'Building Usage', 'Building Area (sqft)',
-            'Assessment Usage', 'Assessment Area (sqft)', 'Area Variation (sqft)',
-            'Variation %', 'Area Status', 'Usage Status', 'Floor Count',
-            'Basement', 'Percentage', 'Assessment Count', 'Assessment Type',
+            'S.No',
+            'GIS ID',
+            'Building Usage',
+            'Building Area (sqft)',
+            'Assessment Usage',
+            'Assessment Area (sqft)',
+            'Area Variation (sqft)',
+            'Variation %',
+            'Area Status',
+            'Usage Status',
+            'Floor Count',
+            'Basement',
+            'Percentage',
+            'Assessment Count',
+            'Assessment Type',
         ];
 
         $headerStyle = [
@@ -1436,7 +1465,7 @@ class VariationController extends Controller
                         if (file_exists($path)) {
                             $mime = mime_content_type($path) ?: 'image/jpeg';
                             $buildingImage = 'data:' . $mime . ';base64,'
-                                           . base64_encode(file_get_contents($path));
+                                . base64_encode(file_get_contents($path));
                             break;
                         }
                     }
@@ -1467,7 +1496,7 @@ class VariationController extends Controller
         return $pdf->download($filename);
     }
 
-  /**
+    /**
      * ══════════════════════════════════════════════════════════════
      * EXPORT EACH BUILDING AS SEPARATE PDF (Area Variation Range)
      *
@@ -1516,7 +1545,11 @@ class VariationController extends Controller
             $allMisData   = collect();
 
             $allBuildings = $this->buildBuildingData(
-                $polygons, $polygonDatas, $pointDatas, $misData, $allMisData
+                $polygons,
+                $polygonDatas,
+                $pointDatas,
+                $misData,
+                $allMisData
             );
 
             unset($polygons, $pointDatas, $misData, $allMisData);
@@ -1768,8 +1801,10 @@ class VariationController extends Controller
                 ], 500);
             }
 
-            return redirect()->back()->with('error',
-                'PDF generation failed: ' . $e->getMessage());
+            return redirect()->back()->with(
+                'error',
+                'PDF generation failed: ' . $e->getMessage()
+            );
         }
     }
 
@@ -1794,11 +1829,20 @@ class VariationController extends Controller
         $mime = $info['mime'] ?? 'image/jpeg';
 
         switch ($mime) {
-            case 'image/jpeg': $src = @imagecreatefromjpeg($path); break;
-            case 'image/png':  $src = @imagecreatefrompng($path);  break;
-            case 'image/webp': $src = @imagecreatefromwebp($path); break;
-            case 'image/gif':  $src = @imagecreatefromgif($path);  break;
-            default: return null;
+            case 'image/jpeg':
+                $src = @imagecreatefromjpeg($path);
+                break;
+            case 'image/png':
+                $src = @imagecreatefrompng($path);
+                break;
+            case 'image/webp':
+                $src = @imagecreatefromwebp($path);
+                break;
+            case 'image/gif':
+                $src = @imagecreatefromgif($path);
+                break;
+            default:
+                return null;
         }
         if (!$src) return null;
 
