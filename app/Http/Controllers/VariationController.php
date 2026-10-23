@@ -1638,6 +1638,7 @@ class VariationController extends Controller
                         'buildingImage'  => $buildingImage,
                         'buildingNumber' => $pageNo,
                         'totalBuildings' => $totalBuildings,
+
                         'summary'        => [
                             'min_variation' => $minVariation,
                             'max_variation' => $maxVariation,

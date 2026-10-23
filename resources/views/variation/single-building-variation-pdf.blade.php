@@ -231,6 +231,12 @@
             </span>
             <span class="lbl">Variation %</span>
         </div>
+         <div class="stat">
+            <span class="num" style="color:#c00;">
+                {{ $buildingData['building']['road_name'] ?? 0 }}%
+            </span>
+            <span class="lbl">Road Name</span>
+        </div>
     </div>
 
     {{-- ═════ ASSESSMENT DETAILS ═════ --}}
