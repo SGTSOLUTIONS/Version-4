@@ -811,7 +811,7 @@ class VariationController extends Controller
                     'building_usage'           => $buildingUsage,
                     'sqfeet'                   => $polygonSqfeet,
                     'building_area_calculated' => round($buildingArea, 2),
-                    'road_name'                => $polygon->road_name ?? null,   // ✅ ADD THIS LINE
+
                 ];
             }
 
@@ -1057,7 +1057,6 @@ class VariationController extends Controller
                 'building' => [
                     'area'      => round($buildingArea, 2),
                     'usage'     => $buildingUsage,
-                    'road_name' => $polygon->road_name ?? null,   // ✅ ADD THIS LINE
                     'details'   => $buildingDetails,
                     'raw_data'  => $polyData ? (array) $polyData : null,
                 ],

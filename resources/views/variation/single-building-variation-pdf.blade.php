@@ -174,6 +174,15 @@
 </head>
 <body>
 
+    @php
+        // ✅ Road name comes from the FIRST assessment point's mis_data
+        $points = $buildingData['assessment']['details']['points'] ?? [];
+        $firstPoint = $points[0] ?? null;
+        $roadName = $firstPoint['mis_data']['road_name']
+            ?? $buildingData['building']['road_name']
+            ?? 'N/A';
+    @endphp
+
     {{-- ═════ HEADER ═════ --}}
     <div class="header">
         <h1>AREA VARIATION REPORT</h1>
@@ -209,9 +218,9 @@
             <span class="lbl">Building Usage</span>
         </div>
 
-        {{-- ✅ NEW: Road Name --}}
+        {{-- ✅ Road Name from mis_data --}}
         <div class="stat">
-            <span class="num">{{ $buildingData['building']['road_name'] ?? 'N/A' }}</span>
+            <span class="num">{{ $roadName }}</span>
             <span class="lbl">Road Name</span>
         </div>
 
@@ -251,6 +260,7 @@
                 <th>Owner Name</th>
                 <th>Phone</th>
                 <th>Door No</th>
+                <th>Road Name</th>
                 <th>MIS Assessment</th>
                 <th>MIS Area</th>
                 <th>Half Year Tax</th>
@@ -258,7 +268,6 @@
             </tr>
         </thead>
         <tbody>
-            @php $points = $buildingData['assessment']['details']['points'] ?? []; @endphp
             @forelse($points as $idx => $point)
                 @php
                     $mis = $point['mis_data'] ?? null;
@@ -273,6 +282,7 @@
                     ]);
                     $door = $doorParts ? implode(' / ', $doorParts) : null;
 
+                    $pointRoad     = $mis['road_name']     ?? null;
                     $halfYearTax   = $mis['half_year_tax'] ?? null;
                     $balance       = $mis['balance']       ?? null;
                     $misAssessment = $mis['assessment']    ?? null;
@@ -293,6 +303,7 @@
                     <td>{{ $owner ?: 'N/A' }}</td>
                     <td>{{ $phone ?: 'N/A' }}</td>
                     <td>{{ $door  ?: 'N/A' }}</td>
+                    <td>{{ $pointRoad ?: 'N/A' }}</td>
                     <td>{{ $misAssessment ?: 'N/A' }}</td>
                     <td>{{ $misPlotArea !== null ? number_format((float)$misPlotArea, 2) : 'N/A' }}</td>
                     <td>{{ $halfYearTax !== null ? number_format((float)$halfYearTax, 2) : 'N/A' }}</td>
@@ -300,7 +311,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="13" style="text-align: center;">No assessments found</td>
+                    <td colspan="14" style="text-align: center;">No assessments found</td>
                 </tr>
             @endforelse
         </tbody>
@@ -356,10 +367,10 @@
                 <td>{{ $buildingData['usage_comparison']['building_usage'] ?? 'N/A' }}</td>
             </tr>
 
-            {{-- ✅ NEW: Road Name --}}
+            {{-- ✅ Road Name from mis_data --}}
             <tr>
                 <td><strong>Road Name</strong></td>
-                <td>{{ $buildingData['building']['road_name'] ?? 'N/A' }}</td>
+                <td>{{ $roadName }}</td>
             </tr>
 
             <tr>
@@ -406,7 +417,7 @@
     {{-- ═════ FOOTER ═════ --}}
     <div class="footer">
         <strong>GIS ID:</strong> {{ $gisid }} |
-        <strong>Road:</strong> {{ $buildingData['building']['road_name'] ?? 'N/A' }} |
+        <strong>Road:</strong> {{ $roadName }} |
         <strong>Assessments:</strong> {{ count($points) }} |
         <strong>Area Variation:</strong> {{ number_format($buildingData['area_comparison']['area_variation'] ?? 0, 2) }} sqft |
         <strong>Filter:</strong> Assessment Area &gt; 0 &amp; Variation ≥ {{ number_format($summary['min_variation'] ?? 500, 2) }} sqft
