@@ -188,6 +188,9 @@
     <div class="building-id-box">
         <div class="gis-label">GIS ID</div>
         <div class="gis-value">{{ $gisid }}</div>
+        {{-- <div class="gis-label" style="margin-top:4px;">
+            Building {{ $buildingNumber }} of {{ $totalBuildings }}
+        </div> --}}
     </div>
 
     {{-- ═════ BUILDING IMAGE ═════ --}}
@@ -208,13 +211,6 @@
             <span class="num">{{ $buildingData['building']['usage'] ?? 'N/A' }}</span>
             <span class="lbl">Building Usage</span>
         </div>
-
-        {{-- ✅ NEW: Road Name --}}
-        <div class="stat">
-            <span class="num">{{ $buildingData['building']['road_name'] ?? 'N/A' }}</span>
-            <span class="lbl">Road Name</span>
-        </div>
-
         <div class="stat">
             <span class="num">{{ $buildingData['assessment']['count'] ?? 0 }}</span>
             <span class="lbl">Total Assessments</span>
@@ -355,13 +351,6 @@
                 <td><strong>Building Usage</strong></td>
                 <td>{{ $buildingData['usage_comparison']['building_usage'] ?? 'N/A' }}</td>
             </tr>
-
-            {{-- ✅ NEW: Road Name --}}
-            <tr>
-                <td><strong>Road Name</strong></td>
-                <td>{{ $buildingData['building']['road_name'] ?? 'N/A' }}</td>
-            </tr>
-
             <tr>
                 <td><strong>Assessment Usage(s)</strong></td>
                 <td>{{ implode(', ', $buildingData['usage_comparison']['all_assessment_usages'] ?? []) ?: 'N/A' }}</td>
@@ -406,7 +395,6 @@
     {{-- ═════ FOOTER ═════ --}}
     <div class="footer">
         <strong>GIS ID:</strong> {{ $gisid }} |
-        <strong>Road:</strong> {{ $buildingData['building']['road_name'] ?? 'N/A' }} |
         <strong>Assessments:</strong> {{ count($points) }} |
         <strong>Area Variation:</strong> {{ number_format($buildingData['area_comparison']['area_variation'] ?? 0, 2) }} sqft |
         <strong>Filter:</strong> Assessment Area &gt; 0 &amp; Variation ≥ {{ number_format($summary['min_variation'] ?? 500, 2) }} sqft
