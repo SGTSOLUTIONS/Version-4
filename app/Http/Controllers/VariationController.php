@@ -1621,9 +1621,6 @@ class VariationController extends Controller
                 mkdir($folderPath, 0755, true);
             }
 
-            // ══════════════════════════════════════════════════════════
-            // GENERATE ONE PDF PER BUILDING — FILENAME = GIS ID
-            // ══════════════════════════════════════════════════════════
             $totalBuildings = count($filtered);
             $savedFiles     = [];
             $failedGisids   = [];
